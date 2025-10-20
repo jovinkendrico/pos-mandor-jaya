@@ -11,12 +11,17 @@ import {
 } from '@/components/ui/sidebar';
 import { usePermission } from '@/hooks/use-permission';
 import { dashboard } from '@/routes';
+import { index as bankIndex } from '@/routes/banks';
+import { index as cityIndex } from '@/routes/cities';
+import { index as customerIndex } from '@/routes/customers';
+import { index as itemIndex } from '@/routes/items';
 import { index as permissionIndex } from '@/routes/permissions';
 import { index as roleIndex } from '@/routes/roles';
+import { index as supplierIndex } from '@/routes/suppliers';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, User2 } from 'lucide-react';
+import { Database, LayoutGrid, User2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -24,6 +29,33 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Master',
+        href: '#',
+        icon: Database,
+        children: [
+            {
+                title: 'Customer',
+                href: customerIndex(),
+            },
+            {
+                title: 'Supplier',
+                href: supplierIndex(),
+            },
+            {
+                title: 'Bank/Cash',
+                href: bankIndex(),
+            },
+            {
+                title: 'Barang',
+                href: itemIndex(),
+            },
+            {
+                title: 'Kota',
+                href: cityIndex(),
+            },
+        ],
     },
     {
         title: 'User Settings',
