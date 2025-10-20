@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->foreignId('city_id')->nullable()->constrained('cities')->nullOnDelete();
             $table->string('phone_number')->nullable();
-            $table->string('contact')->nullable();
+            $table->string('contact_person')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

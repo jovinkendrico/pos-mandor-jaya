@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,8 +14,8 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('name');
-            $table->string('base_uom'); // UOM dasar (PCS, KG, etc)
-            $table->decimal('stock', 15, 2)->default(0); // Stock dalam base UOM
+            $table->foreignId('uom_id')->constrained('uoms')->cascadeOnDelete();
+            $table->decimal('stock', 15, 2)->default(0);
             $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
