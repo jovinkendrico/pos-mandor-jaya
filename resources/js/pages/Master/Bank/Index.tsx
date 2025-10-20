@@ -1,8 +1,8 @@
-import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import BankDeleteConfirmation from '@/components/master/banks/bank-delete-confirmation';
 import BankForm from '@/components/master/banks/bank-form';
 import BankTable from '@/components/master/banks/bank-table';
+import PageTitle from '@/components/page-title';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/banks';
 import { BreadcrumbItem } from '@/types';
@@ -68,11 +68,22 @@ export default function BankIndex({ banks }: PageProps) {
                         Tambah Bank/Cash
                     </Button>
                 </div>
-                <BankTable banks={banks.data} onEdit={handleEdit} onDelete={handleDelete} />
-                <BankForm isModalOpen={isFormModalOpen} onOpenChange={handleFormClose} bank={selectedBank} />
-                <BankDeleteConfirmation isModalOpen={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen} bank={selectedBank} />
+                <BankTable
+                    banks={banks.data}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
+                <BankForm
+                    isModalOpen={isFormModalOpen}
+                    onOpenChange={handleFormClose}
+                    bank={selectedBank}
+                />
+                <BankDeleteConfirmation
+                    isModalOpen={isDeleteModalOpen}
+                    onOpenChange={setIsDeleteModalOpen}
+                    bank={selectedBank}
+                />
             </AppLayout>
         </>
     );
 }
-

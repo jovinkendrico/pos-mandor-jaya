@@ -1,7 +1,8 @@
+import TableLayout from '@/components/TableLayout/TableLayout';
 import { Edit, Trash } from 'lucide-react';
-import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { Button } from '../../ui/button';
+import { TableCell } from '../../ui/table';
 
 interface Bank {
     id: number;
@@ -19,7 +20,9 @@ interface BankTableProps {
     onDelete: (bank: Bank) => void;
 }
 
-export default function BankTable({ banks, onEdit, onDelete }: BankTableProps) {
+const BankTable = (props: BankTableProps) => {
+    const { banks, onEdit, onDelete } = props;
+
     const formatCurrency = (value?: number) => {
         if (!value) return 'Rp 0';
         return new Intl.NumberFormat('id-ID', {
@@ -29,42 +32,68 @@ export default function BankTable({ banks, onEdit, onDelete }: BankTableProps) {
         }).format(value);
     };
 
-    return (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="text-center">#</TableHead>
-                    <TableHead>Nama</TableHead>
-                    <TableHead className="text-center">Tipe</TableHead>
-                    <TableHead>No. Rekening</TableHead>
-                    <TableHead>Nama Pemilik</TableHead>
-                    <TableHead className="text-right">Saldo</TableHead>
-                    <TableHead className="text-center">Aksi</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {banks.map((bank, index) => (
-                    <TableRow key={bank.id}>
-                        <TableCell className="text-center">{index + 1}</TableCell>
-                        <TableCell className="font-medium">{bank.name}</TableCell>
-                        <TableCell className="text-center">
-                            <Badge variant={bank.type === 'bank' ? 'default' : 'secondary'}>{bank.type === 'bank' ? 'Bank' : 'Cash'}</Badge>
-                        </TableCell>
-                        <TableCell>{bank.account_number || '-'}</TableCell>
-                        <TableCell>{bank.account_name || '-'}</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(bank.balance)}</TableCell>
-                        <TableCell className="text-center">
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(bank)}>
-                                <Edit />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => onDelete(bank)}>
-                                <Trash className="text-destructive" />
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-    );
-}
+    const tableColumn = [
+        '#',
+        'Nama',
+        'Tipe',
+        'No. Rekening',
+        'Nama Pemilik',
+        'Saldo',
+        'Aksi',
+    ];
 
+    return (
+        <TableLayout
+            tableName="Bank"
+            tableColumn={tableColumn}
+            tableRow={banks}
+            text="Tidak ada data bank/cash"
+            renderRow={(row) => (
+                <>
+                    <TableCell className="w-full items-center text-center">
+                        {row.id}
+                    </TableCell>
+                    <TableCell className="w-full text-center font-medium">
+                        {row.name}
+                    </TableCell>
+                    <TableCell className="w-full text-center">
+                        <Badge
+                            variant={
+                                row.type === 'bank' ? 'default' : 'secondary'
+                            }
+                        >
+                            {row.type === 'bank' ? 'Bank' : 'Cash'}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="w-full text-center">
+                        {row.account_number || '-'}
+                    </TableCell>
+                    <TableCell className="w-full text-center">
+                        {row.account_name || '-'}
+                    </TableCell>
+                    <TableCell className="w-full text-right font-medium">
+                        {formatCurrency(row.balance)}
+                    </TableCell>
+                    <TableCell className="w-full text-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(row)}
+                        >
+                            <Edit />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(row)}
+                        >
+                            <Trash className="text-destructive" />
+                        </Button>
+                    </TableCell>
+                </>
+            )}
+        />
+    );
+};
+
+export default BankTable;

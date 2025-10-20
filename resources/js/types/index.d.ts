@@ -158,3 +158,8 @@ export interface PageProps {
     auth: Auth;
     [key: string]: unknown;
 }
+
+export interface UOM {
+    id: number;
+    name: string;
+}

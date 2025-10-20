@@ -18,6 +18,7 @@ import { index as itemIndex } from '@/routes/items';
 import { index as permissionIndex } from '@/routes/permissions';
 import { index as roleIndex } from '@/routes/roles';
 import { index as supplierIndex } from '@/routes/suppliers';
+import { index as uomIndex } from '@/routes/uoms';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -54,6 +55,10 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Kota',
                 href: cityIndex(),
+            },
+            {
+                title: 'UOM',
+                href: uomIndex(),
             },
         ],
     },

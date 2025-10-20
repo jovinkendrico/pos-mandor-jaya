@@ -1,6 +1,7 @@
+import TableLayout from '@/components/TableLayout/TableLayout';
+import { Button } from '@/components/ui/button';
 import { Edit, Trash } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { TableCell } from '../../ui/table';
 
 interface City {
     id: number;
@@ -22,41 +23,64 @@ interface CustomerTableProps {
     onDelete: (customer: Customer) => void;
 }
 
-export default function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
-    return (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="text-center">#</TableHead>
-                    <TableHead>Nama Customer</TableHead>
-                    <TableHead>Alamat</TableHead>
-                    <TableHead>Kota</TableHead>
-                    <TableHead>Telepon</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead className="text-center">Aksi</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {customers.map((customer, index) => (
-                    <TableRow key={customer.id}>
-                        <TableCell className="text-center">{index + 1}</TableCell>
-                        <TableCell>{customer.name}</TableCell>
-                        <TableCell>{customer.address || '-'}</TableCell>
-                        <TableCell>{customer.city?.name || '-'}</TableCell>
-                        <TableCell>{customer.phone_number || '-'}</TableCell>
-                        <TableCell>{customer.contact || '-'}</TableCell>
-                        <TableCell className="text-center">
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(customer)}>
-                                <Edit />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => onDelete(customer)}>
-                                <Trash className="text-destructive" />
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-    );
-}
+const CustomerTable = (props: CustomerTableProps) => {
+    const { customers, onEdit, onDelete } = props;
 
+    const tableColumn = [
+        '#',
+        'Nama Customer',
+        'Alamat',
+        'Kota',
+        'Telepon',
+        'Contact Person',
+        'Aksi',
+    ];
+    return (
+        <TableLayout
+            tableName="Customer"
+            tableColumn={tableColumn}
+            tableRow={customers}
+            text="Tidak ada data customer"
+            renderRow={(row) => (
+                <>
+                    <TableCell className="w-full items-center text-center">
+                        {row.id}
+                    </TableCell>
+                    <TableCell className="w-full items-center text-center">
+                        {row.name}
+                    </TableCell>
+                    <TableCell className="w-full items-center text-center">
+                        {row.address || '-'}
+                    </TableCell>
+                    <TableCell className="w-full items-center text-center">
+                        {row.city?.name || '-'}
+                    </TableCell>
+                    <TableCell className="w-full items-center text-center">
+                        {row.phone_number || '-'}
+                    </TableCell>
+                    <TableCell className="w-full items-center text-center">
+                        {row.contact || '-'}
+                    </TableCell>
+                    <TableCell className="w-full items-center text-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(row)}
+                        >
+                            <Edit />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(row)}
+                        >
+                            <Trash className="text-destructive" />
+                        </Button>
+                    </TableCell>
+                </>
+            )}
+        />
+    );
+};
+
+export default CustomerTable;
