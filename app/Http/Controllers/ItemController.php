@@ -19,7 +19,7 @@ class ItemController extends Controller
     {
         $items = Item::with('uoms')->orderBy('name')->get();
 
-        return Inertia::render('Master/Item/Index', [
+        return Inertia::render('master/item/index', [
             'items' => [
                 'data' => $items,
             ],
@@ -31,7 +31,7 @@ class ItemController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Master/Item/Create');
+        return Inertia::render('master/item/create');
     }
 
     /**
@@ -59,7 +59,7 @@ class ItemController extends Controller
     {
         $item->load('uoms');
 
-        return Inertia::render('Master/Item/Show', [
+        return Inertia::render('master/item/show', [
             'item' => $item,
         ]);
     }
@@ -71,7 +71,7 @@ class ItemController extends Controller
     {
         $item->load('uoms');
 
-        return Inertia::render('Master/Item/Edit', [
+        return Inertia::render('master/item/edit', [
             'item' => $item,
         ]);
     }
