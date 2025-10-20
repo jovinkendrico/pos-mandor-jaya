@@ -18,7 +18,7 @@ class BankController extends Controller
     {
         $banks = Bank::orderBy('name')->paginate(10);
 
-        return Inertia::render('Master/Bank/Index', [
+        return Inertia::render('master/bank/index', [
             'banks' => $banks,
         ]);
     }
@@ -28,7 +28,7 @@ class BankController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Master/Bank/Create');
+       return response()->noContent();
     }
 
     /**
@@ -47,9 +47,10 @@ class BankController extends Controller
      */
     public function show(Bank $bank): Response
     {
-        return Inertia::render('Master/Bank/Show', [
-            'bank' => $bank,
-        ]);
+        // return Inertia::render('master/bank/show', [
+        //     'bank' => $bank,
+        // ]);
+        return response()->noContent();
     }
 
     /**
@@ -57,9 +58,10 @@ class BankController extends Controller
      */
     public function edit(Bank $bank): Response
     {
-        return Inertia::render('Master/Bank/Edit', [
-            'bank' => $bank,
-        ]);
+        // return Inertia::render('master/bank/edit', [
+        //     'bank' => $bank,
+        // ]);
+        return response()->noContent();
     }
 
     /**

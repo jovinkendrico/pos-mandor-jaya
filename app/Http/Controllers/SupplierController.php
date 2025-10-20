@@ -24,7 +24,7 @@ class SupplierController extends Controller
         // Only send first 10 cities for initial load
         $cities = City::orderBy('name')->limit(10)->get();
 
-        return Inertia::render('Master/Supplier/Index', [
+        return Inertia::render('master/supplier/index', [
             'suppliers' => $suppliers,
             'cities' => $cities,
         ]);
@@ -35,12 +35,7 @@ class SupplierController extends Controller
      */
     public function create(): Response
     {
-        // Only send first 10 cities for initial load
-        $cities = City::orderBy('name')->limit(10)->get();
-
-        return Inertia::render('Master/Supplier/Create', [
-            'cities' => $cities,
-        ]);
+        return response()->noContent();
     }
 
     /**
@@ -59,11 +54,7 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier): Response
     {
-        $supplier->load('city');
-
-        return Inertia::render('Master/Supplier/Show', [
-            'supplier' => $supplier,
-        ]);
+        return response()->noContent();
     }
 
     /**
@@ -71,13 +62,7 @@ class SupplierController extends Controller
      */
     public function edit(Supplier $supplier): Response
     {
-        // Only send first 10 cities for initial load
-        $cities = City::orderBy('name')->limit(10)->get();
-
-        return Inertia::render('Master/Supplier/Edit', [
-            'supplier' => $supplier,
-            'cities' => $cities,
-        ]);
+        return response()->noContent();
     }
 
     /**

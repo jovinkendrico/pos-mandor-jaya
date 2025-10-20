@@ -24,7 +24,7 @@ class CustomerController extends Controller
         // Only send first 10 cities for initial load
         $cities = City::orderBy('name')->limit(10)->get();
 
-        return Inertia::render('Master/Customer/Index', [
+        return Inertia::render('master/customer/index', [
             'customers' => $customers,
             'cities' => $cities,
         ]);
@@ -35,12 +35,7 @@ class CustomerController extends Controller
      */
     public function create(): Response
     {
-        // Only send first 10 cities for initial load
-        $cities = City::orderBy('name')->limit(10)->get();
-
-        return Inertia::render('Master/Customer/Create', [
-            'cities' => $cities,
-        ]);
+        return response()->noContent();
     }
 
     /**
@@ -59,11 +54,7 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer): Response
     {
-        $customer->load('city');
-
-        return Inertia::render('Master/Customer/Show', [
-            'customer' => $customer,
-        ]);
+        return response()->noContent();
     }
 
     /**
@@ -71,13 +62,7 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer): Response
     {
-        // Only send first 10 cities for initial load
-        $cities = City::orderBy('name')->limit(10)->get();
-
-        return Inertia::render('Master/Customer/Edit', [
-            'customer' => $customer,
-            'cities' => $cities,
-        ]);
+        return response()->noContent();
     }
 
     /**

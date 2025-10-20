@@ -20,7 +20,7 @@ class CityController extends Controller
     {
         $cities = City::orderBy('name')->paginate(10);
 
-        return Inertia::render('Master/City/Index', [
+        return Inertia::render('master/city/index', [
             'cities' => $cities,
         ]);
     }
@@ -30,7 +30,7 @@ class CityController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Master/City/Create');
+        return response()->noContent();
     }
 
     /**
@@ -45,7 +45,7 @@ class CityController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Kota berhasil ditambahkan.',
-                'data' => $city,
+                'data'    => $city,
             ], 201);
         }
 
@@ -59,7 +59,7 @@ class CityController extends Controller
     public function search(Request $request): JsonResponse
     {
         $search = $request->get('search', '');
-        $limit = $request->get('limit', 10);
+        $limit  = $request->get('limit', 10);
 
         $cities = City::query()
             ->when($search, function ($query, $search) {
@@ -85,9 +85,7 @@ class CityController extends Controller
      */
     public function show(City $city): Response
     {
-        return Inertia::render('Master/City/Show', [
-            'city' => $city,
-        ]);
+        return response()->noContent();
     }
 
     /**
@@ -95,9 +93,7 @@ class CityController extends Controller
      */
     public function edit(City $city): Response
     {
-        return Inertia::render('Master/City/Edit', [
-            'city' => $city,
-        ]);
+        return response()->noContent();
     }
 
     /**
