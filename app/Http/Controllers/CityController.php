@@ -19,7 +19,7 @@ class CityController extends Controller
     public function index(Request $request): Response|JsonResponse
     {
         $limit = $request->get('limit', 10);
-        
+
         // If AJAX or wants JSON, return JSON
         if ($request->wantsJson() || $request->ajax()) {
             $cities = City::orderBy('name')->limit($limit)->get();

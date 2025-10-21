@@ -129,7 +129,7 @@ export default function PurchaseShow({ purchase }: PageProps) {
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title={`Pembelian ${purchase.purchase_number}`} />
-                
+
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <PageTitle title={`Pembelian ${purchase.purchase_number}`} />
@@ -258,13 +258,13 @@ export default function PurchaseShow({ purchase }: PageProps) {
                                         </TableCell>
                                         <TableCell className="text-right">{formatCurrency(detail.price)}</TableCell>
                                         <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount1_percent) > 0 
-                                                ? `${detail.discount1_percent}%` 
+                                            {parseFloat(detail.discount1_percent) > 0
+                                                ? `${detail.discount1_percent}%`
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount2_percent) > 0 
-                                                ? `${detail.discount2_percent}%` 
+                                            {parseFloat(detail.discount2_percent) > 0
+                                                ? `${detail.discount2_percent}%`
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="text-right font-medium">
