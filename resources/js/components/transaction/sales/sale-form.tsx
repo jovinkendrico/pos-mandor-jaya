@@ -711,8 +711,8 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                             <Label htmlFor="new_customer_contact">Contact Person</Label>
                             <Input
                                 id="new_customer_contact"
-                                value={newCustomer.contact_person}
-                                onChange={(e) => setNewCustomer((prev) => ({ ...prev, contact_person: e.target.value }))}
+                                value={newCustomer.contact}
+                                onChange={(e) => setNewCustomer((prev) => ({ ...prev, contact: e.target.value }))}
                                 placeholder="Nama contact person"
                             />
                         </div>

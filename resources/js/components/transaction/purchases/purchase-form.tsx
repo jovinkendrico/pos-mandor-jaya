@@ -728,7 +728,7 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                     address: '',
                                     city_id: '',
                                     phone_number: '',
-                                    contact: '',
+                                    contact_person: '',
                                 });
                             }}
                             disabled={isAddingSupplier}
