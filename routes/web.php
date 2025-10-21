@@ -57,7 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'sales'            => SaleController::class,
         'purchase-returns' => PurchaseReturnController::class,
         'sale-returns'     => SaleReturnController::class,
-        'uoms' => UomController::class,
+        'uoms'             => UomController::class,
     ]);
 });
 
