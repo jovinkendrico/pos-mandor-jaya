@@ -16,8 +16,18 @@ class CityController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response|JsonResponse
     {
+        $limit = $request->get('limit', 10);
+
+        // If AJAX or wants JSON, return JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            $cities = City::orderBy('name')->limit($limit)->get();
+            return response()->json([
+                'data' => $cities,
+            ]);
+        }
+
         $cities = City::orderBy('name')->paginate(10);
 
         return Inertia::render('master/city/index', [

@@ -26,7 +26,7 @@ class UpdateCustomerRequest extends FormRequest
             'address' => ['nullable', 'string'],
             'city_id' => ['nullable', 'exists:cities,id'],
             'phone_number' => ['nullable', 'string', 'max:255'],
-            'contact' => ['nullable', 'string', 'max:255'],
+            'contact_person' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

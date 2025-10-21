@@ -16,12 +16,14 @@ import { index as cityIndex } from '@/routes/cities';
 import { index as customerIndex } from '@/routes/customers';
 import { index as itemIndex } from '@/routes/items';
 import { index as permissionIndex } from '@/routes/permissions';
+import { index as purchaseIndex } from '@/routes/purchases';
 import { index as roleIndex } from '@/routes/roles';
+import { index as saleIndex } from '@/routes/sales';
 import { index as supplierIndex } from '@/routes/suppliers';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, User2 } from 'lucide-react';
+import { Database, LayoutGrid, ShoppingCart, User2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -54,6 +56,21 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Kota',
                 href: cityIndex(),
+            },
+        ],
+    },
+    {
+        title: 'Transaksi',
+        href: '#',
+        icon: ShoppingCart,
+        children: [
+            {
+                title: 'Pembelian',
+                href: purchaseIndex(),
+            },
+            {
+                title: 'Penjualan',
+                href: saleIndex(),
             },
         ],
     },

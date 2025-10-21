@@ -9,6 +9,7 @@ use App\Models\City;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 
 class SupplierController extends Controller
 {
@@ -41,9 +42,18 @@ class SupplierController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSupplierRequest $request): RedirectResponse
+    public function store(StoreSupplierRequest $request): RedirectResponse|JsonResponse
     {
-        Supplier::create($request->validated());
+        $supplier = Supplier::create($request->validated());
+
+        // If AJAX request, return JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier berhasil ditambahkan.',
+                'data'    => $supplier,
+            ], 201);
+        }
 
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier berhasil ditambahkan.');

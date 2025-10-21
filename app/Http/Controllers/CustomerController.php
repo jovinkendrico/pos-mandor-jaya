@@ -9,6 +9,7 @@ use App\Models\City;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 
 class CustomerController extends Controller
 {
@@ -41,9 +42,18 @@ class CustomerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCustomerRequest $request): RedirectResponse
+    public function store(StoreCustomerRequest $request): RedirectResponse|JsonResponse
     {
-        Customer::create($request->validated());
+        $customer = Customer::create($request->validated());
+
+        // If AJAX request, return JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer berhasil ditambahkan.',
+                'data'    => $customer,
+            ], 201);
+        }
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer berhasil ditambahkan.');
