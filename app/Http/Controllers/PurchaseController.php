@@ -61,6 +61,8 @@ class PurchaseController extends Controller
         DB::transaction(function () use ($request) {
             // Calculate totals dari semua items
             $subtotal = 0;
+            $totalDiscount1Amount = 0;
+            $totalDiscount2Amount = 0;
             $detailsData = [];
 
             foreach ($request->details as $detail) {
@@ -77,7 +79,9 @@ class PurchaseController extends Controller
                 $itemDiscount2Amount = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal += $itemSubtotal;
+                $subtotal += $amount; // Sum all amounts before discount
+                $totalDiscount1Amount += $itemDiscount1Amount;
+                $totalDiscount2Amount += $itemDiscount2Amount;
 
                 $detailsData[] = [
                     'item_id' => $detail['item_id'],
@@ -92,14 +96,14 @@ class PurchaseController extends Controller
                 ];
             }
 
-            // Calculate discount 1
-            $discount1Percent = $request->discount1_percent ?? 0;
-            $discount1Amount = ($subtotal * $discount1Percent) / 100;
+            // Header discount calculated from sum of item discounts
+            $discount1Amount = $totalDiscount1Amount;
+            $discount1Percent = $subtotal > 0 ? ($discount1Amount / $subtotal) * 100 : 0;
 
             // Calculate discount 2 (applied after discount 1)
             $afterDiscount1 = $subtotal - $discount1Amount;
-            $discount2Percent = $request->discount2_percent ?? 0;
-            $discount2Amount = ($afterDiscount1 * $discount2Percent) / 100;
+            $discount2Amount = $totalDiscount2Amount;
+            $discount2Percent = $afterDiscount1 > 0 ? ($discount2Amount / $afterDiscount1) * 100 : 0;
 
             $totalAfterDiscount = $afterDiscount1 - $discount2Amount;
 
@@ -186,6 +190,8 @@ class PurchaseController extends Controller
         DB::transaction(function () use ($request, $purchase) {
             // Calculate totals dari semua items (same as store)
             $subtotal = 0;
+            $totalDiscount1Amount = 0;
+            $totalDiscount2Amount = 0;
             $detailsData = [];
 
             foreach ($request->details as $detail) {
@@ -202,7 +208,9 @@ class PurchaseController extends Controller
                 $itemDiscount2Amount = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal += $itemSubtotal;
+                $subtotal += $amount; // Sum all amounts before discount
+                $totalDiscount1Amount += $itemDiscount1Amount;
+                $totalDiscount2Amount += $itemDiscount2Amount;
 
                 $detailsData[] = [
                     'item_id' => $detail['item_id'],
@@ -217,12 +225,13 @@ class PurchaseController extends Controller
                 ];
             }
 
-            $discount1Percent = $request->discount1_percent ?? 0;
-            $discount1Amount = ($subtotal * $discount1Percent) / 100;
+            // Header discount calculated from sum of item discounts
+            $discount1Amount = $totalDiscount1Amount;
+            $discount1Percent = $subtotal > 0 ? ($discount1Amount / $subtotal) * 100 : 0;
 
             $afterDiscount1 = $subtotal - $discount1Amount;
-            $discount2Percent = $request->discount2_percent ?? 0;
-            $discount2Amount = ($afterDiscount1 * $discount2Percent) / 100;
+            $discount2Amount = $totalDiscount2Amount;
+            $discount2Percent = $afterDiscount1 > 0 ? ($discount2Amount / $afterDiscount1) * 100 : 0;
 
             $totalAfterDiscount = $afterDiscount1 - $discount2Amount;
 

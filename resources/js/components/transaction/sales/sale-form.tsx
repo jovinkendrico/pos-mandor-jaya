@@ -78,8 +78,6 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
         customer_id: sale?.customer_id?.toString() || '',
         sale_date: sale?.sale_date || new Date().toISOString().split('T')[0],
         due_date: sale?.due_date || '',
-        discount1_percent: sale?.discount1_percent || '0',
-        discount2_percent: sale?.discount2_percent || '0',
         ppn_percent: sale?.ppn_percent || '0',
         notes: sale?.notes || '',
         details: sale?.details || [
@@ -173,7 +171,9 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
 
     // Calculate totals
     const calculations = useMemo(() => {
-        let itemsSubtotal = 0;
+        let subtotal = 0;
+        let totalDiscount1Amount = 0;
+        let totalDiscount2Amount = 0;
 
         // Calculate each item with its discounts
         const itemsCalculated = form.data.details.map((detail) => {
@@ -186,20 +186,23 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
             const disc1Amt = (amount * disc1Pct) / 100;
             const afterDisc1 = amount - disc1Amt;
             const disc2Amt = (afterDisc1 * disc2Pct) / 100;
-            const subtotal = afterDisc1 - disc2Amt;
+            const itemSubtotal = afterDisc1 - disc2Amt;
 
-            return { amount, disc1Amt, disc2Amt, subtotal };
+            return { amount, disc1Amt, disc2Amt, subtotal: itemSubtotal };
         });
 
-        itemsSubtotal = itemsCalculated.reduce((sum, item) => sum + item.subtotal, 0);
+        // Sum all amounts and discounts
+        itemsCalculated.forEach((item) => {
+            subtotal += item.amount;
+            totalDiscount1Amount += item.disc1Amt;
+            totalDiscount2Amount += item.disc2Amt;
+        });
 
-        // Header discounts
-        const headerDisc1Pct = parseFloat(form.data.discount1_percent) || 0;
-        const headerDisc1Amt = (itemsSubtotal * headerDisc1Pct) / 100;
-        const afterHeaderDisc1 = itemsSubtotal - headerDisc1Amt;
+        // Header discounts (calculated from items)
+        const headerDisc1Amt = totalDiscount1Amount;
+        const afterHeaderDisc1 = subtotal - headerDisc1Amt;
 
-        const headerDisc2Pct = parseFloat(form.data.discount2_percent) || 0;
-        const headerDisc2Amt = (afterHeaderDisc1 * headerDisc2Pct) / 100;
+        const headerDisc2Amt = totalDiscount2Amount;
         const totalAfterDiscount = afterHeaderDisc1 - headerDisc2Amt;
 
         // PPN
@@ -209,14 +212,14 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
 
         return {
             itemsCalculated,
-            subtotal: itemsSubtotal,
+            subtotal,
             headerDisc1Amt,
             headerDisc2Amt,
             totalAfterDiscount,
             ppnAmt,
             grandTotal,
         };
-    }, [form.data.details, form.data.discount1_percent, form.data.discount2_percent, form.data.ppn_percent]);
+    }, [form.data.details, form.data.ppn_percent]);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -478,37 +481,9 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Diskon & Pajak</CardTitle>
+                        <CardTitle>Pajak & Catatan</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="discount1_percent">Diskon 1 (Header) %</Label>
-                                <Input
-                                    id="discount1_percent"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max="100"
-                                    value={form.data.discount1_percent}
-                                    onChange={(e) => form.setData('discount1_percent', e.target.value)}
-                                    className="text-right"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="discount2_percent">Diskon 2 (Header) %</Label>
-                                <Input
-                                    id="discount2_percent"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max="100"
-                                    value={form.data.discount2_percent}
-                                    onChange={(e) => form.setData('discount2_percent', e.target.value)}
-                                    className="text-right"
-                                />
-                            </div>
-                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="ppn_percent">PPN %</Label>
                             <Input
@@ -528,8 +503,13 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                                 id="notes"
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
-                                rows={3}
+                                rows={4}
                             />
+                        </div>
+                        <div className="space-y-2 pt-2 border-t">
+                            <div className="text-sm text-muted-foreground">
+                                💡 <strong>Info:</strong> Diskon header otomatis dihitung dari total diskon semua items
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -540,18 +520,18 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Subtotal Items:</span>
+                            <span className="text-muted-foreground">Subtotal (sebelum diskon):</span>
                             <span className="font-medium">{formatCurrency(calculations.subtotal)}</span>
                         </div>
                         {calculations.headerDisc1Amt > 0 && (
                             <div className="flex justify-between text-sm text-red-600">
-                                <span>Diskon 1 ({form.data.discount1_percent}%):</span>
+                                <span>Total Diskon 1 (dari items):</span>
                                 <span>-{formatCurrency(calculations.headerDisc1Amt)}</span>
                             </div>
                         )}
                         {calculations.headerDisc2Amt > 0 && (
                             <div className="flex justify-between text-sm text-red-600">
-                                <span>Diskon 2 ({form.data.discount2_percent}%):</span>
+                                <span>Total Diskon 2 (dari items):</span>
                                 <span>-{formatCurrency(calculations.headerDisc2Amt)}</span>
                             </div>
                         )}
