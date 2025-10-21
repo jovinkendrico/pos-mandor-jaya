@@ -22,8 +22,14 @@ import InputError from '@/components/input-error';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import axios from 'axios';
 import { store as storeSupplier } from '@/routes/suppliers';
+import { store as storeCity } from '@/routes/cities';
 
 interface Supplier {
+    id: number;
+    name: string;
+}
+
+interface City {
     id: number;
     name: string;
 }
@@ -72,9 +78,20 @@ interface PurchaseFormProps {
 
 export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFormProps) {
     const [localSuppliers, setLocalSuppliers] = useState<Supplier[]>(suppliers);
-    const [newSupplierName, setNewSupplierName] = useState('');
     const [isAddingSupplier, setIsAddingSupplier] = useState(false);
     const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
+    const [cities, setCities] = useState<City[]>([]);
+    const [loadingCities, setLoadingCities] = useState(false);
+    const [isAddCityModalOpen, setIsAddCityModalOpen] = useState(false);
+    const [newCityName, setNewCityName] = useState('');
+    const [isAddingCity, setIsAddingCity] = useState(false);
+    const [newSupplier, setNewSupplier] = useState({
+        name: '',
+        address: '',
+        city_id: '',
+        phone_number: '',
+        contact: '',
+    });
 
     const form = useForm({
         supplier_id: purchase?.supplier_id?.toString() || '',
@@ -98,6 +115,25 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
         setLocalSuppliers(suppliers);
     }, [suppliers]);
 
+    // Load cities when add supplier modal opens
+    useEffect(() => {
+        if (isAddSupplierModalOpen && cities.length === 0) {
+            setLoadingCities(true);
+            axios.get('/cities?limit=10')
+                .then((response) => {
+                    if (response.data && response.data.data) {
+                        setCities(response.data.data);
+                    }
+                })
+                .catch(() => {
+                    toast.error('Gagal memuat data kota');
+                })
+                .finally(() => {
+                    setLoadingCities(false);
+                });
+        }
+    }, [isAddSupplierModalOpen]);
+
     const supplierOptions: ComboboxOption[] = useMemo(() => {
         return localSuppliers.map((supplier) => ({
             value: supplier.id.toString(),
@@ -105,8 +141,43 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
         }));
     }, [localSuppliers]);
 
+    const cityOptions: ComboboxOption[] = useMemo(() => {
+        return cities.map((city) => ({
+            value: city.id.toString(),
+            label: city.name,
+        }));
+    }, [cities]);
+
+    const handleAddCity = async () => {
+        if (!newCityName.trim()) {
+            toast.error('Nama kota tidak boleh kosong');
+            return;
+        }
+
+        setIsAddingCity(true);
+
+        try {
+            const response = await axios.post(storeCity().url, {
+                name: newCityName,
+            });
+
+            if (response.data && response.data.data) {
+                const city = response.data.data;
+                setCities((prev) => [...prev, city]);
+                setNewSupplier((prev) => ({ ...prev, city_id: city.id.toString() }));
+                toast.success('Kota berhasil ditambahkan');
+                setNewCityName('');
+                setIsAddCityModalOpen(false);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Gagal menambahkan kota');
+        } finally {
+            setIsAddingCity(false);
+        }
+    };
+
     const handleAddSupplier = async () => {
-        if (!newSupplierName.trim()) {
+        if (!newSupplier.name.trim()) {
             toast.error('Nama supplier tidak boleh kosong');
             return;
         }
@@ -114,16 +185,20 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
         setIsAddingSupplier(true);
 
         try {
-            const response = await axios.post(storeSupplier().url, {
-                name: newSupplierName,
-            });
+            const response = await axios.post(storeSupplier().url, newSupplier);
 
             if (response.data && response.data.data) {
-                const newSupp = response.data.data;
-                setLocalSuppliers((prev) => [...prev, newSupp]);
-                form.setData('supplier_id', newSupp.id.toString());
+                const supp = response.data.data;
+                setLocalSuppliers((prev) => [...prev, supp]);
+                form.setData('supplier_id', supp.id.toString());
                 toast.success('Supplier berhasil ditambahkan');
-                setNewSupplierName('');
+                setNewSupplier({
+                    name: '',
+                    address: '',
+                    city_id: '',
+                    phone_number: '',
+                    contact: '',
+                });
                 setIsAddSupplierModalOpen(false);
             }
         } catch (error: any) {
@@ -563,22 +638,128 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
 
             {/* Dialog for adding new supplier */}
             <Dialog open={isAddSupplierModalOpen} onOpenChange={setIsAddSupplierModalOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Tambah Supplier Baru</DialogTitle>
-                        <DialogDescription>Masukkan nama supplier yang ingin ditambahkan</DialogDescription>
+                        <DialogDescription>Isi data detail untuk menambahkan supplier baru</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div>
+                            <Label htmlFor="new_supplier_name">
+                                Nama Supplier <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="new_supplier_name"
+                                value={newSupplier.name}
+                                onChange={(e) => setNewSupplier((prev) => ({ ...prev, name: e.target.value }))}
+                                placeholder="Masukkan nama supplier"
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="new_supplier_address">Alamat</Label>
+                            <Textarea
+                                id="new_supplier_address"
+                                value={newSupplier.address}
+                                onChange={(e) => setNewSupplier((prev) => ({ ...prev, address: e.target.value }))}
+                                placeholder="Masukkan alamat"
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="new_supplier_city">Kota</Label>
+                                <div className="flex gap-2">
+                                    <div className="flex-1">
+                                        <Combobox
+                                            options={cityOptions}
+                                            value={newSupplier.city_id}
+                                            onValueChange={(value) => setNewSupplier((prev) => ({ ...prev, city_id: value }))}
+                                            placeholder={loadingCities ? 'Memuat kota...' : 'Pilih kota...'}
+                                            searchPlaceholder="Cari kota..."
+                                            className="w-full"
+                                            maxDisplayItems={10}
+                                            disabled={loadingCities}
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setIsAddCityModalOpen(true)}
+                                        title="Tambah kota baru"
+                                        disabled={loadingCities}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="new_supplier_phone">Nomor Telepon</Label>
+                                <Input
+                                    id="new_supplier_phone"
+                                    value={newSupplier.phone_number}
+                                    onChange={(e) => setNewSupplier((prev) => ({ ...prev, phone_number: e.target.value }))}
+                                    placeholder="08123456789"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="new_supplier_contact">Contact Person</Label>
+                            <Input
+                                id="new_supplier_contact"
+                                value={newSupplier.contact}
+                                onChange={(e) => setNewSupplier((prev) => ({ ...prev, contact: e.target.value }))}
+                                placeholder="Nama contact person"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setIsAddSupplierModalOpen(false);
+                                setNewSupplier({
+                                    name: '',
+                                    address: '',
+                                    city_id: '',
+                                    phone_number: '',
+                                    contact: '',
+                                });
+                            }}
+                            disabled={isAddingSupplier}
+                        >
+                            Batal
+                        </Button>
+                        <Button type="button" onClick={handleAddSupplier} disabled={isAddingSupplier}>
+                            {isAddingSupplier ? 'Menambahkan...' : 'Tambah Supplier'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog for adding new city */}
+            <Dialog open={isAddCityModalOpen} onOpenChange={setIsAddCityModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Kota Baru</DialogTitle>
+                        <DialogDescription>Masukkan nama kota yang ingin ditambahkan</DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
-                        <Label htmlFor="new_supplier_name">Nama Supplier</Label>
+                        <Label htmlFor="new_city_name">Nama Kota</Label>
                         <Input
-                            id="new_supplier_name"
-                            value={newSupplierName}
-                            onChange={(e) => setNewSupplierName(e.target.value)}
-                            placeholder="Masukkan nama supplier"
+                            id="new_city_name"
+                            value={newCityName}
+                            onChange={(e) => setNewCityName(e.target.value)}
+                            placeholder="Masukkan nama kota"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     e.preventDefault();
-                                    handleAddSupplier();
+                                    handleAddCity();
                                 }
                             }}
                         />
@@ -588,15 +769,15 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                             type="button"
                             variant="secondary"
                             onClick={() => {
-                                setIsAddSupplierModalOpen(false);
-                                setNewSupplierName('');
+                                setIsAddCityModalOpen(false);
+                                setNewCityName('');
                             }}
-                            disabled={isAddingSupplier}
+                            disabled={isAddingCity}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={handleAddSupplier} disabled={isAddingSupplier}>
-                            {isAddingSupplier ? 'Menambahkan...' : 'Tambah Supplier'}
+                        <Button type="button" onClick={handleAddCity} disabled={isAddingCity}>
+                            {isAddingCity ? 'Menambahkan...' : 'Tambah Kota'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
