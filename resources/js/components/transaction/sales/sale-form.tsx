@@ -22,8 +22,14 @@ import InputError from '@/components/input-error';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import axios from 'axios';
 import { store as storeCustomer } from '@/routes/customers';
+import { store as storeCity } from '@/routes/cities';
 
 interface Customer {
+    id: number;
+    name: string;
+}
+
+interface City {
     id: number;
     name: string;
 }
@@ -72,9 +78,20 @@ interface SaleFormProps {
 
 export default function SaleForm({ sale, customers, items }: SaleFormProps) {
     const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
-    const [newCustomerName, setNewCustomerName] = useState('');
     const [isAddingCustomer, setIsAddingCustomer] = useState(false);
     const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+    const [cities, setCities] = useState<City[]>([]);
+    const [loadingCities, setLoadingCities] = useState(false);
+    const [isAddCityModalOpen, setIsAddCityModalOpen] = useState(false);
+    const [newCityName, setNewCityName] = useState('');
+    const [isAddingCity, setIsAddingCity] = useState(false);
+    const [newCustomer, setNewCustomer] = useState({
+        name: '',
+        address: '',
+        city_id: '',
+        phone_number: '',
+        contact_person: '',
+    });
 
     const form = useForm({
         customer_id: sale?.customer_id?.toString() || '',
@@ -98,6 +115,25 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
         setLocalCustomers(customers);
     }, [customers]);
 
+    // Load cities when add customer modal opens
+    useEffect(() => {
+        if (isAddCustomerModalOpen && cities.length === 0) {
+            setLoadingCities(true);
+            axios.get('/cities?limit=10')
+                .then((response) => {
+                    if (response.data && response.data.data) {
+                        setCities(response.data.data);
+                    }
+                })
+                .catch(() => {
+                    toast.error('Gagal memuat data kota');
+                })
+                .finally(() => {
+                    setLoadingCities(false);
+                });
+        }
+    }, [isAddCustomerModalOpen]);
+
     const customerOptions: ComboboxOption[] = useMemo(() => {
         return localCustomers.map((customer) => ({
             value: customer.id.toString(),
@@ -105,8 +141,43 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
         }));
     }, [localCustomers]);
 
+    const cityOptions: ComboboxOption[] = useMemo(() => {
+        return cities.map((city) => ({
+            value: city.id.toString(),
+            label: city.name,
+        }));
+    }, [cities]);
+
+    const handleAddCity = async () => {
+        if (!newCityName.trim()) {
+            toast.error('Nama kota tidak boleh kosong');
+            return;
+        }
+
+        setIsAddingCity(true);
+
+        try {
+            const response = await axios.post(storeCity().url, {
+                name: newCityName,
+            });
+
+            if (response.data && response.data.data) {
+                const city = response.data.data;
+                setCities((prev) => [...prev, city]);
+                setNewCustomer((prev) => ({ ...prev, city_id: city.id.toString() }));
+                toast.success('Kota berhasil ditambahkan');
+                setNewCityName('');
+                setIsAddCityModalOpen(false);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Gagal menambahkan kota');
+        } finally {
+            setIsAddingCity(false);
+        }
+    };
+
     const handleAddCustomer = async () => {
-        if (!newCustomerName.trim()) {
+        if (!newCustomer.name.trim()) {
             toast.error('Nama customer tidak boleh kosong');
             return;
         }
@@ -114,16 +185,20 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
         setIsAddingCustomer(true);
 
         try {
-            const response = await axios.post(storeCustomer().url, {
-                name: newCustomerName,
-            });
+            const response = await axios.post(storeCustomer().url, newCustomer);
 
             if (response.data && response.data.data) {
-                const newCust = response.data.data;
-                setLocalCustomers((prev) => [...prev, newCust]);
-                form.setData('customer_id', newCust.id.toString());
+                const cust = response.data.data;
+                setLocalCustomers((prev) => [...prev, cust]);
+                form.setData('customer_id', cust.id.toString());
                 toast.success('Customer berhasil ditambahkan');
-                setNewCustomerName('');
+                setNewCustomer({
+                    name: '',
+                    address: '',
+                    city_id: '',
+                    phone_number: '',
+                    contact_person: '',
+                });
                 setIsAddCustomerModalOpen(false);
             }
         } catch (error: any) {
@@ -563,22 +638,128 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
 
             {/* Dialog for adding new customer */}
             <Dialog open={isAddCustomerModalOpen} onOpenChange={setIsAddCustomerModalOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Tambah Customer Baru</DialogTitle>
-                        <DialogDescription>Masukkan nama customer yang ingin ditambahkan</DialogDescription>
+                        <DialogDescription>Isi data detail untuk menambahkan customer baru</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div>
+                            <Label htmlFor="new_customer_name">
+                                Nama Customer <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="new_customer_name"
+                                value={newCustomer.name}
+                                onChange={(e) => setNewCustomer((prev) => ({ ...prev, name: e.target.value }))}
+                                placeholder="Masukkan nama customer"
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="new_customer_address">Alamat</Label>
+                            <Textarea
+                                id="new_customer_address"
+                                value={newCustomer.address}
+                                onChange={(e) => setNewCustomer((prev) => ({ ...prev, address: e.target.value }))}
+                                placeholder="Masukkan alamat"
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="new_customer_city">Kota</Label>
+                                <div className="flex gap-2">
+                                    <div className="flex-1">
+                                        <Combobox
+                                            options={cityOptions}
+                                            value={newCustomer.city_id}
+                                            onValueChange={(value) => setNewCustomer((prev) => ({ ...prev, city_id: value }))}
+                                            placeholder={loadingCities ? 'Memuat kota...' : 'Pilih kota...'}
+                                            searchPlaceholder="Cari kota..."
+                                            className="w-full"
+                                            maxDisplayItems={10}
+                                            disabled={loadingCities}
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setIsAddCityModalOpen(true)}
+                                        title="Tambah kota baru"
+                                        disabled={loadingCities}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="new_customer_phone">Nomor Telepon</Label>
+                                <Input
+                                    id="new_customer_phone"
+                                    value={newCustomer.phone_number}
+                                    onChange={(e) => setNewCustomer((prev) => ({ ...prev, phone_number: e.target.value }))}
+                                    placeholder="08123456789"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="new_customer_contact">Contact Person</Label>
+                            <Input
+                                id="new_customer_contact"
+                                value={newCustomer.contact_person}
+                                onChange={(e) => setNewCustomer((prev) => ({ ...prev, contact_person: e.target.value }))}
+                                placeholder="Nama contact person"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setIsAddCustomerModalOpen(false);
+                                setNewCustomer({
+                                    name: '',
+                                    address: '',
+                                    city_id: '',
+                                    phone_number: '',
+                                    contact_person: '',
+                                });
+                            }}
+                            disabled={isAddingCustomer}
+                        >
+                            Batal
+                        </Button>
+                        <Button type="button" onClick={handleAddCustomer} disabled={isAddingCustomer}>
+                            {isAddingCustomer ? 'Menambahkan...' : 'Tambah Customer'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog for adding new city */}
+            <Dialog open={isAddCityModalOpen} onOpenChange={setIsAddCityModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Kota Baru</DialogTitle>
+                        <DialogDescription>Masukkan nama kota yang ingin ditambahkan</DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
-                        <Label htmlFor="new_customer_name">Nama Customer</Label>
+                        <Label htmlFor="new_city_name">Nama Kota</Label>
                         <Input
-                            id="new_customer_name"
-                            value={newCustomerName}
-                            onChange={(e) => setNewCustomerName(e.target.value)}
-                            placeholder="Masukkan nama customer"
+                            id="new_city_name"
+                            value={newCityName}
+                            onChange={(e) => setNewCityName(e.target.value)}
+                            placeholder="Masukkan nama kota"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     e.preventDefault();
-                                    handleAddCustomer();
+                                    handleAddCity();
                                 }
                             }}
                         />
@@ -588,15 +769,15 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                             type="button"
                             variant="secondary"
                             onClick={() => {
-                                setIsAddCustomerModalOpen(false);
-                                setNewCustomerName('');
+                                setIsAddCityModalOpen(false);
+                                setNewCityName('');
                             }}
-                            disabled={isAddingCustomer}
+                            disabled={isAddingCity}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={handleAddCustomer} disabled={isAddingCustomer}>
-                            {isAddingCustomer ? 'Menambahkan...' : 'Tambah Customer'}
+                        <Button type="button" onClick={handleAddCity} disabled={isAddingCity}>
+                            {isAddingCity ? 'Menambahkan...' : 'Tambah Kota'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
