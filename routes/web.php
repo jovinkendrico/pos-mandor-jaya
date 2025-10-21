@@ -5,9 +5,10 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\UomController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,6 +25,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API routes for autocomplete
     Route::get('cities/search', [CityController::class, 'search'])->name('cities.search');
 
+    // Purchase confirm/unconfirm routes (must be before resource)
+    Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
+    Route::post('purchases/{purchase}/unconfirm', [PurchaseController::class, 'unconfirm'])->name('purchases.unconfirm');
+
+    // Sale confirm/unconfirm routes (must be before resource)
+    Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
+    Route::post('sales/{sale}/unconfirm', [SaleController::class, 'unconfirm'])->name('sales.unconfirm');
+
     Route::resources([
         'users'       => UserController::class,
         'roles'       => RoleController::class,
@@ -33,7 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'suppliers'   => SupplierController::class,
         'banks'       => BankController::class,
         'items'       => ItemController::class,
-        'uoms'        => UomController::class,
+        'purchases'   => PurchaseController::class,
+        'sales'       => SaleController::class,
     ]);
 });
 
