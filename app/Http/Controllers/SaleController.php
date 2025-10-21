@@ -44,7 +44,7 @@ class SaleController extends Controller
      */
     public function create(): Response
     {
-        $customers = Customer::orderBy('name')->limit(10)->get();
+        $customers = Customer::orderBy('name')->limit(5)->get();
         $items = Item::with('uoms')->where('stock', '>', 0)->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/create', [
@@ -170,7 +170,7 @@ class SaleController extends Controller
         }
 
         $sale->load(['details.item', 'details.itemUom']);
-        $customers = Customer::orderBy('name')->limit(10)->get();
+        $customers = Customer::orderBy('name')->limit(5)->get();
         $items = Item::with('uoms')->where('stock', '>', 0)->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/edit', [

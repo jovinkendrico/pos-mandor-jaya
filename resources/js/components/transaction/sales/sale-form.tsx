@@ -286,7 +286,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                                         placeholder="Pilih customer..."
                                         searchPlaceholder="Cari customer..."
                                         className="w-full"
-                                        maxDisplayItems={10}
+                                        maxDisplayItems={5}
                                     />
                                     <InputError message={form.errors.customer_id} />
                                 </div>
