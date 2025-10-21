@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     Table,
     TableBody,
@@ -73,6 +74,7 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
     const [localSuppliers, setLocalSuppliers] = useState<Supplier[]>(suppliers);
     const [newSupplierName, setNewSupplierName] = useState('');
     const [isAddingSupplier, setIsAddingSupplier] = useState(false);
+    const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
 
     const form = useForm({
         supplier_id: purchase?.supplier_id?.toString() || '',
@@ -122,6 +124,7 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                 form.setData('supplier_id', newSupp.id.toString());
                 toast.success('Supplier berhasil ditambahkan');
                 setNewSupplierName('');
+                setIsAddSupplierModalOpen(false);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Gagal menambahkan supplier');
@@ -294,13 +297,7 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                     type="button"
                                     variant="outline"
                                     size="icon"
-                                    onClick={() => {
-                                        const name = prompt('Nama Supplier:');
-                                        if (name) {
-                                            setNewSupplierName(name);
-                                            handleAddSupplier();
-                                        }
-                                    }}
+                                    onClick={() => setIsAddSupplierModalOpen(true)}
                                     title="Tambah supplier baru"
                                 >
                                     <Plus className="h-4 w-4" />
@@ -563,6 +560,47 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Dialog for adding new supplier */}
+            <Dialog open={isAddSupplierModalOpen} onOpenChange={setIsAddSupplierModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Supplier Baru</DialogTitle>
+                        <DialogDescription>Masukkan nama supplier yang ingin ditambahkan</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="new_supplier_name">Nama Supplier</Label>
+                        <Input
+                            id="new_supplier_name"
+                            value={newSupplierName}
+                            onChange={(e) => setNewSupplierName(e.target.value)}
+                            placeholder="Masukkan nama supplier"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddSupplier();
+                                }
+                            }}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setIsAddSupplierModalOpen(false);
+                                setNewSupplierName('');
+                            }}
+                            disabled={isAddingSupplier}
+                        >
+                            Batal
+                        </Button>
+                        <Button type="button" onClick={handleAddSupplier} disabled={isAddingSupplier}>
+                            {isAddingSupplier ? 'Menambahkan...' : 'Tambah Supplier'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </form>
     );
 }

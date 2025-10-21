@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     Table,
     TableBody,
@@ -73,6 +74,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
     const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
     const [newCustomerName, setNewCustomerName] = useState('');
     const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+    const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 
     const form = useForm({
         customer_id: sale?.customer_id?.toString() || '',
@@ -122,6 +124,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                 form.setData('customer_id', newCust.id.toString());
                 toast.success('Customer berhasil ditambahkan');
                 setNewCustomerName('');
+                setIsAddCustomerModalOpen(false);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Gagal menambahkan customer');
@@ -294,13 +297,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                                     type="button"
                                     variant="outline"
                                     size="icon"
-                                    onClick={() => {
-                                        const name = prompt('Nama Customer:');
-                                        if (name) {
-                                            setNewCustomerName(name);
-                                            handleAddCustomer();
-                                        }
-                                    }}
+                                    onClick={() => setIsAddCustomerModalOpen(true)}
                                     title="Tambah customer baru"
                                 >
                                     <Plus className="h-4 w-4" />
@@ -563,6 +560,47 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Dialog for adding new customer */}
+            <Dialog open={isAddCustomerModalOpen} onOpenChange={setIsAddCustomerModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Customer Baru</DialogTitle>
+                        <DialogDescription>Masukkan nama customer yang ingin ditambahkan</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="new_customer_name">Nama Customer</Label>
+                        <Input
+                            id="new_customer_name"
+                            value={newCustomerName}
+                            onChange={(e) => setNewCustomerName(e.target.value)}
+                            placeholder="Masukkan nama customer"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddCustomer();
+                                }
+                            }}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setIsAddCustomerModalOpen(false);
+                                setNewCustomerName('');
+                            }}
+                            disabled={isAddingCustomer}
+                        >
+                            Batal
+                        </Button>
+                        <Button type="button" onClick={handleAddCustomer} disabled={isAddingCustomer}>
+                            {isAddingCustomer ? 'Menambahkan...' : 'Tambah Customer'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </form>
     );
 }
