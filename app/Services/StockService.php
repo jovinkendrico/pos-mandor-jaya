@@ -251,5 +251,33 @@ class StockService
 
         return $value;
     }
+
+    /**
+     * Remove stock movements for returns (when unconfirm)
+     */
+    public function removeReturnStock(string $referenceType, int $referenceId): void
+    {
+        $movements = StockMovement::where('reference_type', $referenceType)
+            ->where('reference_id', $referenceId)
+            ->get();
+
+        foreach ($movements as $movement) {
+            $item = Item::find($movement->item_id);
+
+            // Adjust stock based on movement quantity
+            if ($movement->quantity > 0) {
+                // Was an inbound movement (purchase return), remove it
+                $item->stock -= $movement->quantity;
+            } else {
+                // Was an outbound movement (sale return), remove it
+                $item->stock -= $movement->quantity; // Double negative = add back
+            }
+
+            $item->save();
+
+            // Delete the movement
+            $movement->delete();
+        }
+    }
 }
 
