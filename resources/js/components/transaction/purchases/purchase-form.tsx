@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -728,7 +728,7 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                     address: '',
                                     city_id: '',
                                     phone_number: '',
-                                    contact_person: '',
+                                    contact: '',
                                 });
                             }}
                             disabled={isAddingSupplier}

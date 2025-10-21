@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,7 +90,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
         address: '',
         city_id: '',
         phone_number: '',
-        contact_person: '',
+        contact: '',
     });
 
     const form = useForm({
@@ -197,7 +197,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                     address: '',
                     city_id: '',
                     phone_number: '',
-                    contact_person: '',
+                    contact: '',
                 });
                 setIsAddCustomerModalOpen(false);
             }
@@ -728,7 +728,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
                                     address: '',
                                     city_id: '',
                                     phone_number: '',
-                                    contact_person: '',
+                                    contact: '',
                                 });
                             }}
                             disabled={isAddingCustomer}
