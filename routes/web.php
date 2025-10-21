@@ -6,8 +6,10 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -33,17 +35,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/unconfirm', [SaleController::class, 'unconfirm'])->name('sales.unconfirm');
 
+    // Purchase Return confirm/unconfirm routes (must be before resource)
+    Route::post('purchase-returns/{purchase_return}/confirm', [PurchaseReturnController::class, 'confirm'])->name('purchase-returns.confirm');
+    Route::post('purchase-returns/{purchase_return}/unconfirm', [PurchaseReturnController::class, 'unconfirm'])->name('purchase-returns.unconfirm');
+
+    // Sale Return confirm/unconfirm routes (must be before resource)
+    Route::post('sale-returns/{sale_return}/confirm', [SaleReturnController::class, 'confirm'])->name('sale-returns.confirm');
+    Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
+
     Route::resources([
-        'users'       => UserController::class,
-        'roles'       => RoleController::class,
-        'permissions' => PermissionController::class,
-        'cities'      => CityController::class,
-        'customers'   => CustomerController::class,
-        'suppliers'   => SupplierController::class,
-        'banks'       => BankController::class,
-        'items'       => ItemController::class,
-        'purchases'   => PurchaseController::class,
-        'sales'       => SaleController::class,
+        'users'            => UserController::class,
+        'roles'            => RoleController::class,
+        'permissions'      => PermissionController::class,
+        'cities'           => CityController::class,
+        'customers'        => CustomerController::class,
+        'suppliers'        => SupplierController::class,
+        'banks'            => BankController::class,
+        'items'            => ItemController::class,
+        'purchases'        => PurchaseController::class,
+        'sales'            => SaleController::class,
+        'purchase-returns' => PurchaseReturnController::class,
+        'sale-returns'     => SaleReturnController::class,
     ]);
 });
 
