@@ -1,4 +1,4 @@
-import TableLayout from '@/components/TableLayout/TableLayout';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { TableCell } from '@/components/ui/table';
 import { UOM } from '@/types';
 

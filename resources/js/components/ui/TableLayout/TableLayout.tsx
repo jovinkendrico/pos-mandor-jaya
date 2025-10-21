@@ -5,7 +5,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '../ui/table';
+} from '../table';
 
 interface PropTypes<T> {
     tableName?: string;

@@ -1,3 +1,4 @@
+import UOMForm from '@/components/master/uom/uom-form';
 import UOMTable from '@/components/master/uom/uom-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,10 @@ const UOMPage = (props: UOMProps) => {
                     </Button>
                 </div>
                 <UOMTable uoms={props.uoms} />
+                <UOMForm
+                    isModalOpen={isFormModalOpen}
+                    onOpenChange={setIsFormModalOpen}
+                />
             </AppLayout>
         </>
     );

@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'customers'        => CustomerController::class,
         'suppliers'        => SupplierController::class,
         'banks'            => BankController::class,
+        'uoms'             => UomController::class,
         'items'            => ItemController::class,
         'purchases'        => PurchaseController::class,
         'sales'            => SaleController::class,

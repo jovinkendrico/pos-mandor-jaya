@@ -1,4 +1,4 @@
-import TableLayout from '@/components/TableLayout/TableLayout';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Edit, Trash } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { TableCell } from '../../ui/table';
