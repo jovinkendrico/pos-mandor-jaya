@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUomRequest;
+use App\Http\Requests\UpdateUomRequest;
 use App\Models\Uom;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

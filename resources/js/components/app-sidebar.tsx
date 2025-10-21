@@ -16,13 +16,17 @@ import { index as cityIndex } from '@/routes/cities';
 import { index as customerIndex } from '@/routes/customers';
 import { index as itemIndex } from '@/routes/items';
 import { index as permissionIndex } from '@/routes/permissions';
+import { index as purchaseIndex } from '@/routes/purchases';
+import { index as purchaseReturnIndex } from '@/routes/purchase-returns';
 import { index as roleIndex } from '@/routes/roles';
+import { index as saleIndex } from '@/routes/sales';
+import { index as saleReturnIndex } from '@/routes/sale-returns';
 import { index as supplierIndex } from '@/routes/suppliers';
 import { index as uomIndex } from '@/routes/uoms';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, User2 } from 'lucide-react';
+import { Database, LayoutGrid, ShoppingCart, User2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -59,6 +63,29 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'UOM',
                 href: uomIndex(),
+            },
+        ],
+    },
+    {
+        title: 'Transaksi',
+        href: '#',
+        icon: ShoppingCart,
+        children: [
+            {
+                title: 'Pembelian',
+                href: purchaseIndex(),
+            },
+            {
+                title: 'Penjualan',
+                href: saleIndex(),
+            },
+            {
+                title: 'Retur Beli',
+                href: purchaseReturnIndex(),
+            },
+            {
+                title: 'Retur Jual',
+                href: saleReturnIndex(),
             },
         ],
     },
