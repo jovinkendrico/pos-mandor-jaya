@@ -1,11 +1,12 @@
-import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
-import SupplierDeleteConfirmation from '@/components/master/suppliers/supplier-delete-confirmation';
 import SupplierForm from '@/components/master/suppliers/supplier-form';
 import SupplierTable from '@/components/master/suppliers/supplier-table';
+import PageTitle from '@/components/page-title';
+import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/suppliers';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, ISupplier } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -15,19 +16,9 @@ interface City {
     name: string;
 }
 
-interface Supplier {
-    id: number;
-    name: string;
-    address?: string;
-    city?: City;
-    city_id?: number;
-    phone_number?: string;
-    contact?: string;
-}
-
 interface PageProps {
     suppliers: {
-        data: Supplier[];
+        data: ISupplier[];
     };
     cities: City[];
 }
@@ -43,24 +34,32 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SupplierIndex({ suppliers, cities }: PageProps) {
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+export default function SupplierIndex(props: PageProps) {
+    const { suppliers, cities } = props;
 
-    const handleEdit = (supplier: Supplier) => {
+    const {
+        isOpen: isEditModalOpen,
+        openModal: openEditModal,
+        closeModal: closeEditModal,
+    } = useDisclosure();
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
+
+    const [selectedSupplier, setSelectedSupplier] = useState<
+        ISupplier | undefined
+    >(undefined);
+
+    const handleEdit = (supplier: ISupplier) => {
         setSelectedSupplier(supplier);
-        setIsFormModalOpen(true);
+        openEditModal();
     };
 
-    const handleDelete = (supplier: Supplier) => {
+    const handleDelete = (supplier: ISupplier) => {
         setSelectedSupplier(supplier);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleFormClose = () => {
-        setIsFormModalOpen(false);
-        setSelectedSupplier(null);
+        openDeleteModal();
     };
 
     return (
@@ -69,25 +68,36 @@ export default function SupplierIndex({ suppliers, cities }: PageProps) {
                 <Head title="Supplier" />
                 <div className="flex justify-between">
                     <PageTitle title="Supplier" />
-                    <Button onClick={() => setIsFormModalOpen(true)}>
+                    <Button
+                        onClick={() => {
+                            setSelectedSupplier(undefined);
+                            openEditModal();
+                        }}
+                    >
                         <Plus />
                         Tambah Supplier
                     </Button>
                 </div>
-                <SupplierTable suppliers={suppliers.data} onEdit={handleEdit} onDelete={handleDelete} />
+                <SupplierTable
+                    suppliers={suppliers.data}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
                 <SupplierForm
-                    isModalOpen={isFormModalOpen}
-                    onOpenChange={handleFormClose}
+                    isModalOpen={isEditModalOpen}
                     supplier={selectedSupplier}
                     cities={cities}
+                    onModalClose={closeEditModal}
                 />
-                <SupplierDeleteConfirmation
+                <DeleteModalLayout
+                    dataId={selectedSupplier?.id}
+                    dataName={selectedSupplier?.name}
+                    dataType="Supplier"
                     isModalOpen={isDeleteModalOpen}
-                    onOpenChange={setIsDeleteModalOpen}
-                    supplier={selectedSupplier}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedSupplier}
                 />
             </AppLayout>
         </>
     );
 }
-

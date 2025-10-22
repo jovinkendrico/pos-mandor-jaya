@@ -17,7 +17,7 @@ interface CityTableProps {
 const CityTable = (props: CityTableProps) => {
     const { cities, onEdit, onDelete } = props;
 
-    const tableColumn = ['#', 'Nama Kota', 'Aksi'];
+    const tableColumn = ['Kode', 'Nama Kota', 'Aksi'];
     return (
         <TableLayout
             tableName="Kota"

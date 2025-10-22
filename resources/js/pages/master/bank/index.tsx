@@ -1,28 +1,19 @@
-import BankDeleteConfirmation from '@/components/master/banks/bank-delete-confirmation';
 import BankForm from '@/components/master/banks/bank-form';
 import BankTable from '@/components/master/banks/bank-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/banks';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, IBank } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
-interface Bank {
-    id: number;
-    name: string;
-    type: 'bank' | 'cash';
-    account_number?: string;
-    account_name?: string;
-    balance?: number;
-    description?: string;
-}
-
 interface PageProps {
     banks: {
-        data: Bank[];
+        data: IBank[];
     };
 }
 
@@ -38,24 +29,30 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function BankIndex({ banks }: PageProps) {
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [selectedBank, setSelectedBank] = useState<IBank | undefined>(
+        undefined,
+    );
 
-    const handleEdit = (bank: Bank) => {
+    const handleEdit = (bank: IBank) => {
         setSelectedBank(bank);
-        setIsFormModalOpen(true);
+        openEditModal();
     };
 
-    const handleDelete = (bank: Bank) => {
+    const handleDelete = (bank: IBank) => {
         setSelectedBank(bank);
-        setIsDeleteModalOpen(true);
+        openDeleteModal();
     };
 
-    const handleFormClose = () => {
-        setIsFormModalOpen(false);
-        setSelectedBank(null);
-    };
+    const {
+        isOpen: isEditModalOpen,
+        openModal: openEditModal,
+        closeModal: closeEditModal,
+    } = useDisclosure();
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
 
     return (
         <>
@@ -63,7 +60,12 @@ export default function BankIndex({ banks }: PageProps) {
                 <Head title="Bank/Cash" />
                 <div className="flex justify-between">
                     <PageTitle title="Bank/Cash" />
-                    <Button onClick={() => setIsFormModalOpen(true)}>
+                    <Button
+                        onClick={() => {
+                            setSelectedBank(undefined);
+                            openEditModal();
+                        }}
+                    >
                         <Plus />
                         Tambah Bank/Cash
                     </Button>
@@ -74,14 +76,17 @@ export default function BankIndex({ banks }: PageProps) {
                     onDelete={handleDelete}
                 />
                 <BankForm
-                    isModalOpen={isFormModalOpen}
-                    onOpenChange={handleFormClose}
+                    isModalOpen={isEditModalOpen}
                     bank={selectedBank}
+                    onModalClose={closeEditModal}
                 />
-                <BankDeleteConfirmation
+                <DeleteModalLayout
+                    dataName={selectedBank?.name}
+                    dataId={selectedBank?.id}
+                    dataType="Bank/Cash"
                     isModalOpen={isDeleteModalOpen}
-                    onOpenChange={setIsDeleteModalOpen}
-                    bank={selectedBank}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedBank}
                 />
             </AppLayout>
         </>

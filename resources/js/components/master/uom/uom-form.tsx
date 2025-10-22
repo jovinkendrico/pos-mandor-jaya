@@ -1,31 +1,48 @@
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import useUOM from '@/hooks/use-uom';
 import { UOM } from '@/types';
-import { useForm } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 interface UOMFormProps {
-    isModalOpen: boolean;
-    onOpenChange: (open: boolean) => void;
     uom?: UOM;
+    isModalOpen: boolean;
+    onModalClose: () => void;
 }
 
 const UOMForm = (props: UOMFormProps) => {
-    const { isModalOpen, onOpenChange, uom } = props;
+    const { uom, isModalOpen, onModalClose } = props;
 
-    const form = useForm({
-        name: '',
-    });
+    const {
+        data,
+        setData,
+        errors,
+        processing,
+        reset,
+        handleSubmit,
+        handleCancel,
+    } = useUOM(onModalClose);
+
+    useEffect(() => {
+        if (isModalOpen && uom) {
+            setData('name', uom.name);
+        } else {
+            reset();
+        }
+    }, [isModalOpen, uom, setData, reset]);
 
     return (
-        <Dialog open={true} onOpenChange={onOpenChange}>
+        <Dialog open={isModalOpen} onOpenChange={onModalClose}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>{uom ? 'Edit UOM' : 'Tambah UOM'}</DialogTitle>
@@ -35,22 +52,33 @@ const UOMForm = (props: UOMFormProps) => {
                             : 'Isi data detail untuk menambahkan UOM baru'}
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={() => {}} className="flex flex-col space-y-2">
+                <form
+                    className="flex flex-col space-y-2"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSubmit(uom);
+                    }}
+                >
                     <Label htmlFor="name">Nama UOM</Label>
                     <Input
                         id="name"
                         name="name"
-                        value={form.data.name}
-                        onChange={(e) => form.setData('name', e.target.value)}
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
                     />
-                    <Button
-                        type="submit"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {}}
-                    >
-                        Simpan
-                    </Button>
+                    {errors.name && <InputError message={errors.name} />}
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={handleCancel}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit" size="sm" disabled={processing}>
+                            Simpan
+                        </Button>
+                    </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>

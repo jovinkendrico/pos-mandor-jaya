@@ -1,23 +1,14 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { IBank } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { TableCell } from '../../ui/table';
 
-interface Bank {
-    id: number;
-    name: string;
-    type: 'bank' | 'cash';
-    account_number?: string;
-    account_name?: string;
-    balance?: number;
-    description?: string;
-}
-
 interface BankTableProps {
-    banks: Bank[];
-    onEdit: (bank: Bank) => void;
-    onDelete: (bank: Bank) => void;
+    banks: IBank[];
+    onEdit: (bank: IBank) => void;
+    onDelete: (bank: IBank) => void;
 }
 
 const BankTable = (props: BankTableProps) => {
@@ -33,7 +24,7 @@ const BankTable = (props: BankTableProps) => {
     };
 
     const tableColumn = [
-        '#',
+        'Kode',
         'Nama',
         'Tipe',
         'No. Rekening',
@@ -50,13 +41,13 @@ const BankTable = (props: BankTableProps) => {
             text="Tidak ada data bank/cash"
             renderRow={(row) => (
                 <>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.id}
                     </TableCell>
-                    <TableCell className="w-full text-center font-medium">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.name}
                     </TableCell>
-                    <TableCell className="w-full text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         <Badge
                             variant={
                                 row.type === 'bank' ? 'default' : 'secondary'
@@ -65,16 +56,16 @@ const BankTable = (props: BankTableProps) => {
                             {row.type === 'bank' ? 'Bank' : 'Cash'}
                         </Badge>
                     </TableCell>
-                    <TableCell className="w-full text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.account_number || '-'}
                     </TableCell>
-                    <TableCell className="w-full text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.account_name || '-'}
                     </TableCell>
-                    <TableCell className="w-full text-right font-medium">
+                    <TableCell className="flex w-full items-center justify-center">
                         {formatCurrency(row.balance)}
                     </TableCell>
-                    <TableCell className="w-full text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         <Button
                             variant="ghost"
                             size="icon"

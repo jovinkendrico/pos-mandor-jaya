@@ -1,0 +1,60 @@
+import { router  } from "@inertiajs/react";
+import { Button } from "../button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../dialog";
+import { toast } from "sonner";
+import { destroy } from "@/routes/uoms";
+
+interface DeleteModalLayoutProps<T> {
+    dataId: number | undefined;
+    dataName: string | undefined;
+    dataType: string;
+    isModalOpen: boolean;
+    onModalClose: () => void;
+    setSelected: (selected: T | undefined) => void;
+}
+
+const DeleteModalLayout = <T,>(props: DeleteModalLayoutProps<T>) => {
+    if (!props.dataName || !props.dataId) return null;
+
+    const { dataId, dataName, dataType, isModalOpen, onModalClose, setSelected } = props;
+
+
+    const handleDelete = () => {
+        router.delete(destroy(dataId).url, {
+            onSuccess: () => {
+                onModalClose();
+                toast.success(`${dataType}: ${dataName} berhasil dihapus`);
+                setSelected(undefined);
+            },
+            onError: () => {
+                onModalClose();
+                toast.error(`Gagal menghapus ${dataType}`);
+            },
+        });
+    };
+
+    return (
+        <Dialog open={isModalOpen} onOpenChange={onModalClose}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Hapus {dataName}?</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-500">
+                        Apakah Anda yakin ingin menghapus {dataType}: <span className="font-extrabold">{dataName}</span>?
+                    </p>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="secondary" onClick={onModalClose}>
+                        Batal
+                    </Button>
+                    <Button variant="destructive" onClick={handleDelete}>
+                        Hapus
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export default DeleteModalLayout

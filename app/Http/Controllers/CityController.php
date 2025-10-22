@@ -50,15 +50,6 @@ class CityController extends Controller
     {
         $city = City::create($request->validated());
 
-        // If AJAX request, return JSON
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Kota berhasil ditambahkan.',
-                'data'    => $city,
-            ], 201);
-        }
-
         return redirect()->route('cities.index')
             ->with('success', 'Kota berhasil ditambahkan.');
     }

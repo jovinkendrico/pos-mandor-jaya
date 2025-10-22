@@ -1,33 +1,20 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
+import { ICustomer } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { TableCell } from '../../ui/table';
 
-interface City {
-    id: number;
-    name: string;
-}
-
-interface Customer {
-    id: number;
-    name: string;
-    address?: string;
-    city?: City;
-    phone_number?: string;
-    contact?: string;
-}
-
 interface CustomerTableProps {
-    customers: Customer[];
-    onEdit: (customer: Customer) => void;
-    onDelete: (customer: Customer) => void;
+    customers: ICustomer[];
+    onEdit: (customer: ICustomer) => void;
+    onDelete: (customer: ICustomer) => void;
 }
 
 const CustomerTable = (props: CustomerTableProps) => {
     const { customers, onEdit, onDelete } = props;
 
     const tableColumn = [
-        '#',
+        'Kode',
         'Nama Customer',
         'Alamat',
         'Kota',

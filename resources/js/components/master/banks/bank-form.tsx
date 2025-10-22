@@ -7,10 +7,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { store, update } from '@/routes/banks';
-import { useForm } from '@inertiajs/react';
+import useBanks from '@/hooks/use-banks';
+import { IBank } from '@/types';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
 import InputError from '../../input-error';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
@@ -23,70 +22,43 @@ import {
 } from '../../ui/select';
 import { Textarea } from '../../ui/textarea';
 
-interface Bank {
-    id: number;
-    name: string;
-    type: 'bank' | 'cash';
-    account_number?: string;
-    account_name?: string;
-    balance?: number;
-    description?: string;
-}
-
 interface BankFormProps {
-    bank?: Bank | null;
+    bank?: IBank;
     isModalOpen: boolean;
-    onOpenChange: (isOpen: boolean) => void;
+    onModalClose: () => void;
 }
 
 const BankForm = (props: BankFormProps) => {
-    const { bank, isModalOpen, onOpenChange } = props;
+    const { bank, isModalOpen, onModalClose } = props;
 
-    const form = useForm({
-        name: '',
-        type: 'bank' as 'bank' | 'cash',
-        account_number: '',
-        account_name: '',
-        balance: '0',
-        description: '',
-    });
+    const {
+        data,
+        setData,
+        errors,
+        processing,
+        reset,
+
+        handleSubmit,
+        handleCancel,
+    } = useBanks(onModalClose);
 
     useEffect(() => {
         if (bank) {
-            form.setData({
+            setData({
                 name: bank.name,
                 type: bank.type,
                 account_number: bank.account_number || '',
                 account_name: bank.account_name || '',
-                balance: bank.balance?.toString() || '0',
+                balance: bank.balance || 0,
                 description: bank.description || '',
             });
         } else {
-            form.reset();
+            reset();
         }
-    }, [bank, isModalOpen]);
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        form.submit(bank ? update(bank.id) : store(), {
-            onSuccess: () => {
-                form.reset();
-                toast.success(
-                    bank
-                        ? 'Bank/Cash berhasil diupdate'
-                        : 'Bank/Cash berhasil ditambahkan',
-                );
-                onOpenChange(false);
-            },
-            onError: () => {
-                toast.error('Terjadi kesalahan, periksa input Anda.');
-            },
-        });
-    };
+    }, [bank, isModalOpen, reset, setData]);
 
     return (
-        <Dialog open={isModalOpen} onOpenChange={onOpenChange}>
+        <Dialog open={isModalOpen} onOpenChange={onModalClose}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>
@@ -100,7 +72,10 @@ const BankForm = (props: BankFormProps) => {
                 </DialogHeader>
 
                 <form
-                    onSubmit={handleSubmit}
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSubmit(bank);
+                    }}
                     className="flex flex-col space-y-2"
                 >
                     <div className="flex flex-col space-y-4 pb-4">
@@ -112,13 +87,13 @@ const BankForm = (props: BankFormProps) => {
                                 <Input
                                     id="name"
                                     name="name"
-                                    value={form.data.name}
+                                    value={data.name}
                                     onChange={(e) =>
-                                        form.setData('name', e.target.value)
+                                        setData('name', e.target.value)
                                     }
                                 />
-                                {form.errors.name && (
-                                    <InputError message={form.errors.name} />
+                                {errors.name && (
+                                    <InputError message={errors.name} />
                                 )}
                             </div>
 
@@ -127,9 +102,9 @@ const BankForm = (props: BankFormProps) => {
                                     Tipe
                                 </Label>
                                 <Select
-                                    value={form.data.type}
+                                    value={data.type}
                                     onValueChange={(value: 'bank' | 'cash') =>
-                                        form.setData('type', value)
+                                        setData('type', value)
                                     }
                                 >
                                     <SelectTrigger>
@@ -144,13 +119,13 @@ const BankForm = (props: BankFormProps) => {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {form.errors.type && (
-                                    <InputError message={form.errors.type} />
+                                {errors.type && (
+                                    <InputError message={errors.type} />
                                 )}
                             </div>
                         </div>
 
-                        {form.data.type === 'bank' && (
+                        {data.type === 'bank' && (
                             <>
                                 <div className="flex flex-row gap-4">
                                     <div className="w-1/2">
@@ -160,19 +135,17 @@ const BankForm = (props: BankFormProps) => {
                                         <Input
                                             id="account_number"
                                             name="account_number"
-                                            value={form.data.account_number}
+                                            value={data.account_number}
                                             onChange={(e) =>
-                                                form.setData(
+                                                setData(
                                                     'account_number',
                                                     e.target.value,
                                                 )
                                             }
                                         />
-                                        {form.errors.account_number && (
+                                        {errors.account_number && (
                                             <InputError
-                                                message={
-                                                    form.errors.account_number
-                                                }
+                                                message={errors.account_number}
                                             />
                                         )}
                                     </div>
@@ -184,19 +157,17 @@ const BankForm = (props: BankFormProps) => {
                                         <Input
                                             id="account_name"
                                             name="account_name"
-                                            value={form.data.account_name}
+                                            value={data.account_name}
                                             onChange={(e) =>
-                                                form.setData(
+                                                setData(
                                                     'account_name',
                                                     e.target.value,
                                                 )
                                             }
                                         />
-                                        {form.errors.account_name && (
+                                        {errors.account_name && (
                                             <InputError
-                                                message={
-                                                    form.errors.account_name
-                                                }
+                                                message={errors.account_name}
                                             />
                                         )}
                                     </div>
@@ -212,13 +183,13 @@ const BankForm = (props: BankFormProps) => {
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                value={form.data.balance}
+                                value={data.balance}
                                 onChange={(e) =>
-                                    form.setData('balance', e.target.value)
+                                    setData('balance', Number(e.target.value))
                                 }
                             />
-                            {form.errors.balance && (
-                                <InputError message={form.errors.balance} />
+                            {errors.balance && (
+                                <InputError message={errors.balance} />
                             )}
                         </div>
 
@@ -229,14 +200,14 @@ const BankForm = (props: BankFormProps) => {
                             <Textarea
                                 id="description"
                                 name="description"
-                                value={form.data.description}
+                                value={data.description}
                                 onChange={(e) =>
-                                    form.setData('description', e.target.value)
+                                    setData('description', e.target.value)
                                 }
                                 rows={3}
                             />
-                            {form.errors.description && (
-                                <InputError message={form.errors.description} />
+                            {errors.description && (
+                                <InputError message={errors.description} />
                             )}
                         </div>
                     </div>
@@ -245,13 +216,13 @@ const BankForm = (props: BankFormProps) => {
                         <Button
                             type="button"
                             variant="secondary"
-                            onClick={() => onOpenChange(false)}
-                            disabled={form.processing}
+                            onClick={handleCancel}
+                            disabled={processing}
                         >
-                            Cancel
+                            Batal
                         </Button>
-                        <Button type="submit" disabled={form.processing}>
-                            {form.processing
+                        <Button type="submit" disabled={processing}>
+                            {processing
                                 ? 'Saving...'
                                 : bank
                                   ? 'Update Bank/Cash'

@@ -7,13 +7,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { store as storeCity } from '@/routes/cities';
-import { store, update } from '@/routes/suppliers';
-import { useForm } from '@inertiajs/react';
-import axios from 'axios';
+import useCity from '@/hooks/use-city';
+import useSupplier from '@/hooks/use-supplier';
+import { ISupplier } from '@/types';
 import { Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import InputError from '../../input-error';
 import { Combobox, ComboboxOption } from '../../ui/combobox';
 import { Input } from '../../ui/input';
@@ -25,40 +23,36 @@ interface City {
     name: string;
 }
 
-interface Supplier {
-    id: number;
-    name: string;
-    address?: string;
-    city_id?: number;
-    phone_number?: string;
-    contact?: string;
-}
-
 interface SupplierFormProps {
-    supplier?: Supplier | null;
+    supplier?: ISupplier;
     cities: City[];
     isModalOpen: boolean;
-    onOpenChange: (isOpen: boolean) => void;
+    onModalClose: () => void;
 }
 
-export default function SupplierForm({
-    supplier,
-    cities,
-    isModalOpen,
-    onOpenChange,
-}: SupplierFormProps) {
+export default function SupplierForm(props: SupplierFormProps) {
+    const { supplier, cities, isModalOpen, onModalClose } = props;
+
     const [isAddCityModalOpen, setIsAddCityModalOpen] = useState(false);
     const [localCities, setLocalCities] = useState<City[]>(cities);
-    const [newCityName, setNewCityName] = useState('');
-    const [isAddingCity, setIsAddingCity] = useState(false);
 
-    const form = useForm({
-        name: '',
-        address: '',
-        city_id: '',
-        phone_number: '',
-        contact: '',
-    });
+    const {
+        data: dataSupplier,
+        setData: setDataSupplier,
+        errors: errorsSupplier,
+        processing: processingSupplier,
+        reset: resetSupplier,
+        handleSubmit: handleSubmitSupplier,
+        handleCancel: handleCancelSupplier,
+    } = useSupplier(onModalClose);
+
+    const {
+        setData: setDataCity,
+        errors: errorsCity,
+        processing: processingCity,
+        handleSubmit: handleSubmitCity,
+        handleCancel: handleCancelCity,
+    } = useCity(() => setIsAddCityModalOpen(false));
 
     useEffect(() => {
         setLocalCities(cities);
@@ -66,7 +60,7 @@ export default function SupplierForm({
 
     useEffect(() => {
         if (supplier) {
-            form.setData({
+            setDataSupplier({
                 name: supplier.name,
                 address: supplier.address || '',
                 city_id: supplier.city_id ? supplier.city_id.toString() : '',
@@ -74,9 +68,9 @@ export default function SupplierForm({
                 contact: supplier.contact || '',
             });
         } else {
-            form.reset();
+            resetSupplier();
         }
-    }, [supplier, isModalOpen]);
+    }, [supplier, isModalOpen, resetSupplier, setDataSupplier]);
 
     const cityOptions: ComboboxOption[] = useMemo(() => {
         return localCities.map((city) => ({
@@ -85,70 +79,8 @@ export default function SupplierForm({
         }));
     }, [localCities]);
 
-    const handleAddCity = async () => {
-        if (!newCityName.trim()) {
-            toast.error('Nama kota tidak boleh kosong');
-            return;
-        }
-
-        setIsAddingCity(true);
-
-        try {
-            // Using axios which automatically handles CSRF token from cookies
-            const response = await axios.post(
-                storeCity().url,
-                {
-                    name: newCityName,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                    },
-                },
-            );
-
-            if (response.data && response.data.data) {
-                const newCity = response.data.data;
-
-                setLocalCities((prev) => [...prev, newCity]);
-                form.setData('city_id', newCity.id.toString());
-                toast.success('Kota berhasil ditambahkan');
-                setNewCityName('');
-                setIsAddCityModalOpen(false);
-            }
-        } catch (error: any) {
-            const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.errors?.name?.[0] ||
-                'Gagal menambahkan kota';
-            toast.error(errorMessage);
-        } finally {
-            setIsAddingCity(false);
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        form.submit(supplier ? update(supplier.id) : store(), {
-            onSuccess: () => {
-                form.reset();
-                toast.success(
-                    supplier
-                        ? 'Supplier berhasil diupdate'
-                        : 'Supplier berhasil ditambahkan',
-                );
-                onOpenChange(false);
-            },
-            onError: () => {
-                toast.error('Terjadi kesalahan, periksa input Anda.');
-            },
-        });
-    };
-
     return (
-        <Dialog open={isModalOpen} onOpenChange={onOpenChange}>
+        <Dialog open={isModalOpen} onOpenChange={onModalClose}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>
@@ -162,8 +94,11 @@ export default function SupplierForm({
                 </DialogHeader>
 
                 <form
-                    onSubmit={handleSubmit}
                     className="flex flex-col space-y-2"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSubmitSupplier(supplier);
+                    }}
                 >
                     <div className="flex flex-col space-y-4 pb-4">
                         <div>
@@ -173,13 +108,13 @@ export default function SupplierForm({
                             <Input
                                 id="name"
                                 name="name"
-                                value={form.data.name}
+                                value={dataSupplier.name}
                                 onChange={(e) =>
-                                    form.setData('name', e.target.value)
+                                    setDataSupplier('name', e.target.value)
                                 }
                             />
-                            {form.errors.name && (
-                                <InputError message={form.errors.name} />
+                            {errorsSupplier.name && (
+                                <InputError message={errorsSupplier.name} />
                             )}
                         </div>
 
@@ -188,14 +123,14 @@ export default function SupplierForm({
                             <Textarea
                                 id="address"
                                 name="address"
-                                value={form.data.address}
+                                value={dataSupplier.address}
                                 onChange={(e) =>
-                                    form.setData('address', e.target.value)
+                                    setDataSupplier('address', e.target.value)
                                 }
                                 rows={3}
                             />
-                            {form.errors.address && (
-                                <InputError message={form.errors.address} />
+                            {errorsSupplier.address && (
+                                <InputError message={errorsSupplier.address} />
                             )}
                         </div>
 
@@ -206,9 +141,12 @@ export default function SupplierForm({
                                         <Label htmlFor="city_id">Kota</Label>
                                         <Combobox
                                             options={cityOptions}
-                                            value={form.data.city_id}
+                                            value={dataSupplier.city_id}
                                             onValueChange={(value) =>
-                                                form.setData('city_id', value)
+                                                setDataSupplier(
+                                                    'city_id',
+                                                    value,
+                                                )
                                             }
                                             placeholder="Pilih atau cari kota..."
                                             searchPlaceholder="Cari kota..."
@@ -216,9 +154,9 @@ export default function SupplierForm({
                                             className="w-full"
                                             maxDisplayItems={10}
                                         />
-                                        {form.errors.city_id && (
+                                        {errorsSupplier.city_id && (
                                             <InputError
-                                                message={form.errors.city_id}
+                                                message={errorsSupplier.city_id}
                                             />
                                         )}
                                     </div>
@@ -243,17 +181,17 @@ export default function SupplierForm({
                                 <Input
                                     id="phone_number"
                                     name="phone_number"
-                                    value={form.data.phone_number}
+                                    value={dataSupplier.phone_number}
                                     onChange={(e) =>
-                                        form.setData(
+                                        setDataSupplier(
                                             'phone_number',
                                             e.target.value,
                                         )
                                     }
                                 />
-                                {form.errors.phone_number && (
+                                {errorsSupplier.phone_number && (
                                     <InputError
-                                        message={form.errors.phone_number}
+                                        message={errorsSupplier.phone_number}
                                     />
                                 )}
                             </div>
@@ -264,13 +202,13 @@ export default function SupplierForm({
                             <Input
                                 id="contact"
                                 name="contact"
-                                value={form.data.contact}
+                                value={dataSupplier.contact}
                                 onChange={(e) =>
-                                    form.setData('contact', e.target.value)
+                                    setDataSupplier('contact', e.target.value)
                                 }
                             />
-                            {form.errors.contact && (
-                                <InputError message={form.errors.contact} />
+                            {errorsSupplier.contact && (
+                                <InputError message={errorsSupplier.contact} />
                             )}
                         </div>
                     </div>
@@ -279,13 +217,17 @@ export default function SupplierForm({
                         <Button
                             type="button"
                             variant="secondary"
-                            onClick={() => onOpenChange(false)}
-                            disabled={form.processing}
+                            onClick={handleCancelSupplier}
+                            disabled={processingSupplier}
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={form.processing}>
-                            {form.processing
+                        <Button
+                            type="submit"
+                            size="sm"
+                            disabled={processingSupplier}
+                        >
+                            {processingSupplier
                                 ? 'Saving...'
                                 : supplier
                                   ? 'Update Supplier'
@@ -307,41 +249,46 @@ export default function SupplierForm({
                             Masukkan nama kota yang ingin ditambahkan
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
-                        <Label htmlFor="new_city_name">Nama Kota</Label>
-                        <Input
-                            id="new_city_name"
-                            value={newCityName}
-                            onChange={(e) => setNewCityName(e.target.value)}
-                            placeholder="Masukkan nama kota"
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleAddCity();
+                    <form
+                        className="flex flex-col space-y-2"
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSubmitCity();
+                        }}
+                    >
+                        <div className="py-4">
+                            <Label htmlFor="new_city_name">Nama Kota</Label>
+                            <Input
+                                id="new_city_name"
+                                onChange={(e) =>
+                                    setDataCity('name', e.target.value)
                                 }
-                            }}
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => {
-                                setIsAddCityModalOpen(false);
-                                setNewCityName('');
-                            }}
-                            disabled={isAddingCity}
-                        >
-                            Batal
-                        </Button>
-                        <Button
-                            type="button"
-                            onClick={handleAddCity}
-                            disabled={isAddingCity}
-                        >
-                            {isAddingCity ? 'Menambahkan...' : 'Tambah Kota'}
-                        </Button>
-                    </DialogFooter>
+                                placeholder="Masukkan nama kota"
+                            />
+                            {errorsCity.name && (
+                                <InputError message={errorsCity.name} />
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={handleCancelCity}
+                                disabled={processingCity}
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                type="submit"
+                                size="sm"
+                                disabled={processingCity}
+                            >
+                                {processingCity
+                                    ? 'Menambahkan...'
+                                    : 'Tambah Kota'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
         </Dialog>

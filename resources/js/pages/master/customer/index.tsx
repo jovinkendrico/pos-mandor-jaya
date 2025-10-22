@@ -1,35 +1,21 @@
-import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
-import CustomerDeleteConfirmation from '@/components/master/customers/customer-delete-confirmation';
 import CustomerForm from '@/components/master/customers/customer-form';
 import CustomerTable from '@/components/master/customers/customer-table';
+import PageTitle from '@/components/page-title';
+import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/customers';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, ICity, ICustomer } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
-interface City {
-    id: number;
-    name: string;
-}
-
-interface Customer {
-    id: number;
-    name: string;
-    address?: string;
-    city?: City;
-    city_id?: number;
-    phone_number?: string;
-    contact?: string;
-}
-
 interface PageProps {
     customers: {
-        data: Customer[];
+        data: ICustomer[];
     };
-    cities: City[];
+    cities: ICity[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,25 +29,33 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CustomerIndex({ customers, cities }: PageProps) {
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+export default function CustomerIndex(props: PageProps) {
+    const { customers, cities } = props;
 
-    const handleEdit = (customer: Customer) => {
+    const [selectedCustomer, setSelectedCustomer] = useState<
+        ICustomer | undefined
+    >(undefined);
+
+    const handleEdit = (customer: ICustomer) => {
         setSelectedCustomer(customer);
-        setIsFormModalOpen(true);
+        openEditModal();
     };
 
-    const handleDelete = (customer: Customer) => {
+    const handleDelete = (customer: ICustomer) => {
         setSelectedCustomer(customer);
-        setIsDeleteModalOpen(true);
+        openDeleteModal();
     };
 
-    const handleFormClose = () => {
-        setIsFormModalOpen(false);
-        setSelectedCustomer(null);
-    };
+    const {
+        isOpen: isEditModalOpen,
+        openModal: openEditModal,
+        closeModal: closeEditModal,
+    } = useDisclosure();
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
 
     return (
         <>
@@ -69,25 +63,36 @@ export default function CustomerIndex({ customers, cities }: PageProps) {
                 <Head title="Customer" />
                 <div className="flex justify-between">
                     <PageTitle title="Customer" />
-                    <Button onClick={() => setIsFormModalOpen(true)}>
+                    <Button
+                        onClick={() => {
+                            setSelectedCustomer(undefined);
+                            openEditModal();
+                        }}
+                    >
                         <Plus />
                         Tambah Customer
                     </Button>
                 </div>
-                <CustomerTable customers={customers.data} onEdit={handleEdit} onDelete={handleDelete} />
+                <CustomerTable
+                    customers={customers.data}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
                 <CustomerForm
-                    isModalOpen={isFormModalOpen}
-                    onOpenChange={handleFormClose}
+                    isModalOpen={isEditModalOpen}
                     customer={selectedCustomer}
                     cities={cities}
+                    onModalClose={closeEditModal}
                 />
-                <CustomerDeleteConfirmation
+                <DeleteModalLayout
+                    dataName={selectedCustomer?.name}
+                    dataId={selectedCustomer?.id}
+                    dataType="Customer"
                     isModalOpen={isDeleteModalOpen}
-                    onOpenChange={setIsDeleteModalOpen}
-                    customer={selectedCustomer}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedCustomer}
                 />
             </AppLayout>
         </>
     );
 }
-
