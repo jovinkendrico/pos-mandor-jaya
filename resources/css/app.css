@@ -59,6 +59,48 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    --color-primary-100: oklch(95.4% 0.02 257.6);
+    --color-primary-200: oklch(84.43% 0.05 257.75);
+    --color-primary-300: oklch(73.34% 0.08 258.07);
+    --color-primary-400: oklch(62.3% 0.12 258.4);
+    --color-primary-500: oklch(51.3% 0.15 258.7);
+    --color-primary-600: oklch(42.61% 0.16 259.08);
+    --color-primary-700: oklch(35.59% 0.15 259.39);
+    --color-primary-800: oklch(26.68% 0.11 259.88);
+    --color-primary-900: oklch(15.27% 0.06 260.5);
+
+    --color-secondary-100: oklch(96.71% 0.01 256.45);
+    --color-secondary-200: oklch(89.75% 0.01 256.44);
+    --color-secondary-300: oklch(83.05% 0.01 256.41);
+    --color-secondary-400: oklch(74.96% 0.01 256.36);
+    --color-secondary-500: oklch(66.27% 0.01 256.28);
+    --color-secondary-600: oklch(57.53% 0.01 256.17);
+    --color-secondary-700: oklch(48.24% 0.01 256.03);
+    --color-secondary-800: oklch(38.65% 0.01 255.85);
+    --color-secondary-900: oklch(28.7% 0.01 255.63);
+
+    --color-danger-100: oklch(0.96 0.05 17.56);
+    --color-danger-200: oklch(0.89 0.1 17.56);
+    --color-danger-300: oklch(0.82 0.14 17.56);
+    --color-danger-400: oklch(0.74 0.17 17.56);
+    --color-danger-500: oklch(0.6592 0.192 17.56);
+    --color-danger-600: oklch(0.58 0.19 17.56);
+    --color-danger-700: oklch(0.5 0.18 17.56);
+    --color-danger-800: oklch(0.43 0.16 17.56);
+    --color-danger-900: oklch(0.36 0.13 17.56);
+
+    --color-edit-100: oklch(0.97 0.04 136.03);
+    --color-edit-200: oklch(0.93 0.08 136.03);
+    --color-edit-300: oklch(0.88 0.12 136.03);
+    --color-edit-400: oklch(0.82 0.15 136.03);
+    --color-edit-500: oklch(0.7598 0.174 136.03);
+    --color-edit-600: oklch(0.69 0.18 136.03);
+    --color-edit-700: oklch(0.62 0.17 136.03);
+    --color-edit-800: oklch(0.55 0.15 136.03);
+    --color-edit-900: oklch(0.48 0.12 136.03);
+
+    --color-content-background: var(--background);
 }
 
 :root {
@@ -98,7 +140,7 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
+    --background: oklch(0.247 0.0506 270.94);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.145 0 0);
     --card-foreground: oklch(0.985 0 0);
@@ -112,7 +154,7 @@
     --muted-foreground: oklch(0.708 0 0);
     --accent: oklch(0.269 0 0);
     --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
+    --destructive: oklch(0.6592 0.192 17.56);
     --destructive-foreground: oklch(0.637 0.237 25.331);
     --border: oklch(0.269 0 0);
     --input: oklch(0.269 0 0);
@@ -122,7 +164,7 @@
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
+    --sidebar: oklch(0.2048 0.047 271.81);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.985 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -130,6 +172,40 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(0.269 0 0);
     --sidebar-ring: oklch(0.439 0 0);
+
+    /* Dark Mode Primary Color Palette (Inverted Blues) */
+    --color-primary-100: oklch(15.27% 0.06 260.5);
+    --color-primary-200: oklch(26.68% 0.11 259.88);
+    --color-primary-300: oklch(35.59% 0.15 259.39);
+    --color-primary-400: oklch(42.61% 0.16 259.08);
+    --color-primary-500: oklch(51.3% 0.15 258.7);
+    --color-primary-600: oklch(62.3% 0.12 258.4);
+    --color-primary-700: oklch(73.34% 0.08 258.07);
+    --color-primary-800: oklch(84.43% 0.05 257.75);
+    --color-primary-900: oklch(95.4% 0.02 257.6);
+
+    /* Dark Mode Secondary Color Palette (Inverted Grays) */
+    --color-secondary-100: oklch(28.7% 0.01 255.63); /* Main Background */
+    --color-secondary-200: oklch(38.65% 0.01 255.85);
+    --color-secondary-300: oklch(48.24% 0.01 256.03);
+    --color-secondary-400: oklch(57.53% 0.01 256.17);
+    --color-secondary-500: oklch(66.27% 0.01 256.28);
+    --color-secondary-600: oklch(74.96% 0.01 256.36);
+    --color-secondary-700: oklch(83.05% 0.01 256.41);
+    --color-secondary-800: oklch(89.75% 0.01 256.44); /* Main Text Color */
+    --color-secondary-900: oklch(96.71% 0.01 256.45);
+
+    --color-danger-100: oklch(0.96 0.05 17.56);
+    --color-danger-200: oklch(0.89 0.1 17.56);
+    --color-danger-300: oklch(0.82 0.14 17.56);
+    --color-danger-400: oklch(0.74 0.17 17.56);
+    --color-danger-500: oklch(0.6592 0.192 17.56); /* Your base color */
+    --color-danger-600: oklch(0.58 0.19 17.56);
+    --color-danger-700: oklch(0.5 0.18 17.56);
+    --color-danger-800: oklch(0.43 0.16 17.56);
+    --color-danger-900: oklch(0.36 0.13 17.56);
+
+    --color-content-background: oklch(0.2949 0.0586 270.09);
 }
 
 @layer base {
@@ -140,4 +216,47 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+.btn-primary {
+    @apply bg-primary-700 font-semibold dark:bg-primary-500 dark:text-white;
+}
+.btn-primary:hover {
+    @apply bg-primary-800 dark:bg-primary-500;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    @apply bg-primary-200/60 dark:bg-primary-800/85 dark:text-primary-100;
+}
+
+.btn-secondary:hover {
+    @apply cursor-pointer bg-primary-200/80 dark:bg-primary-800/70;
+}
+
+.content {
+    @apply dark:bg-content-background;
+}
+
+.btn-edit {
+    @apply text-edit-700 dark:bg-edit-400/80 dark:text-white;
+}
+
+.btn-edit:hover {
+    @apply cursor-pointer bg-edit-500 text-white dark:bg-edit-300;
+}
+
+.btn-danger {
+    @apply bg-danger-600 font-semibold text-white dark:bg-danger-500 dark:text-white;
+}
+.btn-danger:hover {
+    @apply cursor-pointer bg-danger-800 text-white dark:bg-red-300;
+}
+
+.btn-trash {
+    @apply font-semibold text-destructive hover:cursor-pointer hover:bg-red-500 hover:text-white dark:bg-danger-500 dark:text-white dark:hover:bg-danger-300;
+}
+
+.input-box {
+    @apply border-2 dark:border-gray-500 dark:focus:border-3 dark:focus:border-white;
 }

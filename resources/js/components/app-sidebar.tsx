@@ -16,12 +16,13 @@ import { index as cityIndex } from '@/routes/cities';
 import { index as customerIndex } from '@/routes/customers';
 import { index as itemIndex } from '@/routes/items';
 import { index as permissionIndex } from '@/routes/permissions';
-import { index as purchaseIndex } from '@/routes/purchases';
 import { index as purchaseReturnIndex } from '@/routes/purchase-returns';
+import { index as purchaseIndex } from '@/routes/purchases';
 import { index as roleIndex } from '@/routes/roles';
-import { index as saleIndex } from '@/routes/sales';
 import { index as saleReturnIndex } from '@/routes/sale-returns';
+import { index as saleIndex } from '@/routes/sales';
 import { index as supplierIndex } from '@/routes/suppliers';
+import { index as uomIndex } from '@/routes/uoms';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -58,6 +59,10 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Kota',
                 href: cityIndex(),
+            },
+            {
+                title: 'UOM',
+                href: uomIndex(),
             },
         ],
     },

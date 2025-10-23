@@ -1,35 +1,31 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { Button } from '@/components/ui/button';
+import { TableCell } from '@/components/ui/table';
+import { UOM } from '@/types';
 import { Edit, Trash } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { TableCell } from '../../ui/table';
 
-interface City {
-    id: number;
-    name: string;
+interface UOMTableProps {
+    uoms: UOM[];
+    onEdit: (uom: UOM) => void;
+    onDelete: (uom: UOM) => void;
 }
 
-interface CityTableProps {
-    cities: City[];
-    onEdit: (city: City) => void;
-    onDelete: (city: City) => void;
-}
+const UOMTable = (props: UOMTableProps) => {
+    const { uoms, onEdit, onDelete } = props;
 
-const CityTable = (props: CityTableProps) => {
-    const { cities, onEdit, onDelete } = props;
-
-    const tableColumn = ['Kode', 'Nama Kota', 'Aksi'];
+    const tableColumn = ['Kode', 'Name', 'Aksi'];
     return (
         <TableLayout
-            tableName="Kota"
+            tableName="UOM"
             tableColumn={tableColumn}
-            text="Tidak ada data kota"
-            tableRow={cities}
+            tableRow={uoms}
+            text="Tidak ada data UOM"
             renderRow={(row) => (
                 <>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="w-full text-center">
                         {row.id}
                     </TableCell>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="w-full text-center">
                         {row.name}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
@@ -45,7 +41,7 @@ const CityTable = (props: CityTableProps) => {
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(row)}
-                            className="btn-trash"
+                            className="btn-danger"
                         >
                             <Trash />
                         </Button>
@@ -56,4 +52,4 @@ const CityTable = (props: CityTableProps) => {
     );
 };
 
-export default CityTable;
+export default UOMTable;

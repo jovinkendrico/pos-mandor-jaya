@@ -11,21 +11,24 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UomController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('dashboard');
-})->name('home');
-
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
+    Route::get('/', function () {
+        return Inertia::render('dashboard');
+    })->name('home');
+
+    Route::get('/dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
     // API routes for autocomplete
     Route::get('cities/search', [CityController::class, 'search'])->name('cities.search');
+
+    Route::post('cities/store', [CityController::class, 'storeCity'])->name('cities.storeCity');
 
     // Purchase confirm/unconfirm routes (must be before resource)
     Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
@@ -51,11 +54,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'customers'        => CustomerController::class,
         'suppliers'        => SupplierController::class,
         'banks'            => BankController::class,
+        'uoms'             => UomController::class,
         'items'            => ItemController::class,
         'purchases'        => PurchaseController::class,
         'sales'            => SaleController::class,
         'purchase-returns' => PurchaseReturnController::class,
         'sale-returns'     => SaleReturnController::class,
+        'uoms'             => UomController::class,
     ]);
 });
 

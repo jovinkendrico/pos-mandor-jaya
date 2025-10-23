@@ -46,14 +46,14 @@ class CustomerController extends Controller
     {
         $customer = Customer::create($request->validated());
 
-        // If AJAX request, return JSON
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Customer berhasil ditambahkan.',
-                'data'    => $customer,
-            ], 201);
-        }
+        // // If AJAX request, return JSON
+        // if ($request->wantsJson() || $request->ajax()) {
+        //     return response()->json([
+        //         'success' => true,
+        //         'message' => 'Customer berhasil ditambahkan.',
+        //         'data'    => $customer,
+        //     ], 201);
+        // }
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer berhasil ditambahkan.');

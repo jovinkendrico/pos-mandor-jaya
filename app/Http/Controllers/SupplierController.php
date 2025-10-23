@@ -46,15 +46,6 @@ class SupplierController extends Controller
     {
         $supplier = Supplier::create($request->validated());
 
-        // If AJAX request, return JSON
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Supplier berhasil ditambahkan.',
-                'data'    => $supplier,
-            ], 201);
-        }
-
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier berhasil ditambahkan.');
     }

@@ -14,7 +14,7 @@ class Customer extends Model
         'address',
         'city_id',
         'phone_number',
-        'contact',
+        'contact_person',
     ];
 
     public function city(): BelongsTo

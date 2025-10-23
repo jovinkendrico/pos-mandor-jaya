@@ -1,22 +1,15 @@
-import CustomerForm from '@/components/master/customers/customer-form';
-import CustomerTable from '@/components/master/customers/customer-table';
+import UOMForm from '@/components/master/uom/uom-form';
+import UOMTable from '@/components/master/uom/uom-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { destroy as destroyCustomer, index } from '@/routes/customers';
-import { BreadcrumbItem, ICity, ICustomer } from '@/types';
+import { destroy as destroyUOM, index } from '@/routes/uoms';
+import { BreadcrumbItem, UOM } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-
-interface PageProps {
-    customers: {
-        data: ICustomer[];
-    };
-    cities: ICity[];
-}
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -24,27 +17,17 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '#',
     },
     {
-        title: 'Customer',
+        title: 'UOM',
         href: index().url,
     },
 ];
 
-export default function CustomerIndex(props: PageProps) {
-    const { customers, cities } = props;
+interface UOMProps {
+    uoms: UOM[];
+}
 
-    const [selectedCustomer, setSelectedCustomer] = useState<
-        ICustomer | undefined
-    >(undefined);
-
-    const handleEdit = (customer: ICustomer) => {
-        setSelectedCustomer(customer);
-        openEditModal();
-    };
-
-    const handleDelete = (customer: ICustomer) => {
-        setSelectedCustomer(customer);
-        openDeleteModal();
-    };
+const UOMPage = (props: UOMProps) => {
+    const { uoms } = props;
 
     const {
         isOpen: isEditModalOpen,
@@ -57,44 +40,57 @@ export default function CustomerIndex(props: PageProps) {
         closeModal: closeDeleteModal,
     } = useDisclosure();
 
+    const [selectedUOM, setSelectedUOM] = useState<UOM | undefined>(undefined);
+
+    const handleEdit = (uom: UOM) => {
+        setSelectedUOM(uom);
+        openEditModal();
+    };
+
+    const handleDelete = (uom: UOM) => {
+        setSelectedUOM(uom);
+        openDeleteModal();
+    };
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
-                <Head title="Customer" />
+                <Head title="UOM" />
                 <div className="flex justify-between">
-                    <PageTitle title="Customer" />
+                    <PageTitle title="UOM" />
                     <Button
                         onClick={() => {
-                            setSelectedCustomer(undefined);
+                            setSelectedUOM(undefined);
                             openEditModal();
                         }}
                         className="btn-primary"
                     >
                         <Plus />
-                        Tambah Customer
+                        Tambah UOM
                     </Button>
                 </div>
-                <CustomerTable
-                    customers={customers.data}
+                <UOMTable
+                    uoms={uoms}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                 />
-                <CustomerForm
+                <UOMForm
                     isModalOpen={isEditModalOpen}
-                    customer={selectedCustomer}
-                    cities={cities}
                     onModalClose={closeEditModal}
+                    uom={selectedUOM}
                 />
                 <DeleteModalLayout
-                    dataName={selectedCustomer?.name}
-                    dataId={selectedCustomer?.id}
-                    dataType="Customer"
+                    dataId={selectedUOM?.id}
+                    dataName={selectedUOM?.name}
+                    dataType="UOM"
                     isModalOpen={isDeleteModalOpen}
                     onModalClose={closeDeleteModal}
-                    setSelected={setSelectedCustomer}
-                    getDeleteUrl={(id) => destroyCustomer(id).url}
+                    setSelected={setSelectedUOM}
+                    getDeleteUrl={(id: number) => destroyUOM(id).url}
                 />
             </AppLayout>
         </>
     );
-}
+};
+
+export default UOMPage;

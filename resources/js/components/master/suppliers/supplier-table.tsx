@@ -1,62 +1,75 @@
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { ISupplier } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { Button } from '../../ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
-
-interface City {
-    id: number;
-    name: string;
-}
-
-interface Supplier {
-    id: number;
-    name: string;
-    address?: string;
-    city?: City;
-    phone_number?: string;
-    contact?: string;
-}
+import { TableCell } from '../../ui/table';
 
 interface SupplierTableProps {
-    suppliers: Supplier[];
-    onEdit: (supplier: Supplier) => void;
-    onDelete: (supplier: Supplier) => void;
+    suppliers: ISupplier[];
+    onEdit: (supplier: ISupplier) => void;
+    onDelete: (supplier: ISupplier) => void;
 }
 
-export default function SupplierTable({ suppliers, onEdit, onDelete }: SupplierTableProps) {
+const SupplierTable = (props: SupplierTableProps) => {
+    const { suppliers, onEdit, onDelete } = props;
+
+    const tableColumn = [
+        'Kode',
+        'Nama Supplier',
+        'Alamat',
+        'Kota',
+        'Telepon',
+        'Contact Person',
+        'Aksi',
+    ];
     return (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="text-center">#</TableHead>
-                    <TableHead>Nama Supplier</TableHead>
-                    <TableHead>Alamat</TableHead>
-                    <TableHead>Kota</TableHead>
-                    <TableHead>Telepon</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead className="text-center">Aksi</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {suppliers.map((supplier, index) => (
-                    <TableRow key={supplier.id}>
-                        <TableCell className="text-center">{index + 1}</TableCell>
-                        <TableCell>{supplier.name}</TableCell>
-                        <TableCell>{supplier.address || '-'}</TableCell>
-                        <TableCell>{supplier.city?.name || '-'}</TableCell>
-                        <TableCell>{supplier.phone_number || '-'}</TableCell>
-                        <TableCell>{supplier.contact || '-'}</TableCell>
-                        <TableCell className="text-center">
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(supplier)}>
-                                <Edit />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => onDelete(supplier)}>
-                                <Trash className="text-destructive" />
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+        <TableLayout
+            tableName="Supplier"
+            tableColumn={tableColumn}
+            tableRow={suppliers}
+            text="Tidak ada data Supplier"
+            renderRow={(row) => (
+                <>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.id}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.name}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.address || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.city?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.phone_number || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.contact || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(row)}
+                            className="btn-edit"
+                        >
+                            <Edit />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(row)}
+                            className="btn-trash"
+                        >
+                            <Trash />
+                        </Button>
+                    </TableCell>
+                </>
+            )}
+        />
     );
-}
+};
 
+export default SupplierTable;

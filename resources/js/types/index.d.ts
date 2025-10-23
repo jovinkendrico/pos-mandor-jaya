@@ -90,6 +90,8 @@ export interface City {
     [key: string]: unknown;
 }
 
+export type ICity = Pick<City, 'id' | 'name'>;
+
 export interface Customer {
     id: number;
     name: string;
@@ -102,6 +104,11 @@ export interface Customer {
     updated_at: string;
     [key: string]: unknown;
 }
+
+export type ICustomer = Pick<
+    Customer,
+    'id' | 'name' | 'address' | 'city_id' | 'city' | 'phone_number' | 'contact'
+>;
 
 export interface Supplier {
     id: number;
@@ -116,18 +123,34 @@ export interface Supplier {
     [key: string]: unknown;
 }
 
+export type ISupplier = Pick<
+    Supplier,
+    'id' | 'name' | 'address' | 'city_id' | 'city' | 'phone_number' | 'contact'
+>;
+
 export interface Bank {
     id: number;
     name: string;
     type: 'bank' | 'cash';
     account_number?: string;
     account_name?: string;
-    balance: string;
+    balance: number;
     description?: string;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 }
+
+export type IBank = Pick<
+    Bank,
+    | 'id'
+    | 'name'
+    | 'type'
+    | 'account_number'
+    | 'account_name'
+    | 'balance'
+    | 'description'
+>;
 
 export interface ItemUom {
     id: number;
@@ -157,4 +180,9 @@ export interface Item {
 export interface PageProps {
     auth: Auth;
     [key: string]: unknown;
+}
+
+export interface UOM {
+    id: number;
+    name: string;
 }

@@ -1,23 +1,19 @@
-import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
-import CityDeleteConfirmation from '@/components/master/cities/city-delete-confirmation';
 import CityForm from '@/components/master/cities/city-form';
 import CityTable from '@/components/master/cities/city-table';
+import PageTitle from '@/components/page-title';
+import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/cities';
-import { BreadcrumbItem } from '@/types';
+import { destroy as destroyCity, index } from '@/routes/cities';
+import { BreadcrumbItem, ICity } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
-interface City {
-    id: number;
-    name: string;
-}
-
 interface PageProps {
     cities: {
-        data: City[];
+        data: ICity[];
     };
 }
 
@@ -33,24 +29,30 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function CityIndex({ cities }: PageProps) {
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [selectedCity, setSelectedCity] = useState<City | null>(null);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [selectedCity, setSelectedCity] = useState<ICity | undefined>(
+        undefined,
+    );
 
-    const handleEdit = (city: City) => {
+    const handleEdit = (city: ICity) => {
         setSelectedCity(city);
-        setIsFormModalOpen(true);
+        openEditModal();
     };
 
-    const handleDelete = (city: City) => {
+    const handleDelete = (city: ICity) => {
         setSelectedCity(city);
-        setIsDeleteModalOpen(true);
+        openDeleteModal();
     };
 
-    const handleFormClose = () => {
-        setIsFormModalOpen(false);
-        setSelectedCity(null);
-    };
+    const {
+        isOpen: isEditModalOpen,
+        openModal: openEditModal,
+        closeModal: closeEditModal,
+    } = useDisclosure();
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
 
     return (
         <>
@@ -58,16 +60,37 @@ export default function CityIndex({ cities }: PageProps) {
                 <Head title="Kota" />
                 <div className="flex justify-between">
                     <PageTitle title="Kota" />
-                    <Button onClick={() => setIsFormModalOpen(true)}>
+                    <Button
+                        onClick={() => {
+                            setSelectedCity(undefined);
+                            openEditModal();
+                        }}
+                        className="btn-primary"
+                    >
                         <Plus />
                         Tambah Kota
                     </Button>
                 </div>
-                <CityTable cities={cities.data} onEdit={handleEdit} onDelete={handleDelete} />
-                <CityForm isModalOpen={isFormModalOpen} onOpenChange={handleFormClose} city={selectedCity} />
-                <CityDeleteConfirmation isModalOpen={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen} city={selectedCity} />
+                <CityTable
+                    cities={cities.data}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
+                <CityForm
+                    isModalOpen={isEditModalOpen}
+                    city={selectedCity}
+                    onModalClose={closeEditModal}
+                />
+                <DeleteModalLayout
+                    dataName={selectedCity?.name}
+                    dataId={selectedCity?.id}
+                    dataType="City"
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedCity}
+                    getDeleteUrl={(id) => destroyCity(id).url}
+                />
             </AppLayout>
         </>
     );
 }
-
