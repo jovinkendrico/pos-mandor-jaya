@@ -28,7 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API routes for autocomplete
     Route::get('cities/search', [CityController::class, 'search'])->name('cities.search');
 
-    Route::post('cities', [CityController::class, 'storeCity'])->name('cities.storeCity');
+    Route::post('cities/store', [CityController::class, 'storeCity'])->name('cities.storeCity');
 
     // Purchase confirm/unconfirm routes (must be before resource)
     Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
