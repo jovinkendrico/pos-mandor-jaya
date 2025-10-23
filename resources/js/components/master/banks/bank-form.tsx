@@ -91,6 +91,7 @@ const BankForm = (props: BankFormProps) => {
                                     onChange={(e) =>
                                         setData('name', e.target.value)
                                     }
+                                    className="input-box"
                                 />
                                 {errors.name && (
                                     <InputError message={errors.name} />
@@ -142,6 +143,7 @@ const BankForm = (props: BankFormProps) => {
                                                     e.target.value,
                                                 )
                                             }
+                                            className="input-box"
                                         />
                                         {errors.account_number && (
                                             <InputError
@@ -164,6 +166,7 @@ const BankForm = (props: BankFormProps) => {
                                                     e.target.value,
                                                 )
                                             }
+                                            className="input-box"
                                         />
                                         {errors.account_name && (
                                             <InputError
@@ -187,6 +190,7 @@ const BankForm = (props: BankFormProps) => {
                                 onChange={(e) =>
                                     setData('balance', Number(e.target.value))
                                 }
+                                className="input-box"
                             />
                             {errors.balance && (
                                 <InputError message={errors.balance} />
@@ -205,6 +209,7 @@ const BankForm = (props: BankFormProps) => {
                                     setData('description', e.target.value)
                                 }
                                 rows={3}
+                                className="input-box"
                             />
                             {errors.description && (
                                 <InputError message={errors.description} />
@@ -218,10 +223,15 @@ const BankForm = (props: BankFormProps) => {
                             variant="secondary"
                             onClick={handleCancel}
                             disabled={processing}
+                            className="btn-secondary"
                         >
                             Batal
                         </Button>
-                        <Button type="submit" disabled={processing}>
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                            className="btn-primary"
+                        >
                             {processing
                                 ? 'Saving...'
                                 : bank

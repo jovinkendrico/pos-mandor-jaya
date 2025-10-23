@@ -65,11 +65,12 @@ const BankTable = (props: BankTableProps) => {
                     <TableCell className="flex w-full items-center justify-center">
                         {formatCurrency(row.balance)}
                     </TableCell>
-                    <TableCell className="flex w-full items-center justify-center text-center">
+                    <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onEdit(row)}
+                            className="btn-edit"
                         >
                             <Edit />
                         </Button>
@@ -77,8 +78,9 @@ const BankTable = (props: BankTableProps) => {
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(row)}
+                            className="btn-trash"
                         >
-                            <Trash className="text-destructive" />
+                            <Trash />
                         </Button>
                     </TableCell>
                 </>

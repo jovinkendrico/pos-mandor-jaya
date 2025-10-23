@@ -32,11 +32,12 @@ const CityTable = (props: CityTableProps) => {
                     <TableCell className="w-full items-center text-center">
                         {row.name}
                     </TableCell>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onEdit(row)}
+                            className="btn-edit"
                         >
                             <Edit />
                         </Button>
@@ -44,8 +45,9 @@ const CityTable = (props: CityTableProps) => {
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(row)}
+                            className="btn-trash"
                         >
-                            <Trash className="text-destructive" />
+                            <Trash />
                         </Button>
                     </TableCell>
                 </>

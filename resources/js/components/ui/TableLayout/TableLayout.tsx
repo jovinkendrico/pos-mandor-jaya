@@ -18,8 +18,8 @@ interface PropTypes<T> {
 const TableLayout = <T,>(props: PropTypes<T>) => {
     const { tableColumn, tableRow, text, renderRow } = props;
     return (
-        <Table>
-            <TableHeader>
+        <Table className='content'>
+            <TableHeader className='hover:bg-none'>
                 <TableRow className="flex w-full flex-row">
                     {tableColumn.map((column, index) => (
                         <TableHead

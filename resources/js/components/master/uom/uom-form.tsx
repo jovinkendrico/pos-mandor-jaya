@@ -65,6 +65,7 @@ const UOMForm = (props: UOMFormProps) => {
                         name="name"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
+                        className="input-box"
                     />
                     {errors.name && <InputError message={errors.name} />}
                     <DialogFooter>
@@ -72,10 +73,15 @@ const UOMForm = (props: UOMFormProps) => {
                             type="button"
                             variant="secondary"
                             onClick={handleCancel}
+                            className="btn-secondary"
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" size="sm" disabled={processing}>
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                            className="btn-primary"
+                        >
                             Simpan
                         </Button>
                     </DialogFooter>

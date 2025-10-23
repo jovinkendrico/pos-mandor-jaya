@@ -73,6 +73,7 @@ export default function SupplierIndex(props: PageProps) {
                             setSelectedSupplier(undefined);
                             openEditModal();
                         }}
+                        className="btn-primary"
                     >
                         <Plus />
                         Tambah Supplier

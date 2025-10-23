@@ -65,6 +65,7 @@ export default function BankIndex({ banks }: PageProps) {
                             setSelectedBank(undefined);
                             openEditModal();
                         }}
+                        className="btn-primary"
                     >
                         <Plus />
                         Tambah Bank/Cash

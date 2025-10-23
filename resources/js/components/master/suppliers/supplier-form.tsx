@@ -112,6 +112,7 @@ export default function SupplierForm(props: SupplierFormProps) {
                                 onChange={(e) =>
                                     setDataSupplier('name', e.target.value)
                                 }
+                                className="input-box"
                             />
                             {errorsSupplier.name && (
                                 <InputError message={errorsSupplier.name} />
@@ -128,6 +129,7 @@ export default function SupplierForm(props: SupplierFormProps) {
                                     setDataSupplier('address', e.target.value)
                                 }
                                 rows={3}
+                                className="input-box"
                             />
                             {errorsSupplier.address && (
                                 <InputError message={errorsSupplier.address} />
@@ -168,6 +170,7 @@ export default function SupplierForm(props: SupplierFormProps) {
                                             setIsAddCityModalOpen(true)
                                         }
                                         title="Tambah kota baru"
+                                        className="btn-secondary"
                                     >
                                         <Plus className="h-4 w-4" />
                                     </Button>
@@ -188,6 +191,7 @@ export default function SupplierForm(props: SupplierFormProps) {
                                             e.target.value,
                                         )
                                     }
+                                    className="input-box"
                                 />
                                 {errorsSupplier.phone_number && (
                                     <InputError
@@ -206,6 +210,7 @@ export default function SupplierForm(props: SupplierFormProps) {
                                 onChange={(e) =>
                                     setDataSupplier('contact', e.target.value)
                                 }
+                                className="input-box"
                             />
                             {errorsSupplier.contact && (
                                 <InputError message={errorsSupplier.contact} />
@@ -219,13 +224,14 @@ export default function SupplierForm(props: SupplierFormProps) {
                             variant="secondary"
                             onClick={handleCancelSupplier}
                             disabled={processingSupplier}
+                            className="btn-secondary"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
-                            size="sm"
                             disabled={processingSupplier}
+                            className="btn-primary"
                         >
                             {processingSupplier
                                 ? 'Saving...'
@@ -275,13 +281,14 @@ export default function SupplierForm(props: SupplierFormProps) {
                                 variant="secondary"
                                 onClick={handleCancelCity}
                                 disabled={processingCity}
+                                className="btn-secondary"
                             >
                                 Batal
                             </Button>
                             <Button
                                 type="submit"
-                                size="sm"
                                 disabled={processingCity}
+                                className="btn-primary"
                             >
                                 {processingCity
                                     ? 'Menambahkan...'

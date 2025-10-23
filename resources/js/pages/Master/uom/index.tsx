@@ -63,6 +63,7 @@ const UOMPage = (props: UOMProps) => {
                             setSelectedUOM(undefined);
                             openEditModal();
                         }}
+                        className="btn-primary"
                     >
                         <Plus />
                         Tambah UOM

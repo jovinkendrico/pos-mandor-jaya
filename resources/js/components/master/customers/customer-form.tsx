@@ -150,6 +150,7 @@ export default function CustomerForm(props: CustomerFormProps) {
                                 onChange={(e) =>
                                     setDataCustomer('name', e.target.value)
                                 }
+                                className="input-box"
                             />
                             {errorsCustomer.name && (
                                 <InputError message={errorsCustomer.name} />
@@ -166,6 +167,7 @@ export default function CustomerForm(props: CustomerFormProps) {
                                     setDataCustomer('address', e.target.value)
                                 }
                                 rows={3}
+                                className="input-box"
                             />
                             {errorsCustomer.address && (
                                 <InputError message={errorsCustomer.address} />
@@ -226,6 +228,7 @@ export default function CustomerForm(props: CustomerFormProps) {
                                             e.target.value,
                                         )
                                     }
+                                    className="input-box"
                                 />
                                 {errorsCustomer.phone_number && (
                                     <InputError
@@ -244,6 +247,7 @@ export default function CustomerForm(props: CustomerFormProps) {
                                 onChange={(e) =>
                                     setDataCustomer('contact', e.target.value)
                                 }
+                                className="input-box"
                             />
                             {errorsCustomer.contact && (
                                 <InputError message={errorsCustomer.contact} />
@@ -257,10 +261,15 @@ export default function CustomerForm(props: CustomerFormProps) {
                             variant="secondary"
                             onClick={handleCancelCustomer}
                             disabled={processingCustomer}
+                            className="btn-secondary"
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={processingCustomer}>
+                        <Button
+                            type="submit"
+                            disabled={processingCustomer}
+                            className="btn-primary"
+                        >
                             {processingCustomer
                                 ? 'Saving...'
                                 : customer
@@ -309,13 +318,14 @@ export default function CustomerForm(props: CustomerFormProps) {
                                 variant="secondary"
                                 onClick={handleCancelCity}
                                 disabled={processingCity}
+                                className="btn-secondary"
                             >
                                 Batal
                             </Button>
                             <Button
                                 type="submit"
-                                size="sm"
                                 disabled={processingCity}
+                                className="btn-primary"
                             >
                                 {processingCity
                                     ? 'Menambahkan...'

@@ -68,6 +68,7 @@ export default function CustomerIndex(props: PageProps) {
                             setSelectedCustomer(undefined);
                             openEditModal();
                         }}
+                        className="btn-primary"
                     >
                         <Plus />
                         Tambah Customer

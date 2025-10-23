@@ -1,8 +1,8 @@
-import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import ItemDeleteConfirmation from '@/components/master/items/item-delete-confirmation';
 import ItemForm from '@/components/master/items/item-form';
 import ItemTable from '@/components/master/items/item-table';
+import PageTitle from '@/components/page-title';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/items';
 import { BreadcrumbItem } from '@/types';
@@ -71,12 +71,19 @@ export default function ItemIndex({ items }: PageProps) {
                 <Head title="Barang" />
                 <div className="flex justify-between">
                     <PageTitle title="Barang" />
-                    <Button onClick={() => setIsFormModalOpen(true)}>
+                    <Button
+                        onClick={() => setIsFormModalOpen(true)}
+                        className="btn-primary"
+                    >
                         <Plus />
                         Tambah Barang
                     </Button>
                 </div>
-                <ItemTable items={items.data} onEdit={handleEdit} onDelete={handleDelete} />
+                <ItemTable
+                    items={items.data}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
                 <ItemForm
                     isModalOpen={isFormModalOpen}
                     onOpenChange={handleFormClose}
@@ -91,4 +98,3 @@ export default function ItemIndex({ items }: PageProps) {
         </>
     );
 }
-

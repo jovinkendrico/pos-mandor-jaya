@@ -48,18 +48,20 @@ const SupplierTable = (props: SupplierTableProps) => {
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.contact || '-'}
                     </TableCell>
-                    <TableCell className="flex w-full items-center justify-center text-center">
+                    <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onEdit(row)}
+                            className="btn-edit"
                         >
                             <Edit />
                         </Button>
                         <Button
-                            variant="destructive"
+                            variant="ghost"
                             size="icon"
                             onClick={() => onDelete(row)}
+                            className="btn-trash"
                         >
                             <Trash />
                         </Button>

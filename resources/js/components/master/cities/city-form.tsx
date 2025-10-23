@@ -77,6 +77,7 @@ export default function CityForm(props: CityFormProps) {
                                 onChange={(e) =>
                                     setData('name', e.target.value)
                                 }
+                                className="input-box"
                             />
                             {errors.name && (
                                 <InputError message={errors.name} />
@@ -90,10 +91,15 @@ export default function CityForm(props: CityFormProps) {
                             variant="secondary"
                             onClick={handleCancel}
                             disabled={processing}
+                            className="btn-secondary"
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={processing}>
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                            className="btn-primary"
+                        >
                             {processing
                                 ? 'Saving...'
                                 : city

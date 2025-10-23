@@ -40,15 +40,15 @@ const DeleteModalLayout = <T,>(props: DeleteModalLayoutProps<T>) => {
                     <DialogTitle>Hapus {dataName}?</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm font-extralight">
                         Apakah Anda yakin ingin menghapus {dataType}: <span className="font-extrabold">{dataName}</span>?
                     </p>
                 </div>
                 <DialogFooter>
-                    <Button type="button" variant="secondary" onClick={onModalClose}>
+                    <Button type="button" variant="secondary" onClick={onModalClose} className="btn-secondary">
                         Batal
                     </Button>
-                    <Button variant="destructive" onClick={handleDelete}>
+                    <Button type="button" onClick={handleDelete} className="btn-danger">
                         Hapus
                     </Button>
                 </DialogFooter>

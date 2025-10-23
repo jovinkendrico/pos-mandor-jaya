@@ -65,6 +65,7 @@ export default function CityIndex({ cities }: PageProps) {
                             setSelectedCity(undefined);
                             openEditModal();
                         }}
+                        className="btn-primary"
                     >
                         <Plus />
                         Tambah Kota
