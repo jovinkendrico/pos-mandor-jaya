@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/customers';
+import { destroy as destroyCustomer, index } from '@/routes/customers';
 import { BreadcrumbItem, ICity, ICustomer } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -92,6 +92,7 @@ export default function CustomerIndex(props: PageProps) {
                     isModalOpen={isDeleteModalOpen}
                     onModalClose={closeDeleteModal}
                     setSelected={setSelectedCustomer}
+                    getDeleteUrl={(id) => destroyCustomer(id).url}
                 />
             </AppLayout>
         </>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/cities';
+import { destroy as destroyCity, index } from '@/routes/cities';
 import { BreadcrumbItem, ICity } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -88,6 +88,7 @@ export default function CityIndex({ cities }: PageProps) {
                     isModalOpen={isDeleteModalOpen}
                     onModalClose={closeDeleteModal}
                     setSelected={setSelectedCity}
+                    getDeleteUrl={(id) => destroyCity(id).url}
                 />
             </AppLayout>
         </>

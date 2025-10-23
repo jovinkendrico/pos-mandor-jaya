@@ -2,7 +2,6 @@ import { router  } from "@inertiajs/react";
 import { Button } from "../button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../dialog";
 import { toast } from "sonner";
-import { destroy } from "@/routes/uoms";
 
 interface DeleteModalLayoutProps<T> {
     dataId: number | undefined;
@@ -11,16 +10,17 @@ interface DeleteModalLayoutProps<T> {
     isModalOpen: boolean;
     onModalClose: () => void;
     setSelected: (selected: T | undefined) => void;
+    getDeleteUrl: (id: number) => string;
 }
 
 const DeleteModalLayout = <T,>(props: DeleteModalLayoutProps<T>) => {
     if (!props.dataName || !props.dataId) return null;
 
-    const { dataId, dataName, dataType, isModalOpen, onModalClose, setSelected } = props;
+    const { dataId, dataName, dataType, isModalOpen, onModalClose, setSelected, getDeleteUrl } = props;
 
 
     const handleDelete = () => {
-        router.delete(destroy(dataId).url, {
+        router.delete(getDeleteUrl(dataId), {
             onSuccess: () => {
                 onModalClose();
                 toast.success(`${dataType}: ${dataName} berhasil dihapus`);
