@@ -20,7 +20,7 @@ class CityController extends Controller
     {
         // If has 'limit' parameter, it's an AJAX request for loading cities
         if ($request->has('limit')) {
-            $limit = $request->get('limit', 10);
+            $limit  = $request->get('limit', 10);
             $cities = City::orderBy('name')->limit($limit)->get();
             return response()->json([
                 'data' => $cities,
@@ -52,6 +52,17 @@ class CityController extends Controller
 
         return redirect()->route('cities.index')
             ->with('success', 'Kota berhasil ditambahkan.');
+    }
+
+
+    public function storeCity(StoreCityRequest $request): RedirectResponse|JsonResponse
+    {
+        $city = City::create($request->validated());
+        return response()->json([
+            'success' => true,
+            'message' => 'Kota berhasil ditambahkan.',
+            'data'    => $city,
+        ], 201);
     }
 
     /**
