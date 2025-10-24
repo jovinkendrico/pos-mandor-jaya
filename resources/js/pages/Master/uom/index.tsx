@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/uoms';
+import { destroy as destroyUOM, index } from '@/routes/uoms';
 import { BreadcrumbItem, UOM } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -86,6 +86,7 @@ const UOMPage = (props: UOMProps) => {
                     isModalOpen={isDeleteModalOpen}
                     onModalClose={closeDeleteModal}
                     setSelected={setSelectedUOM}
+                    getDeleteUrl={(id: number) => destroyUOM(id).url}
                 />
             </AppLayout>
         </>
