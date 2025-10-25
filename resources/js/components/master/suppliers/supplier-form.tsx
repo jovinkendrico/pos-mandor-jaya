@@ -7,6 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import useCity from '@/hooks/use-city';
 import useSupplier from '@/hooks/use-supplier';
 import { ISupplier } from '@/types';
@@ -233,11 +234,13 @@ export default function SupplierForm(props: SupplierFormProps) {
                             disabled={processingSupplier}
                             className="btn-primary"
                         >
-                            {processingSupplier
-                                ? 'Saving...'
-                                : supplier
-                                  ? 'Update Supplier'
-                                  : 'Tambah Supplier'}
+                            {processingSupplier ? (
+                                <Spinner />
+                            ) : supplier ? (
+                                'Update Supplier'
+                            ) : (
+                                'Tambah Supplier'
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

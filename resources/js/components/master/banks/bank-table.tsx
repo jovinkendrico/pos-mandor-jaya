@@ -1,4 +1,5 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { cn } from '@/lib/utils';
 import { IBank } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { Badge } from '../../ui/badge';
@@ -38,7 +39,7 @@ const BankTable = (props: BankTableProps) => {
             tableName="Bank"
             tableColumn={tableColumn}
             tableRow={banks}
-            text="Tidak ada data bank/cash"
+            text="Tidak ada data Bank/Cash"
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">
@@ -52,6 +53,11 @@ const BankTable = (props: BankTableProps) => {
                             variant={
                                 row.type === 'bank' ? 'default' : 'secondary'
                             }
+                            className={cn(
+                                row.type === 'bank'
+                                    ? 'badge-yellow-light'
+                                    : 'badge-green-light',
+                            )}
                         >
                             {row.type === 'bank' ? 'Bank' : 'Cash'}
                         </Badge>

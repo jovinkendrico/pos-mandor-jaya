@@ -191,7 +191,7 @@ export default function CustomerForm(props: CustomerFormProps) {
                                             placeholder="Pilih atau cari kota..."
                                             searchPlaceholder="Cari kota..."
                                             emptyText="Kota tidak ditemukan"
-                                            className="w-full"
+                                            className="w-full dark:!bg-white dark:!text-primary-200"
                                             maxDisplayItems={10}
                                         />
                                         {errorsCustomer.city_id && (
@@ -208,6 +208,7 @@ export default function CustomerForm(props: CustomerFormProps) {
                                             setIsAddCityModalOpen(true)
                                         }
                                         title="Tambah kota baru"
+                                        className="btn-secondary"
                                     >
                                         <Plus className="h-4 w-4" />
                                     </Button>

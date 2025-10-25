@@ -27,25 +27,25 @@ const CustomerTable = (props: CustomerTableProps) => {
             tableName="Customer"
             tableColumn={tableColumn}
             tableRow={customers}
-            text="Tidak ada data customer"
+            text="Tidak ada data Customer"
             renderRow={(row) => (
                 <>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.id}
                     </TableCell>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.name}
                     </TableCell>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.address || '-'}
                     </TableCell>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.city?.name || '-'}
                     </TableCell>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.phone_number || '-'}
                     </TableCell>
-                    <TableCell className="w-full items-center text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.contact || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">

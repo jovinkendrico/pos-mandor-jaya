@@ -7,6 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import useCity from '@/hooks/use-city';
 import { ICity } from '@/types';
 import { useEffect } from 'react';
@@ -100,11 +101,13 @@ export default function CityForm(props: CityFormProps) {
                             disabled={processing}
                             className="btn-primary"
                         >
-                            {processing
-                                ? 'Saving...'
-                                : city
-                                  ? 'Update Kota'
-                                  : 'Tambah Kota'}
+                            {processing ? (
+                                <Spinner />
+                            ) : city ? (
+                                'Update Kota'
+                            ) : (
+                                'Tambah Kota'
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

@@ -22,10 +22,10 @@ const UOMTable = (props: UOMTableProps) => {
             text="Tidak ada data UOM"
             renderRow={(row) => (
                 <>
-                    <TableCell className="w-full text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.id}
                     </TableCell>
-                    <TableCell className="w-full text-center">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.name}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">

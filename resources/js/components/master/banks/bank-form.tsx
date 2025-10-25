@@ -7,9 +7,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import useBanks from '@/hooks/use-banks';
+import { formatCurrency, parseCurrency } from '@/lib/utils';
 import { IBank } from '@/types';
-import { useEffect } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import InputError from '../../input-error';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
@@ -42,6 +44,8 @@ const BankForm = (props: BankFormProps) => {
         handleCancel,
     } = useBanks(onModalClose);
 
+    const [displayValue, setDisplayValue] = useState('');
+
     useEffect(() => {
         if (bank) {
             setData({
@@ -56,6 +60,31 @@ const BankForm = (props: BankFormProps) => {
             reset();
         }
     }, [bank, isModalOpen, reset, setData]);
+
+    useEffect(() => {
+        setDisplayValue(formatCurrency(data.balance));
+    }, [data.balance]);
+
+    const handlePriceChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const input = e.target.value;
+
+        if (input === '') {
+            setData('balance', 0);
+            setDisplayValue('');
+            return;
+        }
+
+        if (input && !input.startsWith('Rp. ')) {
+            setDisplayValue(formatCurrency(data.balance));
+            return;
+        }
+
+        const rawValue = parseCurrency(input);
+
+        setData('balance', rawValue as number);
+
+        setDisplayValue(formatCurrency(rawValue));
+    };
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
@@ -183,13 +212,11 @@ const BankForm = (props: BankFormProps) => {
                             <Input
                                 id="balance"
                                 name="balance"
-                                type="number"
+                                type="text"
                                 step="0.01"
                                 min="0"
-                                value={data.balance}
-                                onChange={(e) =>
-                                    setData('balance', Number(e.target.value))
-                                }
+                                value={displayValue}
+                                onChange={handlePriceChange}
                                 className="input-box"
                             />
                             {errors.balance && (
@@ -232,11 +259,13 @@ const BankForm = (props: BankFormProps) => {
                             disabled={processing}
                             className="btn-primary"
                         >
-                            {processing
-                                ? 'Saving...'
-                                : bank
-                                  ? 'Update Bank/Cash'
-                                  : 'Tambah Bank/Cash'}
+                            {processing ? (
+                                <Spinner />
+                            ) : bank ? (
+                                'Update Bank/Cash'
+                            ) : (
+                                'Tambah Bank/Cash'
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>
