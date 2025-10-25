@@ -83,4 +83,6 @@ class UomController extends Controller
         return redirect()->route('uoms.index')
             ->with('success', 'Uom berhasil dihapus.');
     }
+
+    
 }
