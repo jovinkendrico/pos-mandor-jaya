@@ -21,7 +21,7 @@ const TableLayout = <T,>(props: PropTypes<T>) => {
     return (
         <Table className="content">
             <TableHeader>
-                <TableRow className="flex w-full flex-row dark:border-secondary-300">
+                <TableRow className="flex w-full flex-row hover:!bg-transparent dark:border-secondary-300">
                     {tableColumn.map((column, index) => (
                         <TableHead
                             key={index}

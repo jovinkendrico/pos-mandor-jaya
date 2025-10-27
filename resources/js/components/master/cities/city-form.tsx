@@ -19,10 +19,11 @@ interface CityFormProps {
     city?: ICity;
     isModalOpen: boolean;
     onModalClose: () => void;
+    isNested?: boolean;
 }
 
 export default function CityForm(props: CityFormProps) {
-    const { city, isModalOpen, onModalClose } = props;
+    const { city, isModalOpen, onModalClose, isNested } = props;
 
     const {
         data,
@@ -33,7 +34,7 @@ export default function CityForm(props: CityFormProps) {
 
         handleSubmit,
         handleCancel,
-    } = useCity(onModalClose);
+    } = useCity(onModalClose, isNested);
 
     useEffect(() => {
         if (city) {

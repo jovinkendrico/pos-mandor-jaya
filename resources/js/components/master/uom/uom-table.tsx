@@ -41,7 +41,7 @@ const UOMTable = (props: UOMTableProps) => {
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(row)}
-                            className="btn-danger"
+                            className="btn-trash"
                         >
                             <Trash />
                         </Button>

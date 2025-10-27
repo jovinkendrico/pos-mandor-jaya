@@ -8,7 +8,9 @@ const citySchema = Yup.object().shape({
     name: Yup.string().required('Nama Kota harus diisi.'),
 });
 
-const useCity = (closeModal: () => void) => {
+type InertiaVisitOptions = Parameters<typeof router.visit>[1];
+
+const useCity = (closeModal: () => void, isNested: boolean = false) => {
     const {
         data,
         setData,
@@ -27,7 +29,7 @@ const useCity = (closeModal: () => void) => {
 
         try {
             await citySchema.validate(data, { abortEarly: false });
-            submit(city ? update(city.id) : store(), {
+            const submitOptions: InertiaVisitOptions = {
                 onSuccess: () => {
                     reset();
                     toast.success(
@@ -40,7 +42,12 @@ const useCity = (closeModal: () => void) => {
                 onError: () => {
                     toast.error('Terjadi kesalahan, periksa input Anda.');
                 },
-            });
+            };
+            if (isNested) {
+                submitOptions.preserveState = true;
+                submitOptions.preserveScroll = true;
+            }
+            submit(city ? update(city.id) : store(), submitOptions);
         } catch (err) {
             if (err instanceof Yup.ValidationError) {
                 const yupErrors: Record<string, string> = {};

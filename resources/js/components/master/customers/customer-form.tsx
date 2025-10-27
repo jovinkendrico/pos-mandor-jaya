@@ -7,7 +7,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import useCity from '@/hooks/use-city';
 import useCustomer from '@/hooks/use-customer';
 import { ICity, ICustomer } from '@/types';
 import { Plus } from 'lucide-react';
@@ -17,6 +16,7 @@ import { Combobox, ComboboxOption } from '../../ui/combobox';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Textarea } from '../../ui/textarea';
+import CityForm from '../cities/city-form';
 
 interface CustomerFormProps {
     customer?: ICustomer;
@@ -40,14 +40,6 @@ export default function CustomerForm(props: CustomerFormProps) {
         handleSubmit: handleSubmitCustomer,
         handleCancel: handleCancelCustomer,
     } = useCustomer(onModalClose);
-
-    const {
-        setData: setDataCity,
-        errors: errorsCity,
-        processing: processingCity,
-        handleSubmit: handleSubmitCity,
-        handleCancel: handleCancelCity,
-    } = useCity(() => setIsAddCityModalOpen(false));
 
     useEffect(() => {
         setLocalCities(cities);
@@ -280,62 +272,11 @@ export default function CustomerForm(props: CustomerFormProps) {
                     </DialogFooter>
                 </form>
             </DialogContent>
-
-            {/* Dialog for adding new city */}
-            <Dialog
-                open={isAddCityModalOpen}
-                onOpenChange={setIsAddCityModalOpen}
-            >
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Tambah Kota Baru</DialogTitle>
-                        <DialogDescription>
-                            Masukkan nama kota yang ingin ditambahkan
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form
-                        className="flex flex-col space-y-2"
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSubmitCity();
-                        }}
-                    >
-                        <div className="py-4">
-                            <Label htmlFor="new_city_name">Nama Kota</Label>
-                            <Input
-                                id="new_city_name"
-                                onChange={(e) =>
-                                    setDataCity('name', e.target.value)
-                                }
-                                placeholder="Masukkan nama kota"
-                            />
-                            {errorsCity.name && (
-                                <InputError message={errorsCity.name} />
-                            )}
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={handleCancelCity}
-                                disabled={processingCity}
-                                className="btn-secondary"
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={processingCity}
-                                className="btn-primary"
-                            >
-                                {processingCity
-                                    ? 'Menambahkan...'
-                                    : 'Tambah Kota'}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            <CityForm
+                isModalOpen={isAddCityModalOpen}
+                onModalClose={() => setIsAddCityModalOpen(false)}
+                isNested
+            />
         </Dialog>
     );
 }

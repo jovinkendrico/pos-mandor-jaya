@@ -50,19 +50,8 @@ class CityController extends Controller
     {
         $city = City::create($request->validated());
 
-        return redirect()->route('cities.index')
+        return redirect()->back()
             ->with('success', 'Kota berhasil ditambahkan.');
-    }
-
-
-    public function storeCity(StoreCityRequest $request): RedirectResponse|JsonResponse
-    {
-        $city = City::create($request->validated());
-        return response()->json([
-            'success' => true,
-            'message' => 'Kota berhasil ditambahkan.',
-            'data'    => $city,
-        ], 201);
     }
 
     /**
