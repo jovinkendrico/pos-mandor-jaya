@@ -6,6 +6,7 @@ use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
 use App\Models\Uom;
+use App\Services\ItemService;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -42,7 +43,12 @@ class ItemController extends Controller
     public function store(StoreItemRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            $item = Item::create($request->only(['code', 'name', 'base_uom', 'stock', 'description']));
+            $code = ItemService::generateCode();
+
+            $item = Item::create(array_merge(
+                ['code' => $code],
+                $request->only(['name', 'base_uom', 'stock', 'description'])
+            ));
 
             // Create UOMs
             foreach ($request->uoms as $uom) {
@@ -84,7 +90,7 @@ class ItemController extends Controller
     public function update(UpdateItemRequest $request, Item $item): RedirectResponse
     {
         DB::transaction(function () use ($request, $item) {
-            $item->update($request->only(['code', 'name', 'base_uom', 'stock', 'description']));
+            $item->update($request->only(['name', 'base_uom', 'stock', 'description']));
 
             // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
             $item->uoms()->forceDelete();

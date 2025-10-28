@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreItemRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class StoreItemRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Auth::check();
     }
 
     /**
@@ -22,7 +23,6 @@ class StoreItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:255', 'unique:items,code'],
             'name' => ['required', 'string', 'max:255'],
             'base_uom' => ['required', 'string', 'max:255'],
             'stock' => ['nullable', 'numeric', 'min:0'],
