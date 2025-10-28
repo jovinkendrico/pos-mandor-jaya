@@ -186,3 +186,160 @@ export interface UOM {
     id: number;
     name: string;
 }
+
+export interface Category {
+    id: number;
+    name: string;
+    type: 'income' | 'expense';
+    parent_id?: number;
+    parent?: Category;
+    children?: Category[];
+    is_active: boolean;
+    description?: string;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export type ICategory = Pick<
+    Category,
+    'id' | 'name' | 'type' | 'parent_id' | 'parent' | 'is_active' | 'description'
+>;
+
+export interface CashFlow {
+    id: number;
+    type: 'in' | 'out';
+    category_id: number;
+    category?: Category;
+    amount: number;
+    description: string;
+    reference_type?: 'Purchase' | 'Sale' | 'Manual' | 'Expense';
+    reference_id?: number;
+    bank_id: number;
+    bank?: Bank;
+    transaction_date: string;
+    created_by: number;
+    createdBy?: User;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export type ICashFlow = Pick<
+    CashFlow,
+    | 'id'
+    | 'type'
+    | 'category_id'
+    | 'category'
+    | 'amount'
+    | 'description'
+    | 'reference_type'
+    | 'reference_id'
+    | 'bank_id'
+    | 'bank'
+    | 'transaction_date'
+    | 'created_by'
+    | 'createdBy'
+>;
+
+export interface Payment {
+    id: number;
+    payment_number: string;
+    reference_type: 'Purchase' | 'Sale';
+    reference_id: number;
+    reference?: Purchase | Sale;
+    payment_date: string;
+    amount_paid: number;
+    payment_method: 'cash' | 'bank_transfer' | 'check' | 'other';
+    bank_id?: number;
+    bank?: Bank;
+    notes?: string;
+    created_by: number;
+    createdBy?: User;
+    details?: PaymentDetail[];
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export type IPayment = Pick<
+    Payment,
+    | 'id'
+    | 'payment_number'
+    | 'reference_type'
+    | 'reference_id'
+    | 'reference'
+    | 'payment_date'
+    | 'amount_paid'
+    | 'payment_method'
+    | 'bank_id'
+    | 'bank'
+    | 'notes'
+    | 'created_by'
+    | 'createdBy'
+    | 'details'
+>;
+
+export interface PaymentDetail {
+    id: number;
+    payment_id: number;
+    amount: number;
+    payment_date: string;
+    payment_method: 'cash' | 'bank_transfer' | 'check' | 'other';
+    bank_id?: number;
+    bank?: Bank;
+    notes?: string;
+    created_by: number;
+    createdBy?: User;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface Purchase {
+    id: number;
+    purchase_number: string;
+    supplier_id?: number;
+    supplier?: Supplier;
+    purchase_date: string;
+    due_date?: string;
+    subtotal: number;
+    discount1_percent: number;
+    discount1_amount: number;
+    discount2_percent: number;
+    discount2_amount: number;
+    total_after_discount: number;
+    ppn_percent: number;
+    ppn_amount: number;
+    total_amount: number;
+    status: 'pending' | 'confirmed';
+    notes?: string;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface Sale {
+    id: number;
+    sale_number: string;
+    customer_id?: number;
+    customer?: Customer;
+    sale_date: string;
+    due_date?: string;
+    subtotal: number;
+    discount1_percent: number;
+    discount1_amount: number;
+    discount2_percent: number;
+    discount2_amount: number;
+    total_after_discount: number;
+    ppn_percent: number;
+    ppn_amount: number;
+    total_amount: number;
+    total_cost: number;
+    total_profit: number;
+    status: 'pending' | 'confirmed';
+    notes?: string;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}

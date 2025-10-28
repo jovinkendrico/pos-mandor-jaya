@@ -136,7 +136,7 @@ export default function PurchaseReturnShow({ return: returnData }: PageProps) {
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title={`Retur Beli ${returnData.return_number}`} />
-                
+
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <PageTitle title={`Retur Beli ${returnData.return_number}`} />

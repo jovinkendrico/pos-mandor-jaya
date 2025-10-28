@@ -26,7 +26,7 @@ import { index as uomIndex } from '@/routes/uoms';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, ShoppingCart, User2 } from 'lucide-react';
+import { Database, LayoutGrid, ShoppingCart, User2, Calculator, DollarSign, CreditCard, FileText, BarChart3 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -86,6 +86,21 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Retur Jual',
                 href: saleReturnIndex(),
+            },
+        ],
+    },
+    {
+        title: 'Accounting',
+        href: '#',
+        icon: Calculator,
+        children: [
+            {
+                title: 'Payment Settlement',
+                href: '/accounting/payment-settlement',
+            },
+            {
+                title: 'Cash Management',
+                href: '/accounting/cash-management',
             },
         ],
     },

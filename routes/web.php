@@ -1,15 +1,20 @@
 <?php
 
+use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\BankController;
+use App\Http\Controllers\CashFlowController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleReturnController;
+use App\Http\Controllers\SimpleAccountingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\UserController;
@@ -46,6 +51,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sale-returns/{sale_return}/confirm', [SaleReturnController::class, 'confirm'])->name('sale-returns.confirm');
     Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
 
+    // Payment routes
+    Route::get('payments/status', [PaymentController::class, 'getPaymentStatus'])->name('payments.status');
+
+    // Cash Flow routes
+    Route::get('cash-flows/summary', [CashFlowController::class, 'getSummary'])->name('cash-flows.summary');
+    Route::get('cash-flows/profit-loss', [CashFlowController::class, 'getProfitLoss'])->name('cash-flows.profit-loss');
+    Route::get('cash-flows/bank-balances', [CashFlowController::class, 'getBankBalances'])->name('cash-flows.bank-balances');
+
+    // Category routes
+    Route::get('categories/income', [CategoryController::class, 'getIncomeCategories'])->name('categories.income');
+    Route::get('categories/expense', [CategoryController::class, 'getExpenseCategories'])->name('categories.expense');
+    Route::post('categories/{category}/toggle-active', [CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
+
+    // Simple Accounting routes
+    Route::get('accounting', [SimpleAccountingController::class, 'paymentSettlement'])->name('accounting.dashboard');
+    Route::get('accounting/payment-settlement', [SimpleAccountingController::class, 'paymentSettlement'])->name('accounting.payment-settlement');
+    Route::get('accounting/cash-management', [SimpleAccountingController::class, 'cashManagement'])->name('accounting.cash-management');
+    Route::post('accounting/cash-in', [SimpleAccountingController::class, 'storeCashIn'])->name('accounting.cash-in');
+    Route::post('accounting/cash-out', [SimpleAccountingController::class, 'storeCashOut'])->name('accounting.cash-out');
+
     Route::resources([
         'users'            => UserController::class,
         'roles'            => RoleController::class,
@@ -60,7 +85,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'sales'            => SaleController::class,
         'purchase-returns' => PurchaseReturnController::class,
         'sale-returns'     => SaleReturnController::class,
-        'uoms'             => UomController::class,
+        'payments'         => PaymentController::class,
+        'cash-flows'       => CashFlowController::class,
+        'categories'       => CategoryController::class,
     ]);
 });
 

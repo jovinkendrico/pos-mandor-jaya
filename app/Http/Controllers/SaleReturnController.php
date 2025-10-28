@@ -67,11 +67,11 @@ class SaleReturnController extends Controller
 
             foreach ($request->details as $detail) {
                 $amount = $detail['quantity'] * $detail['price'];
-                
+
                 $itemDiscount1Percent = $detail['discount1_percent'] ?? 0;
                 $itemDiscount1Amount = ($amount * $itemDiscount1Percent) / 100;
                 $afterDiscount1 = $amount - $itemDiscount1Amount;
-                
+
                 $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
                 $itemDiscount2Amount = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal = $afterDiscount1 - $itemDiscount2Amount;
