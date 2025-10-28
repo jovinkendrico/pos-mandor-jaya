@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
+use App\Models\Uom;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -19,10 +20,11 @@ class ItemController extends Controller
     {
         $items = Item::with('uoms')->orderBy('name')->get();
 
+        $uoms = Uom::all();
+
         return Inertia::render('master/item/index', [
-            'items' => [
-                'data' => $items,
-            ],
+            'items' => $items,
+            'uoms'  => $uoms,
         ]);
     }
 

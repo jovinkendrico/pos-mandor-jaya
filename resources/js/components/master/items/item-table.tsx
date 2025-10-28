@@ -53,7 +53,7 @@ const ItemTable = (props: ItemTableProps) => {
             tableName="Barang"
             tableColumn={tableColumn}
             tableRow={items}
-            text="Tidak ada data barang"
+            text="Tidak ada data Barang"
             renderRow={(row) => (
                 <>
                     <TableCell className="w-full items-center text-center">

@@ -7,6 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import useCity from '@/hooks/use-city';
 import { ICity } from '@/types';
 import { useEffect } from 'react';
@@ -18,10 +19,11 @@ interface CityFormProps {
     city?: ICity;
     isModalOpen: boolean;
     onModalClose: () => void;
+    isNested?: boolean;
 }
 
 export default function CityForm(props: CityFormProps) {
-    const { city, isModalOpen, onModalClose } = props;
+    const { city, isModalOpen, onModalClose, isNested } = props;
 
     const {
         data,
@@ -32,7 +34,7 @@ export default function CityForm(props: CityFormProps) {
 
         handleSubmit,
         handleCancel,
-    } = useCity(onModalClose);
+    } = useCity(onModalClose, isNested);
 
     useEffect(() => {
         if (city) {
@@ -100,11 +102,13 @@ export default function CityForm(props: CityFormProps) {
                             disabled={processing}
                             className="btn-primary"
                         >
-                            {processing
-                                ? 'Saving...'
-                                : city
-                                  ? 'Update Kota'
-                                  : 'Tambah Kota'}
+                            {processing ? (
+                                <Spinner />
+                            ) : city ? (
+                                'Update Kota'
+                            ) : (
+                                'Tambah Kota'
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>
