@@ -1,4 +1,4 @@
-import { destroy, store, update } from '@/routes/suppliers';
+import { destroy, store, update } from '@/routes/customers';
 import { ICustomer } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
