@@ -24,7 +24,6 @@ class StoreItemRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'base_uom' => ['required', 'string', 'max:255'],
             'stock' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
             'uoms' => ['required', 'array', 'min:1'],
