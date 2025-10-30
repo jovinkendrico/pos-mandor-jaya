@@ -50,6 +50,7 @@ export default function ItemForm({
         name: string;
         base_uom: string;
         stock: string;
+        modal_price: string; // NEW FIELD FOR COST HPP
         description: string;
         uoms: ItemUom[];
     }>({
@@ -57,6 +58,7 @@ export default function ItemForm({
         name: '',
         base_uom: '',
         stock: '0',
+        modal_price: '', // INIT
         description: '',
         uoms: [],
     });
@@ -309,6 +311,24 @@ export default function ItemForm({
                                 disabled={form.processing}
                             />
                             <InputError message={form.errors.name} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="modal_price">
+                                Harga Modal / HPP <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="modal_price"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={form.data.modal_price}
+                                onChange={(e) => form.setData('modal_price', e.target.value)}
+                                placeholder="0"
+                                required={parseFloat(form.data.stock) > 0}
+                                disabled={form.processing}
+                            />
+                            <InputError message={form.errors.modal_price} />
                         </div>
 
                         <div className="space-y-2">

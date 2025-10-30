@@ -27,6 +27,7 @@ class StoreItemRequest extends FormRequest
             'base_uom' => ['required', 'string', 'max:255'],
             'stock' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
+            'modal_price' => ['required', 'numeric', 'min:0'],
             'uoms' => ['required', 'array', 'min:1'],
             'uoms.*.uom_name' => ['required', 'string', 'max:255'],
             'uoms.*.conversion_value' => ['required', 'integer', 'min:1'],

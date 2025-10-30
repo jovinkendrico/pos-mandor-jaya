@@ -6,6 +6,7 @@ use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
 use App\Models\Uom;
+use App\Models\StockMovement;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,19 @@ class ItemController extends Controller
             // Create UOMs
             foreach ($request->uoms as $uom) {
                 $item->uoms()->create($uom);
+            }
+            // Create stock movement for initial stock with modal_price as unit_cost
+            if ($request->stock > 0 && $request->modal_price) {
+                StockMovement::create([
+                    'item_id' => $item->id,
+                    'reference_type' => 'Initial',
+                    'reference_id' => 0,
+                    'quantity' => $request->stock,
+                    'unit_cost' => $request->modal_price,
+                    'remaining_quantity' => $request->stock,
+                    'movement_date' => now(),
+                    'notes' => 'Initial stock by user',
+                ]);
             }
         });
 
