@@ -39,7 +39,7 @@ class UomController extends Controller
     {
         //
         Uom::create($request->validated());
-        return redirect()->route('uoms.index')
+        return redirect()->back()
             ->with('success', 'UOM berhasil ditambahkan.');
     }
 

@@ -213,8 +213,6 @@ const BankForm = (props: BankFormProps) => {
                                 id="balance"
                                 name="balance"
                                 type="text"
-                                step="0.01"
-                                min="0"
                                 value={displayValue}
                                 onChange={handlePriceChange}
                                 className="input-box"

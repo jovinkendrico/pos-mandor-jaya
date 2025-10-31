@@ -11,17 +11,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useUOM from '@/hooks/use-uom';
-import { UOM } from '@/types';
+import { IUOM } from '@/types';
 import { useEffect } from 'react';
 
 interface UOMFormProps {
-    uom?: UOM;
+    uom?: IUOM;
     isModalOpen: boolean;
     onModalClose: () => void;
+    isNested?: boolean;
 }
 
 const UOMForm = (props: UOMFormProps) => {
-    const { uom, isModalOpen, onModalClose } = props;
+    const { uom, isModalOpen, onModalClose, isNested } = props;
 
     const {
         data,
@@ -31,7 +32,7 @@ const UOMForm = (props: UOMFormProps) => {
         reset,
         handleSubmit,
         handleCancel,
-    } = useUOM(onModalClose);
+    } = useUOM(onModalClose, isNested);
 
     useEffect(() => {
         if (isModalOpen && uom) {

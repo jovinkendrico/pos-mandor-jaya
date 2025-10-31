@@ -6,7 +6,7 @@ import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayo
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroyUOM, index } from '@/routes/uoms';
-import { BreadcrumbItem, UOM } from '@/types';
+import { BreadcrumbItem, IUOM } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -23,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface UOMProps {
-    uoms: UOM[];
+    uoms: IUOM[];
 }
 
 const UOMPage = (props: UOMProps) => {
@@ -40,14 +40,14 @@ const UOMPage = (props: UOMProps) => {
         closeModal: closeDeleteModal,
     } = useDisclosure();
 
-    const [selectedUOM, setSelectedUOM] = useState<UOM | undefined>(undefined);
+    const [selectedUOM, setSelectedUOM] = useState<IUOM | undefined>(undefined);
 
-    const handleEdit = (uom: UOM) => {
+    const handleEdit = (uom: IUOM) => {
         setSelectedUOM(uom);
         openEditModal();
     };
 
-    const handleDelete = (uom: UOM) => {
+    const handleDelete = (uom: IUOM) => {
         setSelectedUOM(uom);
         openDeleteModal();
     };
