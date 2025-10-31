@@ -14,7 +14,6 @@ return new class extends Migration {
             $table->id();
             $table->string('code')->unique();
             $table->string('name');
-            $table->foreignId('uom_id')->constrained('uoms')->cascadeOnDelete();
             $table->decimal('stock', 15, 2)->default(0);
             $table->text('description')->nullable();
             $table->timestamps();
