@@ -1,13 +1,13 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { UOM } from '@/types';
+import { IUOM } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 
 interface UOMTableProps {
-    uoms: UOM[];
-    onEdit: (uom: UOM) => void;
-    onDelete: (uom: UOM) => void;
+    uoms: IUOM[];
+    onEdit: (uom: IUOM) => void;
+    onDelete: (uom: IUOM) => void;
 }
 
 const UOMTable = (props: UOMTableProps) => {

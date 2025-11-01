@@ -157,32 +157,39 @@ export interface ItemUom {
     item_id: number;
     uom_name: string;
     conversion_value: number;
-    price: string;
+    price: number;
     is_base: boolean;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 }
 
+export type IItemUOM = Pick<
+    ItemUom,
+    'uom_name' | 'conversion_value' | 'price' | 'is_base'
+>;
+
 export interface Item {
     id: number;
-    code: string;
     name: string;
-    base_uom: string;
-    stock: string;
+    stock: number;
     description?: string;
-    uoms?: ItemUom[];
+    uoms: ItemUom[];
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 }
+
+export type IItem = Pick<Item, 'id' | 'name' | 'stock' | 'description'> & {
+    uoms: IItemUOM[];
+};
 
 export interface PageProps {
     auth: Auth;
     [key: string]: unknown;
 }
 
-export interface UOM {
+export interface IUOM {
     id: number;
     name: string;
 }

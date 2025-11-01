@@ -1,42 +1,17 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
+import { IItem } from '@/types';
 import { Pencil, Trash2 } from 'lucide-react';
 
-interface ItemUom {
-    id: number;
-    uom_name: string;
-    conversion_value: number;
-    price: string;
-    is_base: boolean;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-    base_uom: string;
-    stock: string;
-    description?: string;
-    uoms?: ItemUom[];
-}
-
 interface ItemTableProps {
-    items: Item[];
-    onEdit?: (item: Item) => void;
-    onDelete?: (item: Item) => void;
+    items: IItem[];
+    onEdit?: (item: IItem) => void;
+    onDelete?: (item: IItem) => void;
 }
 
 const ItemTable = (props: ItemTableProps) => {
     const { items, onEdit, onDelete } = props;
-
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(value);
-    };
 
     const tableColumn = [
         'Kode',
@@ -57,24 +32,22 @@ const ItemTable = (props: ItemTableProps) => {
             renderRow={(row) => (
                 <>
                     <TableCell className="w-full items-center text-center">
-                        {row.code}
+                        {row.id}
                     </TableCell>
                     <TableCell className="w-full items-center text-center">
                         {row.name}
                     </TableCell>
                     <TableCell className="w-full items-center text-center">
-                        {row.base_uom}
+                        {row.stock}
                     </TableCell>
                     <TableCell className="w-full items-center text-center">
-                        {row.stock}
+                        {row.description}
                     </TableCell>
                     <TableCell className="w-full items-center text-center">
                         {row.uoms?.map((u) => u.uom_name).join(', ')}
                     </TableCell>
                     <TableCell className="w-full items-center text-center">
-                        {row.uoms
-                            ?.map((u) => formatCurrency(parseFloat(u.price)))
-                            .join(', ')}
+                        {row.uoms?.map((u) => u.price).join(', ')}
                     </TableCell>
                     <TableCell className="w-full items-center text-center">
                         <Button

@@ -1,5 +1,5 @@
 import { destroy, store, update } from '@/routes/uoms';
-import { UOM } from '@/types';
+import { IUOM } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
@@ -8,7 +8,9 @@ const UOMSchema = Yup.object().shape({
     name: Yup.string().required('Nama UOM harus diisi.'),
 });
 
-const useUOM = (closeModal: () => void) => {
+type InertiaVisitOptions = Parameters<typeof router.visit>[1];
+
+const useUOM = (closeModal: () => void, isNested: boolean = false) => {
     const {
         data,
         setData,
@@ -22,13 +24,12 @@ const useUOM = (closeModal: () => void) => {
         name: '',
     });
 
-    const handleSubmit = async (uom?: UOM) => {
+    const handleSubmit = async (uom?: IUOM) => {
         clearErrors();
 
         try {
             await UOMSchema.validate(data, { abortEarly: false });
-
-            submit(uom ? update(uom.id) : store(), {
+            const submitOptions: InertiaVisitOptions = {
                 onSuccess: () => {
                     reset();
                     toast.success(
@@ -41,7 +42,13 @@ const useUOM = (closeModal: () => void) => {
                 onError: () => {
                     toast.error('Terjadi kesalahan, periksa input Anda.');
                 },
-            });
+            };
+            if (isNested) {
+                submitOptions.preserveState = true;
+                submitOptions.preserveScroll = true;
+            }
+
+            submit(uom ? update(uom.id) : store(), submitOptions);
         } catch (err) {
             if (err instanceof Yup.ValidationError) {
                 const yupErrors: Record<string, string> = {};
@@ -56,7 +63,7 @@ const useUOM = (closeModal: () => void) => {
         }
     };
 
-    const handleDelete = (uom: UOM) => {
+    const handleDelete = (uom: IUOM) => {
         router.delete(destroy(uom.id).url, {
             onSuccess: () => {
                 toast.success('UOM berhasil dihapus');
