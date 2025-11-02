@@ -28,4 +28,9 @@ class ItemUom extends Model
     {
         return $this->belongsTo(Item::class);
     }
+
+    public function uom(): BelongsTo
+    {
+        return $this->belongsTo(Uom::class);
+    }
 }
