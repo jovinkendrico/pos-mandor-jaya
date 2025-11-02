@@ -45,10 +45,13 @@ class ItemController extends Controller
         DB::transaction(function () use ($request) {
             $code = ItemService::generateCode();
 
-            $item = Item::create(array_merge(
-                ['code' => $code],
-                $request->only(['name', 'base_uom', 'stock', 'description'])
-            ));
+            $item = Item::create([
+                'code'        => $code,
+                'name'        => $request->name,
+                'base_uom'    => $request->base_uom,
+                'stock'       => $request->stock ?? 0,
+                'description' => $request->description,
+            ]);
 
             // Create UOMs
             foreach ($request->uoms as $uom) {

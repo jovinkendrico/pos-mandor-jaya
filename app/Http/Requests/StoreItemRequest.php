@@ -28,7 +28,6 @@ class StoreItemRequest extends FormRequest
             'description'             => ['nullable', 'string'],
             'uoms'                    => ['required', 'array', 'min:1'],
             'uoms.*.uom_id'           => ['required', 'exists:uoms,id'],
-            'uoms.*.uom_name'         => ['required', 'string', 'max:255'],
             'uoms.*.conversion_value' => ['required', 'integer', 'min:1'],
             'uoms.*.price'            => ['required', 'numeric', 'min:0'],
             'uoms.*.is_base'          => ['boolean'],
