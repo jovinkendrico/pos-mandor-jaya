@@ -13,7 +13,7 @@ interface UOMTableProps {
 const UOMTable = (props: UOMTableProps) => {
     const { uoms, onEdit, onDelete } = props;
 
-    const tableColumn = ['Kode', 'Name', 'Aksi'];
+    const tableColumn = ['Kode', 'Nama UOM', 'Aksi'];
     return (
         <TableLayout
             tableName="UOM"

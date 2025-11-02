@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import * as Yup from 'yup';
 
 const uomSchema = Yup.object().shape({
+    uom_id: Yup.number().required('UOM harus dipilih.'),
     uom_name: Yup.string().required('Nama UOM harus diisi.'),
     conversion_value: Yup.number()
         .required('Nilai konversi harus diisi.')
@@ -69,6 +70,7 @@ const useItem = (closeModal: () => void) => {
         description: '',
         uoms: [
             {
+                uom_id: 0,
                 uom_name: '',
                 conversion_value: 1,
                 price: 0,
@@ -133,6 +135,7 @@ const useItem = (closeModal: () => void) => {
         setData('uoms', [
             ...data.uoms,
             {
+                uom_id: 0,
                 uom_name: '',
                 conversion_value: 0,
                 price: 0,
@@ -159,11 +162,14 @@ const useItem = (closeModal: () => void) => {
     const handleChangeItem = (
         index: number,
         field: keyof IItemUOM,
-        value: string | number | boolean,
+        value: string | number | boolean | null,
     ) => {
         const updated = [...data.uoms];
 
         switch (field) {
+            case 'uom_id':
+                updated[index][field] = value as number;
+                break;
             case 'uom_name':
                 updated[index][field] = value as string;
                 break;

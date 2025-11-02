@@ -172,12 +172,30 @@ const ItemForm = (props: ItemFormProps) => {
                                         <div className="flex w-full flex-row items-center justify-between gap-2">
                                             <Combobox
                                                 options={uomComboBoxOptions}
-                                                value={uom.uom_name}
+                                                value={
+                                                    uom.uom_id?.toString() || ''
+                                                }
                                                 onValueChange={(newValue) => {
+                                                    const setSelectedUOM =
+                                                        uomComboBoxOptions.find(
+                                                            (option) =>
+                                                                option.value ===
+                                                                newValue,
+                                                        );
+                                                    if (!setSelectedUOM) {
+                                                        return;
+                                                    }
                                                     handleChangeItem(
                                                         index,
                                                         'uom_name',
-                                                        newValue,
+                                                        setSelectedUOM.label,
+                                                    );
+                                                    handleChangeItem(
+                                                        index,
+                                                        'uom_id',
+                                                        Number(
+                                                            setSelectedUOM.value,
+                                                        ),
                                                     );
                                                 }}
                                                 placeholder="Pilih atau cari UOM..."

@@ -167,7 +167,9 @@ export interface ItemUom {
 export type IItemUOM = Pick<
     ItemUom,
     'uom_name' | 'conversion_value' | 'price' | 'is_base'
->;
+> & {
+    uom_id: ItemUom['id'];
+};
 
 export interface Item {
     id: number;

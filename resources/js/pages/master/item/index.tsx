@@ -12,9 +12,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
-    items: {
-        data: IItem[];
-    };
+    items: IItem[];
     uoms: IUOM[];
 }
 
@@ -75,7 +73,7 @@ export default function ItemIndex(props: PageProps) {
                     </Button>
                 </div>
                 <ItemTable
-                    items={items.data}
+                    items={items}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                 />

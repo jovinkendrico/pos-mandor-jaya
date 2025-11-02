@@ -26,7 +26,7 @@ const BankTable = (props: BankTableProps) => {
 
     const tableColumn = [
         'Kode',
-        'Nama',
+        'Nama Bank/Cash',
         'Tipe',
         'No. Rekening',
         'Nama Pemilik',
