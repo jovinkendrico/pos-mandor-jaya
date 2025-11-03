@@ -93,14 +93,20 @@ class ItemController extends Controller
     public function update(UpdateItemRequest $request, Item $item): RedirectResponse
     {
         DB::transaction(function () use ($request, $item) {
-            $item->update($request->only(['name', 'base_uom', 'stock', 'description']));
+
+            $item->update([
+                'name'        => $request->name,
+                'base_uom'    => $request->base_uom,
+                'stock'       => $request->stock ?? 0,
+                'description' => $request->description,
+            ]);
 
             // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
-            $item->uoms()->forceDelete();
+            $item->itemUoms()->forceDelete();
 
             // Create new UOMs
             foreach ($request->uoms as $uom) {
-                $item->uoms()->create($uom);
+                $item->itemUoms()->create($uom);
             }
         });
 
