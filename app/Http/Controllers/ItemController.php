@@ -19,7 +19,7 @@ class ItemController extends Controller
      */
     public function index(): Response
     {
-        $items = Item::with('uoms.uom')->orderBy('name')->get();
+        $items = Item::with('itemUoms.uom')->orderBy('name')->get();
 
         $uoms = Uom::all();
 
@@ -55,7 +55,7 @@ class ItemController extends Controller
 
             // Create UOMs
             foreach ($request->uoms as $uom) {
-                $item->uoms()->create($uom);
+                $item->itemUoms()->create($uom);
             }
         });
 

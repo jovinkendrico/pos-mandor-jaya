@@ -21,7 +21,7 @@ class Item extends Model
         'stock' => 'decimal:2',
     ];
 
-    public function uoms(): HasMany
+    public function itemUoms(): HasMany
     {
         return $this->hasMany(ItemUom::class);
     }
