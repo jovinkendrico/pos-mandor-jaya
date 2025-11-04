@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UpdateItemRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class UpdateItemRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Auth::check();
     }
 
     /**
@@ -22,17 +23,14 @@ class UpdateItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:255', 'unique:items,code,' . $this->route('item')],
-            'name' => ['required', 'string', 'max:255'],
-            'base_uom' => ['required', 'string', 'max:255'],
-            'stock' => ['nullable', 'numeric', 'min:0'],
-            'description' => ['nullable', 'string'],
-            'modal_price' => ['required', 'numeric', 'min:0'],
-            'uoms' => ['required', 'array', 'min:1'],
-            'uoms.*.uom_name' => ['required', 'string', 'max:255'],
+            'name'                    => ['required', 'string', 'max:255'],
+            'stock'                   => ['nullable', 'numeric', 'min:0'],
+            'description'             => ['nullable', 'string'],
+            'uoms'                    => ['required', 'array', 'min:1'],
+            'uoms.*.uom_name'         => ['required', 'string', 'max:255'],
             'uoms.*.conversion_value' => ['required', 'integer', 'min:1'],
-            'uoms.*.price' => ['required', 'numeric', 'min:0'],
-            'uoms.*.is_base' => ['boolean'],
+            'uoms.*.price'            => ['required', 'numeric', 'min:0'],
+            'uoms.*.is_base'          => ['boolean'],
         ];
     }
 }

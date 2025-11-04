@@ -7,7 +7,7 @@ import * as Yup from 'yup';
 const indoPhoneRegex = /^\+62\d{9,13}$/;
 const supplierSchema = Yup.object().shape({
     name: Yup.string().required('Nama Bank/Cash harus diisi.'),
-    address: Yup.string(),
+    address: Yup.string().max(255, 'Maksimal 255 karakter.'),
     city_id: Yup.string(),
     phone_number: Yup.string()
         .nullable()

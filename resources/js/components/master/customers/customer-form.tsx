@@ -66,49 +66,6 @@ export default function CustomerForm(props: CustomerFormProps) {
         }));
     }, [localCities]);
 
-    // const handleAddCity = async () => {
-    //     if (!newCityName.trim()) {
-    //         toast.error('Nama kota tidak boleh kosong');
-    //         return;
-    //     }
-
-    //     setIsAddingCity(true);
-
-    //     try {
-    //         // Using axios which automatically handles CSRF token from cookies
-    //         const response = await axios.post(
-    //             storeCity().url,
-    //             {
-    //                 name: newCityName,
-    //             },
-    //             {
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     Accept: 'application/json',
-    //                 },
-    //             },
-    //         );
-
-    //         if (response.data && response.data.data) {
-    //             const newCity = response.data.data;
-
-    //             setLocalCities((prev) => [...prev, newCity]);
-    //             setData('city_id', newCity.id.toString());
-    //             toast.success('Kota berhasil ditambahkan');
-    //             setNewCityName('');
-    //             setIsAddCityModalOpen(false);
-    //         }
-    //     } catch (error: unknown) {
-    //         const errorMessage =
-    //             error.response?.data?.message ||
-    //             error.response?.data?.errors?.name?.[0] ||
-    //             'Gagal menambahkan kota';
-    //         toast.error(errorMessage);
-    //     } finally {
-    //         setIsAddingCity(false);
-    //     }
-    // };
-
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
             <DialogContent className="max-w-2xl">

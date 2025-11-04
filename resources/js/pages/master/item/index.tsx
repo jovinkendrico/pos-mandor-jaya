@@ -1,37 +1,19 @@
-import ItemDeleteConfirmation from '@/components/master/items/item-delete-confirmation';
 import ItemForm from '@/components/master/items/item-form';
 import ItemTable from '@/components/master/items/item-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/items';
-import { BreadcrumbItem } from '@/types';
+import { destroy as destroyItem, index } from '@/routes/items';
+import { BreadcrumbItem, IItem, IUOM } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
-interface ItemUom {
-    id: number;
-    uom_name: string;
-    conversion_value: number;
-    price: string;
-    is_base: boolean;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-    base_uom: string;
-    stock: string;
-    description?: string;
-    uoms?: ItemUom[];
-}
-
 interface PageProps {
-    items: {
-        data: Item[];
-    };
+    items: IItem[];
+    uoms: IUOM[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -45,24 +27,32 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function ItemIndex({ items }: PageProps) {
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+export default function ItemIndex(props: PageProps) {
+    const { items, uoms } = props;
 
-    const handleEdit = (item: Item) => {
+    const {
+        isOpen: isEditModalOpen,
+        openModal: openEditModal,
+        closeModal: closeEditModal,
+    } = useDisclosure();
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
+
+    const [selectedItem, setSelectedItem] = useState<IItem | undefined>(
+        undefined,
+    );
+
+    const handleEdit = (item: IItem) => {
         setSelectedItem(item);
-        setIsFormModalOpen(true);
+        openEditModal();
     };
 
-    const handleDelete = (item: Item) => {
+    const handleDelete = (item: IItem) => {
         setSelectedItem(item);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleFormClose = () => {
-        setIsFormModalOpen(false);
-        setSelectedItem(null);
+        openDeleteModal();
     };
 
     return (
@@ -72,7 +62,10 @@ export default function ItemIndex({ items }: PageProps) {
                 <div className="flex justify-between">
                     <PageTitle title="Barang" />
                     <Button
-                        onClick={() => setIsFormModalOpen(true)}
+                        onClick={() => {
+                            setSelectedItem(undefined);
+                            openEditModal();
+                        }}
                         className="btn-primary"
                     >
                         <Plus />
@@ -80,19 +73,24 @@ export default function ItemIndex({ items }: PageProps) {
                     </Button>
                 </div>
                 <ItemTable
-                    items={items.data}
+                    items={items}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                 />
                 <ItemForm
-                    isModalOpen={isFormModalOpen}
-                    onOpenChange={handleFormClose}
+                    isModalOpen={isEditModalOpen}
+                    onModalClose={closeEditModal}
                     item={selectedItem}
+                    uomOptions={uoms}
                 />
-                <ItemDeleteConfirmation
+                <DeleteModalLayout
+                    dataId={selectedItem?.id}
+                    dataName={selectedItem?.name}
+                    dataType="Barang"
                     isModalOpen={isDeleteModalOpen}
-                    onOpenChange={setIsDeleteModalOpen}
-                    item={selectedItem}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedItem}
+                    getDeleteUrl={(id: number) => destroyItem(id).url}
                 />
             </AppLayout>
         </>

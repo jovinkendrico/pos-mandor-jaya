@@ -6,6 +6,7 @@ use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
 use App\Models\Uom;
+use App\Services\ItemService;
 use App\Models\StockMovement;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +20,7 @@ class ItemController extends Controller
      */
     public function index(): Response
     {
-        $items = Item::with('uoms')->orderBy('name')->get();
+        $items = Item::with('itemUoms.uom')->orderBy('name')->get();
 
         $uoms = Uom::all();
 
@@ -43,11 +44,19 @@ class ItemController extends Controller
     public function store(StoreItemRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            $item = Item::create($request->only(['code', 'name', 'base_uom', 'stock', 'description']));
+            $code = ItemService::generateCode();
+
+            $item = Item::create([
+                'code'        => $code,
+                'name'        => $request->name,
+                'base_uom'    => $request->base_uom,
+                'stock'       => $request->stock ?? 0,
+                'description' => $request->description,
+            ]);
 
             // Create UOMs
             foreach ($request->uoms as $uom) {
-                $item->uoms()->create($uom);
+                $item->itemUoms()->create($uom);
             }
             // Create stock movement for initial stock with modal_price as unit_cost
             if ($request->stock > 0 && $request->modal_price) {
@@ -98,14 +107,20 @@ class ItemController extends Controller
     public function update(UpdateItemRequest $request, Item $item): RedirectResponse
     {
         DB::transaction(function () use ($request, $item) {
-            $item->update($request->only(['code', 'name', 'base_uom', 'stock', 'description']));
+
+            $item->update([
+                'name'        => $request->name,
+                'base_uom'    => $request->base_uom,
+                'stock'       => $request->stock ?? 0,
+                'description' => $request->description,
+            ]);
 
             // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
-            $item->uoms()->forceDelete();
+            $item->itemUoms()->forceDelete();
 
             // Create new UOMs
             foreach ($request->uoms as $uom) {
-                $item->uoms()->create($uom);
+                $item->itemUoms()->create($uom);
             }
         });
 
