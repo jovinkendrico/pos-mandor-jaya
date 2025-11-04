@@ -3,18 +3,17 @@ import BankTable from '@/components/master/banks/bank-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroyBank, index } from '@/routes/banks';
-import { BreadcrumbItem, IBank } from '@/types';
+import { BreadcrumbItem, IBank, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
-    banks: {
-        data: IBank[];
-    };
+    banks: PaginatedData<IBank>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -76,6 +75,7 @@ export default function BankIndex({ banks }: PageProps) {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                 />
+                <TablePagination data={banks} />
                 <BankForm
                     isModalOpen={isEditModalOpen}
                     bank={selectedBank}

@@ -16,7 +16,7 @@ export function parseCurrency(input: string): number | null {
 }
 
 export function formatCurrency(input: number | null): string {
-    if (!input) {
+    if (!input && input !== 0) {
         return 'Rp. ';
     }
 

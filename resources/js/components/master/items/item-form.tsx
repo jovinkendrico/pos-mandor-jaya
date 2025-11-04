@@ -148,8 +148,7 @@ const ItemForm = (props: ItemFormProps) => {
                                 type="button"
                                 onClick={addUOM}
                                 size="sm"
-                                variant="secondary"
-                                className="btn-secondary"
+                                className="btn-primary"
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Tambah UOM
@@ -160,159 +159,193 @@ const ItemForm = (props: ItemFormProps) => {
                             {dataItem.uoms.map((uom, index) => (
                                 <div
                                     key={index}
-                                    className="content input-box mb-4 flex flex-row items-center gap-4 rounded-lg border bg-gray-100 p-3"
+                                    className="content input-box mb-4 flex flex-row gap-4 rounded-lg border bg-gray-100 p-3"
                                 >
-                                    <div>
-                                        <Label htmlFor={`uom_name_${index}`}>
-                                            Nama UOM{' '}
-                                            <span className="text-red-500">
-                                                *
-                                            </span>
-                                        </Label>
-                                        <div className="flex w-full flex-row items-center justify-between gap-2">
-                                            <Combobox
-                                                options={uomComboBoxOptions}
-                                                value={
-                                                    uom.uom.id?.toString() || ''
-                                                }
-                                                onValueChange={(newValue) => {
-                                                    const setSelectedUOM =
-                                                        uomOptions.find(
-                                                            (u) =>
-                                                                u.id.toString() ===
-                                                                newValue,
-                                                        );
-                                                    if (!setSelectedUOM) {
-                                                        return;
+                                    <div className="w-1/4">
+                                        <div className="flex flex-col gap-2 md:flex-row md:items-end">
+                                            <div className="flex-1">
+                                                <Label
+                                                    htmlFor={`uom_name_${index}`}
+                                                >
+                                                    Nama UOM{' '}
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </Label>
+                                                <Combobox
+                                                    options={uomComboBoxOptions}
+                                                    value={
+                                                        uom.uom.id?.toString() ||
+                                                        ''
                                                     }
-                                                    handleChangeItem(
-                                                        index,
-                                                        'uom.id',
-                                                        Number(newValue),
-                                                    );
-                                                    handleChangeItem(
-                                                        index,
-                                                        'uom.name',
-                                                        setSelectedUOM.name,
-                                                    );
-                                                }}
-                                                placeholder="Pilih atau cari UOM..."
-                                                searchPlaceholder="Cari UOM"
-                                                emptyText="UOM tidak ditemukan"
-                                                className="dark:!bg-white dark:!text-primary-200"
-                                                disabled={processingItem}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() =>
-                                                    setIsAddUOMModalOpen(true)
+                                                    onValueChange={(
+                                                        newValue,
+                                                    ) => {
+                                                        const setSelectedUOM =
+                                                            uomOptions.find(
+                                                                (u) =>
+                                                                    u.id.toString() ===
+                                                                    newValue,
+                                                            );
+                                                        if (!setSelectedUOM) {
+                                                            return;
+                                                        }
+                                                        handleChangeItem(
+                                                            index,
+                                                            'uom.id',
+                                                            Number(newValue),
+                                                        );
+                                                        handleChangeItem(
+                                                            index,
+                                                            'uom.name',
+                                                            setSelectedUOM.name,
+                                                        );
+                                                    }}
+                                                    placeholder="Pilih/cari UOM..."
+                                                    searchPlaceholder="Cari UOM..."
+                                                    emptyText="UOM tidak ditemukan"
+                                                    className="w-full dark:!bg-white dark:!text-primary-200"
+                                                    disabled={processingItem}
+                                                    addLabel="Tambah UOM baru"
+                                                    onAdd={() =>
+                                                        setIsAddUOMModalOpen(
+                                                            true,
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                            <InputError
+                                                message={
+                                                    (
+                                                        errorsItem as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[`uoms[${index}].uom.name`]
                                                 }
-                                                title="Tambah UOM baru"
-                                                className="btn-secondary"
-                                            >
-                                                <Plus className="text-center" />
-                                            </Button>
+                                            />
                                         </div>
                                     </div>
-
-                                    <div>
-                                        <Label htmlFor={`conversion_${index}`}>
-                                            Konversi ke Base{' '}
-                                            <span className="text-red-500">
-                                                *
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id={`conversion_${index}`}
-                                            type="number"
-                                            step="1"
-                                            min="1"
-                                            value={uom.conversion_value}
-                                            onChange={(e) => {
-                                                if (!uom.is_base) {
+                                    <div className="w-1/4">
+                                        <div className="flex flex-col gap-2">
+                                            <Label
+                                                htmlFor={`conversion_${index}`}
+                                            >
+                                                Konversi ke Base{' '}
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <Input
+                                                id={`conversion_${index}`}
+                                                type="number"
+                                                step="1"
+                                                value={uom.conversion_value}
+                                                onChange={(e) => {
+                                                    if (!uom.is_base) {
+                                                        handleChangeItem(
+                                                            index,
+                                                            'conversion_value',
+                                                            Number(
+                                                                e.target.value,
+                                                            ),
+                                                        );
+                                                    } else {
+                                                        handleChangeItem(
+                                                            index,
+                                                            'conversion_value',
+                                                            1,
+                                                        );
+                                                    }
+                                                }}
+                                                className="input-box"
+                                                required
+                                                disabled={
+                                                    processingItem ||
+                                                    uom.is_base
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    (
+                                                        errorsItem as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[
+                                                        `uoms[${index}].conversion_value`
+                                                    ]
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="w-1/4">
+                                        <div className="flex flex-col gap-2">
+                                            <Label htmlFor={`price_${index}`}>
+                                                Harga{' '}
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <Input
+                                                id={`price_${index}`}
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={uom.price}
+                                                onChange={(e) => {
                                                     handleChangeItem(
                                                         index,
-                                                        'conversion_value',
+                                                        'price',
                                                         Number(e.target.value),
                                                     );
-                                                } else {
-                                                    handleChangeItem(
-                                                        index,
-                                                        'conversion_value',
-                                                        1,
-                                                    );
-                                                }
-                                            }}
-                                            className="input-box"
-                                            required
-                                            disabled={
-                                                processingItem || uom.is_base
-                                            }
-                                        />
+                                                }}
+                                                placeholder="0"
+                                                required
+                                                disabled={undefined}
+                                                className="input-box"
+                                            />
+                                        </div>
                                     </div>
-
-                                    <div>
-                                        <Label htmlFor={`price_${index}`}>
-                                            Harga{' '}
-                                            <span className="text-red-500">
-                                                *
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id={`price_${index}`}
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={uom.price}
-                                            onChange={(e) => {
-                                                handleChangeItem(
-                                                    index,
-                                                    'price',
-                                                    Number(e.target.value),
-                                                );
-                                            }}
-                                            placeholder="0"
-                                            required
-                                            disabled={undefined}
-                                            className="input-box"
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center justify-center gap-4">
-                                        <Badge
-                                            variant={
-                                                uom.is_base
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                            className={cn(
-                                                'cursor-pointer rounded-3xl',
-                                                uom.is_base
-                                                    ? 'badge-green-light'
-                                                    : 'badge-gray-light',
-                                            )}
-                                            onClick={() => {
-                                                handleChangeItem(
-                                                    index,
-                                                    'is_base',
-                                                    !uom.is_base,
-                                                );
-                                            }}
-                                        >
-                                            {uom.is_base ? 'Base' : 'Set Base'}
-                                        </Badge>
-                                        <Button
-                                            type="button"
-                                            onClick={() => removeUOM(index)}
-                                            size="icon"
-                                            variant="ghost"
-                                            className="btn-trash"
-                                            disabled={undefined}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                    <div className="flex w-1/4 justify-center">
+                                        <div className="flex w-3/4 items-center justify-between gap-4">
+                                            <div className="flex w-full justify-center">
+                                                <Badge
+                                                    variant={
+                                                        uom.is_base
+                                                            ? 'default'
+                                                            : 'outline'
+                                                    }
+                                                    className={cn(
+                                                        'cursor-pointer rounded-3xl',
+                                                        uom.is_base
+                                                            ? 'badge-green-light'
+                                                            : 'badge-gray-light',
+                                                    )}
+                                                    onClick={() => {
+                                                        handleChangeItem(
+                                                            index,
+                                                            'is_base',
+                                                            !uom.is_base,
+                                                        );
+                                                    }}
+                                                >
+                                                    {uom.is_base
+                                                        ? 'Base'
+                                                        : 'Set Base'}
+                                                </Badge>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                onClick={() => removeUOM(index)}
+                                                size="icon"
+                                                variant="ghost"
+                                                className="btn-trash"
+                                                disabled={undefined}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

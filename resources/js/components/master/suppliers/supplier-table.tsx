@@ -18,7 +18,7 @@ const SupplierTable = (props: SupplierTableProps) => {
         'Nama Supplier',
         'Alamat',
         'Kota',
-        'Telepon',
+        'No. Telepon',
         'Contact Person',
         'Aksi',
     ];

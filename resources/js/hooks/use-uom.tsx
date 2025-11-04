@@ -68,9 +68,6 @@ const useUOM = (closeModal: () => void, isNested: boolean = false) => {
             onSuccess: () => {
                 toast.success('UOM berhasil dihapus');
             },
-            onError: () => {
-                toast.error('Gagal menghapus UOM');
-            },
         });
     };
 

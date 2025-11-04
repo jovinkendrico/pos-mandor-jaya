@@ -137,7 +137,7 @@ const BankForm = (props: BankFormProps) => {
                                         setData('type', value)
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="input-box">
                                         <SelectValue placeholder="Pilih Tipe" />
                                     </SelectTrigger>
                                     <SelectContent>

@@ -18,7 +18,7 @@ const CustomerTable = (props: CustomerTableProps) => {
         'Nama Customer',
         'Alamat',
         'Kota',
-        'Telepon',
+        'No. Telepon',
         'Contact Person',
         'Aksi',
     ];

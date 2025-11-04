@@ -198,3 +198,18 @@ export interface IUOM {
     id: number;
     name: string;
 }
+
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+export interface PaginatedData<T> {
+    data: T[];
+    links: PaginationLink[];
+    current_page: number;
+    from: number;
+    to: number;
+    total: number;
+}

@@ -48,7 +48,6 @@ const ItemTable = (props: ItemTableProps) => {
                     }
                 }
             }
-            console.log(newSelected);
             return hasChanged ? newSelected : prevSelected;
         });
     }, [items]);
@@ -69,7 +68,6 @@ const ItemTable = (props: ItemTableProps) => {
         'Harga',
         'Aksi',
     ];
-    console.log(items);
 
     return (
         <TableLayout
@@ -107,10 +105,14 @@ const ItemTable = (props: ItemTableProps) => {
                         <TableCell className="flex w-full items-center justify-center text-center">
                             <Combobox
                                 options={uomOptions}
+                                searchPlaceholder="Cari UOM..."
+                                placeholder="Pilih atau cari UOM..."
+                                emptyText="UOM tidak ditemukan"
                                 value={currentUomId?.toString() ?? ''}
                                 onValueChange={(newUomId) =>
                                     handleChangeUOM(row.id, Number(newUomId))
                                 }
+                                className="dark:!bg-white dark:!text-primary-200"
                             />
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">

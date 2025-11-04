@@ -81,9 +81,6 @@ const useCustomer = (closeModal: () => void) => {
             onSuccess: () => {
                 toast.success('Customer berhasil dihapus');
             },
-            onError: () => {
-                toast.error('Gagal menghapus customer');
-            },
         });
     };
 

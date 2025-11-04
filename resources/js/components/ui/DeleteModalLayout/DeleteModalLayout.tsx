@@ -47,10 +47,12 @@ const DeleteModalLayout = <T,>(props: DeleteModalLayoutProps<T>) => {
                 toast.success(`${dataType}: ${dataName} berhasil dihapus`);
                 setSelected(undefined);
             },
-            onError: () => {
+            onError: (errors: Record<string, string>) => {
+                console.log(errors);
+                const message = errors.msg || `Gagal menghapus ${dataType}`;
                 setIsLoading(false);
                 onModalClose();
-                toast.error(`Gagal menghapus ${dataType}`);
+                toast.error(message);
             },
         });
     };

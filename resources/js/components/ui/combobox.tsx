@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
+    CommandSeparator,
 } from '@/components/ui/command';
 import {
     Popover,
@@ -34,6 +35,8 @@ interface ComboboxProps {
     className?: string;
     disabled?: boolean;
     maxDisplayItems?: number;
+    onAdd?: () => void;
+    addLabel?: string;
 }
 
 export function Combobox({
@@ -46,6 +49,8 @@ export function Combobox({
     className,
     disabled = false,
     maxDisplayItems = 5,
+    onAdd,
+    addLabel = 'Add',
 }: ComboboxProps) {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
@@ -90,7 +95,9 @@ export function Combobox({
                     className={cn('justify-between', className)}
                     disabled={disabled}
                 >
-                    {selectedOption ? selectedOption.label : placeholder}
+                    <span className="truncate">
+                        {selectedOption ? selectedOption.label : placeholder}
+                    </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -102,6 +109,23 @@ export function Combobox({
                         onValueChange={setSearchValue}
                         className="h-9"
                     />
+                    {onAdd && (
+                        <>
+                            <CommandGroup>
+                                <CommandItem
+                                    onSelect={() => {
+                                        setOpen(false);
+                                        onAdd();
+                                    }}
+                                    className="btn-secondary cursor-pointer"
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {addLabel}
+                                </CommandItem>
+                            </CommandGroup>
+                            <CommandSeparator />
+                        </>
+                    )}
                     <CommandList>
                         <CommandEmpty>{emptyText}</CommandEmpty>
                         <CommandGroup>

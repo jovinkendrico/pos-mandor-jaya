@@ -8,7 +8,7 @@ const uomSchema = Yup.object().shape({
     uom_id: Yup.number().required('UOM harus dipilih.'),
     conversion_value: Yup.number()
         .required('Nilai konversi harus diisi.')
-        .min(1),
+        .min(1, 'Nilai konversi minimal 1.'),
     price: Yup.number().required('Harga barang harus diisi.'),
     is_base: Yup.boolean().required('UOM utama harus dipilih.'),
     uom: Yup.object().shape({
@@ -22,10 +22,7 @@ const itemSchema = Yup.object().shape({
         .required('Nama barang harus diisi.')
         .max(255, 'Maksimal 255 karakter.'),
     stock: Yup.number().nullable(),
-    description: Yup.string()
-        .nullable()
-        .max(255)
-        .max(255, 'Maksimal 255 karakter.'),
+    description: Yup.string().nullable().max(255, 'Maksimal 255 karakter.'),
     uoms: Yup.array()
         .of(uomSchema)
         .required('Minimal harus ada 1 UOM.')
@@ -114,6 +111,7 @@ const useItem = (closeModal: () => void) => {
                         yupErrors[error.path] = error.message;
                     }
                 });
+                console.log(yupErrors);
                 setError(yupErrors);
                 toast.error('Validasi gagal, periksa input Anda.');
             }

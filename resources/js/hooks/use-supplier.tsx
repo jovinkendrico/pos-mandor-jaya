@@ -81,9 +81,6 @@ const useSupplier = (closeModal: () => void) => {
             onSuccess: () => {
                 toast.success('Supplier berhasil dihapus');
             },
-            onError: () => {
-                toast.error('Gagal menghapus supplier');
-            },
         });
     };
 

@@ -154,7 +154,7 @@
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.145 0 0);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
+    --popover: oklch(0.2048 0.047 271.81);
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.985 0 0);
     --primary-foreground: oklch(0.205 0 0);
@@ -280,5 +280,5 @@
 }
 
 .badge-gray-light {
-    @apply rounded-4xl border-2 border-gray-800 bg-gray-300 dark:border-gray-300 dark:bg-gray-700 dark:text-gray-300;
+    @apply rounded-4xl border-2 border-gray-600 bg-gray-200 dark:border-gray-300 dark:bg-gray-700 dark:text-gray-300;
 }

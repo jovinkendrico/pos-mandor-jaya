@@ -67,9 +67,6 @@ const useCity = (closeModal: () => void, isNested: boolean = false) => {
             onSuccess: () => {
                 toast.success('Kota berhasil dihapus');
             },
-            onError: () => {
-                toast.error('Gagal menghapus Kota');
-            },
         });
     };
 
