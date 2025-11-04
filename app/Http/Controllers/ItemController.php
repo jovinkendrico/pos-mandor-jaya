@@ -21,7 +21,7 @@ class ItemController extends Controller
     public function index(): Response
     {
 
-        $items = Item::with('itemUoms.uom')->orderBy('name')->get()->paginate(10);
+        $items = Item::with('itemUoms.uom')->orderBy('name')->paginate(10);
 
         $uoms = Uom::all();
 
@@ -62,14 +62,14 @@ class ItemController extends Controller
             // Create stock movement for initial stock with modal_price as unit_cost
             if ($request->stock > 0 && $request->modal_price) {
                 StockMovement::create([
-                    'item_id' => $item->id,
-                    'reference_type' => 'Initial',
-                    'reference_id' => 0,
-                    'quantity' => $request->stock,
-                    'unit_cost' => $request->modal_price,
+                    'item_id'            => $item->id,
+                    'reference_type'     => 'Initial',
+                    'reference_id'       => 0,
+                    'quantity'           => $request->stock,
+                    'unit_cost'          => $request->modal_price,
                     'remaining_quantity' => $request->stock,
-                    'movement_date' => now(),
-                    'notes' => 'Initial stock by user',
+                    'movement_date'      => now(),
+                    'notes'              => 'Initial stock by user',
                 ]);
             }
         });
