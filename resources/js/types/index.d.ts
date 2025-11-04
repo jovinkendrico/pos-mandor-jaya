@@ -155,7 +155,8 @@ export type IBank = Pick<
 export interface ItemUom {
     id: number;
     item_id: number;
-    uom_name: string;
+    uom: IUOM;
+    uom_id: number;
     conversion_value: number;
     price: number;
     is_base: boolean;
@@ -166,24 +167,26 @@ export interface ItemUom {
 
 export type IItemUOM = Pick<
     ItemUom,
-    'uom_name' | 'conversion_value' | 'price' | 'is_base'
-> & {
-    uom_id: ItemUom['id'];
-};
+    'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
+>;
 
 export interface Item {
     id: number;
+    code: string;
     name: string;
     stock: number;
     description?: string;
-    uoms: ItemUom[];
+    item_uoms: ItemUom[];
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 }
 
-export type IItem = Pick<Item, 'id' | 'name' | 'stock' | 'description'> & {
-    uoms: IItemUOM[];
+export type IItem = Pick<
+    Item,
+    'id' | 'name' | 'stock' | 'description' | 'code'
+> & {
+    item_uoms: IItemUOM[];
 };
 
 export interface PageProps {

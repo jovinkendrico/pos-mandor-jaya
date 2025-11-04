@@ -173,13 +173,13 @@ const ItemForm = (props: ItemFormProps) => {
                                             <Combobox
                                                 options={uomComboBoxOptions}
                                                 value={
-                                                    uom.uom_id?.toString() || ''
+                                                    uom.uom.id?.toString() || ''
                                                 }
                                                 onValueChange={(newValue) => {
                                                     const setSelectedUOM =
-                                                        uomComboBoxOptions.find(
-                                                            (option) =>
-                                                                option.value ===
+                                                        uomOptions.find(
+                                                            (u) =>
+                                                                u.id.toString() ===
                                                                 newValue,
                                                         );
                                                     if (!setSelectedUOM) {
@@ -187,15 +187,13 @@ const ItemForm = (props: ItemFormProps) => {
                                                     }
                                                     handleChangeItem(
                                                         index,
-                                                        'uom_name',
-                                                        setSelectedUOM.label,
+                                                        'uom.id',
+                                                        Number(newValue),
                                                     );
                                                     handleChangeItem(
                                                         index,
-                                                        'uom_id',
-                                                        Number(
-                                                            setSelectedUOM.value,
-                                                        ),
+                                                        'uom.name',
+                                                        setSelectedUOM.name,
                                                     );
                                                 }}
                                                 placeholder="Pilih atau cari UOM..."

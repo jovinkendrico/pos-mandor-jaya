@@ -5,7 +5,7 @@ import { TableCell } from '@/components/ui/table';
 import { formatCurrency, parseCurrency } from '@/lib/utils';
 import { IItem } from '@/types';
 import { Edit, Trash } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ItemTableProps {
     items: IItem[];
@@ -20,13 +20,38 @@ const ItemTable = (props: ItemTableProps) => {
         () => {
             return items.reduce(
                 (acc, item) => {
-                    acc[item.id] = item.uoms?.[0].uom_id ?? 0;
+                    const defaultUom =
+                        item.item_uoms?.find((u) => u.is_base) ??
+                        item.item_uoms?.[0];
+                    acc[item.id] = defaultUom?.uom?.id ?? 0;
                     return acc;
                 },
                 {} as Record<number, number>,
             );
         },
     );
+
+    useEffect(() => {
+        setSelectedUom((prevSelected) => {
+            const newSelected = { ...prevSelected };
+            let hasChanged = false;
+
+            for (const item of items) {
+                if (prevSelected[item.id] === undefined) {
+                    const defaultUom =
+                        item.item_uoms?.find((u) => u?.is_base) ??
+                        item.item_uoms?.[0];
+
+                    if (defaultUom) {
+                        newSelected[item.id] = defaultUom?.uom?.id ?? 0;
+                        hasChanged = true;
+                    }
+                }
+            }
+            console.log(newSelected);
+            return hasChanged ? newSelected : prevSelected;
+        });
+    }, [items]);
 
     const handleChangeUOM = (itemId: number, newUomId: number) => {
         setSelectedUom((prev) => ({
@@ -55,18 +80,20 @@ const ItemTable = (props: ItemTableProps) => {
             renderRow={(row) => {
                 const currentUomId = selectedUom[row.id];
 
-                const currentUom = row.uoms?.find(
-                    (u) => u.uom_id === currentUomId,
+                const currentUom = row.item_uoms?.find(
+                    (u) => u.uom.id === currentUomId,
                 );
 
-                const uomOptions: ComboboxOption[] = row.uoms?.map((uom) => ({
-                    value: uom.uom_id.toString(),
-                    label: uom.uom_name,
-                }));
+                const uomOptions: ComboboxOption[] = row.item_uoms?.map(
+                    (uom) => ({
+                        value: uom.uom?.id.toString() ?? '0',
+                        label: uom.uom?.name ?? '-',
+                    }),
+                );
                 return (
                     <>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {row.id}
+                            {row.code}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {row.name}
@@ -80,7 +107,7 @@ const ItemTable = (props: ItemTableProps) => {
                         <TableCell className="flex w-full items-center justify-center text-center">
                             <Combobox
                                 options={uomOptions}
-                                value={currentUomId.toString()}
+                                value={currentUomId?.toString() ?? ''}
                                 onValueChange={(newUomId) =>
                                     handleChangeUOM(row.id, Number(newUomId))
                                 }

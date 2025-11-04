@@ -6,12 +6,15 @@ import * as Yup from 'yup';
 
 const uomSchema = Yup.object().shape({
     uom_id: Yup.number().required('UOM harus dipilih.'),
-    uom_name: Yup.string().required('Nama UOM harus diisi.'),
     conversion_value: Yup.number()
         .required('Nilai konversi harus diisi.')
         .min(1),
     price: Yup.number().required('Harga barang harus diisi.'),
     is_base: Yup.boolean().required('UOM utama harus dipilih.'),
+    uom: Yup.object().shape({
+        id: Yup.number().required('UOM harus dipilih.'),
+        name: Yup.string().required('UOM harus dipilih.'),
+    }),
 });
 
 const itemSchema = Yup.object().shape({
@@ -71,7 +74,10 @@ const useItem = (closeModal: () => void) => {
         uoms: [
             {
                 uom_id: 0,
-                uom_name: '',
+                uom: {
+                    id: 0,
+                    name: '',
+                },
                 conversion_value: 1,
                 price: 0,
                 is_base: true,
@@ -136,7 +142,10 @@ const useItem = (closeModal: () => void) => {
             ...data.uoms,
             {
                 uom_id: 0,
-                uom_name: '',
+                uom: {
+                    id: 0,
+                    name: '',
+                },
                 conversion_value: 0,
                 price: 0,
                 is_base: false,
@@ -161,39 +170,43 @@ const useItem = (closeModal: () => void) => {
 
     const handleChangeItem = (
         index: number,
-        field: keyof IItemUOM,
+        field: keyof IItemUOM | 'uom.id' | 'uom.name',
         value: string | number | boolean | null,
     ) => {
         const updated = [...data.uoms];
+        const uomToUpdate = updated[index];
 
-        switch (field) {
-            case 'uom_id':
-                updated[index][field] = value as number;
-                break;
-            case 'uom_name':
-                updated[index][field] = value as string;
-                break;
-            case 'conversion_value':
-                updated[index][field] = value as number;
-                break;
-            case 'price':
-                updated[index][field] = value as number;
-                break;
-            case 'is_base':
-                if (value === false) return;
-                updated[index][field] = value as boolean;
+        if (!uomToUpdate) return;
 
-                if (value === true) {
-                    updated.forEach((uom, i) => {
-                        if (i !== index) {
-                            uom.is_base = false;
-                        }
-                    });
-                }
+        if (field === 'uom.id') {
+            uomToUpdate.uom.id = value as number;
+            uomToUpdate.uom_id = value as number;
+        } else if (field === 'uom.name') {
+            uomToUpdate.uom.name = value as string;
+        } else {
+            switch (field) {
+                case 'conversion_value':
+                    uomToUpdate.conversion_value = value as number;
+                    break;
+                case 'price':
+                    uomToUpdate.price = value as number;
+                    break;
+                case 'is_base':
+                    if (value === false) return;
+                    uomToUpdate.is_base = value as boolean;
 
-                break;
-            default:
-                break;
+                    if (value === true) {
+                        updated.forEach((uom, i) => {
+                            if (i !== index) {
+                                uom.is_base = false;
+                            }
+                        });
+                        uomToUpdate.conversion_value = 1;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         setData('uoms', updated);
