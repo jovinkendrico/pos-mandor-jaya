@@ -22,3 +22,7 @@ export function formatCurrency(input: number | null): string {
 
     return 'Rp. ' + input.toLocaleString('id-ID');
 }
+
+export function formatNumber(input: number): number {
+    return Math.round(input);
+}

@@ -77,6 +77,7 @@ export default function CustomerIndex(props: PageProps) {
                     customers={customers.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={customers.from}
                 />
                 {customers.data.length !== 0 && (
                     <TablePagination data={customers} />

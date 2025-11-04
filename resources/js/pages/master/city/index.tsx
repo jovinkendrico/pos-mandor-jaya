@@ -74,6 +74,7 @@ export default function CityIndex({ cities }: PageProps) {
                     cities={cities.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={cities.from}
                 />
                 {cities.data.length !== 0 && <TablePagination data={cities} />}
                 <CityForm

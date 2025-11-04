@@ -162,7 +162,7 @@ const ItemForm = (props: ItemFormProps) => {
                                     className="content input-box mb-4 flex flex-row gap-4 rounded-lg border bg-gray-100 p-3"
                                 >
                                     <div className="w-1/4">
-                                        <div className="flex flex-col gap-2 md:flex-row md:items-end">
+                                        <div className="flex flex-col gap-2">
                                             <div className="flex-1">
                                                 <Label
                                                     htmlFor={`uom_name_${index}`}

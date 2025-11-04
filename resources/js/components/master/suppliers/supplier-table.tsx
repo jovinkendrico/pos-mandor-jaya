@@ -8,10 +8,11 @@ interface SupplierTableProps {
     suppliers: ISupplier[];
     onEdit: (supplier: ISupplier) => void;
     onDelete: (supplier: ISupplier) => void;
+    pageFrom?: number;
 }
 
 const SupplierTable = (props: SupplierTableProps) => {
-    const { suppliers, onEdit, onDelete } = props;
+    const { suppliers, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = [
         'Kode',
@@ -28,6 +29,7 @@ const SupplierTable = (props: SupplierTableProps) => {
             tableColumn={tableColumn}
             tableRow={suppliers}
             text="Tidak ada data Supplier"
+            pageFrom={pageFrom}
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">

@@ -232,7 +232,7 @@
     @apply bg-primary-700 font-semibold dark:bg-primary-500 dark:text-white;
 }
 .btn-primary:hover {
-    @apply bg-primary-800 dark:bg-primary-500;
+    @apply bg-primary-800 dark:bg-primary-600;
     cursor: pointer;
 }
 

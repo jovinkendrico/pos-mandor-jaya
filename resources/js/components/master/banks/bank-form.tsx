@@ -137,10 +137,10 @@ const BankForm = (props: BankFormProps) => {
                                         setData('type', value)
                                     }
                                 >
-                                    <SelectTrigger className="input-box">
+                                    <SelectTrigger className="w-full font-medium dark:!bg-white dark:!text-primary-200">
                                         <SelectValue placeholder="Pilih Tipe" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="dark:data-[selected=true]:bg-primary-400/30">
                                         <SelectItem value="bank">
                                             Bank
                                         </SelectItem>

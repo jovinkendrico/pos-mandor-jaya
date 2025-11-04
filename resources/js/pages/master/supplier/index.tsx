@@ -82,6 +82,7 @@ export default function SupplierIndex(props: PageProps) {
                     suppliers={suppliers.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={suppliers.from}
                 />
                 {suppliers.data.length !== 0 && (
                     <TablePagination data={suppliers} />

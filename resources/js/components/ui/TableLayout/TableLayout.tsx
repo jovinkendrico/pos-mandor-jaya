@@ -13,11 +13,12 @@ interface PropTypes<T> {
     tableColumn: string[];
     tableRow: T[];
     text?: string;
+    pageFrom?: number;
     renderRow: (row: T, rowIndex: number) => ReactNode;
 }
 
 const TableLayout = <T,>(props: PropTypes<T>) => {
-    const { tableColumn, tableRow, text, renderRow } = props;
+    const { tableColumn, tableRow, text, pageFrom = 0, renderRow } = props;
     return (
         <>
             <Table className="content">
@@ -44,7 +45,7 @@ const TableLayout = <T,>(props: PropTypes<T>) => {
                                 className="flex w-full flex-row"
                             >
                                 <TableCell className="flex w-full items-center justify-center text-center">
-                                    {rowIndex + 1}
+                                    {pageFrom + rowIndex}
                                 </TableCell>
                                 {renderRow(row, rowIndex)}
                             </TableRow>

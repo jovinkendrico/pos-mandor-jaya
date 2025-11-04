@@ -8,10 +8,11 @@ interface CustomerTableProps {
     customers: ICustomer[];
     onEdit: (customer: ICustomer) => void;
     onDelete: (customer: ICustomer) => void;
+    pageFrom?: number;
 }
 
 const CustomerTable = (props: CustomerTableProps) => {
-    const { customers, onEdit, onDelete } = props;
+    const { customers, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = [
         'Kode',
@@ -28,6 +29,7 @@ const CustomerTable = (props: CustomerTableProps) => {
             tableColumn={tableColumn}
             tableRow={customers}
             text="Tidak ada data Customer"
+            pageFrom={pageFrom}
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">

@@ -74,6 +74,7 @@ const UOMPage = (props: UOMProps) => {
                     uoms={uoms.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={uoms.from}
                 />
                 {uoms.data.length !== 0 && <TablePagination data={uoms} />}
                 <UOMForm

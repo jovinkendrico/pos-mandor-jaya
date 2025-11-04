@@ -77,6 +77,7 @@ export default function ItemIndex(props: PageProps) {
                     items={items.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={items.from}
                 />
                 {items.data.length !== 0 && <TablePagination data={items} />}
                 <ItemForm

@@ -2,7 +2,7 @@ import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { TableCell } from '@/components/ui/table';
-import { formatCurrency, parseCurrency } from '@/lib/utils';
+import { formatCurrency, formatNumber, parseCurrency } from '@/lib/utils';
 import { IItem } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -11,10 +11,11 @@ interface ItemTableProps {
     items: IItem[];
     onEdit?: (item: IItem) => void;
     onDelete?: (item: IItem) => void;
+    pageFrom?: number;
 }
 
 const ItemTable = (props: ItemTableProps) => {
-    const { items, onEdit, onDelete } = props;
+    const { items, onEdit, onDelete, pageFrom } = props;
 
     const [selectedUom, setSelectedUom] = useState<Record<number, number>>(
         () => {
@@ -75,6 +76,7 @@ const ItemTable = (props: ItemTableProps) => {
             tableColumn={tableColumn}
             tableRow={items}
             text="Tidak ada data Barang"
+            pageFrom={pageFrom}
             renderRow={(row) => {
                 const currentUomId = selectedUom[row.id];
 
@@ -97,10 +99,10 @@ const ItemTable = (props: ItemTableProps) => {
                             {row.name}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {row.stock}
+                            {formatNumber(row.stock)}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {row.description}
+                            {row.description ?? '-'}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             <Combobox
@@ -112,7 +114,7 @@ const ItemTable = (props: ItemTableProps) => {
                                 onValueChange={(newUomId) =>
                                     handleChangeUOM(row.id, Number(newUomId))
                                 }
-                                className="dark:!bg-white dark:!text-primary-200"
+                                className="w-full dark:!bg-white dark:!text-primary-200"
                             />
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">

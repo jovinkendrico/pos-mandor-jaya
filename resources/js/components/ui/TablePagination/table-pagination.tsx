@@ -17,7 +17,7 @@ const TablePagination = (props: TablePaginationProps) => {
                     Menampilkan{' '}
                     <strong className="font-extrabold">{data.from}</strong>{' '}
                     hingga <strong className="font-extrabold">{data.to}</strong>{' '}
-                    dari{' '}
+                    dari total{' '}
                     <strong className="font-extrabold">{data.total}</strong>{' '}
                     data
                 </span>
@@ -56,9 +56,9 @@ const TablePagination = (props: TablePaginationProps) => {
                                         isNumber ? 'w-9' : 'gap-1 px-3',
                                         !link.url
                                             ? 'cursor-not-allowed text-gray-400'
-                                            : 'text-gray-700 hover:bg-primary-100 dark:text-gray-300 dark:hover:bg-primary-400/30',
+                                            : 'text-gray-700 hover:bg-primary-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-primary-400/30',
                                         link.active
-                                            ? 'bg-primary-800 font-bold text-white dark:bg-primary-500/60'
+                                            ? 'bg-primary-800 font-bold text-white hover:bg-primary-800 hover:text-white dark:bg-primary-500/60 dark:hover:bg-primary-500/60'
                                             : '',
                                     )}
                                     as="button"
