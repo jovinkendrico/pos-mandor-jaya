@@ -75,7 +75,7 @@ export default function BankIndex({ banks }: PageProps) {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                 />
-                <TablePagination data={banks} />
+                {banks.data.length !== 0 && <TablePagination data={banks} />}
                 <BankForm
                     isModalOpen={isEditModalOpen}
                     bank={selectedBank}

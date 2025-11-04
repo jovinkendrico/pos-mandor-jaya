@@ -3,10 +3,11 @@ import SupplierTable from '@/components/master/suppliers/supplier-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroySupplier, index } from '@/routes/suppliers';
-import { BreadcrumbItem, ISupplier } from '@/types';
+import { BreadcrumbItem, ISupplier, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -17,9 +18,7 @@ interface City {
 }
 
 interface PageProps {
-    suppliers: {
-        data: ISupplier[];
-    };
+    suppliers: PaginatedData<ISupplier>;
     cities: City[];
 }
 
@@ -84,6 +83,9 @@ export default function SupplierIndex(props: PageProps) {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                 />
+                {suppliers.data.length !== 0 && (
+                    <TablePagination data={suppliers} />
+                )}
                 <SupplierForm
                     isModalOpen={isEditModalOpen}
                     supplier={selectedSupplier}

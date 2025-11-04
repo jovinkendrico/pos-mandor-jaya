@@ -56,9 +56,9 @@ const TablePagination = (props: TablePaginationProps) => {
                                         isNumber ? 'w-9' : 'gap-1 px-3',
                                         !link.url
                                             ? 'cursor-not-allowed text-gray-400'
-                                            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-primary-400/30',
+                                            : 'text-gray-700 hover:bg-primary-100 dark:text-gray-300 dark:hover:bg-primary-400/30',
                                         link.active
-                                            ? 'bg-gray-200 font-bold dark:bg-primary-500/60'
+                                            ? 'bg-primary-800 font-bold text-white dark:bg-primary-500/60'
                                             : '',
                                     )}
                                     as="button"
