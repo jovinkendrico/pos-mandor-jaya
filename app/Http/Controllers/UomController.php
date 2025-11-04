@@ -17,7 +17,7 @@ class UomController extends Controller
     public function index()
     {
         //
-        $uoms = Uom::orderBy('name')->get()->paginate(10);
+        $uoms = Uom::orderBy('name')->paginate(10);
 
         return Inertia::render('master/uom/index', [
             'uoms' => $uoms,
