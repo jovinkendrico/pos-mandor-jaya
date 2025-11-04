@@ -19,7 +19,8 @@ class ItemController extends Controller
      */
     public function index(): Response
     {
-        $items = Item::with('itemUoms.uom')->orderBy('name')->get();
+
+        $items = Item::with('itemUoms.uom')->orderBy('name')->get()->paginate(10);
 
         $uoms = Uom::all();
 
