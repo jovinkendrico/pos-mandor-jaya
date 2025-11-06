@@ -61,14 +61,7 @@ class ItemController extends Controller
             }
 
             foreach ($request->stock_movements as $stock_movement) {
-                StockMovement::create([
-                    'item_id'            => $item->id,
-                    'quantity'           => $stock_movement['remaining_quantity'],
-                    'unit_cost'          => $stock_movement['unit_cost'],
-                    'remaining_quantity' => $stock_movement['remaining_quantity'],
-                    'movement_date'      => now(),
-                    'notes'              => 'Initial stock by user',
-                ]);
+                $item->stockMovements()->create($stock_movement);
             }
         });
 
@@ -117,9 +110,15 @@ class ItemController extends Controller
             // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
             $item->itemUoms()->forceDelete();
 
+            $item->stockMovements()->forceDelete();
+
             // Create new UOMs
             foreach ($request->uoms as $uom) {
                 $item->itemUoms()->create($uom);
+            }
+
+            foreach ($request->stock_movements as $stock_movement) {
+                $item->stockMovements()->create($stock_movement);
             }
         });
 

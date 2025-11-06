@@ -23,14 +23,19 @@ class UpdateItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'                    => ['required', 'string', 'max:255'],
-            'stock'                   => ['nullable', 'numeric', 'min:0'],
-            'description'             => ['nullable', 'string'],
-            'uoms'                    => ['required', 'array', 'min:1'],
-            'uoms.*.uom_name'         => ['required', 'string', 'max:255'],
-            'uoms.*.conversion_value' => ['required', 'integer', 'min:1'],
-            'uoms.*.price'            => ['required', 'numeric', 'min:0'],
-            'uoms.*.is_base'          => ['boolean'],
+            'name'                                 => ['required', 'string', 'max:255'],
+            'stock'                                => ['nullable', 'numeric', 'min:0'],
+            'description'                          => ['nullable', 'string'],
+            'uoms'                                 => ['required', 'array', 'min:1'],
+            'uoms.*.uom_name'                      => ['required', 'string', 'max:255'],
+            'uoms.*.conversion_value'              => ['required', 'integer', 'min:1'],
+            'uoms.*.price'                         => ['required', 'numeric', 'min:0'],
+            'uoms.*.is_base'                       => ['boolean'],
+            'stock_movements'                      => ['array', 'min:1'],
+            'stock_movements.*.remaining_quantity' => ['required'],
+            'stock_movements.*.unit_cost'          => ['required'],
+            'stock_movements.*.movement_date'      => ['required', 'date'],
+            'stock_movements.*.notes'              => ['nullable', 'string'],
         ];
     }
 }

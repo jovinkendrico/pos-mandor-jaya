@@ -26,6 +26,11 @@ class Item extends Model
         return $this->hasMany(ItemUom::class);
     }
 
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
     public function baseUom()
     {
         return $this->uoms()->where('is_base', true)->first();
