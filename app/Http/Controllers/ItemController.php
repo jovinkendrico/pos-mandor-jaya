@@ -59,15 +59,13 @@ class ItemController extends Controller
             foreach ($request->uoms as $uom) {
                 $item->itemUoms()->create($uom);
             }
-            // Create stock movement for initial stock with modal_price as unit_cost
-            if ($request->stock > 0 && $request->modal_price) {
+
+            foreach ($request->stock_movements as $stock_movement) {
                 StockMovement::create([
                     'item_id'            => $item->id,
-                    'reference_type'     => 'Initial',
-                    'reference_id'       => 0,
-                    'quantity'           => $request->stock,
-                    'unit_cost'          => $request->modal_price,
-                    'remaining_quantity' => $request->stock,
+                    'quantity'           => $stock_movement['remaining_quantity'],
+                    'unit_cost'          => $stock_movement['unit_cost'],
+                    'remaining_quantity' => $stock_movement['remaining_quantity'],
                     'movement_date'      => now(),
                     'notes'              => 'Initial stock by user',
                 ]);
