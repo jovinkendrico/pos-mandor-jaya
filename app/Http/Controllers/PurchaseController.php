@@ -157,15 +157,15 @@ class PurchaseController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Purchase $purchase): Response
+    public function edit(Purchase $purchase): Response|RedirectResponse
     {
-        // Only allow edit if status is pending
         if ($purchase->status === 'confirmed') {
-            return redirect()->route('purchases.show', $purchase)
+            return redirect()
+                ->route('purchases.show', $purchase)
                 ->with('error', 'Pembelian yang sudah dikonfirmasi tidak dapat diedit.');
         }
 
-        $purchase->load(['details.item', 'details.itemUom']);
+        $purchase->load(['details.item', 'details.itemUom.uom']);
         $suppliers = Supplier::orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms')->orderBy('name')->get();
 
