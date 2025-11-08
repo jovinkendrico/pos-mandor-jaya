@@ -28,7 +28,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function ItemIndex(props: PageProps) {
+const ItemIndex = (props: PageProps) => {
     const { items, uoms } = props;
 
     const {
@@ -98,4 +98,6 @@ export default function ItemIndex(props: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
+
+export default ItemIndex;

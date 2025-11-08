@@ -27,7 +27,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function BankIndex({ banks }: PageProps) {
+const BankIndex = (props: PageProps) => {
+    const { banks } = props;
+
     const [selectedBank, setSelectedBank] = useState<IBank | undefined>(
         undefined,
     );
@@ -94,4 +96,6 @@ export default function BankIndex({ banks }: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
+
+export default BankIndex;

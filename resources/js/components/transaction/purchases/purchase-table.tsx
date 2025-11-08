@@ -1,13 +1,8 @@
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { formatCurrency } from '@/lib/utils';
 import { Eye } from 'lucide-react';
 
 interface Supplier {
@@ -30,15 +25,8 @@ interface PurchaseTableProps {
     onView: (purchase: Purchase) => void;
 }
 
-export default function PurchaseTable({ purchases, onView }: PurchaseTableProps) {
-    const formatCurrency = (value: string | number) => {
-        const num = typeof value === 'string' ? parseFloat(value) : value;
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(num);
-    };
+export default function PurchaseTable(props: PurchaseTableProps) {
+    const { purchases } = props;
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('id-ID', {
@@ -48,53 +36,56 @@ export default function PurchaseTable({ purchases, onView }: PurchaseTableProps)
         });
     };
 
+    const tableColumn = [
+        'Supplier',
+        'Tanggal',
+        'Jatuh Tempo',
+        'Total',
+        'Status',
+        'Aksi',
+    ];
+
     return (
-        <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[150px]">No. Pembelian</TableHead>
-                        <TableHead>Supplier</TableHead>
-                        <TableHead>Tanggal</TableHead>
-                        <TableHead>Jatuh Tempo</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-center w-[100px]">Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {purchases.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={7} className="text-center text-muted-foreground">
-                                Tidak ada data pembelian
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        purchases.map((purchase) => (
-                            <TableRow key={purchase.id}>
-                                <TableCell className="font-medium">{purchase.purchase_number}</TableCell>
-                                <TableCell>{purchase.supplier?.name || '-'}</TableCell>
-                                <TableCell>{formatDate(purchase.purchase_date)}</TableCell>
-                                <TableCell>{purchase.due_date ? formatDate(purchase.due_date) : '-'}</TableCell>
-                                <TableCell className="text-right font-medium">
-                                    {formatCurrency(purchase.total_amount)}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Badge variant={purchase.status === 'confirmed' ? 'default' : 'secondary'}>
-                                        {purchase.status === 'confirmed' ? 'Confirmed' : 'Pending'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Button size="icon" variant="ghost" onClick={() => onView(purchase)}>
-                                        <Eye className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-        </div>
+        <TableLayout
+            tableName="Pembelian"
+            tableColumn={tableColumn}
+            tableRow={purchases}
+            text="Tidak ada data Pembelian"
+            renderRow={(row) => (
+                <>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.supplier?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {formatDate(row.purchase_date)}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.due_date ? formatDate(row.due_date) : '-'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                        {formatCurrency(Number(row.total_amount))}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        <Badge
+                            variant={
+                                row.status === 'pending' ? 'warning' : 'success'
+                            }
+                        >
+                            {row.status}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {}}
+                            className="btn-edit"
+                        >
+                            <Eye />
+                        </Button>
+                    </TableCell>
+                </>
+            )}
+        />
     );
 }
-

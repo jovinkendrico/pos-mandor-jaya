@@ -4,7 +4,8 @@ import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { TableCell } from '@/components/ui/table';
 import { formatCurrency, formatNumber, parseCurrency } from '@/lib/utils';
 import { IItem } from '@/types';
-import { Edit, Trash } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Edit, Info, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface ItemTableProps {
@@ -67,6 +68,7 @@ const ItemTable = (props: ItemTableProps) => {
         'Deskripsi',
         'Satuan (UOM)',
         'Harga',
+        'Perpindahan Stok',
         'Aksi',
     ];
 
@@ -108,7 +110,7 @@ const ItemTable = (props: ItemTableProps) => {
                             <Combobox
                                 options={uomOptions}
                                 searchPlaceholder="Cari UOM..."
-                                placeholder="Pilih atau cari UOM..."
+                                placeholder="Pilih UOM..."
                                 emptyText="UOM tidak ditemukan"
                                 value={currentUomId?.toString() ?? ''}
                                 onValueChange={(newUomId) =>
@@ -121,6 +123,18 @@ const ItemTable = (props: ItemTableProps) => {
                             {formatCurrency(
                                 parseCurrency(String(currentUom?.price ?? 0)),
                             )}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                asChild
+                                className="btn-info"
+                            >
+                                <Link href={`/items/${row.id}`}>
+                                    <Info />
+                                </Link>
+                            </Button>
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                             <Button

@@ -267,6 +267,14 @@
     @apply font-semibold text-destructive hover:cursor-pointer hover:bg-red-500 hover:text-white dark:bg-danger-500 dark:text-white dark:hover:bg-danger-300;
 }
 
+.btn-info {
+    @apply text-yellow-400 dark:bg-yellow-400/85 dark:text-white;
+}
+
+.btn-info:hover {
+    @apply cursor-pointer bg-yellow-500 text-white dark:bg-yellow-300;
+}
+
 .input-box {
     @apply border-2 dark:border-gray-500 dark:focus:border-3 dark:focus:border-white;
 }
@@ -281,4 +289,8 @@
 
 .badge-gray-light {
     @apply rounded-4xl border-2 border-gray-600 bg-gray-200 dark:border-gray-300 dark:bg-gray-700 dark:text-gray-300;
+}
+
+.combobox {
+    @apply w-full dark:!bg-white dark:!text-primary-200;
 }

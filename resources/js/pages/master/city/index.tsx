@@ -27,7 +27,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CityIndex({ cities }: PageProps) {
+const CityIndex = (props: PageProps) => {
+    const { cities } = props;
+
     const [selectedCity, setSelectedCity] = useState<ICity | undefined>(
         undefined,
     );
@@ -94,4 +96,6 @@ export default function CityIndex({ cities }: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
+
+export default CityIndex;

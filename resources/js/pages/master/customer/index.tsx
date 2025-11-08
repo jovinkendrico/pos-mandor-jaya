@@ -28,7 +28,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CustomerIndex(props: PageProps) {
+const CustomerIndex = (props: PageProps) => {
     const { customers, cities } = props;
 
     const [selectedCustomer, setSelectedCustomer] = useState<
@@ -100,4 +100,6 @@ export default function CustomerIndex(props: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
+
+export default CustomerIndex;

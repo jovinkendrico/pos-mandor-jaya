@@ -10,10 +10,9 @@ interface CreateRolePageProps {
     groupedPermissions: PermissionGroup;
 }
 
-export default function CreateRole({
-    permissions,
-    groupedPermissions,
-}: CreateRolePageProps) {
+const CreateRole = (props: CreateRolePageProps) => {
+    const { permissions, groupedPermissions } = props;
+
     const form = useForm<RoleFormData>({
         name: '',
         guard_name: 'web',
@@ -112,4 +111,6 @@ export default function CreateRole({
             </div>
         </AppLayout>
     );
-}
+};
+
+export default CreateRole;

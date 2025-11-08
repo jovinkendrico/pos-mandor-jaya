@@ -1,12 +1,24 @@
-import { useForm, router } from '@inertiajs/react';
-import { useEffect, useState, useMemo } from 'react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -15,14 +27,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { toast } from 'sonner';
-import { Trash2, Plus } from 'lucide-react';
-import { store, update, index } from '@/routes/purchases';
-import InputError from '@/components/input-error';
-import { Combobox, ComboboxOption } from '@/components/ui/combobox';
-import axios from 'axios';
-import { store as storeSupplier } from '@/routes/suppliers';
+import { Textarea } from '@/components/ui/textarea';
 import { store as storeCity } from '@/routes/cities';
+import { index, store, update } from '@/routes/purchases';
+import { store as storeSupplier } from '@/routes/suppliers';
+import { router, useForm } from '@inertiajs/react';
+import axios from 'axios';
+import { Plus, Trash } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Supplier {
     id: number;
@@ -76,7 +89,11 @@ interface PurchaseFormProps {
     items: Item[];
 }
 
-export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFormProps) {
+export default function PurchaseForm({
+    purchase,
+    suppliers,
+    items,
+}: PurchaseFormProps) {
     const [localSuppliers, setLocalSuppliers] = useState<Supplier[]>(suppliers);
     const [isAddingSupplier, setIsAddingSupplier] = useState(false);
     const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
@@ -95,7 +112,8 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
 
     const form = useForm({
         supplier_id: purchase?.supplier_id?.toString() || '',
-        purchase_date: purchase?.purchase_date || new Date().toISOString().split('T')[0],
+        purchase_date:
+            purchase?.purchase_date || new Date().toISOString().split('T')[0],
         due_date: purchase?.due_date || '',
         ppn_percent: purchase?.ppn_percent || '0',
         notes: purchase?.notes || '',
@@ -119,7 +137,8 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
     useEffect(() => {
         if (isAddSupplierModalOpen && cities.length === 0) {
             setLoadingCities(true);
-            axios.get('/cities?limit=10')
+            axios
+                .get('/cities?limit=10')
                 .then((response) => {
                     if (response.data && response.data.data) {
                         setCities(response.data.data);
@@ -164,13 +183,18 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
             if (response.data && response.data.data) {
                 const city = response.data.data;
                 setCities((prev) => [...prev, city]);
-                setNewSupplier((prev) => ({ ...prev, city_id: city.id.toString() }));
+                setNewSupplier((prev) => ({
+                    ...prev,
+                    city_id: city.id.toString(),
+                }));
                 toast.success('Kota berhasil ditambahkan');
                 setNewCityName('');
                 setIsAddCityModalOpen(false);
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Gagal menambahkan kota');
+            toast.error(
+                error.response?.data?.message || 'Gagal menambahkan kota',
+            );
         } finally {
             setIsAddingCity(false);
         }
@@ -202,7 +226,9 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                 setIsAddSupplierModalOpen(false);
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Gagal menambahkan supplier');
+            toast.error(
+                error.response?.data?.message || 'Gagal menambahkan supplier',
+            );
         } finally {
             setIsAddingSupplier(false);
         }
@@ -231,14 +257,22 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
         form.setData('details', newDetails);
     };
 
-    const handleItemChange = (index: number, field: keyof PurchaseDetail, value: string) => {
+    const handleItemChange = (
+        index: number,
+        field: keyof PurchaseDetail,
+        value: string,
+    ) => {
         const newDetails = [...form.data.details];
         newDetails[index] = { ...newDetails[index], [field]: value };
 
         // Auto-fill price from item UOM when UOM selected
         if (field === 'item_uom_id') {
-            const selectedItem = items.find((item) => item.id.toString() === newDetails[index].item_id);
-            const selectedUom = selectedItem?.uoms.find((uom) => uom.id.toString() === value);
+            const selectedItem = items.find(
+                (item) => item.id.toString() === newDetails[index].item_id,
+            );
+            const selectedUom = selectedItem?.uoms.find(
+                (uom) => uom.id.toString() === value,
+            );
             if (selectedUom) {
                 newDetails[index].price = selectedUom.price;
             }
@@ -316,7 +350,7 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
         }
 
         const hasEmptyItem = form.data.details.some(
-            (d) => !d.item_id || !d.item_uom_id || !d.quantity || !d.price
+            (d) => !d.item_id || !d.item_uom_id || !d.quantity || !d.price,
         );
         if (hasEmptyItem) {
             toast.error('Semua item harus diisi lengkap');
@@ -347,12 +381,12 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             {/* Header Information */}
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Informasi Pembelian</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="space-y-2">
                             <Label htmlFor="supplier_id">Supplier</Label>
                             <div className="flex gap-2">
@@ -360,20 +394,27 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                     <Combobox
                                         options={supplierOptions}
                                         value={form.data.supplier_id}
-                                        onValueChange={(value) => form.setData('supplier_id', value)}
+                                        onValueChange={(value) =>
+                                            form.setData('supplier_id', value)
+                                        }
                                         placeholder="Pilih supplier..."
                                         searchPlaceholder="Cari supplier..."
-                                        className="w-full"
+                                        className="combobox"
                                         maxDisplayItems={10}
                                     />
-                                    <InputError message={form.errors.supplier_id} />
+                                    <InputError
+                                        message={form.errors.supplier_id}
+                                    />
                                 </div>
                                 <Button
                                     type="button"
-                                    variant="outline"
+                                    variant="ghost"
                                     size="icon"
-                                    onClick={() => setIsAddSupplierModalOpen(true)}
+                                    onClick={() =>
+                                        setIsAddSupplierModalOpen(true)
+                                    }
                                     title="Tambah supplier baru"
+                                    className="btn-secondary"
                                 >
                                     <Plus className="h-4 w-4" />
                                 </Button>
@@ -382,26 +423,38 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
 
                         <div className="space-y-2">
                             <Label htmlFor="purchase_date">
-                                Tanggal Pembelian <span className="text-red-500">*</span>
+                                Tanggal Pembelian{' '}
+                                <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="purchase_date"
                                 type="date"
                                 value={form.data.purchase_date}
-                                onChange={(e) => form.setData('purchase_date', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'purchase_date',
+                                        e.target.value,
+                                    )
+                                }
                                 required
+                                className="input-box"
                             />
                             <InputError message={form.errors.purchase_date} />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="due_date">Tanggal Jatuh Tempo</Label>
+                            <Label htmlFor="due_date">
+                                Tanggal Jatuh Tempo
+                            </Label>
                             <Input
                                 id="due_date"
                                 type="date"
                                 value={form.data.due_date}
-                                onChange={(e) => form.setData('due_date', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('due_date', e.target.value)
+                                }
                                 min={form.data.purchase_date}
+                                className="input-box"
                             />
                             <InputError message={form.errors.due_date} />
                         </div>
@@ -409,36 +462,59 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                 </CardContent>
             </Card>
 
-            {/* Items Table */}
-            <Card>
+            <Card className="content">
                 <CardHeader>
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                         <CardTitle>Detail Items</CardTitle>
-                        <Button type="button" onClick={handleAddItem} size="sm" variant="outline">
-                            <Plus className="h-4 w-4 mr-2" />
+                        <Button
+                            type="button"
+                            onClick={handleAddItem}
+                            size="sm"
+                            className="btn-primary"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
                             Tambah Item
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
-                        <Table>
+                        <Table className="content">
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[250px]">Item</TableHead>
-                                    <TableHead className="w-[120px]">UOM</TableHead>
-                                    <TableHead className="w-[100px]">Qty</TableHead>
-                                    <TableHead className="w-[130px]">Harga</TableHead>
-                                    <TableHead className="w-[100px]">Disc 1%</TableHead>
-                                    <TableHead className="w-[100px]">Disc 2%</TableHead>
-                                    <TableHead className="text-right w-[130px]">Subtotal</TableHead>
+                                    <TableHead className="w-[250px]">
+                                        Item
+                                    </TableHead>
+                                    <TableHead className="w-[120px]">
+                                        UOM
+                                    </TableHead>
+                                    <TableHead className="w-[100px]">
+                                        Qty
+                                    </TableHead>
+                                    <TableHead className="w-[130px]">
+                                        Harga
+                                    </TableHead>
+                                    <TableHead className="w-[100px]">
+                                        Disc 1 (%)
+                                    </TableHead>
+                                    <TableHead className="w-[100px]">
+                                        Disc 2 (%)
+                                    </TableHead>
+                                    <TableHead className="w-[130px] text-right">
+                                        Subtotal
+                                    </TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {form.data.details.map((detail, index) => {
-                                    const selectedItem = items.find((item) => item.id.toString() === detail.item_id);
-                                    const itemCalc = calculations.itemsCalculated[index];
+                                    const selectedItem = items.find(
+                                        (item) =>
+                                            item.id.toString() ===
+                                            detail.item_id,
+                                    );
+                                    const itemCalc =
+                                        calculations.itemsCalculated[index];
 
                                     return (
                                         <TableRow key={index}>
@@ -446,18 +522,30 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                                 <Select
                                                     value={detail.item_id}
                                                     onValueChange={(value) => {
-                                                        handleItemChange(index, 'item_id', value);
+                                                        handleItemChange(
+                                                            index,
+                                                            'item_id',
+                                                            value,
+                                                        );
                                                         // Reset UOM when item changes
-                                                        handleItemChange(index, 'item_uom_id', '');
+                                                        handleItemChange(
+                                                            index,
+                                                            'item_uom_id',
+                                                            '',
+                                                        );
                                                     }}
                                                 >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Pilih item" />
+                                                    <SelectTrigger className="combobox font-medium">
+                                                        <SelectValue placeholder="Pilih item..." />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {items.map((item) => (
-                                                            <SelectItem key={item.id} value={item.id.toString()}>
-                                                                {item.code} - {item.name}
+                                                            <SelectItem
+                                                                key={item.id}
+                                                                value={item.id.toString()}
+                                                            >
+                                                                {item.code} -{' '}
+                                                                {item.name}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -466,18 +554,31 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                             <TableCell>
                                                 <Select
                                                     value={detail.item_uom_id}
-                                                    onValueChange={(value) => handleItemChange(index, 'item_uom_id', value)}
+                                                    onValueChange={(value) =>
+                                                        handleItemChange(
+                                                            index,
+                                                            'item_uom_id',
+                                                            value,
+                                                        )
+                                                    }
                                                     disabled={!detail.item_id}
                                                 >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="UOM" />
+                                                    <SelectTrigger className="combobox font-medium">
+                                                        <SelectValue placeholder="Pilih UOM..." />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {selectedItem?.uoms.map((uom) => (
-                                                            <SelectItem key={uom.id} value={uom.id.toString()}>
-                                                                {uom.uom_name}
-                                                            </SelectItem>
-                                                        ))}
+                                                        {selectedItem?.uoms.map(
+                                                            (uom) => (
+                                                                <SelectItem
+                                                                    key={uom.id}
+                                                                    value={uom.id.toString()}
+                                                                >
+                                                                    {
+                                                                        uom.uom_name
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
                                                     </SelectContent>
                                                 </Select>
                                             </TableCell>
@@ -487,8 +588,14 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                                     step="0.01"
                                                     min="0.01"
                                                     value={detail.quantity}
-                                                    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                                    className="text-right"
+                                                    onChange={(e) =>
+                                                        handleItemChange(
+                                                            index,
+                                                            'quantity',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="input-box text-right"
                                                 />
                                             </TableCell>
                                             <TableCell>
@@ -497,8 +604,14 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                                     step="0.01"
                                                     min="0"
                                                     value={detail.price}
-                                                    onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                                                    className="text-right"
+                                                    onChange={(e) =>
+                                                        handleItemChange(
+                                                            index,
+                                                            'price',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="input-box text-right"
                                                 />
                                             </TableCell>
                                             <TableCell>
@@ -507,9 +620,17 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                                     step="0.01"
                                                     min="0"
                                                     max="100"
-                                                    value={detail.discount1_percent}
-                                                    onChange={(e) => handleItemChange(index, 'discount1_percent', e.target.value)}
-                                                    className="text-right"
+                                                    value={
+                                                        detail.discount1_percent
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleItemChange(
+                                                            index,
+                                                            'discount1_percent',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="input-box text-right"
                                                     placeholder="0"
                                                 />
                                             </TableCell>
@@ -519,25 +640,40 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                                     step="0.01"
                                                     min="0"
                                                     max="100"
-                                                    value={detail.discount2_percent}
-                                                    onChange={(e) => handleItemChange(index, 'discount2_percent', e.target.value)}
-                                                    className="text-right"
+                                                    value={
+                                                        detail.discount2_percent
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleItemChange(
+                                                            index,
+                                                            'discount2_percent',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="input-box text-right"
                                                     placeholder="0"
                                                 />
                                             </TableCell>
                                             <TableCell className="text-right font-medium">
-                                                {formatCurrency(itemCalc?.subtotal || 0)}
+                                                {formatCurrency(
+                                                    itemCalc?.subtotal || 0,
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <Button
                                                     type="button"
                                                     size="icon"
                                                     variant="ghost"
-                                                    onClick={() => handleRemoveItem(index)}
-                                                    disabled={form.data.details.length === 1}
-                                                    className="text-red-500"
+                                                    onClick={() =>
+                                                        handleRemoveItem(index)
+                                                    }
+                                                    disabled={
+                                                        form.data.details
+                                                            .length === 1
+                                                    }
+                                                    className="btn-trash"
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash className="h-4 w-4" />
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -550,8 +686,8 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
             </Card>
 
             {/* Totals & Footer */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Pajak & Catatan</CardTitle>
                     </CardHeader>
@@ -565,8 +701,10 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                 min="0"
                                 max="100"
                                 value={form.data.ppn_percent}
-                                onChange={(e) => form.setData('ppn_percent', e.target.value)}
-                                className="text-right"
+                                onChange={(e) =>
+                                    form.setData('ppn_percent', e.target.value)
+                                }
+                                className="input-box text-right"
                             />
                         </div>
                         <div className="space-y-2">
@@ -574,48 +712,70 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                             <Textarea
                                 id="notes"
                                 value={form.data.notes}
-                                onChange={(e) => form.setData('notes', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('notes', e.target.value)
+                                }
                                 rows={4}
+                                className="input-box"
                             />
                         </div>
-                        <div className="space-y-2 pt-2 border-t">
+                        <div className="space-y-2 border-t pt-2">
                             <div className="text-sm text-muted-foreground">
-                                💡 <strong>Info:</strong> Diskon header otomatis dihitung dari total diskon semua items
+                                💡 <strong>Info:</strong> Diskon header otomatis
+                                dihitung dari total diskon semua items
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Total Pembelian</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Subtotal (sebelum diskon):</span>
-                            <span className="font-medium">{formatCurrency(calculations.subtotal)}</span>
+                            <span className="text-muted-foreground">
+                                Subtotal (sebelum diskon):
+                            </span>
+                            <span className="font-medium">
+                                {formatCurrency(calculations.subtotal)}
+                            </span>
                         </div>
                         {calculations.headerDisc1Amt > 0 && (
                             <div className="flex justify-between text-sm text-red-600">
                                 <span>Total Diskon 1 (dari items):</span>
-                                <span>-{formatCurrency(calculations.headerDisc1Amt)}</span>
+                                <span>
+                                    -
+                                    {formatCurrency(
+                                        calculations.headerDisc1Amt,
+                                    )}
+                                </span>
                             </div>
                         )}
                         {calculations.headerDisc2Amt > 0 && (
                             <div className="flex justify-between text-sm text-red-600">
                                 <span>Total Diskon 2 (dari items):</span>
-                                <span>-{formatCurrency(calculations.headerDisc2Amt)}</span>
+                                <span>
+                                    -
+                                    {formatCurrency(
+                                        calculations.headerDisc2Amt,
+                                    )}
+                                </span>
                             </div>
                         )}
                         {calculations.ppnAmt > 0 && (
                             <div className="flex justify-between text-sm text-blue-600">
                                 <span>PPN ({form.data.ppn_percent}%):</span>
-                                <span>+{formatCurrency(calculations.ppnAmt)}</span>
+                                <span>
+                                    +{formatCurrency(calculations.ppnAmt)}
+                                </span>
                             </div>
                         )}
-                        <div className="flex justify-between font-bold text-lg border-t pt-3">
-                            <span>GRAND TOTAL:</span>
-                            <span className="text-primary">{formatCurrency(calculations.grandTotal)}</span>
+                        <div className="flex justify-between border-t-2 pt-3 text-lg font-bold dark:border-gray-500">
+                            <span className="uppercase">Grand Total:</span>
+                            <span className="text-primary">
+                                {formatCurrency(calculations.grandTotal)}
+                            </span>
                         </div>
 
                         <div className="flex gap-2 pt-4">
@@ -624,12 +784,20 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                 variant="outline"
                                 onClick={() => router.visit(index().url)}
                                 disabled={form.processing}
-                                className="flex-1"
+                                className="btn-secondary flex-1"
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={form.processing} className="flex-1">
-                                {form.processing ? 'Menyimpan...' : purchase ? 'Update' : 'Simpan'}
+                            <Button
+                                type="submit"
+                                disabled={form.processing}
+                                className="btn-primary flex-1"
+                            >
+                                {form.processing
+                                    ? 'Menyimpan...'
+                                    : purchase
+                                      ? 'Update'
+                                      : 'Simpan'}
                             </Button>
                         </div>
                     </CardContent>
@@ -637,21 +805,32 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
             </div>
 
             {/* Dialog for adding new supplier */}
-            <Dialog open={isAddSupplierModalOpen} onOpenChange={setIsAddSupplierModalOpen}>
+            <Dialog
+                open={isAddSupplierModalOpen}
+                onOpenChange={setIsAddSupplierModalOpen}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Tambah Supplier Baru</DialogTitle>
-                        <DialogDescription>Isi data detail untuk menambahkan supplier baru</DialogDescription>
+                        <DialogDescription>
+                            Isi data detail untuk menambahkan supplier baru
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div>
                             <Label htmlFor="new_supplier_name">
-                                Nama Supplier <span className="text-red-500">*</span>
+                                Nama Supplier{' '}
+                                <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="new_supplier_name"
                                 value={newSupplier.name}
-                                onChange={(e) => setNewSupplier((prev) => ({ ...prev, name: e.target.value }))}
+                                onChange={(e) =>
+                                    setNewSupplier((prev) => ({
+                                        ...prev,
+                                        name: e.target.value,
+                                    }))
+                                }
                                 placeholder="Masukkan nama supplier"
                             />
                         </div>
@@ -661,7 +840,12 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                             <Textarea
                                 id="new_supplier_address"
                                 value={newSupplier.address}
-                                onChange={(e) => setNewSupplier((prev) => ({ ...prev, address: e.target.value }))}
+                                onChange={(e) =>
+                                    setNewSupplier((prev) => ({
+                                        ...prev,
+                                        address: e.target.value,
+                                    }))
+                                }
                                 placeholder="Masukkan alamat"
                                 rows={3}
                             />
@@ -675,8 +859,17 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                         <Combobox
                                             options={cityOptions}
                                             value={newSupplier.city_id}
-                                            onValueChange={(value) => setNewSupplier((prev) => ({ ...prev, city_id: value }))}
-                                            placeholder={loadingCities ? 'Memuat kota...' : 'Pilih kota...'}
+                                            onValueChange={(value) =>
+                                                setNewSupplier((prev) => ({
+                                                    ...prev,
+                                                    city_id: value,
+                                                }))
+                                            }
+                                            placeholder={
+                                                loadingCities
+                                                    ? 'Memuat kota...'
+                                                    : 'Pilih kota...'
+                                            }
                                             searchPlaceholder="Cari kota..."
                                             className="w-full"
                                             maxDisplayItems={10}
@@ -687,7 +880,9 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                                         type="button"
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => setIsAddCityModalOpen(true)}
+                                        onClick={() =>
+                                            setIsAddCityModalOpen(true)
+                                        }
                                         title="Tambah kota baru"
                                         disabled={loadingCities}
                                     >
@@ -697,22 +892,36 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                             </div>
 
                             <div>
-                                <Label htmlFor="new_supplier_phone">Nomor Telepon</Label>
+                                <Label htmlFor="new_supplier_phone">
+                                    Nomor Telepon
+                                </Label>
                                 <Input
                                     id="new_supplier_phone"
                                     value={newSupplier.phone_number}
-                                    onChange={(e) => setNewSupplier((prev) => ({ ...prev, phone_number: e.target.value }))}
+                                    onChange={(e) =>
+                                        setNewSupplier((prev) => ({
+                                            ...prev,
+                                            phone_number: e.target.value,
+                                        }))
+                                    }
                                     placeholder="08123456789"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <Label htmlFor="new_supplier_contact">Contact Person</Label>
+                            <Label htmlFor="new_supplier_contact">
+                                Contact Person
+                            </Label>
                             <Input
                                 id="new_supplier_contact"
                                 value={newSupplier.contact}
-                                onChange={(e) => setNewSupplier((prev) => ({ ...prev, contact: e.target.value }))}
+                                onChange={(e) =>
+                                    setNewSupplier((prev) => ({
+                                        ...prev,
+                                        contact: e.target.value,
+                                    }))
+                                }
                                 placeholder="Nama contact person"
                             />
                         </div>
@@ -735,19 +944,30 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={handleAddSupplier} disabled={isAddingSupplier}>
-                            {isAddingSupplier ? 'Menambahkan...' : 'Tambah Supplier'}
+                        <Button
+                            type="button"
+                            onClick={handleAddSupplier}
+                            disabled={isAddingSupplier}
+                        >
+                            {isAddingSupplier
+                                ? 'Menambahkan...'
+                                : 'Tambah Supplier'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             {/* Dialog for adding new city */}
-            <Dialog open={isAddCityModalOpen} onOpenChange={setIsAddCityModalOpen}>
+            <Dialog
+                open={isAddCityModalOpen}
+                onOpenChange={setIsAddCityModalOpen}
+            >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Tambah Kota Baru</DialogTitle>
-                        <DialogDescription>Masukkan nama kota yang ingin ditambahkan</DialogDescription>
+                        <DialogDescription>
+                            Masukkan nama kota yang ingin ditambahkan
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <Label htmlFor="new_city_name">Nama Kota</Label>
@@ -776,7 +996,11 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={handleAddCity} disabled={isAddingCity}>
+                        <Button
+                            type="button"
+                            onClick={handleAddCity}
+                            disabled={isAddingCity}
+                        >
                             {isAddingCity ? 'Menambahkan...' : 'Tambah Kota'}
                         </Button>
                     </DialogFooter>
@@ -785,4 +1009,3 @@ export default function PurchaseForm({ purchase, suppliers, items }: PurchaseFor
         </form>
     );
 }
-

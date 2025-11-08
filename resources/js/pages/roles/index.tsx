@@ -14,7 +14,7 @@ interface RolesPageProps {
     roles: Role[];
 }
 
-export default function RolesIndex({ roles }: RolesPageProps) {
+const RolesIndex = ({ roles }: RolesPageProps) => {
     const { props } = usePage();
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [isDeletingModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -67,4 +67,6 @@ export default function RolesIndex({ roles }: RolesPageProps) {
             />
         </AppLayout>
     );
-}
+};
+
+export default RolesIndex;
