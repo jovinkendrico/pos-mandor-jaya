@@ -123,16 +123,12 @@ class ItemController extends Controller
             // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
             $item->itemUoms()->forceDelete();
 
-            $item->stockMovements()->forceDelete();
 
             // Create new UOMs
             foreach ($request->uoms as $uom) {
                 $item->itemUoms()->create($uom);
             }
 
-            foreach ($request->stock_movements as $stock_movement) {
-                $item->stockMovements()->create($stock_movement);
-            }
         });
 
         return redirect()->route('items.index')
