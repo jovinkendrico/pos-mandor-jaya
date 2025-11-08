@@ -27,7 +27,7 @@ const StockMovementTable = (props: StockMovementTableProps) => {
             tableName="Stock Movement"
             tableColumn={tableColumn}
             tableRow={stock_movements}
-            text="Tidak ada data stock movement"
+            text="Tidak ada data perpindahan stok"
             pageFrom={pageFrom}
             renderRow={(row) => (
                 <>

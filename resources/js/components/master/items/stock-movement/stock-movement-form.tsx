@@ -120,7 +120,7 @@ const StockMovementForm = (props: StockMovementFormProps) => {
                                                         </span>
                                                     </Label>
                                                     <Input
-                                                        id={`remaingin_quantity_${index}`}
+                                                        id={`remaining_quantity_${index}`}
                                                         type="text"
                                                         step="1"
                                                         value={

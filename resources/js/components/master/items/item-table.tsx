@@ -128,7 +128,6 @@ const ItemTable = (props: ItemTableProps) => {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                asChild
                                 className="btn-info"
                             >
                                 <Link href={`/items/${row.id}`}>

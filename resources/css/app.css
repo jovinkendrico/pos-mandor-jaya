@@ -268,7 +268,7 @@
 }
 
 .btn-info {
-    @apply text-yellow-400 dark:bg-yellow-400/85 dark:text-white;
+    @apply text-yellow-600 dark:bg-yellow-400/85 dark:text-white;
 }
 
 .btn-info:hover {

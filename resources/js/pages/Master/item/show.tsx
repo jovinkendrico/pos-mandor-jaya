@@ -7,7 +7,7 @@ import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { index, show } from '@/routes/items';
 import { BreadcrumbItem, IItem, IItemStockMovement } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
@@ -48,18 +48,23 @@ const ShowStock = (props: PageProps) => {
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Barang" />
-                <div className="flex justify-between">
+                <div className="flex flex-col gap-4">
                     <PageTitle title="Barang" />
-                    <Button
-                        onClick={() => {
-                            setSelectedStockMovement(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Perpindahan Stok
-                    </Button>
+                    <div className="flex justify-between">
+                        <Button className="btn-danger">
+                            <Link href={`/items`}>Kembali</Link>
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setSelectedStockMovement(undefined);
+                                openEditModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah Perpindahan Stok
+                        </Button>
+                    </div>
                 </div>
                 <StockMovementTable
                     onEdit={setSelectedStockMovement}
