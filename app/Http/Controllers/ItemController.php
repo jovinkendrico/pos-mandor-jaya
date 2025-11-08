@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreItemRequest;
+use App\Http\Requests\StoreStockMovementRequest;
 use App\Http\Requests\UpdateItemRequest;
+use App\Http\Requests\UpdateStockMovementRequest;
 use App\Models\Item;
 use App\Models\Uom;
 use App\Services\ItemService;
@@ -60,26 +62,37 @@ class ItemController extends Controller
                 $item->itemUoms()->create($uom);
             }
 
-            foreach ($request->stock_movements as $stock_movement) {
-                $item->stockMovements()->create($stock_movement);
-            }
         });
 
         return redirect()->route('items.index')
             ->with('success', 'Barang berhasil ditambahkan.');
     }
 
+
     /**
      * Display the specified resource.
      */
     public function show(Item $item): Response
     {
-        $item->load('uoms');
+        $item->load('itemUoms.uoms', 'stockMovements');
 
         return Inertia::render('master/item/show', [
             'item' => $item,
         ]);
     }
+
+    public function storeStockMovement(StoreStockMovementRequest $request, Item $item): RedirectResponse
+    {
+        $item->stockMovements()->createMany($request->validated());
+        return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil ditambahkan.');
+    }
+
+    public function updateStockMovement(UpdateStockMovementRequest $request, Item $item): RedirectResponse
+    {
+        $item->stockMovements()->updateMany($request->validated());
+        return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil diperbarui.');
+    }
+
 
     /**
      * Show the form for editing the specified resource.

@@ -31,11 +31,6 @@ class StoreItemRequest extends FormRequest
             'uoms.*.conversion_value'              => ['required', 'integer', 'min:1'],
             'uoms.*.price'                         => ['required', 'numeric', 'min:0'],
             'uoms.*.is_base'                       => ['boolean'],
-            'stock_movements'                      => ['array', 'min:1'],
-            'stock_movements.*.remaining_quantity' => ['required'],
-            'stock_movements.*.unit_cost'          => ['required'],
-            'stock_movements.*.movement_date'      => ['required', 'date'],
-            'stock_movements.*.notes'              => ['nullable', 'string'],
         ];
     }
 }

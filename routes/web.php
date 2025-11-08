@@ -46,6 +46,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sale-returns/{sale_return}/confirm', [SaleReturnController::class, 'confirm'])->name('sale-returns.confirm');
     Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
 
+
+    Route::prefix('items')->controller(ItemController::class)->group(function () {
+        Route::post('{item}/stock-movements', 'storeStockMovement')->name('items.storeStockMovement');
+        Route::put('{item}/stock-movements', 'updateStockMovement')->name('items.updateStockMovement');
+    });
+
     Route::resources([
         'users'            => UserController::class,
         'roles'            => RoleController::class,
@@ -60,7 +66,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'sales'            => SaleController::class,
         'purchase-returns' => PurchaseReturnController::class,
         'sale-returns'     => SaleReturnController::class,
-        'uoms'             => UomController::class,
     ]);
 });
 
