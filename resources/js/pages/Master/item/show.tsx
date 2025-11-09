@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import { index, show } from '@/routes/items';
 import { BreadcrumbItem, IItem, IItemStockMovement } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { ChevronsLeft, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
@@ -49,10 +49,15 @@ const ShowStock = (props: PageProps) => {
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Barang" />
                 <div className="flex flex-col gap-4">
-                    <PageTitle title="Barang" />
+                    <PageTitle title={`Perpindahan Stok (${item.name})`} />
                     <div className="flex justify-between">
                         <Button className="btn-danger">
-                            <Link href={`/items`}>Kembali</Link>
+                            <Link
+                                href={`/items`}
+                                className="flex items-center justify-between"
+                            >
+                                <ChevronsLeft /> Kembali
+                            </Link>
                         </Button>
                         <Button
                             onClick={() => {
