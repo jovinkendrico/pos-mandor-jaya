@@ -23,13 +23,12 @@ class UpdateStockMovementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'item_id'                              => ['required', 'exists:items,id'],
-            'stock_movements'                      => ['array', 'min:1'],
-            'stock_movements.*.remaining_quantity' => ['required'],
-            'stock_movements.*.unit_cost'          => ['required'],
-            'stock_movements.*.movement_date'      => ['required', 'date'],
-            'stock_movements.*.notes'              => ['nullable', 'string'],
-            'stock_movements.*.id'                 => ['required', 'exists:stock_movements,id'],
+            'item_id'            => ['required', 'exists:items,id'],
+            'remaining_quantity' => ['required'],
+            'unit_cost'          => ['required'],
+            'movement_date'      => ['required', 'date'],
+            'notes'              => ['nullable', 'string'],
+            'id'                 => ['required', 'exists:stock_movements,id'],
         ];
     }
 }
