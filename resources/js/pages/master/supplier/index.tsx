@@ -33,7 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SupplierIndex(props: PageProps) {
+const SupplierIndex = (props: PageProps) => {
     const { suppliers, cities } = props;
 
     const {
@@ -105,4 +105,6 @@ export default function SupplierIndex(props: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
+
+export default SupplierIndex;

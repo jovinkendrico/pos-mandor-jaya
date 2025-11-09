@@ -12,12 +12,10 @@ interface EditRolePageProps {
     selected_permission_ids: number[];
 }
 
-export default function EditRole({
-    role,
-    permissions,
-    groupedPermissions,
-    selected_permission_ids,
-}: EditRolePageProps) {
+const EditRole = (props: EditRolePageProps) => {
+    const { role, permissions, groupedPermissions, selected_permission_ids } =
+        props;
+
     const form = useForm<RoleFormData>({
         name: role.name,
         guard_name: role.guard_name,
@@ -118,4 +116,6 @@ export default function EditRole({
             </div>
         </AppLayout>
     );
-}
+};
+
+export default EditRole;

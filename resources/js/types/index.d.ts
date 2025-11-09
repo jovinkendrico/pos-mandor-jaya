@@ -170,6 +170,26 @@ export type IItemUOM = Pick<
     'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
 >;
 
+export interface ItemStockMovement {
+    id: number;
+    item_id: number;
+    reference_type: string;
+    reference_id: number;
+    quantity: number;
+    unit_cost: number;
+    remaining_quantity: number;
+    movement_date: Date;
+    notes?: string;
+    created_at: Date;
+    updated_at: Date;
+    [key: string]: unknown;
+}
+
+export type IItemStockMovement = Pick<
+    ItemStockMovement,
+    'remaining_quantity' | 'unit_cost' | 'movement_date' | 'notes'
+> & { id?: number };
+
 export interface Item {
     id: number;
     code: string;
@@ -177,6 +197,7 @@ export interface Item {
     stock: number;
     description?: string;
     item_uoms: ItemUom[];
+    stock_movements: ItemStockMovement[];
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
@@ -187,6 +208,7 @@ export type IItem = Pick<
     'id' | 'name' | 'stock' | 'description' | 'code'
 > & {
     item_uoms: IItemUOM[];
+    stock_movements: IItemStockMovement[];
 };
 
 export interface PageProps {
@@ -212,4 +234,42 @@ export interface PaginatedData<T> {
     from: number;
     to: number;
     total: number;
+}
+
+export enum PurchaseStatus {
+    PENDING = 'pending',
+    CONFIRMED = 'confirmed',
+}
+
+export interface IPurchase {
+    id: number;
+    purchase_number: string;
+    supplier_id: number;
+    purchase_date: Date;
+    due_date: Date;
+    subtotal: number;
+    discount1_percent?: number;
+    discount1_amount?: number;
+    discount2_percent?: number;
+    discount2_amount?: number;
+    total_after_discount: number;
+    ppn_percent?: number;
+    total_amount: number;
+    status: PurchaseStatus;
+    notes: string;
+    details: IPurchaseDetail[];
+}
+
+export interface IPurchaseDetail {
+    id: number;
+    purchase_id: number;
+    item_id: number;
+    item_uom_id: number;
+    quantity: number;
+    price: number;
+    discount1_percent?: number;
+    discount1_amount?: number;
+    discount2_percent?: number;
+    discount2_amount?: number;
+    subtotal: number;
 }

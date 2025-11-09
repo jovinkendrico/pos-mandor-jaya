@@ -56,9 +56,9 @@ const TableLayout = <T,>(props: PropTypes<T>) => {
                         <TableRow className="hover:!bg-transparent">
                             <TableCell className="flex min-h-120 w-full flex-col items-center justify-center align-middle">
                                 <img
-                                    src="folder-image-vector.svg"
+                                    src="/folder-image-vector.svg"
                                     alt="no_vector_logo"
-                                    className="max-w-3xs opacity-65 dark:opacity-20"
+                                    className="pointer-events-none max-w-3xs opacity-65 dark:opacity-20"
                                 />
                                 <h1 className="mb-2 flex items-center justify-center text-3xl font-extrabold text-primary-800 dark:text-primary-800">
                                     Data tidak ditemukan
