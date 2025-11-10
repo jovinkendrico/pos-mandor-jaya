@@ -34,8 +34,8 @@ const useCity = (closeModal: () => void, isNested: boolean = false) => {
                     reset();
                     toast.success(
                         city
-                            ? 'Kota berhasil diupdate'
-                            : 'Kota berhasil ditambahkan',
+                            ? `Kota: ${data.name} berhasil diupdate`
+                            : `Kota: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },

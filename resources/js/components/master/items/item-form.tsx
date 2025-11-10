@@ -16,7 +16,7 @@ import useItem from '@/hooks/use-item';
 import { cn } from '@/lib/utils';
 import { IItem, IUOM } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import UOMForm from '../uom/uom-form';
 
 interface ItemFormProps {
@@ -37,6 +37,7 @@ const ItemForm = (props: ItemFormProps) => {
         setData: setDataItem,
         errors: errorsItem,
         processing: processingItem,
+        reset: resetItem,
 
         addUOM,
         removeUOM,
@@ -56,6 +57,16 @@ const ItemForm = (props: ItemFormProps) => {
             label: uom.name,
         }));
     }, [localUOMS]);
+
+    useEffect(() => {
+        if (isModalOpen && item) {
+            setDataItem('name', item.name);
+            setDataItem('description', item.description ?? '');
+            setDataItem('uoms', item.item_uoms);
+        } else {
+            resetItem();
+        }
+    }, [isModalOpen, item, setDataItem, resetItem]);
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>

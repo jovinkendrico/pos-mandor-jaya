@@ -83,31 +83,13 @@ class ItemController extends Controller
 
     public function storeStockMovement(StoreStockMovementRequest $request, Item $item): RedirectResponse
     {
-        foreach ($request->stock_movements as $stock_movement) {
-            $item->stockMovements()->create([
-                'remaining_quantity' => $stock_movement['remaining_quantity'],
-                'unit_cost'          => $stock_movement['unit_cost'],
-                'movement_date'      => $stock_movement['movement_date'],
-                'notes'              => $stock_movement['notes'],
-            ]);
-        }
+        $item->stockMovements()->create($request->validated());
         return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil ditambahkan.');
     }
 
-    public function updateStockMovement(UpdateStockMovementRequest $request, Item $item): RedirectResponse
+    public function updateStockMovement(UpdateStockMovementRequest $request, Item $item, StockMovement $stockMovement): RedirectResponse
     {
-
-        // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
-        $item->stockMovements()->forceDelete();
-
-        foreach ($request->stock_movements as $stock_movement) {
-            $item->stockMovements()->create([
-                'remaining_quantity' => $stock_movement['remaining_quantity'],
-                'unit_cost'          => $stock_movement['unit_cost'],
-                'movement_date'      => $stock_movement['movement_date'],
-                'notes'              => $stock_movement['notes'],
-            ]);
-        }
+        $stockMovement->update($request->validated());
         return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil diperbarui.');
     }
 
@@ -116,6 +98,7 @@ class ItemController extends Controller
         $item->stockMovements()->forceDelete();
         return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil dihapus.');
     }
+
 
 
     /**

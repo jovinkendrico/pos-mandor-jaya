@@ -53,8 +53,8 @@ const useCustomer = (closeModal: () => void) => {
                     reset();
                     toast.success(
                         customer
-                            ? 'Customer berhasil diupdate'
-                            : 'Customer berhasil ditambahkan',
+                            ? `Customer: ${data.name} berhasil diupdate`
+                            : `Customer ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },

@@ -18,40 +18,27 @@ interface ItemTableProps {
 const ItemTable = (props: ItemTableProps) => {
     const { items, onEdit, onDelete, pageFrom } = props;
 
-    const [selectedUom, setSelectedUom] = useState<Record<number, number>>(
-        () => {
-            return items.reduce(
-                (acc, item) => {
-                    const defaultUom =
-                        item.item_uoms?.find((u) => u.is_base) ??
-                        item.item_uoms?.[0];
-                    acc[item.id] = defaultUom?.uom?.id ?? 0;
-                    return acc;
-                },
-                {} as Record<number, number>,
-            );
-        },
+    const getDefaultUoms = (items: IItem[]): Record<number, number> => {
+        return items.reduce(
+            (acc, item) => {
+                const defaultUom =
+                    item.item_uoms?.find((u) => u.is_base) ??
+                    item.item_uoms?.[0];
+                acc[item.id] = defaultUom?.uom?.id ?? 0;
+                return acc;
+            },
+            {} as Record<number, number>,
+        );
+    };
+
+    const [selectedUom, setSelectedUom] = useState<Record<number, number>>(() =>
+        getDefaultUoms(items),
     );
 
     useEffect(() => {
-        setSelectedUom((prevSelected) => {
-            const newSelected = { ...prevSelected };
-            let hasChanged = false;
+        const newDefaultUoms = getDefaultUoms(items);
 
-            for (const item of items) {
-                if (prevSelected[item.id] === undefined) {
-                    const defaultUom =
-                        item.item_uoms?.find((u) => u?.is_base) ??
-                        item.item_uoms?.[0];
-
-                    if (defaultUom) {
-                        newSelected[item.id] = defaultUom?.uom?.id ?? 0;
-                        hasChanged = true;
-                    }
-                }
-            }
-            return hasChanged ? newSelected : prevSelected;
-        });
+        setSelectedUom(newDefaultUoms);
     }, [items]);
 
     const handleChangeUOM = (itemId: number, newUomId: number) => {

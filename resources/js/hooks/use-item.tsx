@@ -17,13 +17,6 @@ const uomSchema = Yup.object().shape({
     }),
 });
 
-const stockMovementsSchema = Yup.object().shape({
-    remaining_quantity: Yup.number().min(1, 'Sisa stok harus lebih besar 0.'),
-    unit_cost: Yup.number().min(1, 'Harga unit harus lebih besar 0.'),
-    movement_date: Yup.date().required('Tanggal harus diisi.'),
-    notes: Yup.string().max(255, 'Maksimal 255 karakter.'),
-});
-
 const itemSchema = Yup.object().shape({
     name: Yup.string()
         .required('Nama barang harus diisi.')
@@ -59,9 +52,6 @@ const itemSchema = Yup.object().shape({
                 return true; // If no base found, this test passes (because 'one-base-uom' test will fail)
             },
         ),
-    stock_movements: Yup.array()
-        .of(stockMovementsSchema)
-        .required('Minimal harus ada 1 stock movement.'),
 });
 
 const useItem = (closeModal: () => void = () => {}) => {
@@ -103,8 +93,8 @@ const useItem = (closeModal: () => void = () => {}) => {
                     reset();
                     toast.success(
                         item
-                            ? 'Item berhasil diupdate'
-                            : 'Item berhasil ditambahkan',
+                            ? `Item: ${data.name} berhasil diupdate`
+                            : `Item: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },

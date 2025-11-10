@@ -53,8 +53,8 @@ const useSupplier = (closeModal: () => void) => {
                     reset();
                     toast.success(
                         supplier
-                            ? 'Supplier berhasil diupdate'
-                            : 'Supplier berhasil ditambahkan',
+                            ? `Supplier: ${data.name} berhasil diupdate`
+                            : `Supplier: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },

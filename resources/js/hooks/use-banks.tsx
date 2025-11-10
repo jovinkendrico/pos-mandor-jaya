@@ -43,8 +43,8 @@ const useBanks = (closeModal: () => void) => {
                     reset();
                     toast.success(
                         bank
-                            ? 'Bank/Cash berhasil diupdate'
-                            : 'Bank/Cash berhasil ditambahkan',
+                            ? `Bank/Cash: ${data.name} berhasil diupdate`
+                            : `Bank/Cash: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },

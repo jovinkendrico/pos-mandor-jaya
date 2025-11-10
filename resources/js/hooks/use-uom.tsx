@@ -34,8 +34,8 @@ const useUOM = (closeModal: () => void, isNested: boolean = false) => {
                     reset();
                     toast.success(
                         uom
-                            ? 'UOM berhasil diupdate'
-                            : 'UOM berhasil ditambahkan',
+                            ? `UOM: ${data.name} berhasil diupdate`
+                            : `UOM: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },
@@ -66,7 +66,7 @@ const useUOM = (closeModal: () => void, isNested: boolean = false) => {
     const handleDelete = (uom: IUOM) => {
         router.delete(destroy(uom.id).url, {
             onSuccess: () => {
-                toast.success('UOM berhasil dihapus');
+                toast.success(`UOM: ${uom.name} berhasil dihapus`);
             },
         });
     };
