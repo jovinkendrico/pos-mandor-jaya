@@ -74,7 +74,7 @@ class ItemController extends Controller
      */
     public function show(Item $item): Response
     {
-        $item->load('itemUoms.uom', 'stockMovements');
+        $item = $item->stockMovements()->latest()->paginate(10)->withQueryString();
 
         return Inertia::render('master/item/show', [
             'item' => $item,
