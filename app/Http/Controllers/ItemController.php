@@ -93,6 +93,12 @@ class ItemController extends Controller
         return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil diperbarui.');
     }
 
+    public function destroyStockMovement(Item $item): RedirectResponse
+    {
+        $item->stockMovements()->forceDelete();
+        return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil dihapus.');
+    }
+
 
 
     /**
