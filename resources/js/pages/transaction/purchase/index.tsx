@@ -1,11 +1,12 @@
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import PurchaseTable from '@/components/transaction/purchases/purchase-table';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { index, create } from '@/routes/purchases';
+import { create, index } from '@/routes/purchases';
 import { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { useState } from 'react';
 
 interface Supplier {
     id: number;
@@ -62,7 +63,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseIndex({ purchases }: PageProps) {
+const PurchaseIndex = (props: PageProps) => {
+    const { purchases } = props;
+    const [selectedPurchase, setSelectedPurchase] = useState<>(undefined);
+
     const handleCreate = () => {
         router.visit(create().url);
     };
@@ -77,7 +81,7 @@ export default function PurchaseIndex({ purchases }: PageProps) {
                 <Head title="Pembelian" />
                 <div className="flex justify-between">
                     <PageTitle title="Pembelian" />
-                    <Button onClick={handleCreate}>
+                    <Button onClick={handleCreate} className="btn-primary">
                         <Plus />
                         Tambah Pembelian
                     </Button>
@@ -86,5 +90,6 @@ export default function PurchaseIndex({ purchases }: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
 
+export default PurchaseIndex;

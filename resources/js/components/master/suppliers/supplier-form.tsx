@@ -131,7 +131,7 @@ export default function SupplierForm(props: SupplierFormProps) {
 
                         <div className="flex flex-row gap-4">
                             <div className="w-1/2">
-                                <div className="flex items-end gap-2">
+                                <div className="flex flex-col gap-2 md:flex-row md:items-end">
                                     <div className="flex-1">
                                         <Label htmlFor="city_id">Kota</Label>
                                         <Combobox
@@ -146,7 +146,7 @@ export default function SupplierForm(props: SupplierFormProps) {
                                             placeholder="Pilih atau cari kota..."
                                             searchPlaceholder="Cari kota..."
                                             emptyText="Kota tidak ditemukan"
-                                            className="w-full"
+                                            className="w-full dark:!bg-white dark:!text-primary-200"
                                             maxDisplayItems={10}
                                         />
                                         {errorsSupplier.city_id && (

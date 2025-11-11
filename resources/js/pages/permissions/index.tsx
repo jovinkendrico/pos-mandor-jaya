@@ -16,10 +16,9 @@ interface PageProps {
     ungroupedPermissions: Permission[];
 }
 
-export default function PermissionsIndex({
-    permissions,
-    ungroupedPermissions,
-}: PageProps) {
+const PermissionsIndex = (props: PageProps) => {
+    const { permissions, ungroupedPermissions } = props;
+
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [selectedPermission, setSelectedPermission] =
         useState<Permission | null>(null);
@@ -92,4 +91,6 @@ export default function PermissionsIndex({
             />
         </AppLayout>
     );
-}
+};
+
+export default PermissionsIndex;

@@ -1,5 +1,5 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency, parseCurrency } from '@/lib/utils';
 import { IBank } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { Badge } from '../../ui/badge';
@@ -10,19 +10,11 @@ interface BankTableProps {
     banks: IBank[];
     onEdit: (bank: IBank) => void;
     onDelete: (bank: IBank) => void;
+    pageFrom?: number;
 }
 
 const BankTable = (props: BankTableProps) => {
-    const { banks, onEdit, onDelete } = props;
-
-    const formatCurrency = (value?: number) => {
-        if (!value) return 'Rp 0';
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(value);
-    };
+    const { banks, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = [
         'Kode',
@@ -40,6 +32,7 @@ const BankTable = (props: BankTableProps) => {
             tableColumn={tableColumn}
             tableRow={banks}
             text="Tidak ada data Bank/Cash"
+            pageFrom={pageFrom}
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">
@@ -68,8 +61,8 @@ const BankTable = (props: BankTableProps) => {
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.account_name || '-'}
                     </TableCell>
-                    <TableCell className="flex w-full items-center justify-center">
-                        {formatCurrency(row.balance)}
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {formatCurrency(parseCurrency(String(row.balance)))}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button

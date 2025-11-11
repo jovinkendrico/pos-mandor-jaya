@@ -154,7 +154,7 @@
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.145 0 0);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
+    --popover: oklch(0.2048 0.047 271.81);
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.985 0 0);
     --primary-foreground: oklch(0.205 0 0);
@@ -232,7 +232,7 @@
     @apply bg-primary-700 font-semibold dark:bg-primary-500 dark:text-white;
 }
 .btn-primary:hover {
-    @apply bg-primary-800 dark:bg-primary-500;
+    @apply bg-primary-800 dark:bg-primary-600;
     cursor: pointer;
 }
 
@@ -267,6 +267,14 @@
     @apply font-semibold text-destructive hover:cursor-pointer hover:bg-red-500 hover:text-white dark:bg-danger-500 dark:text-white dark:hover:bg-danger-300;
 }
 
+.btn-info {
+    @apply text-yellow-600 dark:bg-yellow-400/85 dark:text-white;
+}
+
+.btn-info:hover {
+    @apply cursor-pointer bg-yellow-500 text-white dark:bg-yellow-300;
+}
+
 .input-box {
     @apply border-2 dark:border-gray-500 dark:focus:border-3 dark:focus:border-white;
 }
@@ -280,5 +288,9 @@
 }
 
 .badge-gray-light {
-    @apply rounded-4xl border-2 border-gray-800 bg-gray-300 dark:border-gray-300 dark:bg-gray-700 dark:text-gray-300;
+    @apply rounded-4xl border-2 border-gray-600 bg-gray-200 dark:border-gray-300 dark:bg-gray-700 dark:text-gray-300;
+}
+
+.combobox {
+    @apply w-full dark:!bg-white dark:!text-primary-200;
 }

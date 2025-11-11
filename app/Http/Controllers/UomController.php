@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateUomRequest;
 use App\Models\Uom;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class UomController extends Controller
 {
@@ -16,7 +17,7 @@ class UomController extends Controller
     public function index()
     {
         //
-        $uoms = Uom::orderBy('name')->get();
+        $uoms = Uom::orderBy('name')->paginate(10);
 
         return Inertia::render('master/uom/index', [
             'uoms' => $uoms,
@@ -77,12 +78,24 @@ class UomController extends Controller
      */
     public function destroy(Uom $uom)
     {
-        //
+
+$itemUsingUom = DB::table('item_uoms')
+        ->join('items', 'item_uoms.item_id', '=', 'items.id')
+        ->where('item_uoms.uom_id', $uom->id)
+        ->whereNull('items.deleted_at')
+        ->select('items.name') 
+        ->first();             
+
+    if ($itemUsingUom) {
+        $errorMessage = "UOM ini tidak dapat dihapus karena sedang digunakan oleh Barang: {$itemUsingUom->name}";
+
+        return redirect()->back()->withErrors(['msg' => $errorMessage]);
+    }
         $uom->delete();
 
         return redirect()->route('uoms.index')
             ->with('success', 'Uom berhasil dihapus.');
     }
 
-    
+
 }

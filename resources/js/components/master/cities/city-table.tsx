@@ -12,10 +12,11 @@ interface CityTableProps {
     cities: City[];
     onEdit: (city: City) => void;
     onDelete: (city: City) => void;
+    pageFrom?: number;
 }
 
 const CityTable = (props: CityTableProps) => {
-    const { cities, onEdit, onDelete } = props;
+    const { cities, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = ['Kode', 'Nama Kota', 'Aksi'];
     return (
@@ -23,6 +24,7 @@ const CityTable = (props: CityTableProps) => {
             tableName="Kota"
             tableColumn={tableColumn}
             text="Tidak ada data kota"
+            pageFrom={pageFrom}
             tableRow={cities}
             renderRow={(row) => (
                 <>

@@ -125,7 +125,7 @@ export default function CustomerForm(props: CustomerFormProps) {
 
                         <div className="flex flex-row gap-4">
                             <div className="w-1/2">
-                                <div className="flex items-end gap-2">
+                                <div className="flex flex-col gap-2 md:flex-row md:items-end">
                                     <div className="flex-1">
                                         <Label htmlFor="city_id">Kota</Label>
                                         <Combobox

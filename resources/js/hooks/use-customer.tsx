@@ -53,8 +53,8 @@ const useCustomer = (closeModal: () => void) => {
                     reset();
                     toast.success(
                         customer
-                            ? 'Customer berhasil diupdate'
-                            : 'Customer berhasil ditambahkan',
+                            ? `Customer: ${data.name} berhasil diupdate`
+                            : `Customer ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },
@@ -80,9 +80,6 @@ const useCustomer = (closeModal: () => void) => {
         router.delete(destroy(customer.id).url, {
             onSuccess: () => {
                 toast.success('Customer berhasil dihapus');
-            },
-            onError: () => {
-                toast.error('Gagal menghapus customer');
             },
         });
     };

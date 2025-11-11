@@ -8,7 +8,7 @@ const uomSchema = Yup.object().shape({
     uom_id: Yup.number().required('UOM harus dipilih.'),
     conversion_value: Yup.number()
         .required('Nilai konversi harus diisi.')
-        .min(1),
+        .min(1, 'Nilai konversi minimal 1.'),
     price: Yup.number().required('Harga barang harus diisi.'),
     is_base: Yup.boolean().required('UOM utama harus dipilih.'),
     uom: Yup.object().shape({
@@ -22,10 +22,7 @@ const itemSchema = Yup.object().shape({
         .required('Nama barang harus diisi.')
         .max(255, 'Maksimal 255 karakter.'),
     stock: Yup.number().nullable(),
-    description: Yup.string()
-        .nullable()
-        .max(255)
-        .max(255, 'Maksimal 255 karakter.'),
+    description: Yup.string().nullable().max(255, 'Maksimal 255 karakter.'),
     uoms: Yup.array()
         .of(uomSchema)
         .required('Minimal harus ada 1 UOM.')
@@ -57,7 +54,7 @@ const itemSchema = Yup.object().shape({
         ),
 });
 
-const useItem = (closeModal: () => void) => {
+const useItem = (closeModal: () => void = () => {}) => {
     const {
         data,
         setData,
@@ -96,8 +93,8 @@ const useItem = (closeModal: () => void) => {
                     reset();
                     toast.success(
                         item
-                            ? 'Item berhasil diupdate'
-                            : 'Item berhasil ditambahkan',
+                            ? `Item: ${data.name} berhasil diupdate`
+                            : `Item: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },
@@ -168,7 +165,7 @@ const useItem = (closeModal: () => void) => {
         setData('uoms', updated);
     };
 
-    const handleChangeItem = (
+    const handleChangeUOM = (
         index: number,
         field: keyof IItemUOM | 'uom.id' | 'uom.name',
         value: string | number | boolean | null,
@@ -225,7 +222,7 @@ const useItem = (closeModal: () => void) => {
         handleSubmit,
         handleCancel,
         handleDelete,
-        handleChangeItem,
+        handleChangeUOM,
     };
 };
 

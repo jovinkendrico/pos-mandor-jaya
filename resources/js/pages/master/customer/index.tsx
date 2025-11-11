@@ -3,18 +3,17 @@ import CustomerTable from '@/components/master/customers/customer-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroyCustomer, index } from '@/routes/customers';
-import { BreadcrumbItem, ICity, ICustomer } from '@/types';
+import { BreadcrumbItem, ICity, ICustomer, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
-    customers: {
-        data: ICustomer[];
-    };
+    customers: PaginatedData<ICustomer>;
     cities: ICity[];
 }
 
@@ -29,7 +28,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CustomerIndex(props: PageProps) {
+const CustomerIndex = (props: PageProps) => {
     const { customers, cities } = props;
 
     const [selectedCustomer, setSelectedCustomer] = useState<
@@ -78,7 +77,11 @@ export default function CustomerIndex(props: PageProps) {
                     customers={customers.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={customers.from}
                 />
+                {customers.data.length !== 0 && (
+                    <TablePagination data={customers} />
+                )}
                 <CustomerForm
                     isModalOpen={isEditModalOpen}
                     customer={selectedCustomer}
@@ -97,4 +100,6 @@ export default function CustomerIndex(props: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
+
+export default CustomerIndex;

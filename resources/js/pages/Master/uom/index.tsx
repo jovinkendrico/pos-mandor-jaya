@@ -3,10 +3,11 @@ import UOMTable from '@/components/master/uom/uom-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroyUOM, index } from '@/routes/uoms';
-import { BreadcrumbItem, IUOM } from '@/types';
+import { BreadcrumbItem, IUOM, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -23,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface UOMProps {
-    uoms: IUOM[];
+    uoms: PaginatedData<IUOM>;
 }
 
 const UOMPage = (props: UOMProps) => {
@@ -70,10 +71,12 @@ const UOMPage = (props: UOMProps) => {
                     </Button>
                 </div>
                 <UOMTable
-                    uoms={uoms}
+                    uoms={uoms.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={uoms.from}
                 />
+                {uoms.data.length !== 0 && <TablePagination data={uoms} />}
                 <UOMForm
                     isModalOpen={isEditModalOpen}
                     onModalClose={closeEditModal}

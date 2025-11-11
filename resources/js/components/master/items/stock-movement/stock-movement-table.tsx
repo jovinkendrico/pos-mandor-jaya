@@ -1,60 +1,53 @@
-import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
-import { ICustomer } from '@/types';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { IItemStockMovement } from '@/types';
 import { Edit, Trash } from 'lucide-react';
-import { TableCell } from '../../ui/table';
 
-interface CustomerTableProps {
-    customers: ICustomer[];
-    onEdit: (customer: ICustomer) => void;
-    onDelete: (customer: ICustomer) => void;
+interface StockMovementTableProps {
+    stock_movements: IItemStockMovement[];
+    onEdit?: (stock_movement: IItemStockMovement) => void;
+    onDelete?: (stock_movement: IItemStockMovement) => void;
     pageFrom?: number;
 }
 
-const CustomerTable = (props: CustomerTableProps) => {
-    const { customers, onEdit, onDelete, pageFrom } = props;
+const StockMovementTable = (props: StockMovementTableProps) => {
+    const { stock_movements, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = [
-        'Kode',
-        'Nama Customer',
-        'Alamat',
-        'Kota',
-        'No. Telepon',
-        'Contact Person',
+        'Harga per Unit',
+        'Sisa kuantitas',
+        'Tanggal Pemindahan',
+        'Catatan',
         'Aksi',
     ];
+
     return (
         <TableLayout
-            tableName="Customer"
+            tableName="Stock Movement"
             tableColumn={tableColumn}
-            tableRow={customers}
-            text="Tidak ada data Customer"
+            tableRow={stock_movements}
+            text="Tidak ada data perpindahan stok"
             pageFrom={pageFrom}
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.id}
+                        {row.unit_cost}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.name}
+                        {row.remaining_quantity}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.address || '-'}
+                        {row.movement_date as unknown as string}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.city?.name || '-'}
-                    </TableCell>
-                    <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.phone_number || '-'}
-                    </TableCell>
-                    <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.contact || '-'}
+                        {row.notes}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => onEdit(row)}
+                            onClick={() => onEdit?.(row)}
                             className="btn-edit"
                         >
                             <Edit />
@@ -62,7 +55,7 @@ const CustomerTable = (props: CustomerTableProps) => {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => onDelete(row)}
+                            onClick={() => onDelete?.(row)}
                             className="btn-trash"
                         >
                             <Trash />
@@ -74,4 +67,4 @@ const CustomerTable = (props: CustomerTableProps) => {
     );
 };
 
-export default CustomerTable;
+export default StockMovementTable;

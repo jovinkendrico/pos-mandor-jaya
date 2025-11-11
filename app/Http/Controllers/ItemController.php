@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreItemRequest;
+use App\Http\Requests\StoreStockMovementRequest;
 use App\Http\Requests\UpdateItemRequest;
+use App\Http\Requests\UpdateStockMovementRequest;
 use App\Models\Item;
 use App\Models\Uom;
 use App\Services\ItemService;
@@ -20,7 +22,8 @@ class ItemController extends Controller
      */
     public function index(): Response
     {
-        $items = Item::with('itemUoms.uom')->orderBy('name')->get();
+
+        $items = Item::with('itemUoms.uom')->orderBy('name')->paginate(10);
 
         $uoms = Uom::all();
 
@@ -58,36 +61,54 @@ class ItemController extends Controller
             foreach ($request->uoms as $uom) {
                 $item->itemUoms()->create($uom);
             }
-            // Create stock movement for initial stock with modal_price as unit_cost
-            if ($request->stock > 0 && $request->modal_price) {
-                StockMovement::create([
-                    'item_id' => $item->id,
-                    'reference_type' => 'Initial',
-                    'reference_id' => 0,
-                    'quantity' => $request->stock,
-                    'unit_cost' => $request->modal_price,
-                    'remaining_quantity' => $request->stock,
-                    'movement_date' => now(),
-                    'notes' => 'Initial stock by user',
-                ]);
-            }
+
         });
 
         return redirect()->route('items.index')
             ->with('success', 'Barang berhasil ditambahkan.');
     }
 
+
     /**
      * Display the specified resource.
      */
     public function show(Item $item): Response
     {
-        $item->load('uoms');
+        // Load the main item (with related info if needed)
+        $item->load('itemUoms.uom');
+
+        // Get paginated stock movements separately
+        $stockMovements = $item->stockMovements()
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('master/item/show', [
-            'item' => $item,
+            'item'           => $item,
+            'stockMovements' => $stockMovements,
         ]);
     }
+
+
+    public function storeStockMovement(StoreStockMovementRequest $request, Item $item): RedirectResponse
+    {
+        $item->stockMovements()->create($request->validated());
+        return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil ditambahkan.');
+    }
+
+    public function updateStockMovement(UpdateStockMovementRequest $request, Item $item, StockMovement $stockMovement): RedirectResponse
+    {
+        $stockMovement->update($request->validated());
+        return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil diperbarui.');
+    }
+
+    public function destroyStockMovement(Item $item): RedirectResponse
+    {
+        $item->stockMovements()->forceDelete();
+        return redirect()->route('items.show', $item)->with('success', 'Stock movement berhasil dihapus.');
+    }
+
+
 
     /**
      * Show the form for editing the specified resource.
@@ -118,10 +139,12 @@ class ItemController extends Controller
             // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
             $item->itemUoms()->forceDelete();
 
+
             // Create new UOMs
             foreach ($request->uoms as $uom) {
                 $item->itemUoms()->create($uom);
             }
+
         });
 
         return redirect()->route('items.index')

@@ -3,18 +3,17 @@ import CityTable from '@/components/master/cities/city-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroyCity, index } from '@/routes/cities';
-import { BreadcrumbItem, ICity } from '@/types';
+import { BreadcrumbItem, ICity, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
-    cities: {
-        data: ICity[];
-    };
+    cities: PaginatedData<ICity>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,7 +27,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CityIndex({ cities }: PageProps) {
+const CityIndex = (props: PageProps) => {
+    const { cities } = props;
+
     const [selectedCity, setSelectedCity] = useState<ICity | undefined>(
         undefined,
     );
@@ -75,7 +76,9 @@ export default function CityIndex({ cities }: PageProps) {
                     cities={cities.data}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    pageFrom={cities.from}
                 />
+                {cities.data.length !== 0 && <TablePagination data={cities} />}
                 <CityForm
                     isModalOpen={isEditModalOpen}
                     city={selectedCity}
@@ -93,4 +96,6 @@ export default function CityIndex({ cities }: PageProps) {
             </AppLayout>
         </>
     );
-}
+};
+
+export default CityIndex;

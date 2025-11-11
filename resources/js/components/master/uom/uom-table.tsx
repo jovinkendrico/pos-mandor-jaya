@@ -8,10 +8,11 @@ interface UOMTableProps {
     uoms: IUOM[];
     onEdit: (uom: IUOM) => void;
     onDelete: (uom: IUOM) => void;
+    pageFrom?: number;
 }
 
 const UOMTable = (props: UOMTableProps) => {
-    const { uoms, onEdit, onDelete } = props;
+    const { uoms, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = ['Kode', 'Nama UOM', 'Aksi'];
     return (
@@ -20,6 +21,7 @@ const UOMTable = (props: UOMTableProps) => {
             tableColumn={tableColumn}
             tableRow={uoms}
             text="Tidak ada data UOM"
+            pageFrom={pageFrom}
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">

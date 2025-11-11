@@ -2,55 +2,43 @@ import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { TableCell } from '@/components/ui/table';
-import { formatCurrency, parseCurrency } from '@/lib/utils';
+import { formatCurrency, formatNumber, parseCurrency } from '@/lib/utils';
 import { IItem } from '@/types';
-import { Edit, Trash } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Edit, Info, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface ItemTableProps {
     items: IItem[];
     onEdit?: (item: IItem) => void;
     onDelete?: (item: IItem) => void;
+    pageFrom?: number;
 }
 
 const ItemTable = (props: ItemTableProps) => {
-    const { items, onEdit, onDelete } = props;
+    const { items, onEdit, onDelete, pageFrom } = props;
 
-    const [selectedUom, setSelectedUom] = useState<Record<number, number>>(
-        () => {
-            return items.reduce(
-                (acc, item) => {
-                    const defaultUom =
-                        item.item_uoms?.find((u) => u.is_base) ??
-                        item.item_uoms?.[0];
-                    acc[item.id] = defaultUom?.uom?.id ?? 0;
-                    return acc;
-                },
-                {} as Record<number, number>,
-            );
-        },
+    const getDefaultUoms = (items: IItem[]): Record<number, number> => {
+        return items.reduce(
+            (acc, item) => {
+                const defaultUom =
+                    item.item_uoms?.find((u) => u.is_base) ??
+                    item.item_uoms?.[0];
+                acc[item.id] = defaultUom?.uom?.id ?? 0;
+                return acc;
+            },
+            {} as Record<number, number>,
+        );
+    };
+
+    const [selectedUom, setSelectedUom] = useState<Record<number, number>>(() =>
+        getDefaultUoms(items),
     );
 
     useEffect(() => {
-        setSelectedUom((prevSelected) => {
-            const newSelected = { ...prevSelected };
-            let hasChanged = false;
+        const newDefaultUoms = getDefaultUoms(items);
 
-            for (const item of items) {
-                if (prevSelected[item.id] === undefined) {
-                    const defaultUom =
-                        item.item_uoms?.find((u) => u?.is_base) ??
-                        item.item_uoms?.[0];
-
-                    if (defaultUom) {
-                        newSelected[item.id] = defaultUom?.uom?.id ?? 0;
-                        hasChanged = true;
-                    }
-                }
-            }
-            console.log(newSelected);
-            return hasChanged ? newSelected : prevSelected;
-        });
+        setSelectedUom(newDefaultUoms);
     }, [items]);
 
     const handleChangeUOM = (itemId: number, newUomId: number) => {
@@ -67,9 +55,9 @@ const ItemTable = (props: ItemTableProps) => {
         'Deskripsi',
         'Satuan (UOM)',
         'Harga',
+        'Perpindahan Stok',
         'Aksi',
     ];
-    console.log(items);
 
     return (
         <TableLayout
@@ -77,6 +65,7 @@ const ItemTable = (props: ItemTableProps) => {
             tableColumn={tableColumn}
             tableRow={items}
             text="Tidak ada data Barang"
+            pageFrom={pageFrom}
             renderRow={(row) => {
                 const currentUomId = selectedUom[row.id];
 
@@ -99,24 +88,39 @@ const ItemTable = (props: ItemTableProps) => {
                             {row.name}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {row.stock}
+                            {formatNumber(row.stock)}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {row.description}
+                            {row.description ?? '-'}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             <Combobox
                                 options={uomOptions}
+                                searchPlaceholder="Cari UOM..."
+                                placeholder="Pilih UOM..."
+                                emptyText="UOM tidak ditemukan"
                                 value={currentUomId?.toString() ?? ''}
                                 onValueChange={(newUomId) =>
                                     handleChangeUOM(row.id, Number(newUomId))
                                 }
+                                className="w-full dark:!bg-white dark:!text-primary-200"
                             />
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {formatCurrency(
                                 parseCurrency(String(currentUom?.price ?? 0)),
                             )}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="btn-info"
+                            >
+                                <Link href={`/items/${row.id}`}>
+                                    <Info />
+                                </Link>
+                            </Button>
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                             <Button

@@ -53,8 +53,8 @@ const useSupplier = (closeModal: () => void) => {
                     reset();
                     toast.success(
                         supplier
-                            ? 'Supplier berhasil diupdate'
-                            : 'Supplier berhasil ditambahkan',
+                            ? `Supplier: ${data.name} berhasil diupdate`
+                            : `Supplier: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },
@@ -80,9 +80,6 @@ const useSupplier = (closeModal: () => void) => {
         router.delete(destroy(supplier.id).url, {
             onSuccess: () => {
                 toast.success('Supplier berhasil dihapus');
-            },
-            onError: () => {
-                toast.error('Gagal menghapus supplier');
             },
         });
     };
