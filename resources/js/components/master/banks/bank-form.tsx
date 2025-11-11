@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import useBanks from '@/hooks/use-banks';
-import { formatCurrency, parseCurrency } from '@/lib/utils';
+import { formatCurrency, parseStringtoNumber } from '@/lib/utils';
 import { IBank } from '@/types';
 import { ChangeEvent, useEffect, useState } from 'react';
 import InputError from '../../input-error';
@@ -79,7 +79,7 @@ const BankForm = (props: BankFormProps) => {
             return;
         }
 
-        const rawValue = parseCurrency(input);
+        const rawValue = parseStringtoNumber(input);
 
         setData('balance', rawValue as number);
 

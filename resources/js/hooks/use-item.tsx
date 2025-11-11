@@ -51,6 +51,15 @@ const itemSchema = Yup.object().shape({
 
                 return true; // If no base found, this test passes (because 'one-base-uom' test will fail)
             },
+        )
+        .test(
+            'unique-uoms',
+            'UOM yang sama tidak boleh dipilih lebih dari 1 kali',
+            (uomsArray) => {
+                if (!uomsArray) return true; // Let the other test handle empty/invalid arrays
+                const uniqueUOMs = new Set(uomsArray.map((uom) => uom.uom_id));
+                return uniqueUOMs.size === uomsArray.length;
+            },
         ),
 });
 
@@ -112,7 +121,14 @@ const useItem = (closeModal: () => void = () => {}) => {
                     }
                 });
                 setError(yupErrors);
-                toast.error('Validasi gagal, periksa input Anda.');
+                const duplicateUomError = err.inner.find(
+                    (error) =>
+                        error.type === 'unique-uoms' && error.path === 'uoms',
+                );
+
+                if (duplicateUomError) {
+                    toast.error(duplicateUomError.message);
+                }
             }
         }
     };

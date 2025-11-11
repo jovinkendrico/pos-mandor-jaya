@@ -2,7 +2,12 @@ import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { TableCell } from '@/components/ui/table';
-import { formatCurrency, formatNumber, parseCurrency } from '@/lib/utils';
+import {
+    formatCurrency,
+    formatNumber,
+    formatNumberWithSeparator,
+    parseStringtoNumber,
+} from '@/lib/utils';
 import { IItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Edit, Info, Trash } from 'lucide-react';
@@ -88,7 +93,7 @@ const ItemTable = (props: ItemTableProps) => {
                             {row.name}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {formatNumber(row.stock)}
+                            {formatNumberWithSeparator(formatNumber(row.stock))}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {row.description ?? '-'}
@@ -108,7 +113,9 @@ const ItemTable = (props: ItemTableProps) => {
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {formatCurrency(
-                                parseCurrency(String(currentUom?.price ?? 0)),
+                                parseStringtoNumber(
+                                    String(currentUom?.price ?? 0),
+                                ),
                             )}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">

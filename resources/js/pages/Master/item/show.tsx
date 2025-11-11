@@ -1,27 +1,29 @@
-import StockMovementForm from '@/components/master/items/stock-movement/stock-movement-form';
 import StockMovementTable from '@/components/master/items/stock-movement/stock-movement-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
-import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
-import useDisclosure from '@/hooks/use-disclosure';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import AppLayout from '@/layouts/app-layout';
 import { index, show } from '@/routes/items';
-import { BreadcrumbItem, IItem, IItemStockMovement } from '@/types';
+import {
+    BreadcrumbItem,
+    IItem,
+    IItemStockMovement,
+    PaginatedData,
+} from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ChevronsLeft, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronsLeft } from 'lucide-react';
 
 interface PageProps {
-    stockMovements: IItemStockMovement[];
+    stockMovements: PaginatedData<IItemStockMovement>;
     item: IItem;
 }
 
 const ShowStock = (props: PageProps) => {
     const { stockMovements, item } = props;
 
-    const [selectedStockMovement, setSelectedStockMovement] = useState<
-        IItemStockMovement | undefined
-    >(undefined);
+    // const [selectedStockMovement, setSelectedStockMovement] = useState<
+    //     IItemStockMovement | undefined
+    // >(undefined);
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -38,11 +40,27 @@ const ShowStock = (props: PageProps) => {
         },
     ];
 
-    const {
-        isOpen: isEditModalOpen,
-        openModal: openEditModal,
-        closeModal: closeEditModal,
-    } = useDisclosure();
+    // const {
+    //     isOpen: isEditModalOpen,
+    //     openModal: openEditModal,
+    //     closeModal: closeEditModal,
+    // } = useDisclosure();
+
+    // const {
+    //     isOpen: isDeleteModalOpen,
+    //     openModal: openDeleteModal,
+    //     closeModal: closeDeleteModal,
+    // } = useDisclosure();
+
+    // const handleEdit = (stockMovement: IItemStockMovement) => {
+    //     setSelectedStockMovement(stockMovement);
+    //     openEditModal();
+    // };
+
+    // const handleDelete = (stockMovement: IItemStockMovement) => {
+    //     setSelectedStockMovement(stockMovement);
+    //     openDeleteModal();
+    // };
 
     return (
         <>
@@ -54,12 +72,12 @@ const ShowStock = (props: PageProps) => {
                         <Button className="btn-danger">
                             <Link
                                 href={`/items`}
-                                className="flex items-center justify-between"
+                                className="flex items-center justify-between gap-2"
                             >
                                 <ChevronsLeft /> Kembali
                             </Link>
                         </Button>
-                        <Button
+                        {/* <Button
                             onClick={() => {
                                 setSelectedStockMovement(undefined);
                                 openEditModal();
@@ -68,30 +86,33 @@ const ShowStock = (props: PageProps) => {
                         >
                             <Plus />
                             Tambah Perpindahan Stok
-                        </Button>
+                        </Button> */}
                     </div>
                 </div>
                 <StockMovementTable
-                    onEdit={setSelectedStockMovement}
-                    onDelete={setSelectedStockMovement}
+                    // onEdit={handleEdit}
+                    // onDelete={handleDelete}
                     pageFrom={1}
-                    stock_movements={stockMovements}
+                    stock_movements={stockMovements.data}
                 />
-                <StockMovementForm
+                {/* <StockMovementForm
                     item_id={item.id}
                     isModalOpen={isEditModalOpen}
                     onModalclose={closeEditModal}
                     stock_movement={selectedStockMovement}
-                />
-                <DeleteModalLayout
+                /> */}
+                {stockMovements.data.length !== 0 && (
+                    <TablePagination data={stockMovements} />
+                )}
+                {/* <DeleteModalLayout
                     dataId={selectedStockMovement?.id}
                     dataName={`StockMovement ${selectedStockMovement?.id}`}
                     dataType={`StockMovement`}
-                    isModalOpen={!!selectedStockMovement}
-                    onModalClose={closeEditModal}
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
                     setSelected={setSelectedStockMovement}
                     getDeleteUrl={(id: number) => destroyStockMovement(id).url}
-                />
+                /> */}
             </AppLayout>
         </>
     );

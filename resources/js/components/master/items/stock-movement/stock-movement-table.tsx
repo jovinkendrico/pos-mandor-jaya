@@ -1,6 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import {
+    formatDate,
+    formatNumber,
+    formatNumberWithSeparator,
+} from '@/lib/utils';
 import { IItemStockMovement } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 
@@ -32,16 +37,16 @@ const StockMovementTable = (props: StockMovementTableProps) => {
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.unit_cost}
+                        {formatNumberWithSeparator(row.unit_cost)}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.remaining_quantity}
+                        {formatNumber(row.remaining_quantity)}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.movement_date as unknown as string}
+                        {formatDate(row.movement_date)}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.notes}
+                        {row.notes ?? '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button

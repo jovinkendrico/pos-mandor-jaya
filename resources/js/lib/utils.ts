@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function parseCurrency(input: string): number | null {
+export function parseStringtoNumber(input: string): number | null {
     const rawString = input.replace(/[^0-9]/g, '');
 
     if (!rawString) {
@@ -25,4 +25,16 @@ export function formatCurrency(input: number | null): string {
 
 export function formatNumber(input: number): number {
     return Math.round(input);
+}
+
+export function formatNumberWithSeparator(input: number): string {
+    return input.toLocaleString('id-ID');
+}
+
+export function formatDate(dateString: Date) {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
 }
