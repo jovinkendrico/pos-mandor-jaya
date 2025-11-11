@@ -13,6 +13,9 @@ return new class extends Migration {
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
+            $table->string('reference_type')->nullable();
+            $table->unsignedBigInteger('reference_id')->nullable();
+            $table->decimal('quantity', 15, 2);
             $table->decimal('unit_cost', 15, 2);
             $table->decimal('remaining_quantity', 15, 2)->default(0);
             $table->date('movement_date');
