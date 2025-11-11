@@ -57,11 +57,29 @@ class ItemController extends Controller
                 'description' => $request->description,
             ]);
 
+
+
             // Create UOMs
             foreach ($request->uoms as $uom) {
                 $item->itemUoms()->create($uom);
             }
 
+            $initialStock = (float) ($request->stock ?? 0);
+            if ($initialStock > 0) {
+                $baseUomData = collect($request->uoms)->firstWhere('is_base', true);
+                $unitCost    = $baseUomData['price'] ?? 0;
+
+                StockMovement::create([
+                    'item_id'            => $item->id,
+                    'reference_type'     => 'Stock Awal',
+                    'reference_id'       => null,
+                    'quantity'           => $initialStock,
+                    'unit_cost'          => $unitCost,
+                    'remaining_quantity' => $initialStock,
+                    'movement_date'      => now()->toDateString(),
+                    'notes'              => 'Stock awal saat pembuatan barang',
+                ]);
+            }
         });
 
         return redirect()->route('items.index')
@@ -127,24 +145,62 @@ class ItemController extends Controller
      */
     public function update(UpdateItemRequest $request, Item $item): RedirectResponse
     {
-        DB::transaction(function () use ($request, $item) {
+        $originalStock  = (float) $item->stock;
+        $requestedStock = (float) ($request->stock ?? 0);
 
+        DB::transaction(function () use ($request, $item, $originalStock, $requestedStock) {
             $item->update([
                 'name'        => $request->name,
                 'base_uom'    => $request->base_uom,
-                'stock'       => $request->stock ?? 0,
+                'stock'       => $requestedStock,
                 'description' => $request->description,
             ]);
 
             // Force delete existing UOMs (permanent delete untuk avoid unique constraint issue)
             $item->itemUoms()->forceDelete();
 
-
             // Create new UOMs
             foreach ($request->uoms as $uom) {
                 $item->itemUoms()->create($uom);
             }
 
+            $stockDifference = $requestedStock - $originalStock;
+
+            if (abs($stockDifference) > 0.0001) {
+                $uomsCollection = collect($request->uoms ?? []);
+                $baseUomData    = $uomsCollection->firstWhere('is_base', true) ?? $uomsCollection->first();
+                $unitCost       = (float) ($baseUomData['price'] ?? 0);
+
+                if ($stockDifference < 0) {
+                    $quantityToReduce  = abs($stockDifference);
+                    $existingMovements = StockMovement::where('item_id', $item->id)
+                        ->where('remaining_quantity', '>', 0)
+                        ->orderBy('movement_date', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+                    foreach ($existingMovements as $movement) {
+                        if ($quantityToReduce <= 0) {
+                            break;
+                        }
+
+                        $reduction = min($quantityToReduce, (float) $movement->remaining_quantity);
+                        $movement->decrement('remaining_quantity', $reduction);
+                        $quantityToReduce -= $reduction;
+                    }
+                }
+
+                StockMovement::create([
+                    'item_id'            => $item->id,
+                    'reference_type'     => $stockDifference > 0 ? 'Penyesuaian Stock (IN)' : 'Penyesuaian Stock (OUT)',
+                    'reference_id'       => null,
+                    'quantity'           => $stockDifference,
+                    'unit_cost'          => $unitCost,
+                    'remaining_quantity' => $stockDifference > 0 ? $stockDifference : 0,
+                    'movement_date'      => now()->toDateString(),
+                    'notes'              => 'Penyesuaian stock melalui update data barang',
+                ]);
+            }
         });
 
         return redirect()->route('items.index')
