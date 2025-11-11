@@ -94,6 +94,7 @@ const ShowStock = (props: PageProps) => {
                     // onDelete={handleDelete}
                     pageFrom={1}
                     stock_movements={stockMovements.data}
+                    item_name={item.name}
                 />
                 {/* <StockMovementForm
                     item_id={item.id}

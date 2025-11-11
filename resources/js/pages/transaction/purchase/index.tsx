@@ -3,7 +3,7 @@ import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { create, index } from '@/routes/purchases';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -47,9 +47,7 @@ interface Purchase {
 }
 
 interface PageProps {
-    purchases: {
-        data: Purchase[];
-    };
+    purchases: PaginatedData<Purchase>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -65,7 +63,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const PurchaseIndex = (props: PageProps) => {
     const { purchases } = props;
-    const [selectedPurchase, setSelectedPurchase] = useState<>(undefined);
+    const [selectedPurchase, setSelectedPurchase] = useState<
+        Purchase | undefined
+    >(undefined);
 
     const handleCreate = () => {
         router.visit(create().url);
@@ -86,7 +86,7 @@ const PurchaseIndex = (props: PageProps) => {
                         Tambah Pembelian
                     </Button>
                 </div>
-                <PurchaseTable purchases={purchases.data} onView={handleView} />
+                <PurchaseTable purchases={purchases.data} />
             </AppLayout>
         </>
     );

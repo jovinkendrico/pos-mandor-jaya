@@ -357,9 +357,9 @@ const ItemForm = (props: ItemFormProps) => {
                                                     value={
                                                         uom.is_base
                                                             ? '1'
-                                                            : conversionDisplayValues[
+                                                            : (conversionDisplayValues[
                                                                   index
-                                                              ]
+                                                              ] ?? '0')
                                                     }
                                                     onChange={(e) => {
                                                         handleConversionValueChange(

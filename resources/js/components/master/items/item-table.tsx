@@ -119,15 +119,15 @@ const ItemTable = (props: ItemTableProps) => {
                             )}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="btn-info"
-                            >
-                                <Link href={`/items/${row.id}`}>
+                            <Link href={`/items/${row.id}`}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="btn-info"
+                                >
                                     <Info />
-                                </Link>
-                            </Button>
+                                </Button>
+                            </Link>
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                             <Button

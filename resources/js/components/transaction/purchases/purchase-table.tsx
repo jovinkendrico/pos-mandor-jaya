@@ -22,7 +22,6 @@ interface Purchase {
 
 interface PurchaseTableProps {
     purchases: Purchase[];
-    onView: (purchase: Purchase) => void;
 }
 
 export default function PurchaseTable(props: PurchaseTableProps) {
