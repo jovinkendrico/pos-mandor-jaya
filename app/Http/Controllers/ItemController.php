@@ -74,12 +74,21 @@ class ItemController extends Controller
      */
     public function show(Item $item): Response
     {
-        $item = $item->stockMovements()->latest()->paginate(10)->withQueryString();
+        // Load the main item (with related info if needed)
+        $item->load('itemUoms.uom');
+
+        // Get paginated stock movements separately
+        $stockMovements = $item->stockMovements()
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('master/item/show', [
-            'item' => $item,
+            'item'           => $item,
+            'stockMovements' => $stockMovements,
         ]);
     }
+
 
     public function storeStockMovement(StoreStockMovementRequest $request, Item $item): RedirectResponse
     {
