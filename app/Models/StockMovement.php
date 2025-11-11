@@ -9,6 +9,9 @@ class StockMovement extends Model
 {
     protected $fillable = [
         'item_id',
+        'reference_type',
+        'reference_id',
+        'quantity',
         'unit_cost',
         'remaining_quantity',
         'movement_date',
