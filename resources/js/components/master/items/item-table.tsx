@@ -108,7 +108,7 @@ const ItemTable = (props: ItemTableProps) => {
                                 onValueChange={(newUomId) =>
                                     handleChangeUOM(row.id, Number(newUomId))
                                 }
-                                className="w-full dark:!bg-white dark:!text-primary-200"
+                                className="w-full min-w-[100px] dark:!bg-white dark:!text-primary-200"
                             />
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
