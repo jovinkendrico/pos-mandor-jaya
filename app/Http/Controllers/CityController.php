@@ -54,6 +54,7 @@ class CityController extends Controller
             ->with('success', 'Kota berhasil ditambahkan.');
     }
 
+
     /**
      * Search cities for autocomplete
      */
