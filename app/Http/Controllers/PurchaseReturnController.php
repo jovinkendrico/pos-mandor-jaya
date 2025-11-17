@@ -156,22 +156,7 @@ class PurchaseReturnController extends Controller
                 ->with('error', 'Retur pembelian sudah dikonfirmasi.');
         }
 
-        DB::transaction(function () use ($purchaseReturn) {
-            // Reduce stock for each returned item
-            foreach ($purchaseReturn->details as $detail) {
-                $this->stockService->deductStock(
-                    $detail->item_id,
-                    $detail->item_uom_id,
-                    $detail->quantity,
-                    $purchaseReturn->return_date,
-                    "Retur Pembelian: {$purchaseReturn->return_number}",
-                    PurchaseReturn::class,
-                    $purchaseReturn->id
-                );
-            }
-
-            $purchaseReturn->update(['status' => 'confirmed']);
-        });
+        $this->stockService->confirmPurchaseReturn($purchaseReturn);
 
         return redirect()->route('purchase-returns.show', $purchaseReturn)
             ->with('success', 'Retur pembelian dikonfirmasi. Stock telah dikurangi.');
@@ -187,12 +172,7 @@ class PurchaseReturnController extends Controller
                 ->with('error', 'Retur pembelian belum dikonfirmasi.');
         }
 
-        DB::transaction(function () use ($purchaseReturn) {
-            // Restore stock
-            $this->stockService->removeReturnStock(PurchaseReturn::class, $purchaseReturn->id);
-
-            $purchaseReturn->update(['status' => 'pending']);
-        });
+        $this->stockService->unconfirmPurchaseReturn($purchaseReturn);
 
         return redirect()->route('purchase-returns.show', $purchaseReturn)
             ->with('success', 'Konfirmasi retur pembelian dibatalkan. Stock telah dikembalikan.');

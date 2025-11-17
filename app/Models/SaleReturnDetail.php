@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SaleReturnDetail extends Model
@@ -57,5 +58,11 @@ class SaleReturnDetail extends Model
     public function itemUom(): BelongsTo
     {
         return $this->belongsTo(ItemUom::class);
+    }
+
+    public function fifoMappings(): HasMany
+    {
+        return $this->hasMany(FifoMapping::class, 'reference_detail_id')
+            ->where('reference_type', 'SaleReturn');
     }
 }

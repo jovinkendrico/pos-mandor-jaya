@@ -47,12 +47,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
 
 
-    Route::prefix('items')->controller(ItemController::class)->group(function () {
-        Route::post('{item}/stock-movements', 'storeStockMovement')->name('items.storeStockMovement');
-        Route::put('{item}/stock-movements', 'updateStockMovement')->name('items.updateStockMovement');
-        Route::delete('{item}/stock-movements', 'destroyStockMovement')->name('items.destroyStockMovement');
-    });
-
     Route::resources([
         'users'            => UserController::class,
         'roles'            => RoleController::class,

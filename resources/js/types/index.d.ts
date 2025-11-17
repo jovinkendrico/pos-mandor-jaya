@@ -196,6 +196,7 @@ export interface Item {
     name: string;
     stock: number;
     description?: string;
+    modal_price?: number;
     item_uoms: ItemUom[];
     stock_movements: ItemStockMovement[];
     created_at: string;
@@ -205,7 +206,7 @@ export interface Item {
 
 export type IItem = Pick<
     Item,
-    'id' | 'name' | 'stock' | 'description' | 'code'
+    'id' | 'name' | 'stock' | 'description' | 'code' | 'modal_price'
 > & {
     item_uoms: IItemUOM[];
     stock_movements: IItemStockMovement[];

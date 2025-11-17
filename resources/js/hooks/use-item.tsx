@@ -22,6 +22,14 @@ const itemSchema = Yup.object().shape({
         .required('Nama barang harus diisi.')
         .max(255, 'Maksimal 255 karakter.'),
     stock: Yup.number().nullable(),
+    modal_price: Yup.number()
+        .nullable()
+        .min(0, 'Harga modal tidak boleh kurang dari 0.')
+        .when('stock', {
+            is: (value: unknown) => Number(value ?? 0) > 0,
+            then: (schema) => schema.required('Harga modal wajib diisi ketika stok awal diisi.'),
+            otherwise: (schema) => schema,
+        }),
     description: Yup.string().nullable().max(255, 'Maksimal 255 karakter.'),
     uoms: Yup.array()
         .of(uomSchema)
@@ -67,6 +75,7 @@ const useItem = (closeModal: () => void = () => {}) => {
     } = useForm({
         name: '',
         stock: 0,
+        modal_price: 0,
         description: '',
         uoms: [
             {
@@ -143,7 +152,7 @@ const useItem = (closeModal: () => void = () => {}) => {
                     id: 0,
                     name: '',
                 },
-                conversion_value: 0,
+                conversion_value: 1,
                 price: 0,
                 is_base: false,
             },

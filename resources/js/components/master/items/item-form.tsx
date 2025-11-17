@@ -61,6 +61,8 @@ const ItemForm = (props: ItemFormProps) => {
     useEffect(() => {
         if (isModalOpen && item) {
             setDataItem('name', item.name);
+            setDataItem('stock', item.stock ?? 0);
+            setDataItem('modal_price', 0);
             setDataItem('description', item.description ?? '');
             setDataItem('uoms', item.item_uoms);
         } else {
@@ -106,14 +108,12 @@ const ItemForm = (props: ItemFormProps) => {
                             <Label htmlFor="stock">Stok (dalam Base UOM)</Label>
                             <Input
                                 id="stock"
-                                type="text"
+                                type="number"
                                 value={dataItem.stock ?? 0}
                                 onChange={(e) =>
                                     setDataItem(
                                         'stock',
-                                        Number(e.target.value)
-                                            ? Number(e.target.value)
-                                            : 0,
+                                        Number(e.target.value) || 0,
                                     )
                                 }
                                 placeholder="Cth: 100"
@@ -122,6 +122,30 @@ const ItemForm = (props: ItemFormProps) => {
                             />
                             {errorsItem.stock && (
                                 <InputError message={errorsItem.stock} />
+                            )}
+                        </div>
+
+                        <div>
+                            <Label htmlFor="modal_price">
+                                Harga Modal / HPP
+                            </Label>
+                            <Input
+                                id="modal_price"
+                                type="number"
+                                min={0}
+                                value={dataItem.modal_price ?? 0}
+                                onChange={(e) =>
+                                    setDataItem(
+                                        'modal_price',
+                                        Number(e.target.value) || 0,
+                                    )
+                                }
+                                placeholder="Cth: 15000"
+                                disabled={processingItem}
+                                className="input-box"
+                            />
+                            {errorsItem.modal_price && (
+                                <InputError message={errorsItem.modal_price} />
                             )}
                         </div>
 

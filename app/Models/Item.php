@@ -33,6 +33,6 @@ class Item extends Model
 
     public function baseUom()
     {
-        return $this->uoms()->where('is_base', true)->first();
+        return $this->itemUoms()->where('is_base', true)->first();
     }
 }

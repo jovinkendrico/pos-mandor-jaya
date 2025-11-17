@@ -28,7 +28,7 @@ class StoreStockMovementRequest extends FormRequest
             'reference_id'       => ['nullable', 'integer'],
             'quantity'           => ['required', 'numeric'],
             'unit_cost'          => ['required', 'numeric', 'min:0'],
-            'remaining_quantity' => ['required', 'numeric'],
+            'remaining_quantity' => ['nullable', 'numeric'],
             'movement_date'      => ['required', 'date'],
             'notes'              => ['nullable', 'string'],
         ];
