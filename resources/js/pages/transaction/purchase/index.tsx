@@ -65,7 +65,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const PurchaseIndex = (props: PageProps) => {
     const { purchases } = props;
-    const [selectedPurchase, setSelectedPurchase] = useState<>(undefined);
+    const [selectedPurchase, setSelectedPurchase] = useState<Purchase | undefined>(undefined);
 
     const handleCreate = () => {
         router.visit(create().url);
