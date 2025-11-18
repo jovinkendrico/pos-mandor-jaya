@@ -71,6 +71,8 @@ const ItemForm = (props: ItemFormProps) => {
     useEffect(() => {
         if (isModalOpen && item) {
             setDataItem('name', item.name);
+            setDataItem('stock', item.stock ?? 0);
+            setDataItem('modal_price', 0);
             setDataItem('description', item.description ?? '');
             setDataItem('uoms', item.item_uoms);
 
@@ -217,6 +219,30 @@ const ItemForm = (props: ItemFormProps) => {
                             />
                             {errorsItem.stock && (
                                 <InputError message={errorsItem.stock} />
+                            )}
+                        </div>
+
+                        <div>
+                            <Label htmlFor="modal_price">
+                                Harga Modal / HPP
+                            </Label>
+                            <Input
+                                id="modal_price"
+                                type="number"
+                                min={0}
+                                value={dataItem.modal_price ?? 0}
+                                onChange={(e) =>
+                                    setDataItem(
+                                        'modal_price',
+                                        Number(e.target.value) || 0,
+                                    )
+                                }
+                                placeholder="Cth: 15000"
+                                disabled={processingItem}
+                                className="input-box"
+                            />
+                            {errorsItem.modal_price && (
+                                <InputError message={errorsItem.modal_price} />
                             )}
                         </div>
 

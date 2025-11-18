@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SaleDetail extends Model
 {
@@ -47,5 +48,11 @@ class SaleDetail extends Model
     public function itemUom(): BelongsTo
     {
         return $this->belongsTo(ItemUom::class);
+    }
+
+    public function fifoMappings(): HasMany
+    {
+        return $this->hasMany(FifoMapping::class, 'reference_detail_id')
+            ->where('reference_type', 'Sale');
     }
 }

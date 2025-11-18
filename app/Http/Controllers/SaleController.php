@@ -45,7 +45,7 @@ class SaleController extends Controller
     public function create(): Response
     {
         $customers = Customer::orderBy('name')->limit(5)->get();
-        $items = Item::with('uoms')->where('stock', '>', 0)->orderBy('name')->get();
+        $items = Item::with('itemUoms.uom')->where('stock', '>', 0)->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/create', [
             'customers' => $customers,
@@ -161,7 +161,7 @@ class SaleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Sale $sale): Response
+    public function edit(Sale $sale): Response|RedirectResponse
     {
         // Only allow edit if status is pending
         if ($sale->status === 'confirmed') {
@@ -171,7 +171,7 @@ class SaleController extends Controller
 
         $sale->load(['details.item', 'details.itemUom']);
         $customers = Customer::orderBy('name')->limit(5)->get();
-        $items = Item::with('uoms')->where('stock', '>', 0)->orderBy('name')->get();
+        $items = Item::with('itemUoms.uom')->where('stock', '>', 0)->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/edit', [
             'sale' => $sale,

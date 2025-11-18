@@ -160,43 +160,7 @@ class SaleReturnController extends Controller
                 ->with('error', 'Retur penjualan sudah dikonfirmasi.');
         }
 
-        DB::transaction(function () use ($saleReturn) {
-            $totalCost = 0;
-            $totalProfitAdjustment = 0;
-
-            foreach ($saleReturn->details as $detail) {
-                // Add stock back
-                $this->stockService->addStock(
-                    $detail->item_id,
-                    $detail->item_uom_id,
-                    $detail->quantity,
-                    $detail->price, // Use sale price as cost for return
-                    $saleReturn->return_date,
-                    "Retur Penjualan: {$saleReturn->return_number}",
-                    SaleReturn::class,
-                    $saleReturn->id
-                );
-
-                // Calculate cost (we return it at sale price, but cost might be different)
-                // For simplicity, use sale price as cost for returned items
-                $itemCost = $detail->price * $detail->quantity;
-                $profitAdjustment = $detail->subtotal - $itemCost; // This will be negative
-
-                $detail->update([
-                    'cost' => $itemCost,
-                    'profit_adjustment' => $profitAdjustment,
-                ]);
-
-                $totalCost += $itemCost;
-                $totalProfitAdjustment += $profitAdjustment;
-            }
-
-            $saleReturn->update([
-                'status' => 'confirmed',
-                'total_cost' => $totalCost,
-                'total_profit_adjustment' => $totalProfitAdjustment,
-            ]);
-        });
+        $this->stockService->confirmSaleReturn($saleReturn);
 
         return redirect()->route('sale-returns.show', $saleReturn)
             ->with('success', 'Retur penjualan dikonfirmasi. Stock telah dikembalikan.');
@@ -212,24 +176,7 @@ class SaleReturnController extends Controller
                 ->with('error', 'Retur penjualan belum dikonfirmasi.');
         }
 
-        DB::transaction(function () use ($saleReturn) {
-            // Remove returned stock
-            $this->stockService->removeReturnStock(SaleReturn::class, $saleReturn->id);
-
-            // Reset cost and profit
-            foreach ($saleReturn->details as $detail) {
-                $detail->update([
-                    'cost' => 0,
-                    'profit_adjustment' => 0,
-                ]);
-            }
-
-            $saleReturn->update([
-                'status' => 'pending',
-                'total_cost' => 0,
-                'total_profit_adjustment' => 0,
-            ]);
-        });
+        $this->stockService->unconfirmSaleReturn($saleReturn);
 
         return redirect()->route('sale-returns.show', $saleReturn)
             ->with('success', 'Konfirmasi retur penjualan dibatalkan.');
