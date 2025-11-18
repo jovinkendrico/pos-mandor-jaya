@@ -1,0 +1,24 @@
+feat: Implement hierarchical Chart of Accounts and Bank/Cash COA integration
+
+- Implement hierarchical COA structure with parent-child relationships
+  * ASET (1xxx): Kas (1100) with children (1101-1104), Piutang (1200), Persediaan (1300), Uang Muka (1400), Aset Tetap (1500)
+  * KEWAJIBAN (2xxx): Hutang Lancar (2100), Hutang Jangka Panjang (2200)
+  * MODAL (3xxx): Modal (3100) with children
+  * PENDAPATAN (4xxx): Pendapatan (4100) with children
+  * HPP (5xxx): HPP (5100) with children
+  * BEBAN OPERASIONAL (6xxx): Beban Operasional (6100) with 10 children
+  * BEBAN NON OPERASIONAL (7xxx): Beban Non Operasional (7100) with children
+
+- Remove order field from chart_of_accounts (migration, model, controller, seeder, frontend)
+- Create complete Chart of Account master views (index, table, form, hook)
+- Add Chart of Account to sidebar navigation
+- Integrate Bank/Cash with COA selection (form dropdown, table display)
+- Update AccountingService to use child accounts (1101, 4101, 5101, 2101)
+- Update BankController to load and send COA list for selection
+- Remove unused accounting_entries table and AccountingEntry model
+- Update DatabaseSeeder to use child accounts for banks
+
+Files:
+- New: Chart of Account views, models, controllers, migrations, seeder
+- Updated: Bank views, AccountingService, BankController, types, routes
+

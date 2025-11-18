@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBankRequest;
 use App\Http\Requests\UpdateBankRequest;
 use App\Models\Bank;
+use App\Models\ChartOfAccount;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -16,10 +17,21 @@ class BankController extends Controller
      */
     public function index(): Response
     {
-        $banks = Bank::orderBy('name')->paginate(10);
+        $banks = Bank::with('chartOfAccount')->orderBy('name')->paginate(10);
+
+        // Get COA accounts for cash/bank (children of 1100 - Kas)
+        $kasParent = ChartOfAccount::where('code', '1100')->first();
+        $cashBankAccounts = ChartOfAccount::where(function ($query) use ($kasParent) {
+            $query->where('parent_id', $kasParent?->id)
+                ->orWhere('code', '1100');
+        })
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get();
 
         return Inertia::render('master/bank/index', [
             'banks' => $banks,
+            'chartOfAccounts' => $cashBankAccounts,
         ]);
     }
 
@@ -36,7 +48,19 @@ class BankController extends Controller
      */
     public function store(StoreBankRequest $request): RedirectResponse
     {
-        Bank::create($request->validated());
+        $data = $request->validated();
+
+        // Auto-assign chart_of_account_id based on type
+        if (!isset($data['chart_of_account_id'])) {
+            // Use child accounts: 1101 for cash, 1103 for bank (default)
+            $coaCode = $data['type'] === 'cash' ? '1101' : '1103';
+            $coa = ChartOfAccount::where('code', $coaCode)->first();
+            if ($coa) {
+                $data['chart_of_account_id'] = $coa->id;
+            }
+        }
+
+        Bank::create($data);
 
         return redirect()->route('banks.index')
             ->with('success', 'Bank/Cash berhasil ditambahkan.');
@@ -69,7 +93,19 @@ class BankController extends Controller
      */
     public function update(UpdateBankRequest $request, Bank $bank): RedirectResponse
     {
-        $bank->update($request->validated());
+        $data = $request->validated();
+
+        // Auto-assign chart_of_account_id based on type if not provided
+        if (!isset($data['chart_of_account_id'])) {
+            // Use child accounts: 1101 for cash, 1103 for bank (default)
+            $coaCode = $data['type'] === 'cash' ? '1101' : '1103';
+            $coa = ChartOfAccount::where('code', $coaCode)->first();
+            if ($coa) {
+                $data['chart_of_account_id'] = $coa->id;
+            }
+        }
+
+        $bank->update($data);
 
         return redirect()->route('banks.index')
             ->with('success', 'Bank/Cash berhasil diperbarui.');

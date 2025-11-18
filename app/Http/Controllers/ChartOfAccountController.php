@@ -1,0 +1,141 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreChartOfAccountRequest;
+use App\Http\Requests\UpdateChartOfAccountRequest;
+use App\Models\ChartOfAccount;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ChartOfAccountController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
+    {
+        $query = ChartOfAccount::query();
+
+        // Filter by type
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter by is_active
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        // Filter by parent_id (null for root accounts)
+        if ($request->has('parent_id')) {
+            if ($request->parent_id === 'null' || $request->parent_id === null) {
+                $query->whereNull('parent_id');
+            } else {
+                $query->where('parent_id', $request->parent_id);
+            }
+        }
+
+        $chartOfAccounts = $query->with('parent')
+            ->orderBy('type')
+            ->orderBy('code')
+            ->paginate(10);
+
+        // Get all accounts for parent selection (for form dropdown)
+        $allAccounts = ChartOfAccount::where('is_active', true)
+            ->orderBy('type')
+            ->orderBy('code')
+            ->get();
+
+        return Inertia::render('master/chart-of-account/index', [
+            'chartOfAccounts' => $chartOfAccounts,
+            'allAccounts' => $allAccounts,
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(): RedirectResponse
+    {
+        return redirect()->route('chart-of-accounts.index');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreChartOfAccountRequest $request): RedirectResponse
+    {
+        ChartOfAccount::create([
+            'code' => $request->code,
+            'name' => $request->name,
+            'type' => $request->type,
+            'parent_id' => $request->parent_id,
+            'description' => $request->description,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return redirect()->route('chart-of-accounts.index')
+            ->with('success', 'Chart of Account berhasil ditambahkan.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(ChartOfAccount $chartOfAccount): RedirectResponse
+    {
+        return redirect()->route('chart-of-accounts.index');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(ChartOfAccount $chartOfAccount): RedirectResponse
+    {
+        return redirect()->route('chart-of-accounts.index');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateChartOfAccountRequest $request, ChartOfAccount $chartOfAccount): RedirectResponse
+    {
+        $chartOfAccount->update([
+            'code' => $request->code,
+            'name' => $request->name,
+            'type' => $request->type,
+            'parent_id' => $request->parent_id,
+            'description' => $request->description,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return redirect()->route('chart-of-accounts.index')
+            ->with('success', 'Chart of Account berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(ChartOfAccount $chartOfAccount): RedirectResponse
+    {
+        // Check if account has children
+        if ($chartOfAccount->children()->count() > 0) {
+            return redirect()->route('chart-of-accounts.index')
+                ->with('error', 'Tidak dapat menghapus akun yang memiliki sub-akun.');
+        }
+
+        // Check if account has journal entries
+        if ($chartOfAccount->journalEntryDetails()->count() > 0) {
+            return redirect()->route('chart-of-accounts.index')
+                ->with('error', 'Tidak dapat menghapus akun yang sudah memiliki transaksi.');
+        }
+
+        $chartOfAccount->delete();
+
+        return redirect()->route('chart-of-accounts.index')
+            ->with('success', 'Chart of Account berhasil dihapus.');
+    }
+}

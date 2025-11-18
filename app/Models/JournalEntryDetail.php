@@ -4,29 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Bank extends Model
+class JournalEntryDetail extends Model
 {
-    use SoftDeletes;
-
     protected $fillable = [
-        'name',
-        'type',
+        'journal_entry_id',
         'chart_of_account_id',
-        'account_number',
-        'account_name',
-        'balance',
+        'debit',
+        'credit',
         'description',
     ];
 
     protected $casts = [
-        'balance' => 'decimal:2',
+        'debit' => 'decimal:2',
+        'credit' => 'decimal:2',
     ];
+
+    public function journalEntry(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntry::class);
+    }
 
     public function chartOfAccount(): BelongsTo
     {
         return $this->belongsTo(ChartOfAccount::class);
     }
 }
-

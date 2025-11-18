@@ -132,6 +132,8 @@ export interface Bank {
     id: number;
     name: string;
     type: 'bank' | 'cash';
+    chart_of_account_id?: number;
+    chart_of_account?: ChartOfAccount;
     account_number?: string;
     account_name?: string;
     balance: number;
@@ -146,6 +148,8 @@ export type IBank = Pick<
     | 'id'
     | 'name'
     | 'type'
+    | 'chart_of_account_id'
+    | 'chart_of_account'
     | 'account_number'
     | 'account_name'
     | 'balance'
@@ -301,6 +305,7 @@ export interface PurchaseDetail {
     subtotal: number;
 }
 
+<<<<<<< HEAD
 export type IPurchaseDetail = Pick<
     PurchaseDetail,
     | 'item_id'
@@ -309,4 +314,23 @@ export type IPurchaseDetail = Pick<
     | 'price'
     | 'discount1_percent'
     | 'discount2_percent'
+=======
+export interface ChartOfAccount {
+    id: number;
+    code: string;
+    name: string;
+    type: 'asset' | 'liability' | 'equity' | 'income' | 'expense';
+    parent_id?: number;
+    parent?: ChartOfAccount;
+    description?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export type IChartOfAccount = Pick<
+    ChartOfAccount,
+    'id' | 'code' | 'name' | 'type' | 'parent_id' | 'description' | 'is_active'
+>>>>>>> 69f169f07bc87cd4fdd9b931803903aca0df8197
 >;
