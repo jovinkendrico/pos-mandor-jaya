@@ -2,21 +2,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { IPurchase } from '@/types';
-import { Eye } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Info } from 'lucide-react';
 
 interface PurchaseTableProps {
     purchases: IPurchase[];
+    pageFrom?: number;
 }
 
 export default function PurchaseTable(props: PurchaseTableProps) {
-    const { purchases } = props;
+    const { purchases, pageFrom } = props;
 
     const tableColumn = [
+        'Kode',
         'Supplier',
-        'Tanggal',
-        'Jatuh Tempo',
+        'Tanggal Pembelian',
+        'Tanggal Jatuh Tempo',
         'Total',
         'Status',
         'Aksi',
@@ -27,39 +30,52 @@ export default function PurchaseTable(props: PurchaseTableProps) {
             tableName="Pembelian"
             tableColumn={tableColumn}
             tableRow={purchases}
+            pageFrom={pageFrom}
             text="Tidak ada data Pembelian"
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.purchase_number}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.supplier?.name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {''}
+                        {formatDate(row.purchase_date)}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {''}
+                        {row.due_date ? formatDate(row.due_date) : '-'}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="flex w-full items-center justify-center text-center">
                         {formatCurrency(Number(row.total_amount))}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         <Badge
                             variant={
-                                row.status === 'pending' ? 'warning' : 'success'
+                                row.status === 'pending'
+                                    ? 'default'
+                                    : 'secondary'
                             }
+                            className={cn(
+                                row.status === 'pending'
+                                    ? 'badge-yellow-light'
+                                    : 'badge-green-light',
+                            )}
                         >
-                            {row.status}
+                            {row.status === 'pending' ? 'Pending' : 'Confirmed'}
                         </Badge>
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {}}
-                            className="btn-edit"
-                        >
-                            <Eye />
-                        </Button>
+                        <Link href={`/purchases/${row.id}`}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {}}
+                                className="btn-info"
+                            >
+                                <Info />
+                            </Button>
+                        </Link>
                     </TableCell>
                 </>
             )}

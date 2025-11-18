@@ -1,6 +1,7 @@
 import PageTitle from '@/components/page-title';
 import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import { Button } from '@/components/ui/button';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import AppLayout from '@/layouts/app-layout';
 import { create, index } from '@/routes/purchases';
 import { BreadcrumbItem, IPurchase, PaginatedData } from '@/types';
@@ -49,7 +50,13 @@ const PurchaseIndex = (props: PageProps) => {
                         Tambah Pembelian
                     </Button>
                 </div>
-                <PurchaseTable purchases={purchases.data} />
+                <PurchaseTable
+                    purchases={purchases.data}
+                    pageFrom={purchases.from}
+                />
+                {purchases.data.length !== 0 && (
+                    <TablePagination data={purchases} />
+                )}
             </AppLayout>
         </>
     );

@@ -26,7 +26,11 @@ import { Textarea } from '@/components/ui/textarea';
 import useCity from '@/hooks/use-city';
 import usePurchase from '@/hooks/use-purchase';
 import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
-import { formatCurrency } from '@/lib/utils';
+import {
+    formatCurrency,
+    formatDiscount,
+    formatNumberWithSeparator,
+} from '@/lib/utils';
 import { IItem, IPurchase, IPurchaseDetail, ISupplier } from '@/types';
 import { Plus, Trash } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -47,6 +51,10 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         useState<ISupplier[]>(supplierOptions);
     const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
     const [isAddCityModalOpen, setIsAddCityModalOpen] = useState(false);
+    const [quantityDisplayValues, setQuantityDisplayValues] = useState<
+        string[]
+    >([]);
+    const [priceDisplayValues, setPriceDisplayValues] = useState<string[]>([]);
 
     useEffect(() => {
         const fetchCityData = async () => {
@@ -61,6 +69,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         setData: setDataPurchase,
         errors: errorsPurchase,
         processing: processingPurchase,
+        reset: resetPurchase,
 
         addItem,
         removeItem,
@@ -68,6 +77,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         handleSubmit: handleSubmitPurchase,
         handleCancel: handleCancelPurchase,
         handleChangeItem,
+        handleQuantityChange,
+        handlePriceChange,
     } = usePurchase();
 
     useEffect(() => {
@@ -95,6 +106,40 @@ const PurchaseForm = (props: PurchaseFormProps) => {
             dataPurchase.ppn_percent,
         );
     }, [dataPurchase.details, dataPurchase.ppn_percent]);
+
+    useEffect(() => {
+        if (purchase) {
+            setDataPurchase('supplier_id', purchase.supplier.id);
+            setDataPurchase('purchase_date', purchase.purchase_date);
+            setDataPurchase('due_date', purchase.due_date ?? null);
+            setDataPurchase(
+                'discount1_percent',
+                purchase.discount1_percent ?? 0,
+            );
+            setDataPurchase(
+                'discount2_percent',
+                purchase.discount2_percent ?? 0,
+            );
+            setDataPurchase('ppn_percent', purchase.ppn_percent ?? 0);
+            setDataPurchase('notes', purchase.notes ?? '');
+            setDataPurchase('details', purchase.details);
+
+            const formattedQuantity = purchase.details.map((detail) =>
+                detail.quantity
+                    ? formatNumberWithSeparator(detail.quantity)
+                    : '0',
+            );
+            const formattedPrices = purchase.details.map((detail) =>
+                detail.price ? formatNumberWithSeparator(detail.price) : '0',
+            );
+            setQuantityDisplayValues(formattedQuantity);
+            setPriceDisplayValues(formattedPrices);
+        } else {
+            resetPurchase();
+            setQuantityDisplayValues([]);
+            setPriceDisplayValues([]);
+        }
+    }, [purchase, setDataPurchase, resetPurchase]);
 
     return (
         <form
@@ -290,6 +335,18 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                            `details[${index}].item_id`
+                                                        ]
+                                                    }
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                 <Select
@@ -328,53 +385,120 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                         )}
                                                     </SelectContent>
                                                 </Select>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="text"
-                                                    value={detail.quantity}
-                                                    onChange={(e) =>
-                                                        handleChangeItem(
-                                                            index,
-                                                            'quantity',
-                                                            Number(
-                                                                e.target.value,
-                                                            ),
-                                                        )
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                            `details[${index}].item_uom_id`
+                                                        ]
                                                     }
-                                                    className="input-box text-right"
                                                 />
                                             </TableCell>
                                             <TableCell>
                                                 <Input
                                                     type="text"
-                                                    value={detail.price ?? ''}
-                                                    onChange={(e) =>
-                                                        handleChangeItem(
-                                                            index,
-                                                            'price',
-                                                            Number(
-                                                                e.target.value,
-                                                            ),
-                                                        )
+                                                    value={
+                                                        quantityDisplayValues[
+                                                            index
+                                                        ] ?? '0'
                                                     }
+                                                    onChange={(e) => {
+                                                        handleQuantityChange(
+                                                            index,
+                                                            e,
+                                                            quantityDisplayValues,
+                                                            setQuantityDisplayValues,
+                                                        );
+                                                    }}
                                                     className="input-box text-right"
                                                 />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                            `details[${index}].quantity`
+                                                        ]
+                                                    }
+                                                />
                                             </TableCell>
-                                            <TableCell className="flex flex-col">
+                                            <TableCell>
+                                                <Input
+                                                    type="text"
+                                                    value={
+                                                        priceDisplayValues[
+                                                            index
+                                                        ] ?? '0'
+                                                    }
+                                                    onChange={(e) => {
+                                                        handlePriceChange(
+                                                            index,
+                                                            e,
+                                                            priceDisplayValues,
+                                                            setPriceDisplayValues,
+                                                        );
+                                                        console.log(
+                                                            typeof dataPurchase
+                                                                .details[index]
+                                                                .price,
+                                                            dataPurchase
+                                                                .details[index]
+                                                                .price,
+                                                        );
+                                                    }}
+                                                    className="input-box text-right"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                            `details[${index}].price`
+                                                        ]
+                                                    }
+                                                />
+                                            </TableCell>
+                                            <TableCell>
                                                 <Input
                                                     type="text"
                                                     value={
                                                         detail.discount1_percent
                                                     }
-                                                    onChange={(e) =>
+                                                    onChange={(e) => {
+                                                        const value =
+                                                            formatDiscount(
+                                                                e.target.value,
+                                                            );
+
                                                         handleChangeItem(
                                                             index,
                                                             'discount1_percent',
-                                                            e.target.value,
-                                                        )
-                                                    }
+                                                            value,
+                                                        );
+                                                    }}
                                                     className="input-box text-right"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                            `details[${index}].discount1_percent`
+                                                        ]
+                                                    }
                                                 />
                                             </TableCell>
                                             <TableCell>
@@ -383,14 +507,31 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                     value={
                                                         detail.discount2_percent
                                                     }
-                                                    onChange={(e) =>
+                                                    onChange={(e) => {
+                                                        const value =
+                                                            formatDiscount(
+                                                                e.target.value,
+                                                            );
+
                                                         handleChangeItem(
                                                             index,
                                                             'discount2_percent',
-                                                            e.target.value,
-                                                        )
-                                                    }
+                                                            value,
+                                                        );
+                                                    }}
                                                     className="input-box text-right"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                            `details[${index}].discount2_percent`
+                                                        ]
+                                                    }
                                                 />
                                             </TableCell>
                                             <TableCell className="text-center font-medium">
@@ -437,12 +578,12 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                 id="ppn_percent"
                                 type="text"
                                 value={dataPurchase.ppn_percent}
-                                onChange={(e) =>
-                                    setDataPurchase(
-                                        'ppn_percent',
-                                        Number(e.target.value),
-                                    )
-                                }
+                                onChange={(e) => {
+                                    const value = formatDiscount(
+                                        e.target.value,
+                                    );
+                                    setDataPurchase('ppn_percent', value);
+                                }}
                                 className="input-box text-right"
                             />
                         </div>

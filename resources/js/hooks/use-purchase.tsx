@@ -1,6 +1,12 @@
+import {
+    formatCurrency,
+    formatNumberWithSeparator,
+    parseStringtoNumber,
+} from '@/lib/utils';
 import { destroy, store, update } from '@/routes/purchases';
 import { IPurchase, IPurchaseDetail } from '@/types';
 import { router, useForm } from '@inertiajs/react';
+import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
@@ -27,7 +33,7 @@ const purchaseSchema = Yup.object().shape({
         .required('Supplier harus dipilih.')
         .min(1, 'Supplier harus dipilih.'),
     purchase_date: Yup.date().required('Tanggal harus diisi.'),
-    due_date: Yup.date(),
+    due_date: Yup.date().nullable(),
     discount1_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
@@ -100,7 +106,7 @@ const usePurchase = () => {
                     }
                 });
                 setError(yupErrors);
-
+                console.log(yupErrors);
                 toast.error('Validasi gagal, periksa input Anda.');
             }
         }
@@ -156,7 +162,7 @@ const usePurchase = () => {
     const handleChangeItem = (
         index: number,
         field: keyof IPurchaseDetail | 'item_id' | 'item_name' | 'item_uom_id',
-        value: string | number,
+        value: string | number | null,
     ) => {
         const updated = [...data.details];
         const detailToUpdate = updated[index];
@@ -189,6 +195,64 @@ const usePurchase = () => {
         setData('details', updated);
     };
 
+    const handleQuantityChange = (
+        index: number,
+        e: ChangeEvent<HTMLInputElement>,
+        quantityDisplayValues: string[],
+        setQuantityDisplayValue: Dispatch<SetStateAction<string[]>>,
+    ) => {
+        const input = e.target.value;
+
+        if (input === '') {
+            handleChangeItem(index, 'quantity', 0);
+            setQuantityDisplayValue([
+                ...quantityDisplayValues.slice(0, index),
+                '0',
+                ...quantityDisplayValues.slice(index + 1),
+            ]);
+            return;
+        }
+
+        const rawValue = parseStringtoNumber(input);
+
+        const validRawValue = isNaN(rawValue ?? 0) ? 0 : rawValue;
+
+        handleChangeItem(index, 'quantity', validRawValue);
+        setQuantityDisplayValue([
+            ...quantityDisplayValues.slice(0, index),
+            formatNumberWithSeparator(validRawValue ?? 0),
+            ...quantityDisplayValues.slice(index + 1),
+        ]);
+    };
+
+    const handlePriceChange = (
+        index: number,
+        e: ChangeEvent<HTMLInputElement>,
+        priceDisplayValues: string[],
+        setPriceDisplayValues: Dispatch<SetStateAction<string[]>>,
+    ) => {
+        const input = e.target.value;
+
+        if (input === '') {
+            handleChangeItem(index, 'price', 0);
+            setPriceDisplayValues([
+                ...priceDisplayValues.slice(0, index),
+                '',
+                ...priceDisplayValues.slice(index + 1),
+            ]);
+            return;
+        }
+
+        const rawValue = parseStringtoNumber(input);
+
+        handleChangeItem(index, 'price', rawValue);
+        setPriceDisplayValues([
+            ...priceDisplayValues.slice(0, index),
+            formatCurrency(rawValue ?? 0),
+            ...priceDisplayValues.slice(index + 1),
+        ]);
+    };
+
     return {
         data,
         setData,
@@ -203,6 +267,8 @@ const usePurchase = () => {
         handleDelete,
         handleCancel,
         handleChangeItem,
+        handleQuantityChange,
+        handlePriceChange,
     };
 };
 

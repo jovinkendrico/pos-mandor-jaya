@@ -45,3 +45,19 @@ export function formatDate(dateString: Date) {
         day: 'numeric',
     });
 }
+
+export function formatDiscount(input: string) {
+    let parsedInput = parseStringtoNumber(input);
+
+    if (!parsedInput) {
+        parsedInput = 0;
+    } else {
+        if (parsedInput > 100) {
+            parsedInput = 100;
+        } else if (parsedInput < 0) {
+            parsedInput = 0;
+        }
+    }
+
+    return parsedInput;
+}

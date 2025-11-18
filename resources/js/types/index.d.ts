@@ -195,6 +195,7 @@ export interface Item {
     code: string;
     name: string;
     stock: number;
+    modal_price?: number;
     description?: string;
     modal_price?: number;
     item_uoms: ItemUom[];
@@ -206,7 +207,13 @@ export interface Item {
 
 export type IItem = Pick<
     Item,
-    'id' | 'name' | 'stock' | 'description' | 'code' | 'modal_price'
+    | 'id'
+    | 'name'
+    | 'stock'
+    | 'modal_price'
+    | 'description'
+    | 'code'
+    | 'modal_price'
 > & {
     item_uoms: IItemUOM[];
     stock_movements: IItemStockMovement[];
@@ -245,6 +252,7 @@ export enum PurchaseStatus {
 export interface Purchase {
     id: number;
     purchase_number: string;
+    purchase_number: string;
     supplier: Supplier;
     purchase_date: Date;
     due_date?: Date;
@@ -264,10 +272,11 @@ export interface Purchase {
 export type IPurchase = Pick<
     Purchase,
     | 'id'
+    | 'purchase_number'
     | 'purchase_date'
     | 'due_date'
-    | 'discount_1_percent'
-    | 'discount_2_percent'
+    | 'discount1_percent'
+    | 'discount2_percent'
     | 'ppn_percent'
     | 'total_amount'
     | 'status'

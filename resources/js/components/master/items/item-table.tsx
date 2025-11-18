@@ -57,10 +57,10 @@ const ItemTable = (props: ItemTableProps) => {
         'Kode',
         'Nama Barang',
         'Stok',
+        'Harga Modal',
         'Deskripsi',
         'Satuan (UOM)',
         'Harga',
-        'Perpindahan Stok',
         'Aksi',
     ];
 
@@ -93,7 +93,18 @@ const ItemTable = (props: ItemTableProps) => {
                             {row.name}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {formatNumberWithSeparator(formatNumber(row.stock))}
+                            {currentUom
+                                ? formatNumberWithSeparator(
+                                      row.stock / currentUom?.conversion_value,
+                                  )
+                                : '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {formatCurrency(
+                                parseStringtoNumber(
+                                    String(formatNumber(row.modal_price ?? 0)),
+                                ),
+                            )}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {row.description ?? '-'}
@@ -114,11 +125,13 @@ const ItemTable = (props: ItemTableProps) => {
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {formatCurrency(
                                 parseStringtoNumber(
-                                    String(currentUom?.price ?? 0),
+                                    String(
+                                        formatNumber(currentUom?.price ?? 0),
+                                    ),
                                 ),
                             )}
                         </TableCell>
-                        <TableCell className="flex w-full items-center justify-center text-center">
+                        <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                             <Link href={`/items/${row.id}`}>
                                 <Button
                                     variant="ghost"
@@ -128,8 +141,6 @@ const ItemTable = (props: ItemTableProps) => {
                                     <Info />
                                 </Button>
                             </Link>
-                        </TableCell>
-                        <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                             <Button
                                 variant="ghost"
                                 size="icon"

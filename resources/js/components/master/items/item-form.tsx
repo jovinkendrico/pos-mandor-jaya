@@ -21,7 +21,7 @@ import {
 } from '@/lib/utils';
 import { IItem, IUOM } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import UOMForm from '../uom/uom-form';
 
 interface ItemFormProps {
@@ -55,6 +55,9 @@ const ItemForm = (props: ItemFormProps) => {
         handleSubmit: handleSubmitItem,
         handleCancel: handleCancelItem,
         handleChangeUOM,
+        handleStockChange,
+        handlePriceChange,
+        handleConversionValueChange,
     } = useItem(onModalClose);
 
     useMemo(() => {
@@ -96,82 +99,6 @@ const ItemForm = (props: ItemFormProps) => {
         }
     }, [isModalOpen, item, setDataItem, resetItem]);
 
-    const handleStockChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const input = e.target.value;
-
-        if (!input) {
-            setDataItem('stock', 0);
-            setStockDisplayValue('0');
-            return;
-        }
-
-        const rawValue = parseStringtoNumber(input);
-
-        setDataItem('stock', rawValue ?? 0);
-        setStockDisplayValue(formatNumberWithSeparator(rawValue ?? 0));
-    };
-
-    const handlePriceChange = (
-        index: number,
-        e: ChangeEvent<HTMLInputElement>,
-    ) => {
-        const input = e.target.value;
-
-        if (input === '') {
-            setDataItem('uoms', [
-                ...dataItem.uoms.slice(0, index),
-                { ...dataItem.uoms[index], price: 0 },
-                ...dataItem.uoms.slice(index + 1),
-            ]);
-            setPriceDisplayValues([
-                ...priceDisplayValues.slice(0, index),
-                '',
-                ...priceDisplayValues.slice(index + 1),
-            ]);
-            return;
-        }
-
-        const rawValue = parseStringtoNumber(input ?? '');
-
-        setDataItem('uoms', [
-            ...dataItem.uoms.slice(0, index),
-            { ...dataItem.uoms[index], price: rawValue ?? 0 },
-            ...dataItem.uoms.slice(index + 1),
-        ]);
-
-        const updatedDisplayValues = [...priceDisplayValues];
-        updatedDisplayValues[index] = formatCurrency(rawValue);
-        setPriceDisplayValues(updatedDisplayValues);
-    };
-
-    const handleConversionValueChange = (
-        index: number,
-        e: ChangeEvent<HTMLInputElement>,
-    ) => {
-        const input = e.target.value;
-
-        if (input === '') {
-            handleChangeUOM(index, 'conversion_value', 0);
-            setConversionDisplayValues([
-                ...conversionDisplayValues.slice(0, index),
-                '0',
-                ...conversionDisplayValues.slice(index + 1),
-            ]);
-            return;
-        }
-
-        const rawValue = parseStringtoNumber(input);
-
-        const validRawValue = isNaN(rawValue ?? 0) ? 0 : rawValue;
-
-        handleChangeUOM(index, 'conversion_value', validRawValue);
-        setConversionDisplayValues([
-            ...conversionDisplayValues.slice(0, index),
-            formatNumberWithSeparator(validRawValue ?? 0),
-            ...conversionDisplayValues.slice(index + 1),
-        ]);
-    };
-
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
             <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
@@ -212,7 +139,9 @@ const ItemForm = (props: ItemFormProps) => {
                                 id="stock"
                                 type="text"
                                 value={stockDisplayValue}
-                                onChange={(e) => handleStockChange(e)}
+                                onChange={(e) =>
+                                    handleStockChange(e, setStockDisplayValue)
+                                }
                                 placeholder="Cth: 100"
                                 disabled={processingItem}
                                 className="input-box"
@@ -228,13 +157,15 @@ const ItemForm = (props: ItemFormProps) => {
                             </Label>
                             <Input
                                 id="modal_price"
-                                type="number"
-                                min={0}
-                                value={dataItem.modal_price ?? 0}
+                                type="text"
+                                value={formatCurrency(
+                                    dataItem.modal_price ?? 0,
+                                )}
                                 onChange={(e) =>
                                     setDataItem(
                                         'modal_price',
-                                        Number(e.target.value) || 0,
+                                        parseStringtoNumber(e.target.value) ||
+                                            0,
                                     )
                                 }
                                 placeholder="Cth: 15000"
@@ -341,6 +272,13 @@ const ItemForm = (props: ItemFormProps) => {
                                                                 'uom.name',
                                                                 setSelectedUOM.name,
                                                             );
+                                                            handleChangeUOM(
+                                                                index,
+                                                                'uom_id',
+                                                                Number(
+                                                                    newValue,
+                                                                ),
+                                                            );
                                                         }}
                                                         placeholder="Pilih/cari UOM..."
                                                         searchPlaceholder="Cari UOM..."
@@ -395,10 +333,11 @@ const ItemForm = (props: ItemFormProps) => {
                                                         handleConversionValueChange(
                                                             index,
                                                             e,
+                                                            conversionDisplayValues,
+                                                            setConversionDisplayValues,
                                                         );
                                                     }}
                                                     className="input-box"
-                                                    required
                                                     disabled={
                                                         processingItem ||
                                                         uom.is_base
@@ -434,16 +373,17 @@ const ItemForm = (props: ItemFormProps) => {
                                                     value={
                                                         priceDisplayValues[
                                                             index
-                                                        ] || ''
+                                                        ] || 'Rp. 0'
                                                     }
                                                     onChange={(e) =>
                                                         handlePriceChange(
                                                             index,
                                                             e,
+                                                            priceDisplayValues,
+                                                            setPriceDisplayValues,
                                                         )
                                                     }
                                                     placeholder="0"
-                                                    required
                                                     disabled={undefined}
                                                     className="input-box"
                                                 />

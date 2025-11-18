@@ -24,13 +24,13 @@ const TableLayout = <T,>(props: PropTypes<T>) => {
             <Table className="content">
                 <TableHeader>
                     <TableRow className="flex w-full flex-row hover:!bg-transparent dark:border-secondary-300">
-                        <TableHead className="flex w-full min-w-[100px] items-center justify-center text-center dark:text-secondary-500">
+                        <TableHead className="flex w-full min-w-[125px] items-center justify-center text-center dark:text-secondary-500">
                             No.
                         </TableHead>
                         {tableColumn.map((column, index) => (
                             <TableHead
                                 key={index}
-                                className="flex w-full min-w-[100px] items-center justify-center text-center dark:text-secondary-500"
+                                className="flex w-full min-w-[125px] items-center justify-center text-center dark:text-secondary-500"
                             >
                                 {column}
                             </TableHead>
