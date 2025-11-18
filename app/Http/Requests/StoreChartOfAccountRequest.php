@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
-class UpdateBankRequest extends FormRequest
+class StoreChartOfAccountRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,13 +23,12 @@ class UpdateBankRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'code' => ['required', 'string', 'max:50', 'unique:chart_of_accounts,code'],
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:bank,cash'],
-            'chart_of_account_id' => ['nullable', 'exists:chart_of_accounts,id'],
-            'account_number' => ['nullable', 'string', 'max:255'],
-            'account_name' => ['nullable', 'string', 'max:255'],
-            'balance' => ['nullable', 'numeric', 'min:0'],
+            'type' => ['required', 'in:asset,liability,equity,income,expense'],
+            'parent_id' => ['nullable', 'exists:chart_of_accounts,id'],
             'description' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
         ];
     }
 }

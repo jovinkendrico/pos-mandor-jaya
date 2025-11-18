@@ -25,6 +25,7 @@ class StoreBankRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:bank,cash'],
+            'chart_of_account_id' => ['nullable', 'exists:chart_of_accounts,id'],
             'account_number' => ['nullable', 'string', 'max:255'],
             'account_name' => ['nullable', 'string', 'max:255'],
             'balance' => ['nullable', 'numeric', 'min:0'],

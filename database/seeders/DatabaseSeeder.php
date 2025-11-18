@@ -8,6 +8,7 @@ use App\Models\City;
 use App\Models\Customer;
 use App\Models\Supplier;
 use App\Models\Bank;
+use App\Models\ChartOfAccount;
 use App\Models\Item;
 use App\Models\ItemUom;
 use App\Models\StockMovement;
@@ -206,10 +207,16 @@ class DatabaseSeeder extends Seeder
 
     private function seedBanks(): void
     {
+        // Get COA for cash and bank (using child accounts)
+        $kasKecilCoa = ChartOfAccount::where('code', '1101')->first();
+        $bankBcaCoa = ChartOfAccount::where('code', '1103')->first();
+        $bankMandiriCoa = ChartOfAccount::where('code', '1104')->first();
+
         $banks = [
             [
                 'name' => 'Bank BCA',
                 'type' => 'bank',
+                'chart_of_account_id' => $bankBcaCoa?->id,
                 'account_number' => '1234567890',
                 'account_name' => 'PT Mandor Jaya',
                 'balance' => 50000000.00,
@@ -218,6 +225,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Bank Mandiri',
                 'type' => 'bank',
+                'chart_of_account_id' => $bankMandiriCoa?->id,
                 'account_number' => '0987654321',
                 'account_name' => 'PT Mandor Jaya',
                 'balance' => 30000000.00,
@@ -226,6 +234,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Kas Kecil',
                 'type' => 'cash',
+                'chart_of_account_id' => $kasKecilCoa?->id,
                 'account_number' => null,
                 'account_name' => null,
                 'balance' => 5000000.00,
@@ -234,10 +243,15 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($banks as $bank) {
-            Bank::firstOrCreate(
-                ['name' => $bank['name'], 'type' => $bank['type']],
-                $bank
-            );
+            $existingBank = Bank::where('name', $bank['name'])->where('type', $bank['type'])->first();
+            if ($existingBank) {
+                // Update existing bank with COA if not set
+                if (!$existingBank->chart_of_account_id) {
+                    $existingBank->update(['chart_of_account_id' => $bank['chart_of_account_id']]);
+                }
+            } else {
+                Bank::create($bank);
+            }
         }
     }
 

@@ -12,6 +12,7 @@ import {
 import { usePermission } from '@/hooks/use-permission';
 import { dashboard } from '@/routes';
 import { index as bankIndex } from '@/routes/banks';
+import { index as chartOfAccountIndex } from '@/routes/chart-of-accounts';
 import { index as cityIndex } from '@/routes/cities';
 import { index as customerIndex } from '@/routes/customers';
 import { index as itemIndex } from '@/routes/items';
@@ -51,6 +52,10 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Bank/Cash',
                 href: bankIndex(),
+            },
+            {
+                title: 'Kode Perkiraan',
+                href: chartOfAccountIndex(),
             },
             {
                 title: 'Barang',

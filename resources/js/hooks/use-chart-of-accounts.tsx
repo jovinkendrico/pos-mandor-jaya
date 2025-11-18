@@ -1,20 +1,21 @@
-import { destroy, store, update } from '@/routes/banks';
-import { IBank, ICity } from '@/types';
+import { destroy, store, update } from '@/routes/chart-of-accounts';
+import { IChartOfAccount } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
-const bankSchema = Yup.object().shape({
-    name: Yup.string().required('Nama Bank/Cash harus diisi.'),
-    type: Yup.string(),
-    chart_of_account_id: Yup.number().nullable(),
-    account_number: Yup.string(),
-    account_name: Yup.string(),
-    balance: Yup.number(),
-    description: Yup.string(),
+const chartOfAccountSchema = Yup.object().shape({
+    code: Yup.string().required('Kode akun harus diisi.'),
+    name: Yup.string().required('Nama akun harus diisi.'),
+    type: Yup.string()
+        .oneOf(['asset', 'liability', 'equity', 'income', 'expense'], 'Tipe akun tidak valid.')
+        .required('Tipe akun harus diisi.'),
+    parent_id: Yup.number().nullable(),
+    description: Yup.string().nullable(),
+    is_active: Yup.boolean(),
 });
 
-const useBanks = (closeModal: () => void) => {
+const useChartOfAccounts = (closeModal: () => void) => {
     const {
         data,
         setData,
@@ -25,28 +26,27 @@ const useBanks = (closeModal: () => void) => {
         setError,
         clearErrors,
     } = useForm({
+        code: '',
         name: '',
-        type: 'bank' as 'bank' | 'cash',
-        chart_of_account_id: null as number | null,
-        account_number: '',
-        account_name: '',
-        balance: 0,
+        type: 'asset' as 'asset' | 'liability' | 'equity' | 'income' | 'expense',
+        parent_id: null as number | null,
         description: '',
+        is_active: true,
     });
 
-    const handleSubmit = async (bank?: IBank) => {
+    const handleSubmit = async (chartOfAccount?: IChartOfAccount) => {
         clearErrors();
 
         try {
-            await bankSchema.validate(data, { abortEarly: false });
+            await chartOfAccountSchema.validate(data, { abortEarly: false });
 
-            submit(bank ? update(bank.id) : store(), {
+            submit(chartOfAccount ? update(chartOfAccount.id) : store(), {
                 onSuccess: () => {
                     reset();
                     toast.success(
-                        bank
-                            ? `Bank/Cash: ${data.name} berhasil diupdate`
-                            : `Bank/Cash: ${data.name} berhasil ditambahkan`,
+                        chartOfAccount
+                            ? `Chart of Account: ${data.name} berhasil diupdate`
+                            : `Chart of Account: ${data.name} berhasil ditambahkan`,
                     );
                     closeModal();
                 },
@@ -68,13 +68,13 @@ const useBanks = (closeModal: () => void) => {
         }
     };
 
-    const handleDelete = (bank: ICity) => {
-        router.delete(destroy(bank.id).url, {
+    const handleDelete = (chartOfAccount: IChartOfAccount) => {
+        router.delete(destroy(chartOfAccount.id).url, {
             onSuccess: () => {
-                toast.success('Bank/Cash berhasil dihapus');
+                toast.success('Chart of Account berhasil dihapus');
             },
             onError: () => {
-                toast.error('Gagal menghapus Bank/Cash');
+                toast.error('Gagal menghapus Chart of Account');
             },
         });
     };
@@ -83,17 +83,18 @@ const useBanks = (closeModal: () => void) => {
         reset();
         closeModal();
     };
+
     return {
         data,
         setData,
         errors,
         processing,
         reset,
-
         handleSubmit,
         handleCancel,
         handleDelete,
     };
 };
 
-export default useBanks;
+export default useChartOfAccounts;
+

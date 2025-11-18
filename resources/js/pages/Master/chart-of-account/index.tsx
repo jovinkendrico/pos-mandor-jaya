@@ -14,6 +14,7 @@ import { useState } from 'react';
 
 interface PageProps {
     chartOfAccounts: PaginatedData<IChartOfAccount>;
+    allAccounts?: IChartOfAccount[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [

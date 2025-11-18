@@ -157,6 +157,47 @@ const BankForm = (props: BankFormProps) => {
                             </div>
                         </div>
 
+                        <div>
+                            <Label htmlFor="chart_of_account_id">
+                                Chart of Account
+                            </Label>
+                            <Select
+                                value={
+                                    data.chart_of_account_id
+                                        ? data.chart_of_account_id.toString()
+                                        : 'none'
+                                }
+                                onValueChange={(value) =>
+                                    setData(
+                                        'chart_of_account_id',
+                                        value === 'none' ? null : parseInt(value),
+                                    )
+                                }
+                            >
+                                <SelectTrigger className="w-full font-medium dark:!bg-white dark:!text-primary-200">
+                                    <SelectValue placeholder="Pilih Chart of Account" />
+                                </SelectTrigger>
+                                <SelectContent className="dark:data-[selected=true]:bg-primary-400/30">
+                                    <SelectItem value="none">
+                                        Pilih Chart of Account
+                                    </SelectItem>
+                                    {chartOfAccounts.map((coa) => (
+                                        <SelectItem
+                                            key={coa.id}
+                                            value={coa.id.toString()}
+                                        >
+                                            {coa.code} - {coa.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.chart_of_account_id && (
+                                <InputError
+                                    message={errors.chart_of_account_id}
+                                />
+                            )}
+                        </div>
+
                         {data.type === 'bank' && (
                             <>
                                 <div className="flex flex-row gap-4">

@@ -7,13 +7,14 @@ import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroyBank, index } from '@/routes/banks';
-import { BreadcrumbItem, IBank, PaginatedData } from '@/types';
+import { BreadcrumbItem, IBank, IChartOfAccount, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
     banks: PaginatedData<IBank>;
+    chartOfAccounts?: IChartOfAccount[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,7 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const BankIndex = (props: PageProps) => {
-    const { banks } = props;
+    const { banks, chartOfAccounts = [] } = props;
 
     const [selectedBank, setSelectedBank] = useState<IBank | undefined>(
         undefined,
@@ -83,6 +84,7 @@ const BankIndex = (props: PageProps) => {
                     isModalOpen={isEditModalOpen}
                     bank={selectedBank}
                     onModalClose={closeEditModal}
+                    chartOfAccounts={chartOfAccounts}
                 />
                 <DeleteModalLayout
                     dataName={selectedBank?.name}

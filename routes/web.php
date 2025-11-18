@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BankController;
+use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ItemController;
@@ -55,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'customers'        => CustomerController::class,
         'suppliers'        => SupplierController::class,
         'banks'            => BankController::class,
+        'chart-of-accounts' => ChartOfAccountController::class,
         'uoms'             => UomController::class,
         'items'            => ItemController::class,
         'purchases'        => PurchaseController::class,
