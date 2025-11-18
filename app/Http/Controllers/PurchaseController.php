@@ -169,6 +169,7 @@ class PurchaseController extends Controller
         $suppliers = Supplier::orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
+
         return Inertia::render('transaction/purchase/edit', [
             'purchase'  => $purchase,
             'suppliers' => $suppliers,
