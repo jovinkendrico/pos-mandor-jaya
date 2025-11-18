@@ -4,27 +4,24 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PurchasePaymentController;
 use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SalePaymentController;
 use App\Http\Controllers\SaleReturnController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('dashboard');
-    })->name('home');
-
-    Route::get('/dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('home');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // API routes for autocomplete
     Route::get('cities/search', [CityController::class, 'search'])->name('cities.search');
@@ -47,6 +44,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sale-returns/{sale_return}/confirm', [SaleReturnController::class, 'confirm'])->name('sale-returns.confirm');
     Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
 
+    // Purchase Payment confirm/unconfirm routes (must be before resource)
+    Route::post('purchase-payments/{purchase_payment}/confirm', [PurchasePaymentController::class, 'confirm'])->name('purchase-payments.confirm');
+    Route::post('purchase-payments/{purchase_payment}/unconfirm', [PurchasePaymentController::class, 'unconfirm'])->name('purchase-payments.unconfirm');
+
+    // Sale Payment confirm/unconfirm routes (must be before resource)
+    Route::post('sale-payments/{sale_payment}/confirm', [SalePaymentController::class, 'confirm'])->name('sale-payments.confirm');
+    Route::post('sale-payments/{sale_payment}/unconfirm', [SalePaymentController::class, 'unconfirm'])->name('sale-payments.unconfirm');
 
     Route::resources([
         'users'            => UserController::class,
@@ -63,6 +67,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'sales'            => SaleController::class,
         'purchase-returns' => PurchaseReturnController::class,
         'sale-returns'     => SaleReturnController::class,
+        'purchase-payments' => PurchasePaymentController::class,
+        'sale-payments'     => SalePaymentController::class,
     ]);
 });
 

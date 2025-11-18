@@ -297,3 +297,91 @@ export type IChartOfAccount = Pick<
     ChartOfAccount,
     'id' | 'code' | 'name' | 'type' | 'parent_id' | 'description' | 'is_active'
 >;
+
+export interface PurchasePayment {
+    id: number;
+    payment_number: string;
+    payment_date: string;
+    total_amount: number;
+    bank_id?: number;
+    bank?: Bank;
+    payment_method: 'cash' | 'transfer' | 'giro' | 'cek' | 'other';
+    reference_number?: string;
+    notes?: string;
+    status: 'pending' | 'confirmed';
+    purchases?: IPurchase[];
+    items?: PurchasePaymentItem[];
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface PurchasePaymentItem {
+    id: number;
+    purchase_payment_id: number;
+    purchase_id: number;
+    purchase?: IPurchase;
+    amount: number;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export type IPurchasePayment = Pick<
+    PurchasePayment,
+    | 'id'
+    | 'payment_number'
+    | 'payment_date'
+    | 'total_amount'
+    | 'bank_id'
+    | 'payment_method'
+    | 'reference_number'
+    | 'notes'
+    | 'status'
+> & {
+    items?: Array<Pick<PurchasePaymentItem, 'purchase_id' | 'amount'>>;
+};
+
+export interface SalePayment {
+    id: number;
+    payment_number: string;
+    payment_date: string;
+    total_amount: number;
+    bank_id?: number;
+    bank?: Bank;
+    payment_method: 'cash' | 'transfer' | 'giro' | 'cek' | 'other';
+    reference_number?: string;
+    notes?: string;
+    status: 'pending' | 'confirmed';
+    sales?: any[]; // Sale interface array
+    items?: SalePaymentItem[];
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface SalePaymentItem {
+    id: number;
+    sale_payment_id: number;
+    sale_id: number;
+    sale?: any; // Sale interface
+    amount: number;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export type ISalePayment = Pick<
+    SalePayment,
+    | 'id'
+    | 'payment_number'
+    | 'payment_date'
+    | 'total_amount'
+    | 'bank_id'
+    | 'payment_method'
+    | 'reference_number'
+    | 'notes'
+    | 'status'
+> & {
+    items?: Array<Pick<SalePaymentItem, 'sale_id' | 'amount'>>;
+};

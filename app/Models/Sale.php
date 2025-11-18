@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Sale extends Model
 {
@@ -61,6 +63,41 @@ class Sale extends Model
     {
         return $this->hasMany(StockMovement::class, 'reference_id')
             ->where('reference_type', 'Sale');
+    }
+
+    public function payments(): BelongsToMany
+    {
+        return $this->belongsToMany(SalePayment::class, 'sale_payment_items')
+            ->withPivot('amount')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get total paid amount
+     */
+    public function getTotalPaidAttribute(): float
+    {
+        return DB::table('sale_payment_items')
+            ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
+            ->where('sale_payment_items.sale_id', $this->id)
+            ->where('sale_payments.status', 'confirmed')
+            ->sum('sale_payment_items.amount') ?? 0;
+    }
+
+    /**
+     * Get remaining amount to pay
+     */
+    public function getRemainingAmountAttribute(): float
+    {
+        return max(0, $this->total_amount - $this->total_paid);
+    }
+
+    /**
+     * Check if sale is fully paid
+     */
+    public function isFullyPaid(): bool
+    {
+        return $this->remaining_amount <= 0;
     }
 
     /**

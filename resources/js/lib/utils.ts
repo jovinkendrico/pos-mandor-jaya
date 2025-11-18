@@ -15,12 +15,17 @@ export function parseCurrency(input: string): number | null {
     return parseInt(rawString, 10);
 }
 
-export function formatCurrency(input: number | null): string {
-    if (!input && input !== 0) {
-        return 'Rp. ';
+export function formatCurrency(input: number | null | undefined): string {
+    if (input === null || input === undefined) {
+        return 'Rp. 0';
     }
 
-    return 'Rp. ' + input.toLocaleString('id-ID');
+    // Round to 2 decimal places and format
+    const rounded = Math.round(input * 100) / 100;
+    return 'Rp. ' + rounded.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    });
 }
 
 export function formatNumber(input: number): number {
