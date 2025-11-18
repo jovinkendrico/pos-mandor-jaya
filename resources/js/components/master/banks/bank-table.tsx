@@ -20,6 +20,7 @@ const BankTable = (props: BankTableProps) => {
         'Kode',
         'Nama Bank/Cash',
         'Tipe',
+        'Chart of Account',
         'No. Rekening',
         'Nama Pemilik',
         'Saldo',
@@ -54,6 +55,15 @@ const BankTable = (props: BankTableProps) => {
                         >
                             {row.type === 'bank' ? 'Bank' : 'Cash'}
                         </Badge>
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.chart_of_account ? (
+                            <span className="font-mono text-sm">
+                                {row.chart_of_account.code} - {row.chart_of_account.name}
+                            </span>
+                        ) : (
+                            '-'
+                        )}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.account_number || '-'}

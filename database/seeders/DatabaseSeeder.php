@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             $this->seedCustomers();
             $this->seedSuppliers();
             $this->seedBanks();
+            $this->call(ChartOfAccountSeeder::class);
             $this->seedItems();
             $this->seedPurchases();
             $this->seedSales();
