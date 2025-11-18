@@ -73,6 +73,7 @@ const ItemForm = (props: ItemFormProps) => {
             setDataItem('name', item.name);
             setDataItem('description', item.description ?? '');
             setDataItem('uoms', item.item_uoms);
+
             setStockDisplayValue(formatNumberWithSeparator(item.stock));
 
             const formattedPrices = item.item_uoms.map((uom) =>
@@ -87,6 +88,9 @@ const ItemForm = (props: ItemFormProps) => {
             setConversionDisplayValues(formattedConversions);
         } else {
             resetItem();
+            setStockDisplayValue('');
+            setPriceDisplayValues([]);
+            setConversionDisplayValues([]);
         }
     }, [isModalOpen, item, setDataItem, resetItem]);
 
@@ -264,9 +268,9 @@ const ItemForm = (props: ItemFormProps) => {
                                 {dataItem.uoms.map((uom, index) => (
                                     <div
                                         key={index}
-                                        className="content input-box mb-4 flex flex-row gap-4 rounded-lg border bg-gray-100 p-3"
+                                        className="content input-box mb-4 flex flex-col gap-4 rounded-lg border bg-gray-100 p-3 sm:flex-row"
                                     >
-                                        <div className="w-1/4">
+                                        <div className="w-full sm:w-1/4">
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex-1">
                                                     <Label
@@ -341,12 +345,12 @@ const ItemForm = (props: ItemFormProps) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="w-1/4">
+                                        <div className="w-full sm:w-1/4">
                                             <div className="flex flex-col gap-2">
                                                 <Label
                                                     htmlFor={`conversion_${index}`}
                                                 >
-                                                    Konversi ke Base{' '}
+                                                    Nilai Konversi{' '}
                                                     <span className="text-red-500">
                                                         *
                                                     </span>
@@ -388,7 +392,7 @@ const ItemForm = (props: ItemFormProps) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="w-1/4">
+                                        <div className="w-full sm:w-1/4">
                                             <div className="flex flex-col gap-2">
                                                 <Label
                                                     htmlFor={`price_${index}`}
@@ -419,8 +423,8 @@ const ItemForm = (props: ItemFormProps) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="flex w-1/4 justify-center">
-                                            <div className="flex w-3/4 items-center justify-between gap-4">
+                                        <div className="flex w-full justify-center sm:w-1/4">
+                                            <div className="flex items-center justify-between gap-4 sm:w-3/4">
                                                 <div className="flex w-full justify-center">
                                                     <Badge
                                                         variant={

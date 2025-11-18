@@ -11,7 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import useSupplier from '@/hooks/use-supplier';
 import { ISupplier } from '@/types';
 import { Plus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import InputError from '../../input-error';
 import { Combobox, ComboboxOption } from '../../ui/combobox';
 import { Input } from '../../ui/input';
@@ -19,23 +19,17 @@ import { Label } from '../../ui/label';
 import { Textarea } from '../../ui/textarea';
 import CityForm from '../cities/city-form';
 
-interface City {
-    id: number;
-    name: string;
-}
-
 interface SupplierFormProps {
     supplier?: ISupplier;
-    cities: City[];
     isModalOpen: boolean;
     onModalClose: () => void;
+    cityComboboxOption: ComboboxOption[];
 }
 
 export default function SupplierForm(props: SupplierFormProps) {
-    const { supplier, cities, isModalOpen, onModalClose } = props;
+    const { supplier, isModalOpen, onModalClose, cityComboboxOption } = props;
 
     const [isAddCityModalOpen, setIsAddCityModalOpen] = useState(false);
-    const [localCities, setLocalCities] = useState<City[]>(cities);
 
     const {
         data: dataSupplier,
@@ -46,10 +40,6 @@ export default function SupplierForm(props: SupplierFormProps) {
         handleSubmit: handleSubmitSupplier,
         handleCancel: handleCancelSupplier,
     } = useSupplier(onModalClose);
-
-    useEffect(() => {
-        setLocalCities(cities);
-    }, [cities]);
 
     useEffect(() => {
         if (supplier) {
@@ -64,13 +54,6 @@ export default function SupplierForm(props: SupplierFormProps) {
             resetSupplier();
         }
     }, [supplier, isModalOpen, resetSupplier, setDataSupplier]);
-
-    const cityOptions: ComboboxOption[] = useMemo(() => {
-        return localCities.map((city) => ({
-            value: city.id.toString(),
-            label: city.name,
-        }));
-    }, [localCities]);
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
@@ -135,7 +118,7 @@ export default function SupplierForm(props: SupplierFormProps) {
                                     <div className="flex-1">
                                         <Label htmlFor="city_id">Kota</Label>
                                         <Combobox
-                                            options={cityOptions}
+                                            options={cityComboboxOption}
                                             value={dataSupplier.city_id}
                                             onValueChange={(value) =>
                                                 setDataSupplier(

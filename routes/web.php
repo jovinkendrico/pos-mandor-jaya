@@ -26,7 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // API routes for autocomplete
-    Route::get('cities/search', [CityController::class, 'search'])->name('cities.search');
+    Route::get('/cities/search', [CityController::class, 'search'])->name('cities.search');
 
     Route::post('cities/store', [CityController::class, 'storeCity'])->name('cities.storeCity');
 

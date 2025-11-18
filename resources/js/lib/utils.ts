@@ -16,8 +16,12 @@ export function parseStringtoNumber(input: string): number | null {
 }
 
 export function formatCurrency(input: number | null): string {
-    if (!input && input !== 0) {
+    if (input === null || isNaN(input)) {
         return 'Rp. ';
+    }
+
+    if (typeof input === 'string') {
+        return 'Rp. ' + Number(input).toLocaleString('id-ID');
     }
 
     return 'Rp. ' + input.toLocaleString('id-ID');
@@ -28,6 +32,9 @@ export function formatNumber(input: number): number {
 }
 
 export function formatNumberWithSeparator(input: number): string {
+    if (typeof input === 'string') {
+        return Number(input).toLocaleString('id-ID');
+    }
     return input.toLocaleString('id-ID');
 }
 

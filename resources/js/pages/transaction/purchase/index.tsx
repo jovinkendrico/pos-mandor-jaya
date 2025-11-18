@@ -3,51 +3,13 @@ import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { create, index } from '@/routes/purchases';
-import { BreadcrumbItem, PaginatedData } from '@/types';
+import { BreadcrumbItem, IPurchase, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
-interface Supplier {
-    id: number;
-    name: string;
-}
-
-interface Item {
-    id: number;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-}
-
-interface PurchaseDetail {
-    id: number;
-    item: Item;
-    item_uom: ItemUom;
-    quantity: string;
-    price: string;
-    discount1_percent: string;
-    discount2_percent: string;
-    subtotal: string;
-}
-
-interface Purchase {
-    id: number;
-    purchase_number: string;
-    supplier?: Supplier;
-    purchase_date: string;
-    due_date?: string;
-    subtotal: string;
-    total_amount: string;
-    status: 'pending' | 'confirmed';
-    details: PurchaseDetail[];
-}
-
 interface PageProps {
-    purchases: PaginatedData<Purchase>;
+    purchases: PaginatedData<IPurchase>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -63,15 +25,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const PurchaseIndex = (props: PageProps) => {
     const { purchases } = props;
+
     const [selectedPurchase, setSelectedPurchase] = useState<
-        Purchase | undefined
+        IPurchase | undefined
     >(undefined);
 
     const handleCreate = () => {
         router.visit(create().url);
     };
 
-    const handleView = (purchase: Purchase) => {
+    const handleView = (purchase: IPurchase) => {
         router.visit(`/purchases/${purchase.id}`);
     };
 

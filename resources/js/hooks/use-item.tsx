@@ -193,7 +193,6 @@ const useItem = (closeModal: () => void = () => {}) => {
 
         if (field === 'uom.id') {
             uomToUpdate.uom.id = value as number;
-            uomToUpdate.uom_id = value as number;
         } else if (field === 'uom.name') {
             uomToUpdate.uom.name = value as string;
         } else {

@@ -241,12 +241,12 @@ export enum PurchaseStatus {
     CONFIRMED = 'confirmed',
 }
 
-export interface IPurchase {
+export interface Purchase {
     id: number;
     purchase_number: string;
-    supplier_id: number;
+    supplier: Supplier;
     purchase_date: Date;
-    due_date: Date;
+    due_date?: Date;
     subtotal: number;
     discount1_percent?: number;
     discount1_amount?: number;
@@ -255,15 +255,32 @@ export interface IPurchase {
     total_after_discount: number;
     ppn_percent?: number;
     total_amount: number;
-    status: PurchaseStatus;
+    status?: PurchaseStatus;
     notes: string;
-    details: IPurchaseDetail[];
+    details: PurchaseDetail[];
 }
 
-export interface IPurchaseDetail {
+export type IPurchase = Pick<
+    Purchase,
+    | 'id'
+    | 'purchase_date'
+    | 'due_date'
+    | 'discount_1_percent'
+    | 'discount_2_percent'
+    | 'ppn_percent'
+    | 'total_amount'
+    | 'status'
+    | 'notes'
+> & {
+    supplier: ISupplier;
+    details: IPurchaseDetail[];
+};
+
+export interface PurchaseDetail {
     id: number;
     purchase_id: number;
     item_id: number;
+    item: IItem;
     item_uom_id: number;
     quantity: number;
     price: number;
@@ -273,3 +290,13 @@ export interface IPurchaseDetail {
     discount2_amount?: number;
     subtotal: number;
 }
+
+export type IPurchaseDetail = Pick<
+    PurchaseDetail,
+    | 'item_id'
+    | 'item_uom_id'
+    | 'quantity'
+    | 'price'
+    | 'discount1_percent'
+    | 'discount2_percent'
+>;
