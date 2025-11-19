@@ -71,7 +71,9 @@ class Sale extends Model
         $date = $saleDate ? date('Ymd', strtotime($saleDate)) : now()->format('Ymd');
 
         // Use lockForUpdate to prevent race conditions in concurrent requests
-        $lastSale = static::whereDate('sale_date', $saleDate ? date('Y-m-d', strtotime($saleDate)) : today())
+        // Include soft deleted records to continue sequence even if sale was deleted
+        $lastSale = static::withTrashed()
+            ->whereDate('sale_date', $saleDate ? date('Y-m-d', strtotime($saleDate)) : today())
             ->lockForUpdate()
             ->orderBy('id', 'desc')
             ->first();

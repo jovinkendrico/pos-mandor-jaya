@@ -496,30 +496,57 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($purchaseDates as $index => $purchaseDate) {
-            $supplier       = $suppliers->random();
-            $purchaseNumber = Purchase::generatePurchaseNumber($purchaseDate->format('Y-m-d'));
+            $supplier = $suppliers->random();
 
-            // Select random items for this purchase
-            $selectedItems = $items->random(min(3, $items->count()));
+            // Generate purchase number with retry logic
+            $maxRetries = 5;
+            $purchase   = null;
 
-            $subtotal = 0;
-            $purchase = Purchase::create([
-                'purchase_number'      => $purchaseNumber,
-                'supplier_id'          => $supplier->id,
-                'purchase_date'        => $purchaseDate,
-                'due_date'             => $purchaseDate->copy()->addDays(30),
-                'subtotal'             => 0,
-                'discount1_percent'    => 0,
-                'discount1_amount'     => 0,
-                'discount2_percent'    => 0,
-                'discount2_amount'     => 0,
-                'total_after_discount' => 0,
-                'ppn_percent'          => 11,
-                'ppn_amount'           => 0,
-                'total_amount'         => 0,
-                'status'               => 'pending',
-                'notes'                => sprintf('Purchase seeder #%d', $index + 1),
-            ]);
+            for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+                try {
+                    $purchaseNumber = Purchase::generatePurchaseNumber($purchaseDate->format('Y-m-d'));
+
+                    // Select random items for this purchase
+                    $selectedItems = $items->random(min(3, $items->count()));
+
+                    $subtotal = 0;
+                    $purchase = Purchase::create([
+                        'purchase_number'      => $purchaseNumber,
+                        'supplier_id'          => $supplier->id,
+                        'purchase_date'        => $purchaseDate,
+                        'due_date'             => $purchaseDate->copy()->addDays(30),
+                        'subtotal'             => 0,
+                        'discount1_percent'    => 0,
+                        'discount1_amount'     => 0,
+                        'discount2_percent'    => 0,
+                        'discount2_amount'     => 0,
+                        'total_after_discount' => 0,
+                        'ppn_percent'          => 11,
+                        'ppn_amount'           => 0,
+                        'total_amount'         => 0,
+                        'status'               => 'pending',
+                        'notes'                => sprintf('Purchase seeder #%d', $index + 1),
+                    ]);
+
+                    break; // Success, exit retry loop
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Check if it's a unique constraint violation
+                    if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'purchase_number') || str_contains($e->getMessage(), 'purchases_purchase_number_unique'))) {
+                        if ($attempt === $maxRetries - 1) {
+                            // On last attempt, skip this purchase
+                            continue 2; // Continue to next purchase in outer loop
+                        }
+                        // Wait a tiny bit before retrying
+                        usleep(10000 * ($attempt + 1));
+                        continue;
+                    }
+                    throw $e; // Re-throw if it's a different error
+                }
+            }
+
+            if (!$purchase) {
+                continue; // Skip to next purchase if creation failed
+            }
 
             foreach ($selectedItems as $item) {
                 $baseUom = $item->itemUoms->where('is_base', true)->first();
@@ -585,32 +612,59 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($saleDates as $index => $saleDate) {
-            $customer   = $customers->random();
-            $saleNumber = Sale::generateSaleNumber($saleDate->format('Y-m-d'));
+            $customer = $customers->random();
 
-            // Select random items for this sale
-            $selectedItems = $items->random(min(2, $items->count()));
+            // Generate sale number with retry logic
+            $maxRetries = 5;
+            $sale       = null;
 
-            $subtotal = 0;
-            $sale     = Sale::create([
-                'sale_number'          => $saleNumber,
-                'customer_id'          => $customer->id,
-                'sale_date'            => $saleDate,
-                'due_date'             => $saleDate->copy()->addDays(14),
-                'subtotal'             => 0,
-                'discount1_percent'    => 0,
-                'discount1_amount'     => 0,
-                'discount2_percent'    => 0,
-                'discount2_amount'     => 0,
-                'total_after_discount' => 0,
-                'ppn_percent'          => 11,
-                'ppn_amount'           => 0,
-                'total_amount'         => 0,
-                'total_cost'           => 0,
-                'total_profit'         => 0,
-                'status'               => 'pending',
-                'notes'                => sprintf('Sale seeder #%d', $index + 1),
-            ]);
+            for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+                try {
+                    $saleNumber = Sale::generateSaleNumber($saleDate->format('Y-m-d'));
+
+                    // Select random items for this sale
+                    $selectedItems = $items->random(min(2, $items->count()));
+
+                    $subtotal = 0;
+                    $sale     = Sale::create([
+                        'sale_number'          => $saleNumber,
+                        'customer_id'          => $customer->id,
+                        'sale_date'            => $saleDate,
+                        'due_date'             => $saleDate->copy()->addDays(14),
+                        'subtotal'             => 0,
+                        'discount1_percent'    => 0,
+                        'discount1_amount'     => 0,
+                        'discount2_percent'    => 0,
+                        'discount2_amount'     => 0,
+                        'total_after_discount' => 0,
+                        'ppn_percent'          => 11,
+                        'ppn_amount'           => 0,
+                        'total_amount'         => 0,
+                        'total_cost'           => 0,
+                        'total_profit'         => 0,
+                        'status'               => 'pending',
+                        'notes'                => sprintf('Sale seeder #%d', $index + 1),
+                    ]);
+
+                    break; // Success, exit retry loop
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Check if it's a unique constraint violation
+                    if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'sale_number') || str_contains($e->getMessage(), 'sales_sale_number_unique'))) {
+                        if ($attempt === $maxRetries - 1) {
+                            // On last attempt, skip this sale
+                            continue 2; // Continue to next sale in outer loop
+                        }
+                        // Wait a tiny bit before retrying
+                        usleep(10000 * ($attempt + 1));
+                        continue;
+                    }
+                    throw $e; // Re-throw if it's a different error
+                }
+            }
+
+            if (!$sale) {
+                continue; // Skip to next sale if creation failed
+            }
 
             foreach ($selectedItems as $item) {
                 $baseUom = $item->itemUoms->where('is_base', true)->first();
