@@ -54,8 +54,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@mandorjaya.com'],
             [
-                'name' => 'Administrator',
-                'password' => Hash::make('password'),
+                'name'              => 'Administrator',
+                'password'          => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
         );
@@ -63,8 +63,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'kasir@mandorjaya.com'],
             [
-                'name' => 'Kasir',
-                'password' => Hash::make('password'),
+                'name'              => 'Kasir',
+                'password'          => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
         );
@@ -108,38 +108,38 @@ class DatabaseSeeder extends Seeder
 
         $customers = [
             [
-                'name' => 'PT Toko Maju Jaya',
-                'address' => 'Jl. Sudirman No. 123',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-12345678',
+                'name'           => 'PT Toko Maju Jaya',
+                'address'        => 'Jl. Sudirman No. 123',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-12345678',
                 'contact_person' => 'Budi Santoso',
             ],
             [
-                'name' => 'CV Sumber Rezeki',
-                'address' => 'Jl. Gatot Subroto No. 456',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-87654321',
+                'name'           => 'CV Sumber Rezeki',
+                'address'        => 'Jl. Gatot Subroto No. 456',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-87654321',
                 'contact_person' => 'Siti Nurhaliza',
             ],
             [
-                'name' => 'UD Berkah Abadi',
-                'address' => 'Jl. Thamrin No. 789',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-11223344',
+                'name'           => 'UD Berkah Abadi',
+                'address'        => 'Jl. Thamrin No. 789',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-11223344',
                 'contact_person' => 'Ahmad Hidayat',
             ],
             [
-                'name' => 'Toko Sejahtera',
-                'address' => 'Jl. Merdeka No. 321',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-55667788',
+                'name'           => 'Toko Sejahtera',
+                'address'        => 'Jl. Merdeka No. 321',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-55667788',
                 'contact_person' => 'Dewi Sartika',
             ],
             [
-                'name' => 'PT Mitra Usaha',
-                'address' => 'Jl. Asia Afrika No. 654',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-99887766',
+                'name'           => 'PT Mitra Usaha',
+                'address'        => 'Jl. Asia Afrika No. 654',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-99887766',
                 'contact_person' => 'Rudi Hartono',
             ],
         ];
@@ -161,38 +161,38 @@ class DatabaseSeeder extends Seeder
 
         $suppliers = [
             [
-                'name' => 'PT Supplier Utama',
-                'address' => 'Jl. Industri No. 100',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-11111111',
+                'name'           => 'PT Supplier Utama',
+                'address'        => 'Jl. Industri No. 100',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-11111111',
                 'contact_person' => 'Joko Widodo',
             ],
             [
-                'name' => 'CV Distributor Sejahtera',
-                'address' => 'Jl. Raya Bogor No. 200',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-22222222',
+                'name'           => 'CV Distributor Sejahtera',
+                'address'        => 'Jl. Raya Bogor No. 200',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-22222222',
                 'contact_person' => 'Susi Susanti',
             ],
             [
-                'name' => 'UD Grosir Makmur',
-                'address' => 'Jl. Pasar Minggu No. 300',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-33333333',
+                'name'           => 'UD Grosir Makmur',
+                'address'        => 'Jl. Pasar Minggu No. 300',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-33333333',
                 'contact_person' => 'Bambang Pamungkas',
             ],
             [
-                'name' => 'PT Importir Barang',
-                'address' => 'Jl. Tanah Abang No. 400',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-44444444',
+                'name'           => 'PT Importir Barang',
+                'address'        => 'Jl. Tanah Abang No. 400',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-44444444',
                 'contact_person' => 'Lukman Hakim',
             ],
             [
-                'name' => 'CV Pemasok Terpercaya',
-                'address' => 'Jl. Mangga Dua No. 500',
-                'city_id' => $cities->random()->id,
-                'phone_number' => '021-55555555',
+                'name'           => 'CV Pemasok Terpercaya',
+                'address'        => 'Jl. Mangga Dua No. 500',
+                'city_id'        => $cities->random()->id,
+                'phone_number'   => '021-55555555',
                 'contact_person' => 'Rina Wati',
             ],
         ];
@@ -208,37 +208,37 @@ class DatabaseSeeder extends Seeder
     private function seedBanks(): void
     {
         // Get COA for cash and bank (using child accounts)
-        $kasKecilCoa = ChartOfAccount::where('code', '1101')->first();
-        $bankBcaCoa = ChartOfAccount::where('code', '1103')->first();
+        $kasKecilCoa    = ChartOfAccount::where('code', '1101')->first();
+        $bankBcaCoa     = ChartOfAccount::where('code', '1103')->first();
         $bankMandiriCoa = ChartOfAccount::where('code', '1104')->first();
 
         $banks = [
             [
-                'name' => 'Bank BCA',
-                'type' => 'bank',
+                'name'                => 'Bank BCA',
+                'type'                => 'bank',
                 'chart_of_account_id' => $bankBcaCoa?->id,
-                'account_number' => '1234567890',
-                'account_name' => 'PT Mandor Jaya',
-                'balance' => 50000000.00,
-                'description' => 'Rekening utama perusahaan',
+                'account_number'      => '1234567890',
+                'account_name'        => 'PT Mandor Jaya',
+                'balance'             => 50000000.00,
+                'description'         => 'Rekening utama perusahaan',
             ],
             [
-                'name' => 'Bank Mandiri',
-                'type' => 'bank',
+                'name'                => 'Bank Mandiri',
+                'type'                => 'bank',
                 'chart_of_account_id' => $bankMandiriCoa?->id,
-                'account_number' => '0987654321',
-                'account_name' => 'PT Mandor Jaya',
-                'balance' => 30000000.00,
-                'description' => 'Rekening operasional',
+                'account_number'      => '0987654321',
+                'account_name'        => 'PT Mandor Jaya',
+                'balance'             => 30000000.00,
+                'description'         => 'Rekening operasional',
             ],
             [
-                'name' => 'Kas Kecil',
-                'type' => 'cash',
+                'name'                => 'Kas Kecil',
+                'type'                => 'cash',
                 'chart_of_account_id' => $kasKecilCoa?->id,
-                'account_number' => null,
-                'account_name' => null,
-                'balance' => 5000000.00,
-                'description' => 'Kas kecil untuk transaksi harian',
+                'account_number'      => null,
+                'account_name'        => null,
+                'balance'             => 5000000.00,
+                'description'         => 'Kas kecil untuk transaksi harian',
             ],
         ];
 
@@ -263,159 +263,163 @@ class DatabaseSeeder extends Seeder
         }
 
         $baseUom = $uoms->where('name', 'PCS')->first() ?? $uoms->first();
-        $boxUom = $uoms->where('name', 'BOX')->first();
-        $pakUom = $uoms->where('name', 'PAK')->first();
+        $boxUom  = $uoms->where('name', 'BOX')->first();
+        $pakUom  = $uoms->where('name', 'PAK')->first();
 
         $items = [
             [
-                'name' => 'Pensil 2B',
+                'name'        => 'Pensil 2B',
                 'description' => 'Pensil 2B Faber Castell',
-                'stock' => 500,
+                'stock'       => 500,
                 'modal_price' => 2000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 3000.00,
-                        'is_base' => true,
+                        'price'            => 3000.00,
+                        'is_base'          => true,
                     ],
-                    ...($boxUom ? [[
-                        'uom_id' => $boxUom->id,
-                        'conversion_value' => 12,
-                        'price' => 33000.00,
-                        'is_base' => false,
-                    ]] : []),
+                    ...($boxUom ? [
+                        [
+                            'uom_id'           => $boxUom->id,
+                            'conversion_value' => 12,
+                            'price'            => 33000.00,
+                            'is_base'          => false,
+                        ],
+                    ] : []),
                 ],
             ],
             [
-                'name' => 'Buku Tulis 38 Lembar',
+                'name'        => 'Buku Tulis 38 Lembar',
                 'description' => 'Buku tulis isi 38 lembar merk Sinar Dunia',
-                'stock' => 200,
+                'stock'       => 200,
                 'modal_price' => 2500.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 4000.00,
-                        'is_base' => true,
+                        'price'            => 4000.00,
+                        'is_base'          => true,
                     ],
-                    ...($pakUom ? [[
-                        'uom_id' => $pakUom->id,
-                        'conversion_value' => 10,
-                        'price' => 35000.00,
-                        'is_base' => false,
-                    ]] : []),
+                    ...($pakUom ? [
+                        [
+                            'uom_id'           => $pakUom->id,
+                            'conversion_value' => 10,
+                            'price'            => 35000.00,
+                            'is_base'          => false,
+                        ],
+                    ] : []),
                 ],
             ],
             [
-                'name' => 'Spidol Permanent',
+                'name'        => 'Spidol Permanent',
                 'description' => 'Spidol permanent Snowman warna hitam',
-                'stock' => 100,
+                'stock'       => 100,
                 'modal_price' => 5000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 8000.00,
-                        'is_base' => true,
+                        'price'            => 8000.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
             [
-                'name' => 'Penghapus',
+                'name'        => 'Penghapus',
                 'description' => 'Penghapus Faber Castell',
-                'stock' => 300,
+                'stock'       => 300,
                 'modal_price' => 1500.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 2500.00,
-                        'is_base' => true,
+                        'price'            => 2500.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
             [
-                'name' => 'Penggaris 30cm',
+                'name'        => 'Penggaris 30cm',
                 'description' => 'Penggaris plastik 30cm',
-                'stock' => 150,
+                'stock'       => 150,
                 'modal_price' => 3000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 5000.00,
-                        'is_base' => true,
+                        'price'            => 5000.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
             [
-                'name' => 'Stapler',
+                'name'        => 'Stapler',
                 'description' => 'Stapler kecil merk Joyko',
-                'stock' => 50,
+                'stock'       => 50,
                 'modal_price' => 15000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 25000.00,
-                        'is_base' => true,
+                        'price'            => 25000.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
             [
-                'name' => 'Isi Stapler',
+                'name'        => 'Isi Stapler',
                 'description' => 'Isi stapler ukuran standar',
-                'stock' => 1000,
+                'stock'       => 1000,
                 'modal_price' => 5000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 8000.00,
-                        'is_base' => true,
+                        'price'            => 8000.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
             [
-                'name' => 'Kertas A4',
+                'name'        => 'Kertas A4',
                 'description' => 'Kertas HVS A4 70gr',
-                'stock' => 100,
+                'stock'       => 100,
                 'modal_price' => 45000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $pakUom ? $pakUom->id : $baseUom->id,
+                        'uom_id'           => $pakUom ? $pakUom->id : $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 55000.00,
-                        'is_base' => true,
+                        'price'            => 55000.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
             [
-                'name' => 'Map Kertas',
+                'name'        => 'Map Kertas',
                 'description' => 'Map kertas warna',
-                'stock' => 200,
+                'stock'       => 200,
                 'modal_price' => 2000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 3500.00,
-                        'is_base' => true,
+                        'price'            => 3500.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
             [
-                'name' => 'Binder Clip',
+                'name'        => 'Binder Clip',
                 'description' => 'Binder clip ukuran besar',
-                'stock' => 500,
+                'stock'       => 500,
                 'modal_price' => 1000.00,
-                'uoms' => [
+                'uoms'        => [
                     [
-                        'uom_id' => $baseUom->id,
+                        'uom_id'           => $baseUom->id,
                         'conversion_value' => 1,
-                        'price' => 2000.00,
-                        'is_base' => true,
+                        'price'            => 2000.00,
+                        'is_base'          => true,
                     ],
                 ],
             ],
@@ -423,15 +427,15 @@ class DatabaseSeeder extends Seeder
 
         foreach ($items as $itemData) {
             // Check if item already exists by name
-            $item = Item::where('name', $itemData['name'])->first();
+            $item      = Item::where('name', $itemData['name'])->first();
             $isNewItem = false;
 
             if (!$item) {
-                $code = ItemService::generateCode();
-                $item = Item::create([
-                    'code' => $code,
-                    'name' => $itemData['name'],
-                    'stock' => $itemData['stock'],
+                $code      = ItemService::generateCode();
+                $item      = Item::create([
+                    'code'        => $code,
+                    'name'        => $itemData['name'],
+                    'stock'       => $itemData['stock'],
                     'description' => $itemData['description'],
                 ]);
                 $isNewItem = true;
@@ -447,12 +451,12 @@ class DatabaseSeeder extends Seeder
                 ItemUom::firstOrCreate(
                     [
                         'item_id' => $item->id,
-                        'uom_id' => $uomData['uom_id'],
+                        'uom_id'  => $uomData['uom_id'],
                     ],
                     [
                         'conversion_value' => $uomData['conversion_value'],
-                        'price' => $uomData['price'],
-                        'is_base' => $uomData['is_base'],
+                        'price'            => $uomData['price'],
+                        'is_base'          => $uomData['is_base'],
                     ]
                 );
             }
@@ -460,14 +464,14 @@ class DatabaseSeeder extends Seeder
             // Create initial stock movement only for new items
             if ($isNewItem && $itemData['stock'] > 0 && $itemData['modal_price'] > 0) {
                 StockMovement::create([
-                    'item_id' => $item->id,
-                    'reference_type' => 'OpeningBalance',
-                    'reference_id' => $item->id,
-                    'quantity' => $itemData['stock'],
-                    'unit_cost' => $itemData['modal_price'],
+                    'item_id'            => $item->id,
+                    'reference_type'     => 'OpeningBalance',
+                    'reference_id'       => $item->id,
+                    'quantity'           => $itemData['stock'],
+                    'unit_cost'          => $itemData['modal_price'],
                     'remaining_quantity' => $itemData['stock'],
-                    'movement_date' => now(),
-                    'notes' => 'Opening balance - Seeded data',
+                    'movement_date'      => now(),
+                    'notes'              => 'Opening balance - Seeded data',
                 ]);
             }
         }
@@ -476,7 +480,7 @@ class DatabaseSeeder extends Seeder
     private function seedPurchases(): void
     {
         $suppliers = Supplier::all();
-        $items = Item::with('itemUoms')->get();
+        $items     = Item::with('itemUoms')->get();
 
         if ($suppliers->isEmpty() || $items->isEmpty()) {
             return;
@@ -492,29 +496,29 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($purchaseDates as $index => $purchaseDate) {
-            $supplier = $suppliers->random();
-            $purchaseNumber = Purchase::generatePurchaseNumber();
+            $supplier       = $suppliers->random();
+            $purchaseNumber = Purchase::generatePurchaseNumber($purchaseDate->format('Y-m-d'));
 
             // Select random items for this purchase
             $selectedItems = $items->random(min(3, $items->count()));
 
             $subtotal = 0;
             $purchase = Purchase::create([
-                'purchase_number' => $purchaseNumber,
-                'supplier_id' => $supplier->id,
-                'purchase_date' => $purchaseDate,
-                'due_date' => $purchaseDate->copy()->addDays(30),
-                'subtotal' => 0,
-                'discount1_percent' => 0,
-                'discount1_amount' => 0,
-                'discount2_percent' => 0,
-                'discount2_amount' => 0,
+                'purchase_number'      => $purchaseNumber,
+                'supplier_id'          => $supplier->id,
+                'purchase_date'        => $purchaseDate,
+                'due_date'             => $purchaseDate->copy()->addDays(30),
+                'subtotal'             => 0,
+                'discount1_percent'    => 0,
+                'discount1_amount'     => 0,
+                'discount2_percent'    => 0,
+                'discount2_amount'     => 0,
                 'total_after_discount' => 0,
-                'ppn_percent' => 11,
-                'ppn_amount' => 0,
-                'total_amount' => 0,
-                'status' => 'pending',
-                'notes' => sprintf('Purchase seeder #%d', $index + 1),
+                'ppn_percent'          => 11,
+                'ppn_amount'           => 0,
+                'total_amount'         => 0,
+                'status'               => 'pending',
+                'notes'                => sprintf('Purchase seeder #%d', $index + 1),
             ]);
 
             foreach ($selectedItems as $item) {
@@ -524,35 +528,35 @@ class DatabaseSeeder extends Seeder
                 }
 
                 // Purchase price is lower than selling price (modal price)
-                $purchasePrice = $baseUom->price * 0.7; // 70% of selling price
-                $quantity = rand(10, 50);
+                $purchasePrice  = $baseUom->price * 0.7; // 70% of selling price
+                $quantity       = rand(10, 50);
                 $detailSubtotal = $quantity * $purchasePrice;
 
                 PurchaseDetail::create([
-                    'purchase_id' => $purchase->id,
-                    'item_id' => $item->id,
-                    'item_uom_id' => $baseUom->id,
-                    'quantity' => $quantity,
-                    'price' => $purchasePrice,
+                    'purchase_id'       => $purchase->id,
+                    'item_id'           => $item->id,
+                    'item_uom_id'       => $baseUom->id,
+                    'quantity'          => $quantity,
+                    'price'             => $purchasePrice,
                     'discount1_percent' => 0,
-                    'discount1_amount' => 0,
+                    'discount1_amount'  => 0,
                     'discount2_percent' => 0,
-                    'discount2_amount' => 0,
-                    'subtotal' => $detailSubtotal,
+                    'discount2_amount'  => 0,
+                    'subtotal'          => $detailSubtotal,
                 ]);
 
                 $subtotal += $detailSubtotal;
             }
 
             $totalAfterDiscount = $subtotal;
-            $ppnAmount = $totalAfterDiscount * 0.11;
-            $totalAmount = $totalAfterDiscount + $ppnAmount;
+            $ppnAmount          = $totalAfterDiscount * 0.11;
+            $totalAmount        = $totalAfterDiscount + $ppnAmount;
 
             $purchase->update([
-                'subtotal' => $subtotal,
+                'subtotal'             => $subtotal,
                 'total_after_discount' => $totalAfterDiscount,
-                'ppn_amount' => $ppnAmount,
-                'total_amount' => $totalAmount,
+                'ppn_amount'           => $ppnAmount,
+                'total_amount'         => $totalAmount,
             ]);
 
             // Confirm purchase to create stock movements
@@ -563,7 +567,7 @@ class DatabaseSeeder extends Seeder
     private function seedSales(): void
     {
         $customers = Customer::all();
-        $items = Item::with('itemUoms')->get();
+        $items     = Item::with('itemUoms')->get();
 
         if ($customers->isEmpty() || $items->isEmpty()) {
             return;
@@ -581,31 +585,31 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($saleDates as $index => $saleDate) {
-            $customer = $customers->random();
-            $saleNumber = Sale::generateSaleNumber();
+            $customer   = $customers->random();
+            $saleNumber = Sale::generateSaleNumber($saleDate->format('Y-m-d'));
 
             // Select random items for this sale
             $selectedItems = $items->random(min(2, $items->count()));
 
             $subtotal = 0;
-            $sale = Sale::create([
-                'sale_number' => $saleNumber,
-                'customer_id' => $customer->id,
-                'sale_date' => $saleDate,
-                'due_date' => $saleDate->copy()->addDays(14),
-                'subtotal' => 0,
-                'discount1_percent' => 0,
-                'discount1_amount' => 0,
-                'discount2_percent' => 0,
-                'discount2_amount' => 0,
+            $sale     = Sale::create([
+                'sale_number'          => $saleNumber,
+                'customer_id'          => $customer->id,
+                'sale_date'            => $saleDate,
+                'due_date'             => $saleDate->copy()->addDays(14),
+                'subtotal'             => 0,
+                'discount1_percent'    => 0,
+                'discount1_amount'     => 0,
+                'discount2_percent'    => 0,
+                'discount2_amount'     => 0,
                 'total_after_discount' => 0,
-                'ppn_percent' => 11,
-                'ppn_amount' => 0,
-                'total_amount' => 0,
-                'total_cost' => 0,
-                'total_profit' => 0,
-                'status' => 'pending',
-                'notes' => sprintf('Sale seeder #%d', $index + 1),
+                'ppn_percent'          => 11,
+                'ppn_amount'           => 0,
+                'total_amount'         => 0,
+                'total_cost'           => 0,
+                'total_profit'         => 0,
+                'status'               => 'pending',
+                'notes'                => sprintf('Sale seeder #%d', $index + 1),
             ]);
 
             foreach ($selectedItems as $item) {
@@ -620,22 +624,22 @@ class DatabaseSeeder extends Seeder
                     continue;
                 }
 
-                $sellingPrice = $baseUom->price;
+                $sellingPrice   = $baseUom->price;
                 $detailSubtotal = $quantity * $sellingPrice;
 
                 SaleDetail::create([
-                    'sale_id' => $sale->id,
-                    'item_id' => $item->id,
-                    'item_uom_id' => $baseUom->id,
-                    'quantity' => $quantity,
-                    'price' => $sellingPrice,
+                    'sale_id'           => $sale->id,
+                    'item_id'           => $item->id,
+                    'item_uom_id'       => $baseUom->id,
+                    'quantity'          => $quantity,
+                    'price'             => $sellingPrice,
                     'discount1_percent' => 0,
-                    'discount1_amount' => 0,
+                    'discount1_amount'  => 0,
                     'discount2_percent' => 0,
-                    'discount2_amount' => 0,
-                    'subtotal' => $detailSubtotal,
-                    'cost' => 0, // Will be calculated on confirm
-                    'profit' => 0, // Will be calculated on confirm
+                    'discount2_amount'  => 0,
+                    'subtotal'          => $detailSubtotal,
+                    'cost'              => 0, // Will be calculated on confirm
+                    'profit'            => 0, // Will be calculated on confirm
                 ]);
 
                 $subtotal += $detailSubtotal;
@@ -643,14 +647,14 @@ class DatabaseSeeder extends Seeder
 
             if ($subtotal > 0) {
                 $totalAfterDiscount = $subtotal;
-                $ppnAmount = $totalAfterDiscount * 0.11;
-                $totalAmount = $totalAfterDiscount + $ppnAmount;
+                $ppnAmount          = $totalAfterDiscount * 0.11;
+                $totalAmount        = $totalAfterDiscount + $ppnAmount;
 
                 $sale->update([
-                    'subtotal' => $subtotal,
+                    'subtotal'             => $subtotal,
                     'total_after_discount' => $totalAfterDiscount,
-                    'ppn_amount' => $ppnAmount,
-                    'total_amount' => $totalAmount,
+                    'ppn_amount'           => $ppnAmount,
+                    'total_amount'         => $totalAmount,
                 ]);
 
                 // Confirm sale to calculate FIFO cost and profit
@@ -679,26 +683,26 @@ class DatabaseSeeder extends Seeder
         $stockService = app(StockService::class);
 
         // Create 1 purchase return
-        $purchase = $purchases->random();
+        $purchase     = $purchases->random();
         $returnNumber = PurchaseReturn::generateReturnNumber();
-        $returnDate = now()->subDays(2);
+        $returnDate   = now()->subDays(2);
 
-        $subtotal = 0;
+        $subtotal       = 0;
         $purchaseReturn = PurchaseReturn::create([
-            'return_number' => $returnNumber,
-            'purchase_id' => $purchase->id,
-            'return_date' => $returnDate,
-            'subtotal' => 0,
-            'discount1_percent' => 0,
-            'discount1_amount' => 0,
-            'discount2_percent' => 0,
-            'discount2_amount' => 0,
+            'return_number'        => $returnNumber,
+            'purchase_id'          => $purchase->id,
+            'return_date'          => $returnDate,
+            'subtotal'             => 0,
+            'discount1_percent'    => 0,
+            'discount1_amount'     => 0,
+            'discount2_percent'    => 0,
+            'discount2_amount'     => 0,
             'total_after_discount' => 0,
-            'ppn_percent' => 11,
-            'ppn_amount' => 0,
-            'total_amount' => 0,
-            'status' => 'pending',
-            'reason' => 'Barang rusak/defect',
+            'ppn_percent'          => 11,
+            'ppn_amount'           => 0,
+            'total_amount'         => 0,
+            'status'               => 'pending',
+            'reason'               => 'Barang rusak/defect',
         ]);
 
         // Return 1 item from the purchase
@@ -710,15 +714,15 @@ class DatabaseSeeder extends Seeder
             PurchaseReturnDetail::create([
                 'purchase_return_id' => $purchaseReturn->id,
                 'purchase_detail_id' => $purchaseDetail->id,
-                'item_id' => $purchaseDetail->item_id,
-                'item_uom_id' => $purchaseDetail->item_uom_id,
-                'quantity' => $returnQuantity,
-                'price' => $purchaseDetail->price,
-                'discount1_percent' => 0,
-                'discount1_amount' => 0,
-                'discount2_percent' => 0,
-                'discount2_amount' => 0,
-                'subtotal' => $returnSubtotal,
+                'item_id'            => $purchaseDetail->item_id,
+                'item_uom_id'        => $purchaseDetail->item_uom_id,
+                'quantity'           => $returnQuantity,
+                'price'              => $purchaseDetail->price,
+                'discount1_percent'  => 0,
+                'discount1_amount'   => 0,
+                'discount2_percent'  => 0,
+                'discount2_amount'   => 0,
+                'subtotal'           => $returnSubtotal,
             ]);
 
             $subtotal = $returnSubtotal;
@@ -726,14 +730,14 @@ class DatabaseSeeder extends Seeder
 
         if ($subtotal > 0) {
             $totalAfterDiscount = $subtotal;
-            $ppnAmount = $totalAfterDiscount * 0.11;
-            $totalAmount = $totalAfterDiscount + $ppnAmount;
+            $ppnAmount          = $totalAfterDiscount * 0.11;
+            $totalAmount        = $totalAfterDiscount + $ppnAmount;
 
             $purchaseReturn->update([
-                'subtotal' => $subtotal,
+                'subtotal'             => $subtotal,
                 'total_after_discount' => $totalAfterDiscount,
-                'ppn_amount' => $ppnAmount,
-                'total_amount' => $totalAmount,
+                'ppn_amount'           => $ppnAmount,
+                'total_amount'         => $totalAmount,
             ]);
 
             // Confirm purchase return
@@ -760,28 +764,28 @@ class DatabaseSeeder extends Seeder
         $stockService = app(StockService::class);
 
         // Create 1 sale return
-        $sale = $sales->random();
+        $sale         = $sales->random();
         $returnNumber = SaleReturn::generateReturnNumber();
-        $returnDate = now()->subDays(1);
+        $returnDate   = now()->subDays(1);
 
-        $subtotal = 0;
+        $subtotal   = 0;
         $saleReturn = SaleReturn::create([
-            'return_number' => $returnNumber,
-            'sale_id' => $sale->id,
-            'return_date' => $returnDate,
-            'subtotal' => 0,
-            'discount1_percent' => 0,
-            'discount1_amount' => 0,
-            'discount2_percent' => 0,
-            'discount2_amount' => 0,
-            'total_after_discount' => 0,
-            'ppn_percent' => 11,
-            'ppn_amount' => 0,
-            'total_amount' => 0,
-            'total_cost' => 0,
+            'return_number'           => $returnNumber,
+            'sale_id'                 => $sale->id,
+            'return_date'             => $returnDate,
+            'subtotal'                => 0,
+            'discount1_percent'       => 0,
+            'discount1_amount'        => 0,
+            'discount2_percent'       => 0,
+            'discount2_amount'        => 0,
+            'total_after_discount'    => 0,
+            'ppn_percent'             => 11,
+            'ppn_amount'              => 0,
+            'total_amount'            => 0,
+            'total_cost'              => 0,
             'total_profit_adjustment' => 0,
-            'status' => 'pending',
-            'reason' => 'Barang tidak sesuai pesanan',
+            'status'                  => 'pending',
+            'reason'                  => 'Barang tidak sesuai pesanan',
         ]);
 
         // Return 1 item from the sale
@@ -791,18 +795,18 @@ class DatabaseSeeder extends Seeder
             $returnSubtotal = $returnQuantity * $saleDetail->price;
 
             SaleReturnDetail::create([
-                'sale_return_id' => $saleReturn->id,
-                'sale_detail_id' => $saleDetail->id,
-                'item_id' => $saleDetail->item_id,
-                'item_uom_id' => $saleDetail->item_uom_id,
-                'quantity' => $returnQuantity,
-                'price' => $saleDetail->price,
+                'sale_return_id'    => $saleReturn->id,
+                'sale_detail_id'    => $saleDetail->id,
+                'item_id'           => $saleDetail->item_id,
+                'item_uom_id'       => $saleDetail->item_uom_id,
+                'quantity'          => $returnQuantity,
+                'price'             => $saleDetail->price,
                 'discount1_percent' => 0,
-                'discount1_amount' => 0,
+                'discount1_amount'  => 0,
                 'discount2_percent' => 0,
-                'discount2_amount' => 0,
-                'subtotal' => $returnSubtotal,
-                'cost' => 0, // Will be calculated on confirm
+                'discount2_amount'  => 0,
+                'subtotal'          => $returnSubtotal,
+                'cost'              => 0, // Will be calculated on confirm
                 'profit_adjustment' => 0, // Will be calculated on confirm
             ]);
 
@@ -811,14 +815,14 @@ class DatabaseSeeder extends Seeder
 
         if ($subtotal > 0) {
             $totalAfterDiscount = $subtotal;
-            $ppnAmount = $totalAfterDiscount * 0.11;
-            $totalAmount = $totalAfterDiscount + $ppnAmount;
+            $ppnAmount          = $totalAfterDiscount * 0.11;
+            $totalAmount        = $totalAfterDiscount + $ppnAmount;
 
             $saleReturn->update([
-                'subtotal' => $subtotal,
+                'subtotal'             => $subtotal,
                 'total_after_discount' => $totalAfterDiscount,
-                'ppn_amount' => $ppnAmount,
-                'total_amount' => $totalAmount,
+                'ppn_amount'           => $ppnAmount,
+                'total_amount'         => $totalAmount,
             ]);
 
             // Confirm sale return
