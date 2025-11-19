@@ -28,15 +28,76 @@ class SaleController extends Controller
      */
     public function index(Request $request): Response
     {
-        $perPage = $request->per_page ?? 10;
+        $query = Sale::with(['customer', 'details.item', 'details.itemUom']);
 
-        $sales = Sale::with(['customer', 'details.item', 'details.itemUom'])
-            ->orderBy('sale_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate($perPage);
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('sale_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by payment status
+        if ($request->has('payment_status') && $request->payment_status && $request->payment_status !== 'all') {
+            // We'll filter this after getting the data since it's a computed attribute
+        }
+
+        // Filter by date range
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('sale_date', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('sale_date', '<=', $request->date_to);
+        }
+
+        // Sort
+        $sortBy = $request->get('sort_by', 'sale_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSortFields = ['sale_date', 'sale_number', 'total_amount', 'status'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('sale_date', 'desc');
+        }
+        $query->orderBy('id', 'desc');
+
+        $sales = $query->get()->append(['total_paid', 'remaining_amount']);
+
+        // Filter by payment status after getting data
+        if ($request->has('payment_status') && $request->payment_status && $request->payment_status !== 'all') {
+            $sales = $sales->filter(function ($sale) use ($request) {
+                if ($request->payment_status === 'paid') {
+                    return $sale->remaining_amount <= 0;
+                } elseif ($request->payment_status === 'unpaid') {
+                    return $sale->remaining_amount > 0;
+                }
+                return true;
+            })->values();
+        }
 
         return Inertia::render('transaction/sale/index', [
-            'sales' => $sales,
+            'sales' => [
+                'data' => $sales,
+            ],
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'status' => $request->get('status', 'all'),
+                'payment_status' => $request->get('payment_status', 'all'),
+                'date_from' => $request->get('date_from', ''),
+                'date_to' => $request->get('date_to', ''),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 

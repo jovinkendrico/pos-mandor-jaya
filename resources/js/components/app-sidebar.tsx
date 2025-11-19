@@ -19,15 +19,17 @@ import { index as itemIndex } from '@/routes/items';
 import { index as permissionIndex } from '@/routes/permissions';
 import { index as purchaseReturnIndex } from '@/routes/purchase-returns';
 import { index as purchaseIndex } from '@/routes/purchases';
+import { index as purchasePaymentIndex } from '@/routes/purchase-payments';
 import { index as roleIndex } from '@/routes/roles';
 import { index as saleReturnIndex } from '@/routes/sale-returns';
 import { index as saleIndex } from '@/routes/sales';
+import { index as salePaymentIndex } from '@/routes/sale-payments';
 import { index as supplierIndex } from '@/routes/suppliers';
 import { index as uomIndex } from '@/routes/uoms';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, ShoppingCart, User2 } from 'lucide-react';
+import { Database, LayoutGrid, ShoppingCart, User2, CreditCard } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -91,6 +93,21 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Retur Jual',
                 href: saleReturnIndex(),
+            },
+        ],
+    },
+    {
+        title: 'Pembayaran',
+        href: '#',
+        icon: CreditCard,
+        children: [
+            {
+                title: 'Pembayaran Pembelian',
+                href: purchasePaymentIndex(),
+            },
+            {
+                title: 'Pembayaran Penjualan',
+                href: salePaymentIndex(),
             },
         ],
     },

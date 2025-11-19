@@ -15,16 +15,42 @@ export function parseStringtoNumber(input: string): number | null {
     return parseInt(rawString, 10);
 }
 
-export function formatCurrency(input: number | null): string {
-    if (input === null || isNaN(input)) {
-        return 'Rp. ';
+export function parseCurrency(input: string): number | null {
+    if (!input || typeof input !== 'string') {
+        return null;
     }
 
+    // Remove currency symbols, spaces, and non-numeric characters except dots and commas
+    const cleaned = input.replace(/[^\d.,]/g, '');
+    
+    // Remove dots (thousand separators) and replace comma with dot (decimal separator)
+    const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+    
+    if (!normalized) {
+        return null;
+    }
+
+    const parsed = parseFloat(normalized);
+    
+    return isNaN(parsed) ? null : parsed;
+}
+
+export function formatCurrency(input: number | null | undefined): string {
+    if (input === null || input === undefined || isNaN(input as number)) {
+        return 'Rp. 0';
+    }
+
+    // Handle string input
     if (typeof input === 'string') {
         return 'Rp. ' + Number(input).toLocaleString('id-ID');
     }
 
-    return 'Rp. ' + input.toLocaleString('id-ID');
+    // Round to 2 decimal places and format
+    const rounded = Math.round(input * 100) / 100;
+    return 'Rp. ' + rounded.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    });
 }
 
 export function formatNumber(input: number): number {

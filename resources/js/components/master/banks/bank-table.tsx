@@ -72,9 +72,7 @@ const BankTable = (props: BankTableProps) => {
                         {row.account_name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {formatCurrency(
-                            parseStringtoNumber(String(row.balance)),
-                        )}
+                        {formatCurrency(row.balance)}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button
