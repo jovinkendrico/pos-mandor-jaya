@@ -34,19 +34,19 @@ class Sale extends Model
     ];
 
     protected $casts = [
-        'sale_date' => 'date',
-        'due_date' => 'date',
-        'subtotal' => 'decimal:2',
-        'discount1_percent' => 'decimal:2',
-        'discount1_amount' => 'decimal:2',
-        'discount2_percent' => 'decimal:2',
-        'discount2_amount' => 'decimal:2',
+        'sale_date'            => 'date',
+        'due_date'             => 'date',
+        'subtotal'             => 'decimal:2',
+        'discount1_percent'    => 'decimal:2',
+        'discount1_amount'     => 'decimal:2',
+        'discount2_percent'    => 'decimal:2',
+        'discount2_amount'     => 'decimal:2',
         'total_after_discount' => 'decimal:2',
-        'ppn_percent' => 'decimal:2',
-        'ppn_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'total_cost' => 'decimal:2',
-        'total_profit' => 'decimal:2',
+        'ppn_percent'          => 'decimal:2',
+        'ppn_amount'           => 'decimal:2',
+        'total_amount'         => 'decimal:2',
+        'total_cost'           => 'decimal:2',
+        'total_profit'         => 'decimal:2',
     ];
 
     public function customer(): BelongsTo
@@ -103,10 +103,13 @@ class Sale extends Model
     /**
      * Generate unique sale number
      */
-    public static function generateSaleNumber(): string
+    public static function generateSaleNumber($saleDate = null): string
     {
-        $date = now()->format('Ymd');
-        $lastSale = static::whereDate('created_at', today())
+        $date = $saleDate ? date('Ymd', strtotime($saleDate)) : now()->format('Ymd');
+
+        // Use lockForUpdate to prevent race conditions in concurrent requests
+        $lastSale = static::whereDate('sale_date', $saleDate ? date('Y-m-d', strtotime($saleDate)) : today())
+            ->lockForUpdate()
             ->orderBy('id', 'desc')
             ->first();
 

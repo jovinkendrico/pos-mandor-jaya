@@ -32,17 +32,17 @@ class Purchase extends Model
     ];
 
     protected $casts = [
-        'purchase_date' => 'date',
-        'due_date' => 'date',
-        'subtotal' => 'decimal:2',
-        'discount1_percent' => 'decimal:2',
-        'discount1_amount' => 'decimal:2',
-        'discount2_percent' => 'decimal:2',
-        'discount2_amount' => 'decimal:2',
+        'purchase_date'        => 'date',
+        'due_date'             => 'date',
+        'subtotal'             => 'decimal:2',
+        'discount1_percent'    => 'decimal:2',
+        'discount1_amount'     => 'decimal:2',
+        'discount2_percent'    => 'decimal:2',
+        'discount2_amount'     => 'decimal:2',
         'total_after_discount' => 'decimal:2',
-        'ppn_percent' => 'decimal:2',
-        'ppn_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'ppn_percent'          => 'decimal:2',
+        'ppn_amount'           => 'decimal:2',
+        'total_amount'         => 'decimal:2',
     ];
 
     public function supplier(): BelongsTo
@@ -99,10 +99,13 @@ class Purchase extends Model
     /**
      * Generate unique purchase number
      */
-    public static function generatePurchaseNumber(): string
+    public static function generatePurchaseNumber($purchaseDate = null): string
     {
-        $date = now()->format('Ymd');
-        $lastPurchase = static::whereDate('created_at', today())
+        $date = $purchaseDate ? date('Ymd', strtotime($purchaseDate)) : now()->format('Ymd');
+
+        // Use lockForUpdate to prevent race conditions in concurrent requests
+        $lastPurchase = static::whereDate('purchase_date', $purchaseDate ? date('Y-m-d', strtotime($purchaseDate)) : today())
+            ->lockForUpdate()
             ->orderBy('id', 'desc')
             ->first();
 
