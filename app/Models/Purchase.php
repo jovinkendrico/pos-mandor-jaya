@@ -104,7 +104,9 @@ class Purchase extends Model
         $date = $purchaseDate ? date('Ymd', strtotime($purchaseDate)) : now()->format('Ymd');
 
         // Use lockForUpdate to prevent race conditions in concurrent requests
-        $lastPurchase = static::whereDate('purchase_date', $purchaseDate ? date('Y-m-d', strtotime($purchaseDate)) : today())
+        // Include soft deleted records to continue sequence even if purchase was deleted
+        $lastPurchase = static::withTrashed()
+            ->whereDate('purchase_date', $purchaseDate ? date('Y-m-d', strtotime($purchaseDate)) : today())
             ->lockForUpdate()
             ->orderBy('id', 'desc')
             ->first();
