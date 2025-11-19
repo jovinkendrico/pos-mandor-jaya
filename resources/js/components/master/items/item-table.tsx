@@ -2,7 +2,12 @@ import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { TableCell } from '@/components/ui/table';
-import { formatCurrency, formatNumber, parseCurrency } from '@/lib/utils';
+import {
+    formatCurrency,
+    formatNumber,
+    formatNumberWithSeparator,
+    parseStringtoNumber,
+} from '@/lib/utils';
 import { IItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Edit, Info, Trash } from 'lucide-react';
@@ -52,10 +57,10 @@ const ItemTable = (props: ItemTableProps) => {
         'Kode',
         'Nama Barang',
         'Stok',
+        'Harga Modal',
         'Deskripsi',
         'Satuan (UOM)',
         'Harga',
-        'Perpindahan Stok',
         'Aksi',
     ];
 
@@ -88,7 +93,18 @@ const ItemTable = (props: ItemTableProps) => {
                             {row.name}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {formatNumber(row.stock)}
+                            {currentUom
+                                ? formatNumberWithSeparator(
+                                      row.stock / currentUom?.conversion_value,
+                                  )
+                                : '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {formatCurrency(
+                                parseStringtoNumber(
+                                    String(formatNumber(row.modal_price ?? 0)),
+                                ),
+                            )}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {row.description ?? '-'}
@@ -103,26 +119,28 @@ const ItemTable = (props: ItemTableProps) => {
                                 onValueChange={(newUomId) =>
                                     handleChangeUOM(row.id, Number(newUomId))
                                 }
-                                className="w-full dark:!bg-white dark:!text-primary-200"
+                                className="w-full min-w-[100px] dark:!bg-white dark:!text-primary-200"
                             />
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {formatCurrency(
-                                parseCurrency(String(currentUom?.price ?? 0)),
+                                parseStringtoNumber(
+                                    String(
+                                        formatNumber(currentUom?.price ?? 0),
+                                    ),
+                                ),
                             )}
                         </TableCell>
-                        <TableCell className="flex w-full items-center justify-center text-center">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="btn-info"
-                            >
-                                <Link href={`/items/${row.id}`}>
-                                    <Info />
-                                </Link>
-                            </Button>
-                        </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                            <Link href={`/items/${row.id}`}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="btn-info"
+                                >
+                                    <Info />
+                                </Button>
+                            </Link>
                             <Button
                                 variant="ghost"
                                 size="icon"

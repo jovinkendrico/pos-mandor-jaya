@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import useStockMovement from '@/hooks/use-stock-movement';
+import { formatNumber } from '@/lib/utils';
 import { IItemStockMovement } from '@/types';
 import { Dialog, DialogDescription } from '@radix-ui/react-dialog';
 import { useEffect } from 'react';
@@ -30,6 +31,7 @@ const StockMovementForm = (props: StockMovementFormProps) => {
         setData: setDataStockMovement,
         errors: errorsStockMovement,
         processing: processingStockMovement,
+        reset: resetStockMovement,
 
         handleSubmit,
         handleCancel,
@@ -40,6 +42,20 @@ const StockMovementForm = (props: StockMovementFormProps) => {
             setDataStockMovement('item_id', item_id);
         }
     }, [item_id, setDataStockMovement]);
+
+    useEffect(() => {
+        if (stock_movement && isModalOpen) {
+            setDataStockMovement({
+                remaining_quantity:
+                    formatNumber(stock_movement.remaining_quantity) ?? 0,
+                unit_cost: formatNumber(stock_movement.unit_cost) ?? 0,
+                movement_date: stock_movement.movement_date ?? new Date(),
+                notes: stock_movement.notes || '',
+            });
+        } else {
+            resetStockMovement();
+        }
+    }, [stock_movement, isModalOpen, setDataStockMovement, resetStockMovement]);
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalclose}>

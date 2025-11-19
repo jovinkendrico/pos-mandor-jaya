@@ -8,9 +8,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import useCustomer from '@/hooks/use-customer';
-import { ICity, ICustomer } from '@/types';
+import { ICustomer } from '@/types';
 import { Plus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import InputError from '../../input-error';
 import { Combobox, ComboboxOption } from '../../ui/combobox';
 import { Input } from '../../ui/input';
@@ -20,16 +20,15 @@ import CityForm from '../cities/city-form';
 
 interface CustomerFormProps {
     customer?: ICustomer;
-    cities: ICity[];
     isModalOpen: boolean;
     onModalClose: () => void;
+    cityComboboxOption: ComboboxOption[];
 }
 
 export default function CustomerForm(props: CustomerFormProps) {
-    const { customer, cities, isModalOpen, onModalClose } = props;
+    const { customer, isModalOpen, onModalClose, cityComboboxOption } = props;
 
     const [isAddCityModalOpen, setIsAddCityModalOpen] = useState(false);
-    const [localCities, setLocalCities] = useState<ICity[]>(cities);
 
     const {
         data: dataCustomer,
@@ -40,10 +39,6 @@ export default function CustomerForm(props: CustomerFormProps) {
         handleSubmit: handleSubmitCustomer,
         handleCancel: handleCancelCustomer,
     } = useCustomer(onModalClose);
-
-    useEffect(() => {
-        setLocalCities(cities);
-    }, [cities]);
 
     useEffect(() => {
         if (customer) {
@@ -58,13 +53,6 @@ export default function CustomerForm(props: CustomerFormProps) {
             resetCustomer();
         }
     }, [customer, isModalOpen, resetCustomer, setDataCustomer]);
-
-    const cityOptions: ComboboxOption[] = useMemo(() => {
-        return localCities.map((city) => ({
-            value: city.id.toString(),
-            label: city.name,
-        }));
-    }, [localCities]);
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
@@ -129,7 +117,7 @@ export default function CustomerForm(props: CustomerFormProps) {
                                     <div className="flex-1">
                                         <Label htmlFor="city_id">Kota</Label>
                                         <Combobox
-                                            options={cityOptions}
+                                            options={cityComboboxOption}
                                             value={dataCustomer.city_id}
                                             onValueChange={(value) =>
                                                 setDataCustomer(

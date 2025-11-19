@@ -1,5 +1,5 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
-import { cn, formatCurrency, parseCurrency } from '@/lib/utils';
+import { cn, formatCurrency, parseStringtoNumber } from '@/lib/utils';
 import { IBank } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { Badge } from '../../ui/badge';
@@ -72,7 +72,9 @@ const BankTable = (props: BankTableProps) => {
                         {row.account_name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {formatCurrency(parseCurrency(String(row.balance)))}
+                        {formatCurrency(
+                            parseStringtoNumber(String(row.balance)),
+                        )}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Button

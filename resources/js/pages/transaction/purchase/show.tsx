@@ -1,73 +1,22 @@
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import Modal from '@/components/ui/Modal/Modal';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { index, edit } from '@/routes/purchases';
-import { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { CheckCircle2, XCircle, Pencil } from 'lucide-react';
+import { cn, formatCurrency, formatDate, formatNumber } from '@/lib/utils';
+import { edit, index } from '@/routes/purchases';
+import { BreadcrumbItem, IItem, IPurchase } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, CheckCircle2, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface Supplier {
-    id: number;
-    name: string;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-}
-
-interface PurchaseDetail {
-    id: number;
-    item: Item;
-    item_uom: ItemUom;
-    quantity: string;
-    price: string;
-    discount1_percent: string;
-    discount1_amount: string;
-    discount2_percent: string;
-    discount2_amount: string;
-    subtotal: string;
-}
-
-interface Purchase {
-    id: number;
-    purchase_number: string;
-    supplier?: Supplier;
-    purchase_date: string;
-    due_date?: string;
-    subtotal: string;
-    discount1_percent: string;
-    discount1_amount: string;
-    discount2_percent: string;
-    discount2_amount: string;
-    total_after_discount: string;
-    ppn_percent: string;
-    ppn_amount: string;
-    total_amount: string;
-    status: 'pending' | 'confirmed';
-    notes?: string;
-    details: PurchaseDetail[];
-}
-
 interface PageProps {
-    purchase: Purchase;
+    purchase: IPurchase;
+    items: IItem[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -85,40 +34,52 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseShow({ purchase }: PageProps) {
-    const formatCurrency = (value: string | number) => {
-        const num = typeof value === 'string' ? parseFloat(value) : value;
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(num);
-    };
+const PurchaseShow = (props: PageProps) => {
+    const { purchase } = props;
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+    const {
+        isOpen: isConfirmModalOpen,
+        openModal: openConfirmModal,
+        closeModal: closeConfirmModal,
+    } = useDisclosure();
+
+    const tableColumn = [
+        'Kode',
+        'Nama Item',
+        'UOM',
+        'Kuantitas',
+        'Harga',
+        'Disc 1 (%)',
+        'Disc 2 (%)',
+        'Subtotal',
+    ];
 
     const handleConfirm = () => {
-        if (confirm('Konfirmasi pembelian? Stock akan bertambah dan data tidak bisa diedit lagi.')) {
-            router.post(`/purchases/${purchase.id}/confirm`, {}, {
-                onSuccess: () => toast.success('Pembelian dikonfirmasi'),
+        router.post(
+            `/purchases/${purchase.id}/confirm`,
+            {},
+            {
+                onSuccess: () => {
+                    toast.success('Pembelian dikonfirmasi');
+                    closeConfirmModal();
+                },
                 onError: () => toast.error('Gagal konfirmasi pembelian'),
-            });
-        }
+            },
+        );
     };
 
     const handleUnconfirm = () => {
-        if (confirm('Batalkan konfirmasi? Stock akan dikembalikan dan data bisa diedit kembali.')) {
-            router.post(`/purchases/${purchase.id}/unconfirm`, {}, {
-                onSuccess: () => toast.success('Konfirmasi dibatalkan'),
+        router.post(
+            `/purchases/${purchase.id}/unconfirm`,
+            {},
+            {
+                onSuccess: () => {
+                    toast.success('Konfirmasi dibatalkan');
+                    closeConfirmModal();
+                },
                 onError: () => toast.error('Gagal membatalkan konfirmasi'),
-            });
-        }
+            },
+        );
     };
 
     const handleEdit = () => {
@@ -130,31 +91,61 @@ export default function PurchaseShow({ purchase }: PageProps) {
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title={`Pembelian ${purchase.purchase_number}`} />
 
-                <div className="flex justify-between items-center mb-6">
+                <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <PageTitle title={`Pembelian ${purchase.purchase_number}`} />
-                        <div className="flex gap-2 items-center mt-2">
-                            <Badge variant={purchase.status === 'confirmed' ? 'default' : 'secondary'} className="text-sm">
-                                {purchase.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                        <div className="flex flex-row items-center gap-2">
+                            <Link href={index().url}>
+                                <ArrowLeft className="h-8 w-8" />
+                            </Link>
+                            <PageTitle
+                                title={`Pembelian ${purchase.purchase_number}`}
+                            />
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                            <Badge
+                                variant={
+                                    purchase.status === 'confirmed'
+                                        ? 'default'
+                                        : 'secondary'
+                                }
+                                className={cn(
+                                    purchase.status === 'pending'
+                                        ? 'badge-yellow-light'
+                                        : 'badge-green-light',
+                                )}
+                            >
+                                {purchase.status === 'confirmed'
+                                    ? 'Confirmed'
+                                    : 'Pending'}
                             </Badge>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         {purchase.status === 'pending' && (
                             <>
-                                <Button onClick={handleEdit} variant="outline">
-                                    <Pencil className="h-4 w-4 mr-2" />
+                                <Button
+                                    onClick={handleEdit}
+                                    variant="secondary"
+                                    className="btn-secondary"
+                                >
+                                    <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                 </Button>
-                                <Button onClick={handleConfirm}>
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                <Button
+                                    onClick={openConfirmModal}
+                                    className="btn-primary"
+                                >
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
                                     Konfirmasi
                                 </Button>
                             </>
                         )}
                         {purchase.status === 'confirmed' && (
-                            <Button onClick={handleUnconfirm} variant="destructive">
-                                <XCircle className="h-4 w-4 mr-2" />
+                            <Button
+                                onClick={openConfirmModal}
+                                className="btn-danger"
+                            >
+                                <XCircle className="mr-2 h-4 w-4" />
                                 Batalkan Konfirmasi
                             </Button>
                         )}
@@ -162,122 +153,217 @@ export default function PurchaseShow({ purchase }: PageProps) {
                 </div>
 
                 {/* Purchase Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <Card>
+                <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <Card className="content">
                         <CardHeader>
                             <CardTitle>Informasi Pembelian</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Supplier:</span>
-                                <span className="font-medium">{purchase.supplier?.name || '-'}</span>
+                                <span className="text-muted-foreground">
+                                    Supplier:
+                                </span>
+                                <span className="font-medium">
+                                    {purchase.supplier?.name || '-'}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Tanggal:</span>
-                                <span className="font-medium">{formatDate(purchase.purchase_date)}</span>
+                                <span className="text-muted-foreground">
+                                    Tanggal:
+                                </span>
+                                <span className="font-medium">
+                                    {formatDate(purchase.purchase_date)}
+                                </span>
                             </div>
                             {purchase.due_date && (
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Jatuh Tempo:</span>
-                                    <span className="font-medium">{formatDate(purchase.due_date)}</span>
+                                    <span className="text-muted-foreground">
+                                        Jatuh Tempo:
+                                    </span>
+                                    <span className="font-medium">
+                                        {formatDate(purchase.due_date)}
+                                    </span>
                                 </div>
                             )}
                             {purchase.notes && (
                                 <div className="flex flex-col">
-                                    <span className="text-muted-foreground">Catatan:</span>
-                                    <span className="font-medium mt-1">{purchase.notes}</span>
+                                    <span className="text-muted-foreground">
+                                        Catatan:
+                                    </span>
+                                    <span className="mt-1 font-medium">
+                                        {purchase.notes}
+                                    </span>
                                 </div>
                             )}
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="content">
                         <CardHeader>
                             <CardTitle>Ringkasan</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Subtotal:</span>
-                                <span>{formatCurrency(purchase.subtotal)}</span>
+                                <span className="text-muted-foreground">
+                                    Subtotal:
+                                </span>
+                                <span>
+                                    {formatCurrency(purchase.subtotal ?? 0)}
+                                </span>
                             </div>
-                            {parseFloat(purchase.discount1_percent) > 0 && (
-                                <div className="flex justify-between text-red-600">
-                                    <span>Diskon 1 ({purchase.discount1_percent}%):</span>
-                                    <span>-{formatCurrency(purchase.discount1_amount)}</span>
+                            {formatNumber(purchase.discount1_percent ?? 0) >
+                                0 && (
+                                <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                    <span>
+                                        Diskon 1 (
+                                        {formatNumber(
+                                            purchase.discount1_percent ?? 0,
+                                        )}
+                                        %):
+                                    </span>
+                                    <span>
+                                        -
+                                        {formatCurrency(
+                                            purchase.discount1_amount ?? 0,
+                                        )}
+                                    </span>
                                 </div>
                             )}
-                            {parseFloat(purchase.discount2_percent) > 0 && (
-                                <div className="flex justify-between text-red-600">
-                                    <span>Diskon 2 ({purchase.discount2_percent}%):</span>
-                                    <span>-{formatCurrency(purchase.discount2_amount)}</span>
+                            {formatNumber(purchase.discount2_percent ?? 0) >
+                                0 && (
+                                <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                    <span>
+                                        Diskon 2 (
+                                        {formatNumber(
+                                            purchase.discount2_percent ?? 0,
+                                        )}
+                                        %):
+                                    </span>
+                                    <span>
+                                        -
+                                        {formatCurrency(
+                                            purchase.discount2_amount ?? 0,
+                                        )}
+                                    </span>
                                 </div>
                             )}
-                            {parseFloat(purchase.ppn_percent) > 0 && (
-                                <div className="flex justify-between text-blue-600">
-                                    <span>PPN ({purchase.ppn_percent}%):</span>
-                                    <span>+{formatCurrency(purchase.ppn_amount)}</span>
+                            {formatNumber(purchase.ppn_percent ?? 0) > 0 && (
+                                <div className="flex justify-between text-blue-600 dark:text-primary-700">
+                                    <span>
+                                        PPN (
+                                        {formatNumber(
+                                            purchase.ppn_percent ?? 0,
+                                        )}
+                                        %):
+                                    </span>
+                                    <span>
+                                        +
+                                        {formatCurrency(
+                                            purchase.ppn_amount ?? 0,
+                                        )}
+                                    </span>
                                 </div>
                             )}
-                            <div className="flex justify-between font-bold text-lg border-t pt-2">
+                            <div className="flex justify-between border-t pt-2 text-lg font-bold">
                                 <span>TOTAL:</span>
-                                <span>{formatCurrency(purchase.total_amount)}</span>
+                                <span>
+                                    {formatCurrency(purchase.total_amount)}
+                                </span>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Items Table */}
-                <Card>
+                <Card className="content">
                     <CardHeader>
-                        <CardTitle>Detail Items</CardTitle>
+                        <CardTitle>Detail Barang</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[100px]">Kode</TableHead>
-                                    <TableHead>Nama Item</TableHead>
-                                    <TableHead>UOM</TableHead>
-                                    <TableHead className="text-right">Qty</TableHead>
-                                    <TableHead className="text-right">Harga</TableHead>
-                                    <TableHead className="text-right">Disc 1</TableHead>
-                                    <TableHead className="text-right">Disc 2</TableHead>
-                                    <TableHead className="text-right">Subtotal</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {purchase.details.map((detail) => (
-                                    <TableRow key={detail.id}>
-                                        <TableCell className="font-mono">{detail.item.code}</TableCell>
-                                        <TableCell>{detail.item.name}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">{detail.item_uom.uom_name}</Badge>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <TableLayout
+                                tableColumn={tableColumn}
+                                tableRow={purchase.details}
+                                pageFrom={1}
+                                renderRow={(detail) => (
+                                    <>
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            {detail.item?.code}
                                         </TableCell>
-                                        <TableCell className="text-right">
-                                            {parseFloat(detail.quantity).toLocaleString('id-ID')}
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            {detail.item?.name}
                                         </TableCell>
-                                        <TableCell className="text-right">{formatCurrency(detail.price)}</TableCell>
-                                        <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount1_percent) > 0
-                                                ? `${detail.discount1_percent}%`
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            <Badge variant="outline">
+                                                {detail.item_uom?.uom.name}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            {formatNumber(
+                                                detail.quantity,
+                                            ).toLocaleString('id-ID')}
+                                        </TableCell>
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            {formatCurrency(detail.price)}
+                                        </TableCell>
+                                        <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
+                                            {formatNumber(
+                                                detail.discount1_percent ?? 0,
+                                            ) > 0
+                                                ? `${formatNumber(
+                                                      detail.discount1_percent ??
+                                                          0,
+                                                  )}%`
                                                 : '-'}
                                         </TableCell>
-                                        <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount2_percent) > 0
-                                                ? `${detail.discount2_percent}%`
+                                        <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
+                                            {formatNumber(
+                                                detail.discount2_percent ?? 0,
+                                            ) > 0
+                                                ? `${formatNumber(
+                                                      detail.discount2_percent ??
+                                                          0,
+                                                  )}%`
                                                 : '-'}
                                         </TableCell>
-                                        <TableCell className="text-right font-medium">
-                                            {formatCurrency(detail.subtotal)}
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            {formatCurrency(
+                                                detail.subtotal ?? 0,
+                                            )}
                                         </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                    </>
+                                )}
+                            />
+                        </div>
                     </CardContent>
                 </Card>
+                <Modal
+                    titleDesc={
+                        purchase.status === 'pending'
+                            ? 'Konfirmasi Pembelian?'
+                            : 'Batalkan Konfirmasi?'
+                    }
+                    contentDesc={
+                        purchase.status === 'pending'
+                            ? 'Stock akan bertambah dan data tidak bisa diedit lagi.'
+                            : 'Stock akan dikembalikan dan data bisa diedit kembali.'
+                    }
+                    submitText={
+                        purchase.status === 'pending'
+                            ? 'Konfirmasi'
+                            : 'Batalkan Konfirmasi'
+                    }
+                    isModalOpen={isConfirmModalOpen}
+                    onModalClose={closeConfirmModal}
+                    handleSubmit={
+                        purchase.status === 'pending'
+                            ? handleConfirm
+                            : handleUnconfirm
+                    }
+                />
             </AppLayout>
         </>
     );
-}
+};
 
+export default PurchaseShow;

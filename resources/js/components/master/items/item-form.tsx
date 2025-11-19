@@ -13,7 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import useItem from '@/hooks/use-item';
-import { cn } from '@/lib/utils';
+import {
+    cn,
+    formatCurrency,
+    formatNumberWithSeparator,
+    parseStringtoNumber,
+} from '@/lib/utils';
 import { IItem, IUOM } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -31,6 +36,11 @@ const ItemForm = (props: ItemFormProps) => {
 
     const [localUOMS, setLocalUOMS] = useState<IUOM[]>(uomOptions);
     const [isAddUOMModalOpen, setIsAddUOMModalOpen] = useState(false);
+    const [priceDisplayValues, setPriceDisplayValues] = useState<string[]>([]);
+    const [conversionDisplayValues, setConversionDisplayValues] = useState<
+        string[]
+    >([]);
+    const [stockDisplayValue, setStockDisplayValue] = useState('');
 
     const {
         data: dataItem,
@@ -45,6 +55,9 @@ const ItemForm = (props: ItemFormProps) => {
         handleSubmit: handleSubmitItem,
         handleCancel: handleCancelItem,
         handleChangeUOM,
+        handleStockChange,
+        handlePriceChange,
+        handleConversionValueChange,
     } = useItem(onModalClose);
 
     useMemo(() => {
@@ -65,8 +78,24 @@ const ItemForm = (props: ItemFormProps) => {
             setDataItem('modal_price', 0);
             setDataItem('description', item.description ?? '');
             setDataItem('uoms', item.item_uoms);
+
+            setStockDisplayValue(formatNumberWithSeparator(item.stock));
+
+            const formattedPrices = item.item_uoms.map((uom) =>
+                formatCurrency(uom.price || 0),
+            );
+            const formattedConversions = item.item_uoms.map((uom) =>
+                uom.conversion_value
+                    ? formatNumberWithSeparator(uom.conversion_value)
+                    : '0',
+            );
+            setPriceDisplayValues(formattedPrices);
+            setConversionDisplayValues(formattedConversions);
         } else {
             resetItem();
+            setStockDisplayValue('');
+            setPriceDisplayValues([]);
+            setConversionDisplayValues([]);
         }
     }, [isModalOpen, item, setDataItem, resetItem]);
 
@@ -108,13 +137,10 @@ const ItemForm = (props: ItemFormProps) => {
                             <Label htmlFor="stock">Stok (dalam Base UOM)</Label>
                             <Input
                                 id="stock"
-                                type="number"
-                                value={dataItem.stock ?? 0}
+                                type="text"
+                                value={stockDisplayValue}
                                 onChange={(e) =>
-                                    setDataItem(
-                                        'stock',
-                                        Number(e.target.value) || 0,
-                                    )
+                                    handleStockChange(e, setStockDisplayValue)
                                 }
                                 placeholder="Cth: 100"
                                 disabled={processingItem}
@@ -131,13 +157,15 @@ const ItemForm = (props: ItemFormProps) => {
                             </Label>
                             <Input
                                 id="modal_price"
-                                type="number"
-                                min={0}
-                                value={dataItem.modal_price ?? 0}
+                                type="text"
+                                value={formatCurrency(
+                                    dataItem.modal_price ?? 0,
+                                )}
                                 onChange={(e) =>
                                     setDataItem(
                                         'modal_price',
-                                        Number(e.target.value) || 0,
+                                        parseStringtoNumber(e.target.value) ||
+                                            0,
                                     )
                                 }
                                 placeholder="Cth: 15000"
@@ -197,9 +225,9 @@ const ItemForm = (props: ItemFormProps) => {
                                 {dataItem.uoms.map((uom, index) => (
                                     <div
                                         key={index}
-                                        className="content input-box mb-4 flex flex-row gap-4 rounded-lg border bg-gray-100 p-3"
+                                        className="content input-box mb-4 flex flex-col gap-4 rounded-lg border bg-gray-100 p-3 sm:flex-row"
                                     >
-                                        <div className="w-1/4">
+                                        <div className="w-full sm:w-1/4">
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex-1">
                                                     <Label
@@ -244,6 +272,13 @@ const ItemForm = (props: ItemFormProps) => {
                                                                 'uom.name',
                                                                 setSelectedUOM.name,
                                                             );
+                                                            handleChangeUOM(
+                                                                index,
+                                                                'uom_id',
+                                                                Number(
+                                                                    newValue,
+                                                                ),
+                                                            );
                                                         }}
                                                         placeholder="Pilih/cari UOM..."
                                                         searchPlaceholder="Cari UOM..."
@@ -274,41 +309,35 @@ const ItemForm = (props: ItemFormProps) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="w-1/4">
+                                        <div className="w-full sm:w-1/4">
                                             <div className="flex flex-col gap-2">
                                                 <Label
                                                     htmlFor={`conversion_${index}`}
                                                 >
-                                                    Konversi ke Base{' '}
+                                                    Nilai Konversi{' '}
                                                     <span className="text-red-500">
                                                         *
                                                     </span>
                                                 </Label>
                                                 <Input
                                                     id={`conversion_${index}`}
-                                                    type="number"
-                                                    step="1"
-                                                    value={uom.conversion_value}
+                                                    type="text"
+                                                    value={
+                                                        uom.is_base
+                                                            ? '1'
+                                                            : (conversionDisplayValues[
+                                                                  index
+                                                              ] ?? '0')
+                                                    }
                                                     onChange={(e) => {
-                                                        if (!uom.is_base) {
-                                                            handleChangeUOM(
-                                                                index,
-                                                                'conversion_value',
-                                                                Number(
-                                                                    e.target
-                                                                        .value,
-                                                                ),
-                                                            );
-                                                        } else {
-                                                            handleChangeUOM(
-                                                                index,
-                                                                'conversion_value',
-                                                                1,
-                                                            );
-                                                        }
+                                                        handleConversionValueChange(
+                                                            index,
+                                                            e,
+                                                            conversionDisplayValues,
+                                                            setConversionDisplayValues,
+                                                        );
                                                     }}
                                                     className="input-box"
-                                                    required
                                                     disabled={
                                                         processingItem ||
                                                         uom.is_base
@@ -328,7 +357,7 @@ const ItemForm = (props: ItemFormProps) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="w-1/4">
+                                        <div className="w-full sm:w-1/4">
                                             <div className="flex flex-col gap-2">
                                                 <Label
                                                     htmlFor={`price_${index}`}
@@ -341,32 +370,27 @@ const ItemForm = (props: ItemFormProps) => {
                                                 <Input
                                                     id={`price_${index}`}
                                                     type="text"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={uom.price}
-                                                    onChange={(e) => {
-                                                        handleChangeUOM(
+                                                    value={
+                                                        priceDisplayValues[
+                                                            index
+                                                        ] || 'Rp. 0'
+                                                    }
+                                                    onChange={(e) =>
+                                                        handlePriceChange(
                                                             index,
-                                                            'price',
-                                                            Number(
-                                                                e.target.value,
-                                                            )
-                                                                ? Number(
-                                                                      e.target
-                                                                          .value,
-                                                                  )
-                                                                : 0,
-                                                        );
-                                                    }}
+                                                            e,
+                                                            priceDisplayValues,
+                                                            setPriceDisplayValues,
+                                                        )
+                                                    }
                                                     placeholder="0"
-                                                    required
                                                     disabled={undefined}
                                                     className="input-box"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="flex w-1/4 justify-center">
-                                            <div className="flex w-3/4 items-center justify-between gap-4">
+                                        <div className="flex w-full justify-center sm:w-1/4">
+                                            <div className="flex items-center justify-between gap-4 sm:w-3/4">
                                                 <div className="flex w-full justify-center">
                                                     <Badge
                                                         variant={

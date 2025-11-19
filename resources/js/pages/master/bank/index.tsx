@@ -84,7 +84,7 @@ const BankIndex = (props: PageProps) => {
                     isModalOpen={isEditModalOpen}
                     bank={selectedBank}
                     onModalClose={closeEditModal}
-                    chartOfAccounts={chartOfAccounts}
+                    chartsOfAccounts={chartOfAccounts}
                 />
                 <DeleteModalLayout
                     dataName={selectedBank?.name}

@@ -7,7 +7,7 @@ import {
     setMonth as setMonthFns,
     setYear as setYearFns,
 } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ export function DatePicker({
 }: DatePickerProps) {
     const [open, setOpen] = React.useState(false);
 
-    const [month, setMonth] = React.useState(value || new Date());
+    const [month, setMonth] = React.useState(value || undefined);
 
     const months = [
         'Januari',
@@ -65,7 +65,8 @@ export function DatePicker({
     );
 
     const handleMonthChange = (monthStr: string) => {
-        const newDate = setMonthFns(month, months.indexOf(monthStr));
+        if (!month) return;
+        const newDate = setMonthFns(month as Date, months.indexOf(monthStr));
         setMonth(newDate);
     };
 
@@ -93,7 +94,7 @@ export function DatePicker({
                     variant="outline"
                     data-empty={!value}
                     className={cn(
-                        'w-[280px] justify-start text-left font-normal data-[empty=true]:text-muted-foreground',
+                        'w-full max-w-48 justify-start text-left font-normal data-[empty=true]:text-muted-foreground',
                         className,
                     )}
                 >
@@ -103,13 +104,14 @@ export function DatePicker({
                     ) : (
                         <span>Pick a date</span>
                     )}
+                    <ChevronDown />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
                 <div className="flex justify-between p-2">
                     <Select
                         onValueChange={handleMonthChange}
-                        value={months[getMonth(month)]}
+                        value={months[getMonth(month as Date)]}
                     >
                         <SelectTrigger className="w-[110px]">
                             <SelectValue placeholder="Month" />
@@ -124,7 +126,11 @@ export function DatePicker({
                     </Select>
                     <Select
                         onValueChange={handleYearChange}
-                        value={getYear(month).toString()}
+                        value={
+                            typeof month === 'string'
+                                ? 'Select Date'
+                                : getYear(month as Date).toString()
+                        }
                     >
                         <SelectTrigger className="w-[110px]">
                             <SelectValue placeholder="Year" />
@@ -142,7 +148,7 @@ export function DatePicker({
                     mode="single"
                     selected={value}
                     onSelect={handleSelect}
-                    month={month}
+                    month={typeof month === 'string' ? undefined : month}
                     onMonthChange={setMonth}
                     locale={id}
                 />

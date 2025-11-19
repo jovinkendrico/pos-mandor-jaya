@@ -2,24 +2,20 @@ import SupplierForm from '@/components/master/suppliers/supplier-form';
 import SupplierTable from '@/components/master/suppliers/supplier-table';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
+import { ComboboxOption } from '@/components/ui/combobox';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
+import useCity from '@/hooks/use-city';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroySupplier, index } from '@/routes/suppliers';
 import { BreadcrumbItem, ISupplier, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
-
-interface City {
-    id: number;
-    name: string;
-}
+import { useEffect, useState } from 'react';
 
 interface PageProps {
     suppliers: PaginatedData<ISupplier>;
-    cities: City[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -34,7 +30,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const SupplierIndex = (props: PageProps) => {
-    const { suppliers, cities } = props;
+    const { suppliers } = props;
+    const { getCityData } = useCity();
+    const [cityOptions, setCityOptions] = useState<ComboboxOption[]>([]);
 
     const {
         isOpen: isEditModalOpen,
@@ -60,6 +58,14 @@ const SupplierIndex = (props: PageProps) => {
         setSelectedSupplier(supplier);
         openDeleteModal();
     };
+
+    useEffect(() => {
+        const fetchCityData = async () => {
+            const response = await getCityData();
+            setCityOptions(response);
+        };
+        fetchCityData();
+    }, [getCityData]);
 
     return (
         <>
@@ -90,8 +96,8 @@ const SupplierIndex = (props: PageProps) => {
                 <SupplierForm
                     isModalOpen={isEditModalOpen}
                     supplier={selectedSupplier}
-                    cities={cities}
                     onModalClose={closeEditModal}
+                    cityComboboxOption={cityOptions}
                 />
                 <DeleteModalLayout
                     dataId={selectedSupplier?.id}
