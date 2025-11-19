@@ -111,24 +111,51 @@ class PurchaseController extends Controller
 
             $totalAmount = $totalAfterDiscount + $ppnAmount;
 
-            // Create purchase
-            $purchase = Purchase::create([
-                'purchase_number'      => Purchase::generatePurchaseNumber(),
-                'supplier_id'          => $request->supplier_id,
-                'purchase_date'        => $request->purchase_date,
-                'due_date'             => $request->due_date,
-                'subtotal'             => $subtotal,
-                'discount1_percent'    => $discount1Percent,
-                'discount1_amount'     => $discount1Amount,
-                'discount2_percent'    => $discount2Percent,
-                'discount2_amount'     => $discount2Amount,
-                'total_after_discount' => $totalAfterDiscount,
-                'ppn_percent'          => $ppnPercent,
-                'ppn_amount'           => $ppnAmount,
-                'total_amount'         => $totalAmount,
-                'status'               => 'pending',
-                'notes'                => $request->notes,
-            ]);
+            // Generate purchase number with retry logic to handle race conditions
+            $maxRetries = 5;
+            $purchase   = null;
+
+            for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+                try {
+                    $purchaseNumber = Purchase::generatePurchaseNumber($request->purchase_date);
+
+                    // Create purchase
+                    $purchase = Purchase::create([
+                        'purchase_number'      => $purchaseNumber,
+                        'supplier_id'          => $request->supplier_id,
+                        'purchase_date'        => $request->purchase_date,
+                        'due_date'             => $request->due_date,
+                        'subtotal'             => $subtotal,
+                        'discount1_percent'    => $discount1Percent,
+                        'discount1_amount'     => $discount1Amount,
+                        'discount2_percent'    => $discount2Percent,
+                        'discount2_amount'     => $discount2Amount,
+                        'total_after_discount' => $totalAfterDiscount,
+                        'ppn_percent'          => $ppnPercent,
+                        'ppn_amount'           => $ppnAmount,
+                        'total_amount'         => $totalAmount,
+                        'status'               => 'pending',
+                        'notes'                => $request->notes,
+                    ]);
+
+                    break; // Success, exit retry loop
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Check if it's a unique constraint violation (SQLSTATE 23000)
+                    if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'purchase_number') || str_contains($e->getMessage(), 'purchases_purchase_number_unique'))) {
+                        if ($attempt === $maxRetries - 1) {
+                            throw $e; // Re-throw on last attempt
+                        }
+                        // Wait a tiny bit before retrying (microseconds)
+                        usleep(10000 * ($attempt + 1)); // 10ms, 20ms, 30ms, etc.
+                        continue;
+                    }
+                    throw $e; // Re-throw if it's a different error
+                }
+            }
+
+            if (!$purchase) {
+                throw new \Exception('Failed to create purchase after ' . $maxRetries . ' attempts');
+            }
 
             // Create purchase details
             foreach ($detailsData as $detailData) {

@@ -16,9 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
-    public function __construct(private readonly StockService $stockService)
-    {
-    }
+    public function __construct(private readonly StockService $stockService) {}
 
     /**
      * Display a listing of the resource.
@@ -48,7 +46,7 @@ class ItemController extends Controller
     public function store(StoreItemRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            $code = ItemService::generateCode();
+            $code         = ItemService::generateCode();
             $openingStock = (float) ($request->stock ?? 0);
 
             $item = Item::create([
