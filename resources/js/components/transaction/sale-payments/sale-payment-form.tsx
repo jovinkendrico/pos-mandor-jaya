@@ -114,7 +114,8 @@ export default function SalePaymentForm({
         const newItems = [...form.data.items];
         const sale = sales.find((s) => s.id === Number(saleId));
         if (sale) {
-            const remaining = (sale.remaining_amount || sale.total_amount) - (sale.total_paid || 0);
+            // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
+            const remaining = sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0));
             newItems[index] = {
                 ...newItems[index],
                 sale_id: Number(saleId),
@@ -135,7 +136,8 @@ export default function SalePaymentForm({
         const sale = sales.find((s) => s.id === saleId);
 
         if (sale) {
-            const remaining = (sale.remaining_amount || sale.total_amount) - (sale.total_paid || 0);
+            // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
+            const remaining = sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0));
             const amount = Math.min(Math.max(0, rawValue), remaining);
             newItems[index] = {
                 ...newItems[index],
@@ -313,8 +315,9 @@ export default function SalePaymentForm({
                                 ) : (
                                     form.data.items.map((item, index) => {
                                         const sale = sales.find((s) => s.id === item.sale_id);
+                                        // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
                                         const remaining = sale
-                                            ? (sale.remaining_amount || sale.total_amount) - (sale.total_paid || 0)
+                                            ? (sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0)))
                                             : 0;
 
                                         return (

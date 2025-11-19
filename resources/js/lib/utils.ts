@@ -15,6 +15,26 @@ export function parseStringtoNumber(input: string): number | null {
     return parseInt(rawString, 10);
 }
 
+export function parseCurrency(input: string): number | null {
+    if (!input || typeof input !== 'string') {
+        return null;
+    }
+
+    // Remove currency symbols, spaces, and non-numeric characters except dots and commas
+    const cleaned = input.replace(/[^\d.,]/g, '');
+    
+    // Remove dots (thousand separators) and replace comma with dot (decimal separator)
+    const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+    
+    if (!normalized) {
+        return null;
+    }
+
+    const parsed = parseFloat(normalized);
+    
+    return isNaN(parsed) ? null : parsed;
+}
+
 export function formatCurrency(input: number | null | undefined): string {
     if (input === null || input === undefined || isNaN(input as number)) {
         return 'Rp. 0';

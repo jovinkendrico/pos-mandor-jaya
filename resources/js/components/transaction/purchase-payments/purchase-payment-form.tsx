@@ -114,7 +114,8 @@ export default function PurchasePaymentForm({
         const newItems = [...form.data.items];
         const purchase = purchases.find((p) => p.id === Number(purchaseId));
         if (purchase) {
-            const remaining = (purchase.remaining_amount || purchase.total_amount) - (purchase.total_paid || 0);
+            // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
+            const remaining = purchase.remaining_amount ?? (Number(purchase.total_amount) - (purchase.total_paid || 0));
             newItems[index] = {
                 ...newItems[index],
                 purchase_id: Number(purchaseId),
@@ -135,7 +136,8 @@ export default function PurchasePaymentForm({
         const purchase = purchases.find((p) => p.id === purchaseId);
 
         if (purchase) {
-            const remaining = (purchase.remaining_amount || purchase.total_amount) - (purchase.total_paid || 0);
+            // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
+            const remaining = purchase.remaining_amount ?? (Number(purchase.total_amount) - (purchase.total_paid || 0));
             const amount = Math.min(Math.max(0, rawValue), remaining);
             newItems[index] = {
                 ...newItems[index],
@@ -313,8 +315,9 @@ export default function PurchasePaymentForm({
                                 ) : (
                                     form.data.items.map((item, index) => {
                                         const purchase = purchases.find((p) => p.id === item.purchase_id);
+                                        // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
                                         const remaining = purchase
-                                            ? (purchase.remaining_amount || purchase.total_amount) - (purchase.total_paid || 0)
+                                            ? (purchase.remaining_amount ?? (Number(purchase.total_amount) - (purchase.total_paid || 0)))
                                             : 0;
 
                                         return (
