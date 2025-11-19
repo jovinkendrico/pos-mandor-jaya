@@ -11,8 +11,8 @@ interface TablePaginationProps {
 const TablePagination = (props: TablePaginationProps) => {
     const { data } = props;
     return (
-        <div className="mt-4 flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
+        <div className="mt-4 flex flex-col items-center gap-4 md:flex-row md:justify-between md:gap-0">
+            <div className="px-3 text-sm text-muted-foreground">
                 <span className="font-extralight">
                     Menampilkan{' '}
                     <strong className="font-extrabold">{data.from}</strong>{' '}

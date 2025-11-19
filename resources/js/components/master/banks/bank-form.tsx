@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import useBanks from '@/hooks/use-banks';
-import { formatCurrency, parseCurrency } from '@/lib/utils';
+import { formatCurrency, parseStringtoNumber } from '@/lib/utils';
 import { IBank, IChartOfAccount } from '@/types';
 import { ChangeEvent, useEffect, useState } from 'react';
 import InputError from '../../input-error';
@@ -28,11 +28,11 @@ interface BankFormProps {
     bank?: IBank;
     isModalOpen: boolean;
     onModalClose: () => void;
-    chartOfAccounts?: IChartOfAccount[];
+    chartsOfAccounts?: IChartOfAccount[];
 }
 
 const BankForm = (props: BankFormProps) => {
-    const { bank, isModalOpen, onModalClose, chartOfAccounts = [] } = props;
+    const { bank, isModalOpen, onModalClose } = props;
 
     const {
         data,
@@ -52,7 +52,6 @@ const BankForm = (props: BankFormProps) => {
             setData({
                 name: bank.name,
                 type: bank.type,
-                chart_of_account_id: bank.chart_of_account_id || null,
                 account_number: bank.account_number || '',
                 account_name: bank.account_name || '',
                 balance: bank.balance || 0,
@@ -81,7 +80,7 @@ const BankForm = (props: BankFormProps) => {
             return;
         }
 
-        const rawValue = parseCurrency(input);
+        const rawValue = parseStringtoNumber(input);
 
         setData('balance', rawValue as number);
 
@@ -155,47 +154,6 @@ const BankForm = (props: BankFormProps) => {
                                     <InputError message={errors.type} />
                                 )}
                             </div>
-                        </div>
-
-                        <div>
-                            <Label htmlFor="chart_of_account_id">
-                                Chart of Account
-                            </Label>
-                            <Select
-                                value={
-                                    data.chart_of_account_id
-                                        ? data.chart_of_account_id.toString()
-                                        : 'none'
-                                }
-                                onValueChange={(value) =>
-                                    setData(
-                                        'chart_of_account_id',
-                                        value === 'none' ? null : parseInt(value),
-                                    )
-                                }
-                            >
-                                <SelectTrigger className="w-full font-medium dark:!bg-white dark:!text-primary-200">
-                                    <SelectValue placeholder="Pilih Chart of Account" />
-                                </SelectTrigger>
-                                <SelectContent className="dark:data-[selected=true]:bg-primary-400/30">
-                                    <SelectItem value="none">
-                                        Pilih Chart of Account
-                                    </SelectItem>
-                                    {chartOfAccounts.map((coa) => (
-                                        <SelectItem
-                                            key={coa.id}
-                                            value={coa.id.toString()}
-                                        >
-                                            {coa.code} - {coa.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {errors.chart_of_account_id && (
-                                <InputError
-                                    message={errors.chart_of_account_id}
-                                />
-                            )}
                         </div>
 
                         {data.type === 'bank' && (

@@ -1,6 +1,12 @@
+import {
+    formatCurrency,
+    formatNumberWithSeparator,
+    parseStringtoNumber,
+} from '@/lib/utils';
 import { destroy, store, update } from '@/routes/items';
 import { IItem, IItemUOM } from '@/types';
 import { router, useForm } from '@inertiajs/react';
+import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
@@ -24,10 +30,13 @@ const itemSchema = Yup.object().shape({
     stock: Yup.number().nullable(),
     modal_price: Yup.number()
         .nullable()
-        .min(0, 'Harga modal tidak boleh kurang dari 0.')
+        .min(0, 'Harga modal tidak boleh negatif.')
         .when('stock', {
             is: (value: unknown) => Number(value ?? 0) > 0,
-            then: (schema) => schema.required('Harga modal wajib diisi ketika stok awal diisi.'),
+            then: (schema) =>
+                schema.required(
+                    'Harga modal wajib diisi ketika stok awal diisi.',
+                ),
             otherwise: (schema) => schema,
         }),
     description: Yup.string().nullable().max(255, 'Maksimal 255 karakter.'),
@@ -58,6 +67,15 @@ const itemSchema = Yup.object().shape({
                 }
 
                 return true; // If no base found, this test passes (because 'one-base-uom' test will fail)
+            },
+        )
+        .test(
+            'unique-uoms',
+            'UOM yang sama tidak boleh dipilih lebih dari 1 kali',
+            (uomsArray) => {
+                if (!uomsArray) return true; // Let the other test handle empty/invalid arrays
+                const uniqueUOMs = new Set(uomsArray.map((uom) => uom.uom_id));
+                return uniqueUOMs.size === uomsArray.length;
             },
         ),
 });
@@ -121,7 +139,14 @@ const useItem = (closeModal: () => void = () => {}) => {
                     }
                 });
                 setError(yupErrors);
-                toast.error('Validasi gagal, periksa input Anda.');
+                const duplicateUomError = err.inner.find(
+                    (error) =>
+                        error.type === 'unique-uoms' && error.path === 'uoms',
+                );
+
+                if (duplicateUomError) {
+                    toast.error(duplicateUomError.message);
+                }
             }
         }
     };
@@ -186,9 +211,10 @@ const useItem = (closeModal: () => void = () => {}) => {
 
         if (field === 'uom.id') {
             uomToUpdate.uom.id = value as number;
-            uomToUpdate.uom_id = value as number;
         } else if (field === 'uom.name') {
             uomToUpdate.uom.name = value as string;
+        } else if (field === 'uom_id') {
+            uomToUpdate.uom_id = value as number;
         } else {
             switch (field) {
                 case 'conversion_value':
@@ -218,6 +244,89 @@ const useItem = (closeModal: () => void = () => {}) => {
         setData('uoms', updated);
     };
 
+    const handleStockChange = (
+        e: ChangeEvent<HTMLInputElement>,
+        setStockDisplayValue: Dispatch<SetStateAction<string>>,
+    ) => {
+        const input = e.target.value;
+
+        if (!input) {
+            setData('stock', 0);
+            setStockDisplayValue('0');
+            return;
+        }
+
+        const rawValue = parseStringtoNumber(input);
+
+        setData('stock', rawValue ?? 0);
+        setStockDisplayValue(formatNumberWithSeparator(rawValue ?? 0));
+    };
+
+    const handlePriceChange = (
+        index: number,
+        e: ChangeEvent<HTMLInputElement>,
+        priceDisplayValues: string[],
+        setPriceDisplayValues: Dispatch<SetStateAction<string[]>>,
+    ) => {
+        const input = e.target.value;
+
+        if (input === '') {
+            setData('uoms', [
+                ...data.uoms.slice(0, index),
+                { ...data.uoms[index], price: 0 },
+                ...data.uoms.slice(index + 1),
+            ]);
+            setPriceDisplayValues([
+                ...priceDisplayValues.slice(0, index),
+                '',
+                ...priceDisplayValues.slice(index + 1),
+            ]);
+            return;
+        }
+
+        const rawValue = parseStringtoNumber(input ?? '');
+
+        setData('uoms', [
+            ...data.uoms.slice(0, index),
+            { ...data.uoms[index], price: rawValue ?? 0 },
+            ...data.uoms.slice(index + 1),
+        ]);
+
+        const updatedDisplayValues = [...priceDisplayValues];
+        updatedDisplayValues[index] = formatCurrency(rawValue);
+        setPriceDisplayValues(updatedDisplayValues);
+    };
+
+    const handleConversionValueChange = (
+        index: number,
+        e: ChangeEvent<HTMLInputElement>,
+        conversionDisplayValues: string[],
+        setConversionDisplayValues: Dispatch<SetStateAction<string[]>>,
+    ) => {
+        const input = e.target.value;
+
+        if (input === '') {
+            handleChangeUOM(index, 'conversion_value', 0);
+            setConversionDisplayValues([
+                ...conversionDisplayValues.slice(0, index),
+                '0',
+                ...conversionDisplayValues.slice(index + 1),
+            ]);
+            return;
+        }
+
+        const rawValue = parseStringtoNumber(input);
+
+        const validRawValue = isNaN(rawValue ?? 0) ? 0 : rawValue;
+
+        handleChangeUOM(index, 'conversion_value', validRawValue);
+        setConversionDisplayValues([
+            ...conversionDisplayValues.slice(0, index),
+            formatNumberWithSeparator(validRawValue ?? 0),
+            ...conversionDisplayValues.slice(index + 1),
+        ]);
+    };
+
     return {
         data,
         setData,
@@ -232,6 +341,9 @@ const useItem = (closeModal: () => void = () => {}) => {
         handleCancel,
         handleDelete,
         handleChangeUOM,
+        handleStockChange,
+        handlePriceChange,
+        handleConversionValueChange,
     };
 };
 

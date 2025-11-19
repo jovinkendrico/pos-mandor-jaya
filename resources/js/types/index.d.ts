@@ -199,6 +199,7 @@ export interface Item {
     code: string;
     name: string;
     stock: number;
+    modal_price?: number;
     description?: string;
     modal_price?: number;
     item_uoms: ItemUom[];
@@ -210,7 +211,13 @@ export interface Item {
 
 export type IItem = Pick<
     Item,
-    'id' | 'name' | 'stock' | 'description' | 'code' | 'modal_price'
+    | 'id'
+    | 'name'
+    | 'stock'
+    | 'modal_price'
+    | 'description'
+    | 'code'
+    | 'modal_price'
 > & {
     item_uoms: IItemUOM[];
     stock_movements: IItemStockMovement[];
@@ -219,6 +226,10 @@ export type IItem = Pick<
 export interface PageProps {
     auth: Auth;
     [key: string]: unknown;
+    flash: {
+        success?: string;
+        error?: string;
+    };
 }
 
 export interface IUOM {
@@ -246,39 +257,79 @@ export enum PurchaseStatus {
     CONFIRMED = 'confirmed',
 }
 
-export interface IPurchase {
+export interface Purchase {
     id: number;
-    purchase_number: string;
     supplier_id: number;
+    purchase_number: string;
+    purchase_number: string;
+    supplier: Supplier;
     purchase_date: Date;
-    due_date: Date;
-    subtotal: number;
+    due_date?: Date;
+    subtotal?: number;
     discount1_percent?: number;
     discount1_amount?: number;
     discount2_percent?: number;
     discount2_amount?: number;
     total_after_discount: number;
     ppn_percent?: number;
+    ppn_amount?: number;
     total_amount: number;
-    status: PurchaseStatus;
+    status?: PurchaseStatus;
     notes: string;
-    details: IPurchaseDetail[];
+    details: PurchaseDetail[];
 }
 
-export interface IPurchaseDetail {
-    id: number;
+export type IPurchase = Pick<
+    Purchase,
+    | 'id'
+    | 'supplier_id'
+    | 'purchase_number'
+    | 'purchase_date'
+    | 'due_date'
+    | 'subtotal'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'discount1_amount'
+    | 'discount2_amount'
+    | 'ppn_percent'
+    | 'ppn_amount'
+    | 'total_amount'
+    | 'status'
+    | 'notes'
+> & {
+    supplier: ISupplier;
+    details: IPurchaseDetail[];
+};
+
+export interface PurchaseDetail {
+    id?: number;
     purchase_id: number;
     item_id: number;
+    item?: IItem;
     item_uom_id: number;
+    item_uom?: IItemUOM;
     quantity: number;
     price: number;
     discount1_percent?: number;
     discount1_amount?: number;
     discount2_percent?: number;
     discount2_amount?: number;
-    subtotal: number;
+    subtotal?: number;
 }
 
+export type IPurchaseDetail = Pick<
+    PurchaseDetail,
+    | 'id'
+    | 'item_id'
+    | 'item_uom_id'
+    | 'item_uom'
+    | 'item'
+    | 'quantity'
+    | 'price'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'subtotal'
+>;
 export interface ChartOfAccount {
     id: number;
     code: string;
@@ -295,5 +346,12 @@ export interface ChartOfAccount {
 
 export type IChartOfAccount = Pick<
     ChartOfAccount,
-    'id' | 'code' | 'name' | 'type' | 'parent_id' | 'description' | 'is_active'
+    | 'id'
+    | 'code'
+    | 'name'
+    | 'type'
+    | 'parent_id'
+    | 'description'
+    | 'is_active'
+    | 'subtotal'
 >;

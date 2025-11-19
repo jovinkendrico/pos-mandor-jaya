@@ -455,7 +455,7 @@ export default function SaleForm({ sale, customers, items }: SaleFormProps) {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle>Detail Items</CardTitle>
+                        <CardTitle>Detail Barang</CardTitle>
                         <Button
                             type="button"
                             onClick={handleAddItem}

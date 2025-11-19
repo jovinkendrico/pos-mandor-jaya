@@ -1,6 +1,6 @@
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -14,7 +14,7 @@ import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/purchase-returns';
 import { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { CheckCircle2, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Supplier {
@@ -106,20 +106,33 @@ export default function PurchaseReturnShow({ return: returnData }: PageProps) {
     };
 
     const handleConfirm = () => {
-        if (confirm('Konfirmasi retur? Stock akan berkurang dan data tidak bisa diedit lagi.')) {
-            router.post(`/purchase-returns/${returnData.id}/confirm`, {}, {
-                onSuccess: () => toast.success('Retur pembelian dikonfirmasi'),
-                onError: () => toast.error('Gagal konfirmasi retur'),
-            });
+        if (
+            confirm(
+                'Konfirmasi retur? Stock akan berkurang dan data tidak bisa diedit lagi.',
+            )
+        ) {
+            router.post(
+                `/purchase-returns/${returnData.id}/confirm`,
+                {},
+                {
+                    onSuccess: () =>
+                        toast.success('Retur pembelian dikonfirmasi'),
+                    onError: () => toast.error('Gagal konfirmasi retur'),
+                },
+            );
         }
     };
 
     const handleUnconfirm = () => {
         if (confirm('Batalkan konfirmasi? Stock akan dikembalikan.')) {
-            router.post(`/purchase-returns/${returnData.id}/unconfirm`, {}, {
-                onSuccess: () => toast.success('Konfirmasi dibatalkan'),
-                onError: () => toast.error('Gagal membatalkan konfirmasi'),
-            });
+            router.post(
+                `/purchase-returns/${returnData.id}/unconfirm`,
+                {},
+                {
+                    onSuccess: () => toast.success('Konfirmasi dibatalkan'),
+                    onError: () => toast.error('Gagal membatalkan konfirmasi'),
+                },
+            );
         }
     };
 
@@ -136,32 +149,49 @@ export default function PurchaseReturnShow({ return: returnData }: PageProps) {
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title={`Retur Beli ${returnData.return_number}`} />
-                
-                <div className="flex justify-between items-center mb-6">
+
+                <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <PageTitle title={`Retur Beli ${returnData.return_number}`} />
-                        <div className="flex gap-2 items-center mt-2">
-                            <Badge variant={returnData.status === 'confirmed' ? 'default' : 'secondary'} className="text-sm">
-                                {returnData.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                        <PageTitle
+                            title={`Retur Beli ${returnData.return_number}`}
+                        />
+                        <div className="mt-2 flex items-center gap-2">
+                            <Badge
+                                variant={
+                                    returnData.status === 'confirmed'
+                                        ? 'default'
+                                        : 'secondary'
+                                }
+                                className="text-sm"
+                            >
+                                {returnData.status === 'confirmed'
+                                    ? 'Confirmed'
+                                    : 'Pending'}
                             </Badge>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         {returnData.status === 'pending' && (
                             <>
-                                <Button onClick={handleDelete} variant="destructive">
-                                    <Trash2 className="h-4 w-4 mr-2" />
+                                <Button
+                                    onClick={handleDelete}
+                                    variant="destructive"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
                                     Hapus
                                 </Button>
                                 <Button onClick={handleConfirm}>
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
                                     Konfirmasi
                                 </Button>
                             </>
                         )}
                         {returnData.status === 'confirmed' && (
-                            <Button onClick={handleUnconfirm} variant="destructive">
-                                <XCircle className="h-4 w-4 mr-2" />
+                            <Button
+                                onClick={handleUnconfirm}
+                                variant="destructive"
+                            >
+                                <XCircle className="mr-2 h-4 w-4" />
                                 Batalkan Konfirmasi
                             </Button>
                         )}
@@ -169,28 +199,44 @@ export default function PurchaseReturnShow({ return: returnData }: PageProps) {
                 </div>
 
                 {/* Return Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <Card>
                         <CardHeader>
                             <CardTitle>Informasi Retur</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">No. Pembelian:</span>
-                                <span className="font-medium font-mono">{returnData.purchase.purchase_number}</span>
+                                <span className="text-muted-foreground">
+                                    No. Pembelian:
+                                </span>
+                                <span className="font-mono font-medium">
+                                    {returnData.purchase.purchase_number}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Supplier:</span>
-                                <span className="font-medium">{returnData.purchase.supplier?.name || '-'}</span>
+                                <span className="text-muted-foreground">
+                                    Supplier:
+                                </span>
+                                <span className="font-medium">
+                                    {returnData.purchase.supplier?.name || '-'}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Tanggal Retur:</span>
-                                <span className="font-medium">{formatDate(returnData.return_date)}</span>
+                                <span className="text-muted-foreground">
+                                    Tanggal Retur:
+                                </span>
+                                <span className="font-medium">
+                                    {formatDate(returnData.return_date)}
+                                </span>
                             </div>
                             {returnData.reason && (
-                                <div className="flex flex-col pt-2 border-t">
-                                    <span className="text-muted-foreground">Alasan:</span>
-                                    <span className="font-medium mt-1">{returnData.reason}</span>
+                                <div className="flex flex-col border-t pt-2">
+                                    <span className="text-muted-foreground">
+                                        Alasan:
+                                    </span>
+                                    <span className="mt-1 font-medium">
+                                        {returnData.reason}
+                                    </span>
                                 </div>
                             )}
                         </CardContent>
@@ -202,30 +248,50 @@ export default function PurchaseReturnShow({ return: returnData }: PageProps) {
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Subtotal:</span>
-                                <span>{formatCurrency(returnData.subtotal)}</span>
+                                <span className="text-muted-foreground">
+                                    Subtotal:
+                                </span>
+                                <span>
+                                    {formatCurrency(returnData.subtotal)}
+                                </span>
                             </div>
                             {parseFloat(returnData.discount1_amount) > 0 && (
                                 <div className="flex justify-between text-red-600">
                                     <span>Total Diskon 1:</span>
-                                    <span>-{formatCurrency(returnData.discount1_amount)}</span>
+                                    <span>
+                                        -
+                                        {formatCurrency(
+                                            returnData.discount1_amount,
+                                        )}
+                                    </span>
                                 </div>
                             )}
                             {parseFloat(returnData.discount2_amount) > 0 && (
                                 <div className="flex justify-between text-red-600">
                                     <span>Total Diskon 2:</span>
-                                    <span>-{formatCurrency(returnData.discount2_amount)}</span>
+                                    <span>
+                                        -
+                                        {formatCurrency(
+                                            returnData.discount2_amount,
+                                        )}
+                                    </span>
                                 </div>
                             )}
                             {parseFloat(returnData.ppn_amount) > 0 && (
                                 <div className="flex justify-between text-blue-600">
-                                    <span>PPN ({returnData.ppn_percent}%):</span>
-                                    <span>+{formatCurrency(returnData.ppn_amount)}</span>
+                                    <span>
+                                        PPN ({returnData.ppn_percent}%):
+                                    </span>
+                                    <span>
+                                        +{formatCurrency(returnData.ppn_amount)}
+                                    </span>
                                 </div>
                             )}
-                            <div className="flex justify-between font-bold text-lg border-t pt-2">
+                            <div className="flex justify-between border-t pt-2 text-lg font-bold">
                                 <span>TOTAL:</span>
-                                <span>{formatCurrency(returnData.total_amount)}</span>
+                                <span>
+                                    {formatCurrency(returnData.total_amount)}
+                                </span>
                             </div>
                         </CardContent>
                     </Card>
@@ -234,39 +300,69 @@ export default function PurchaseReturnShow({ return: returnData }: PageProps) {
                 {/* Items Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Detail Items Diretur</CardTitle>
+                        <CardTitle>Detail Barang Diretur</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[100px]">Kode</TableHead>
+                                    <TableHead className="w-[100px]">
+                                        Kode
+                                    </TableHead>
                                     <TableHead>Nama Item</TableHead>
                                     <TableHead>UOM</TableHead>
-                                    <TableHead className="text-right">Qty Retur</TableHead>
-                                    <TableHead className="text-right">Harga</TableHead>
-                                    <TableHead className="text-right">Disc 1</TableHead>
-                                    <TableHead className="text-right">Disc 2</TableHead>
-                                    <TableHead className="text-right">Subtotal</TableHead>
+                                    <TableHead className="text-right">
+                                        Qty Retur
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Harga
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Disc 1
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Disc 2
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Subtotal
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {returnData.details.map((detail) => (
                                     <TableRow key={detail.id}>
-                                        <TableCell className="font-mono">{detail.item.code}</TableCell>
-                                        <TableCell>{detail.item.name}</TableCell>
+                                        <TableCell className="font-mono">
+                                            {detail.item.code}
+                                        </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{detail.item_uom.uom_name}</Badge>
+                                            {detail.item.name}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline">
+                                                {detail.item_uom.uom_name}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {parseFloat(detail.quantity).toLocaleString('id-ID')}
+                                            {parseFloat(
+                                                detail.quantity,
+                                            ).toLocaleString('id-ID')}
                                         </TableCell>
-                                        <TableCell className="text-right">{formatCurrency(detail.price)}</TableCell>
-                                        <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount1_percent) > 0 ? `${detail.discount1_percent}%` : '-'}
+                                        <TableCell className="text-right">
+                                            {formatCurrency(detail.price)}
                                         </TableCell>
                                         <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount2_percent) > 0 ? `${detail.discount2_percent}%` : '-'}
+                                            {parseFloat(
+                                                detail.discount1_percent,
+                                            ) > 0
+                                                ? `${detail.discount1_percent}%`
+                                                : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right text-red-600">
+                                            {parseFloat(
+                                                detail.discount2_percent,
+                                            ) > 0
+                                                ? `${detail.discount2_percent}%`
+                                                : '-'}
                                         </TableCell>
                                         <TableCell className="text-right font-medium">
                                             {formatCurrency(detail.subtotal)}
@@ -281,4 +377,3 @@ export default function PurchaseReturnShow({ return: returnData }: PageProps) {
         </>
     );
 }
-

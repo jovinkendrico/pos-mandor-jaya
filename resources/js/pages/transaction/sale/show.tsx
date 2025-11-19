@@ -1,6 +1,6 @@
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -11,10 +11,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { index, edit } from '@/routes/sales';
+import { edit, index } from '@/routes/sales';
 import { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { CheckCircle2, XCircle, Pencil } from 'lucide-react';
+import { CheckCircle2, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Customer {
@@ -108,20 +108,36 @@ export default function SaleShow({ sale }: PageProps) {
     };
 
     const handleConfirm = () => {
-        if (confirm('Konfirmasi penjualan? Stock akan berkurang, profit akan dihitung, dan data tidak bisa diedit lagi.')) {
-            router.post(`/sales/${sale.id}/confirm`, {}, {
-                onSuccess: () => toast.success('Penjualan dikonfirmasi'),
-                onError: () => toast.error('Gagal konfirmasi penjualan'),
-            });
+        if (
+            confirm(
+                'Konfirmasi penjualan? Stock akan berkurang, profit akan dihitung, dan data tidak bisa diedit lagi.',
+            )
+        ) {
+            router.post(
+                `/sales/${sale.id}/confirm`,
+                {},
+                {
+                    onSuccess: () => toast.success('Penjualan dikonfirmasi'),
+                    onError: () => toast.error('Gagal konfirmasi penjualan'),
+                },
+            );
         }
     };
 
     const handleUnconfirm = () => {
-        if (confirm('Batalkan konfirmasi? Stock akan dikembalikan dan data bisa diedit kembali.')) {
-            router.post(`/sales/${sale.id}/unconfirm`, {}, {
-                onSuccess: () => toast.success('Konfirmasi dibatalkan'),
-                onError: () => toast.error('Gagal membatalkan konfirmasi'),
-            });
+        if (
+            confirm(
+                'Batalkan konfirmasi? Stock akan dikembalikan dan data bisa diedit kembali.',
+            )
+        ) {
+            router.post(
+                `/sales/${sale.id}/unconfirm`,
+                {},
+                {
+                    onSuccess: () => toast.success('Konfirmasi dibatalkan'),
+                    onError: () => toast.error('Gagal membatalkan konfirmasi'),
+                },
+            );
         }
     };
 
@@ -134,12 +150,21 @@ export default function SaleShow({ sale }: PageProps) {
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title={`Penjualan ${sale.sale_number}`} />
 
-                <div className="flex justify-between items-center mb-6">
+                <div className="mb-6 flex items-center justify-between">
                     <div>
                         <PageTitle title={`Penjualan ${sale.sale_number}`} />
-                        <div className="flex gap-2 items-center mt-2">
-                            <Badge variant={sale.status === 'confirmed' ? 'default' : 'secondary'} className="text-sm">
-                                {sale.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                        <div className="mt-2 flex items-center gap-2">
+                            <Badge
+                                variant={
+                                    sale.status === 'confirmed'
+                                        ? 'default'
+                                        : 'secondary'
+                                }
+                                className="text-sm"
+                            >
+                                {sale.status === 'confirmed'
+                                    ? 'Confirmed'
+                                    : 'Pending'}
                             </Badge>
                         </div>
                     </div>
@@ -147,18 +172,21 @@ export default function SaleShow({ sale }: PageProps) {
                         {sale.status === 'pending' && (
                             <>
                                 <Button onClick={handleEdit} variant="outline">
-                                    <Pencil className="h-4 w-4 mr-2" />
+                                    <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                 </Button>
                                 <Button onClick={handleConfirm}>
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
                                     Konfirmasi
                                 </Button>
                             </>
                         )}
                         {sale.status === 'confirmed' && (
-                            <Button onClick={handleUnconfirm} variant="destructive">
-                                <XCircle className="h-4 w-4 mr-2" />
+                            <Button
+                                onClick={handleUnconfirm}
+                                variant="destructive"
+                            >
+                                <XCircle className="mr-2 h-4 w-4" />
                                 Batalkan Konfirmasi
                             </Button>
                         )}
@@ -166,30 +194,46 @@ export default function SaleShow({ sale }: PageProps) {
                 </div>
 
                 {/* Sale Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <Card>
                         <CardHeader>
                             <CardTitle>Informasi Penjualan</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Customer:</span>
-                                <span className="font-medium">{sale.customer?.name || '-'}</span>
+                                <span className="text-muted-foreground">
+                                    Customer:
+                                </span>
+                                <span className="font-medium">
+                                    {sale.customer?.name || '-'}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Tanggal:</span>
-                                <span className="font-medium">{formatDate(sale.sale_date)}</span>
+                                <span className="text-muted-foreground">
+                                    Tanggal:
+                                </span>
+                                <span className="font-medium">
+                                    {formatDate(sale.sale_date)}
+                                </span>
                             </div>
                             {sale.due_date && (
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Jatuh Tempo:</span>
-                                    <span className="font-medium">{formatDate(sale.due_date)}</span>
+                                    <span className="text-muted-foreground">
+                                        Jatuh Tempo:
+                                    </span>
+                                    <span className="font-medium">
+                                        {formatDate(sale.due_date)}
+                                    </span>
                                 </div>
                             )}
                             {sale.notes && (
                                 <div className="flex flex-col">
-                                    <span className="text-muted-foreground">Catatan:</span>
-                                    <span className="font-medium mt-1">{sale.notes}</span>
+                                    <span className="text-muted-foreground">
+                                        Catatan:
+                                    </span>
+                                    <span className="mt-1 font-medium">
+                                        {sale.notes}
+                                    </span>
                                 </div>
                             )}
                         </CardContent>
@@ -201,40 +245,56 @@ export default function SaleShow({ sale }: PageProps) {
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Subtotal:</span>
+                                <span className="text-muted-foreground">
+                                    Subtotal:
+                                </span>
                                 <span>{formatCurrency(sale.subtotal)}</span>
                             </div>
                             {parseFloat(sale.discount1_percent) > 0 && (
                                 <div className="flex justify-between text-red-600">
-                                    <span>Diskon 1 ({sale.discount1_percent}%):</span>
-                                    <span>-{formatCurrency(sale.discount1_amount)}</span>
+                                    <span>
+                                        Diskon 1 ({sale.discount1_percent}%):
+                                    </span>
+                                    <span>
+                                        -{formatCurrency(sale.discount1_amount)}
+                                    </span>
                                 </div>
                             )}
                             {parseFloat(sale.discount2_percent) > 0 && (
                                 <div className="flex justify-between text-red-600">
-                                    <span>Diskon 2 ({sale.discount2_percent}%):</span>
-                                    <span>-{formatCurrency(sale.discount2_amount)}</span>
+                                    <span>
+                                        Diskon 2 ({sale.discount2_percent}%):
+                                    </span>
+                                    <span>
+                                        -{formatCurrency(sale.discount2_amount)}
+                                    </span>
                                 </div>
                             )}
                             {parseFloat(sale.ppn_percent) > 0 && (
                                 <div className="flex justify-between text-blue-600">
                                     <span>PPN ({sale.ppn_percent}%):</span>
-                                    <span>+{formatCurrency(sale.ppn_amount)}</span>
+                                    <span>
+                                        +{formatCurrency(sale.ppn_amount)}
+                                    </span>
                                 </div>
                             )}
-                            <div className="flex justify-between font-bold text-lg border-t pt-2">
+                            <div className="flex justify-between border-t pt-2 text-lg font-bold">
                                 <span>TOTAL:</span>
                                 <span>{formatCurrency(sale.total_amount)}</span>
                             </div>
                             {sale.status === 'confirmed' && (
                                 <>
-                                    <div className="flex justify-between text-orange-600 border-t pt-2">
+                                    <div className="flex justify-between border-t pt-2 text-orange-600">
                                         <span>Total Cost (FIFO):</span>
-                                        <span className="font-medium">{formatCurrency(sale.total_cost)}</span>
+                                        <span className="font-medium">
+                                            {formatCurrency(sale.total_cost)}
+                                        </span>
                                     </div>
-                                    <div className="flex justify-between text-green-600 font-bold text-lg">
+                                    <div className="flex justify-between text-lg font-bold text-green-600">
                                         <span>PROFIT:</span>
-                                        <span>{formatCurrency(sale.total_profit)}</span>
+                                        <span>
+                                            {formatCurrency(sale.total_profit)}
+                                        </span>
                                     </div>
                                 </>
                             )}
@@ -245,24 +305,40 @@ export default function SaleShow({ sale }: PageProps) {
                 {/* Items Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Detail Items</CardTitle>
+                        <CardTitle>Detail Barang</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[100px]">Kode</TableHead>
+                                    <TableHead className="w-[100px]">
+                                        Kode
+                                    </TableHead>
                                     <TableHead>Nama Item</TableHead>
                                     <TableHead>UOM</TableHead>
-                                    <TableHead className="text-right">Qty</TableHead>
-                                    <TableHead className="text-right">Harga</TableHead>
-                                    <TableHead className="text-right">Disc 1</TableHead>
-                                    <TableHead className="text-right">Disc 2</TableHead>
-                                    <TableHead className="text-right">Subtotal</TableHead>
+                                    <TableHead className="text-right">
+                                        Qty
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Harga
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Disc 1
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Disc 2
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Subtotal
+                                    </TableHead>
                                     {sale.status === 'confirmed' && (
                                         <>
-                                            <TableHead className="text-right">Cost</TableHead>
-                                            <TableHead className="text-right">Profit</TableHead>
+                                            <TableHead className="text-right">
+                                                Cost
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Profit
+                                            </TableHead>
                                         </>
                                     )}
                                 </TableRow>
@@ -270,22 +346,36 @@ export default function SaleShow({ sale }: PageProps) {
                             <TableBody>
                                 {sale.details.map((detail) => (
                                     <TableRow key={detail.id}>
-                                        <TableCell className="font-mono">{detail.item.code}</TableCell>
-                                        <TableCell>{detail.item.name}</TableCell>
+                                        <TableCell className="font-mono">
+                                            {detail.item.code}
+                                        </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{detail.item_uom.uom_name}</Badge>
+                                            {detail.item.name}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline">
+                                                {detail.item_uom.uom_name}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {parseFloat(detail.quantity).toLocaleString('id-ID')}
+                                            {parseFloat(
+                                                detail.quantity,
+                                            ).toLocaleString('id-ID')}
                                         </TableCell>
-                                        <TableCell className="text-right">{formatCurrency(detail.price)}</TableCell>
+                                        <TableCell className="text-right">
+                                            {formatCurrency(detail.price)}
+                                        </TableCell>
                                         <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount1_percent) > 0
+                                            {parseFloat(
+                                                detail.discount1_percent,
+                                            ) > 0
                                                 ? `${detail.discount1_percent}%`
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="text-right text-red-600">
-                                            {parseFloat(detail.discount2_percent) > 0
+                                            {parseFloat(
+                                                detail.discount2_percent,
+                                            ) > 0
                                                 ? `${detail.discount2_percent}%`
                                                 : '-'}
                                         </TableCell>
@@ -295,10 +385,14 @@ export default function SaleShow({ sale }: PageProps) {
                                         {sale.status === 'confirmed' && (
                                             <>
                                                 <TableCell className="text-right text-orange-600">
-                                                    {formatCurrency(detail.cost)}
+                                                    {formatCurrency(
+                                                        detail.cost,
+                                                    )}
                                                 </TableCell>
-                                                <TableCell className="text-right text-green-600 font-medium">
-                                                    {formatCurrency(detail.profit)}
+                                                <TableCell className="text-right font-medium text-green-600">
+                                                    {formatCurrency(
+                                                        detail.profit,
+                                                    )}
                                                 </TableCell>
                                             </>
                                         )}
@@ -312,4 +406,3 @@ export default function SaleShow({ sale }: PageProps) {
         </>
     );
 }
-

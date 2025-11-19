@@ -46,7 +46,7 @@ const useStockMovement = (closeModal: () => void) => {
                 stock_movement
                     ? updateStockMovement({
                           item: item_id,
-                          stockMovement: stock_movement?.id ?? 0,
+                          id: stock_movement?.id ?? 0,
                       })
                     : storeStockMovement(item_id),
                 {
@@ -61,7 +61,6 @@ const useStockMovement = (closeModal: () => void) => {
                     },
 
                     onError: () => {
-                        console.log(errors);
                         toast.error('Terjadi kesalahan, periksa input Anda.');
                     },
                 },

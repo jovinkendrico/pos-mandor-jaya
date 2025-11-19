@@ -30,12 +30,10 @@ class PurchaseController extends Controller
         $purchases = Purchase::with(['supplier', 'details.item', 'details.itemUom'])
             ->orderBy('purchase_date', 'desc')
             ->orderBy('id', 'desc')
-            ->get();
+            ->paginate(10);
 
         return Inertia::render('transaction/purchase/index', [
-            'purchases' => [
-                'data' => $purchases,
-            ],
+            'purchases' => $purchases,
         ]);
     }
 
@@ -174,7 +172,7 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase): Response
     {
-        $purchase->load(['supplier', 'details.item', 'details.itemUom']);
+        $purchase->load(['supplier', 'details.item', 'details.itemUom.uom']);
 
         return Inertia::render('transaction/purchase/show', [
             'purchase' => $purchase,
