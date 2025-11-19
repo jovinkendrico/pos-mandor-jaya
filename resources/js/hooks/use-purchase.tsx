@@ -92,9 +92,8 @@ const usePurchase = () => {
                     );
                 },
 
-                onError: (error) => {
+                onError: () => {
                     toast.error('Terjadi kesalahan, periksa input Anda.');
-                    console.log(error);
                 },
             });
         } catch (err) {
@@ -106,7 +105,6 @@ const usePurchase = () => {
                     }
                 });
                 setError(yupErrors);
-                console.log(yupErrors);
                 toast.error('Validasi gagal, periksa input Anda.');
             }
         }
@@ -116,7 +114,9 @@ const usePurchase = () => {
         if (!purchase.id) return;
         router.delete(destroy(purchase.id).url, {
             onSuccess: () => {
-                toast.success('Pembelian berhasil dihapus');
+                toast.success(
+                    `Pembelian: ${purchase.purchase_number} berhasil dihapus`,
+                );
             },
             onError: () => {
                 toast.error('Gagal menghapus pembelian');

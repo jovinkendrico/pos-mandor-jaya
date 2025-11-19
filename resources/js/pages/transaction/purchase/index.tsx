@@ -1,13 +1,21 @@
 import PageTitle from '@/components/page-title';
 import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { create, index } from '@/routes/purchases';
-import { BreadcrumbItem, IPurchase, PaginatedData } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { create, destroy as destroyPurchase, index } from '@/routes/purchases';
+import {
+    BreadcrumbItem,
+    PageProps as InertiaPageProps,
+    IPurchase,
+    PaginatedData,
+} from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface PageProps {
     purchases: PaginatedData<IPurchase>;
@@ -26,18 +34,35 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const PurchaseIndex = (props: PageProps) => {
     const { purchases } = props;
+    const { flash } = usePage<InertiaPageProps>().props;
 
     const [selectedPurchase, setSelectedPurchase] = useState<
         IPurchase | undefined
     >(undefined);
 
+    useMemo(() => {
+        if (
+            flash.success === 'Pembelian berhasil ditambahkan' ||
+            flash.success === 'Pembelian berhasil diperbarui'
+        ) {
+            toast.success(flash.success);
+        }
+    }, [flash]);
+
     const handleCreate = () => {
         router.visit(create().url);
     };
 
-    const handleView = (purchase: IPurchase) => {
-        router.visit(`/purchases/${purchase.id}`);
+    const handleDelete = (purchase: IPurchase) => {
+        setSelectedPurchase(purchase);
+        openDeleteModal();
     };
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
 
     return (
         <>
@@ -53,10 +78,21 @@ const PurchaseIndex = (props: PageProps) => {
                 <PurchaseTable
                     purchases={purchases.data}
                     pageFrom={purchases.from}
+                    onDelete={handleDelete}
                 />
                 {purchases.data.length !== 0 && (
                     <TablePagination data={purchases} />
                 )}
+                <DeleteModalLayout
+                    dataName={selectedPurchase?.purchase_number}
+                    dataId={selectedPurchase?.id}
+                    dataType="Pembelian"
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedPurchase}
+                    getDeleteUrl={(id: number) => destroyPurchase(id).url}
+                    dontPrintMessage
+                />
             </AppLayout>
         </>
     );

@@ -5,15 +5,16 @@ import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { IPurchase } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Info } from 'lucide-react';
+import { Info, Trash } from 'lucide-react';
 
 interface PurchaseTableProps {
     purchases: IPurchase[];
     pageFrom?: number;
+    onDelete: (purchase: IPurchase) => void;
 }
 
 export default function PurchaseTable(props: PurchaseTableProps) {
-    const { purchases, pageFrom } = props;
+    const { purchases, pageFrom, onDelete } = props;
 
     const tableColumn = [
         'Kode',
@@ -70,12 +71,19 @@ export default function PurchaseTable(props: PurchaseTableProps) {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => {}}
                                 className="btn-info"
                             >
                                 <Info />
                             </Button>
                         </Link>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(row)}
+                            className="btn-trash"
+                        >
+                            <Trash />
+                        </Button>
                     </TableCell>
                 </>
             )}

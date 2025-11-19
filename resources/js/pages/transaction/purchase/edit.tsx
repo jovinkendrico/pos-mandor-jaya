@@ -2,55 +2,14 @@ import PageTitle from '@/components/page-title';
 import PurchaseForm from '@/components/transaction/purchases/purchase-form';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/purchases';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-
-interface Supplier {
-    id: number;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-    price: string;
-    conversion_value: number;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-    stock: string;
-    uoms: ItemUom[];
-}
-
-interface PurchaseDetail {
-    item_id: string;
-    item_uom_id: string;
-    quantity: string;
-    price: string;
-    discount1_percent: string;
-    discount2_percent: string;
-}
-
-interface Purchase {
-    id: number;
-    purchase_number: string;
-    supplier_id?: number;
-    purchase_date: string;
-    due_date?: string;
-    discount1_percent: string;
-    discount2_percent: string;
-    ppn_percent: string;
-    notes?: string;
-    details: PurchaseDetail[];
-}
+import { BreadcrumbItem, IItem, IPurchase, ISupplier } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    purchase: Purchase;
-    suppliers: Supplier[];
-    items: Item[];
+    purchase: IPurchase;
+    suppliers: ISupplier[];
+    items: IItem[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -68,15 +27,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseEdit({ purchase, suppliers, items }: PageProps) {
+const PurchaseEdit = ({ purchase, suppliers, items }: PageProps) => {
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title={`Edit Pembelian ${purchase.purchase_number}`} />
-                <PageTitle title={`Edit Pembelian ${purchase.purchase_number}`} />
-                <PurchaseForm purchase={purchase} suppliers={suppliers} items={items} />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle
+                        title={`Edit Pembelian ${purchase.purchase_number}`}
+                    />
+                </div>
+                <PurchaseForm
+                    purchase={purchase}
+                    supplierOptions={suppliers}
+                    items={items}
+                />
             </AppLayout>
         </>
     );
-}
+};
 
+export default PurchaseEdit;

@@ -12,13 +12,14 @@ import {
 import { Spinner } from '../spinner';
 
 interface DeleteModalLayoutProps<T> {
-    dataId: number | undefined;
-    dataName: string | undefined;
+    dataId?: number;
+    dataName?: string;
     dataType: string;
     isModalOpen: boolean;
     onModalClose: () => void;
     setSelected: (selected: T | undefined) => void;
     getDeleteUrl: (id: number) => string;
+    dontPrintMessage?: boolean;
 }
 
 const DeleteModalLayout = <T,>(props: DeleteModalLayoutProps<T>) => {
@@ -44,11 +45,12 @@ const DeleteModalLayout = <T,>(props: DeleteModalLayoutProps<T>) => {
             onSuccess: () => {
                 setIsLoading(false);
                 onModalClose();
-                toast.success(`${dataType}: ${dataName} berhasil dihapus`);
+                if (!props.dontPrintMessage) {
+                    toast.success(`${dataType}: ${dataName} berhasil dihapus`);
+                }
                 setSelected(undefined);
             },
             onError: (errors: Record<string, string>) => {
-                console.log(errors);
                 const message = errors.msg || `Gagal menghapus ${dataType}`;
                 setIsLoading(false);
                 onModalClose();

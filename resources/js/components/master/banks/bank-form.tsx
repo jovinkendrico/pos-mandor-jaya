@@ -10,7 +10,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import useBanks from '@/hooks/use-banks';
 import { formatCurrency, parseStringtoNumber } from '@/lib/utils';
-import { IBank } from '@/types';
+import { IBank, IChartOfAccount } from '@/types';
 import { ChangeEvent, useEffect, useState } from 'react';
 import InputError from '../../input-error';
 import { Input } from '../../ui/input';
@@ -28,6 +28,7 @@ interface BankFormProps {
     bank?: IBank;
     isModalOpen: boolean;
     onModalClose: () => void;
+    chartsOfAccounts?: IChartOfAccount[];
 }
 
 const BankForm = (props: BankFormProps) => {

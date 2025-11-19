@@ -23,7 +23,7 @@ const TableLayout = <T,>(props: PropTypes<T>) => {
         <>
             <Table className="content">
                 <TableHeader>
-                    <TableRow className="flex w-full flex-row hover:!bg-transparent dark:border-secondary-300">
+                    <TableRow className="flex w-full flex-row hover:!bg-transparent dark:border-b-2 dark:border-white/25">
                         <TableHead className="flex w-full min-w-[125px] items-center justify-center text-center dark:text-secondary-500">
                             No.
                         </TableHead>

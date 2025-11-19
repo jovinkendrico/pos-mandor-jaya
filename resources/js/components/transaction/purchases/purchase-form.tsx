@@ -14,6 +14,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -29,6 +30,7 @@ import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
 import {
     formatCurrency,
     formatDiscount,
+    formatNumber,
     formatNumberWithSeparator,
 } from '@/lib/utils';
 import { IItem, IPurchase, IPurchaseDetail, ISupplier } from '@/types';
@@ -46,6 +48,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
     const { purchase, items, supplierOptions } = props;
     const { getCityData } = useCity();
 
+    const [isReady, setIsReady] = useState(false);
     const [cityOptions, setCityOptions] = useState<ComboboxOption[]>([]);
     const [localSuppliers, setLocalSuppliers] =
         useState<ISupplier[]>(supplierOptions);
@@ -109,20 +112,21 @@ const PurchaseForm = (props: PurchaseFormProps) => {
 
     useEffect(() => {
         if (purchase) {
-            setDataPurchase('supplier_id', purchase.supplier.id);
+            setDataPurchase('supplier_id', purchase.supplier_id);
             setDataPurchase('purchase_date', purchase.purchase_date);
             setDataPurchase('due_date', purchase.due_date ?? null);
             setDataPurchase(
-                'discount1_percent',
-                purchase.discount1_percent ?? 0,
+                'ppn_percent',
+                formatNumber(purchase.ppn_percent ?? 0),
             );
-            setDataPurchase(
-                'discount2_percent',
-                purchase.discount2_percent ?? 0,
-            );
-            setDataPurchase('ppn_percent', purchase.ppn_percent ?? 0);
             setDataPurchase('notes', purchase.notes ?? '');
             setDataPurchase('details', purchase.details);
+            const formattedDiscount = purchase.details.map((detail) => ({
+                ...detail,
+                discount1_percent: formatNumber(detail.discount1_percent ?? 0),
+                discount2_percent: formatNumber(detail.discount2_percent ?? 0),
+            }));
+            setDataPurchase('details', formattedDiscount);
 
             const formattedQuantity = purchase.details.map((detail) =>
                 detail.quantity
@@ -134,13 +138,17 @@ const PurchaseForm = (props: PurchaseFormProps) => {
             );
             setQuantityDisplayValues(formattedQuantity);
             setPriceDisplayValues(formattedPrices);
+            setIsReady(true);
         } else {
             resetPurchase();
             setQuantityDisplayValues([]);
             setPriceDisplayValues([]);
+            setIsReady(true);
         }
     }, [purchase, setDataPurchase, resetPurchase]);
-
+    if (!isReady) {
+        return <Skeleton className="h-full w-full" />;
+    }
     return (
         <form
             onSubmit={(e) => {
@@ -249,7 +257,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
             <Card className="content">
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle>Detail Items</CardTitle>
+                        <CardTitle>Detail Barang</CardTitle>
                         <Button
                             type="button"
                             onClick={addItem}
@@ -273,7 +281,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                         UOM
                                     </TableHead>
                                     <TableHead className="min-w-[125px] text-center">
-                                        Qty
+                                        Kuantitas
                                     </TableHead>
                                     <TableHead className="min-w-[180px] text-center">
                                         Harga
@@ -296,13 +304,12 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                         (item) =>
                                             item.id === Number(detail.item_id),
                                     );
-
                                     return (
                                         <TableRow key={index}>
                                             <TableCell>
                                                 <Select
                                                     value={
-                                                        detail.item_id
+                                                        detail?.item_id
                                                             ? detail.item_id?.toString()
                                                             : ''
                                                     }
@@ -443,14 +450,6 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                             e,
                                                             priceDisplayValues,
                                                             setPriceDisplayValues,
-                                                        );
-                                                        console.log(
-                                                            typeof dataPurchase
-                                                                .details[index]
-                                                                .price,
-                                                            dataPurchase
-                                                                .details[index]
-                                                                .price,
                                                         );
                                                     }}
                                                     className="input-box text-right"
@@ -661,12 +660,12 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                         <div className="flex gap-2 pt-4">
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="secondary"
                                 onClick={handleCancelPurchase}
                                 disabled={processingPurchase}
                                 className="btn-secondary flex-1"
                             >
-                                Batal
+                                Reset
                             </Button>
                             <Button
                                 type="submit"
