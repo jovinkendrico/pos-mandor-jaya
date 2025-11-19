@@ -31,8 +31,9 @@ class PurchaseController extends Controller
         $query = Purchase::with(['supplier', 'details.item', 'details.itemUom']);
 
         // Search
-        if ($request->has('search') && $request->search) {
+        if ($request->filled('search')) {
             $search = $request->search;
+
             $query->where(function ($q) use ($search) {
                 $q->where('purchase_number', 'like', "%{$search}%")
                     ->orWhereHas('supplier', function ($q) use ($search) {
@@ -41,65 +42,63 @@ class PurchaseController extends Controller
             });
         }
 
-        // Filter by status
-        if ($request->has('status') && $request->status && $request->status !== 'all') {
+        // Status filter
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
-        // Filter by payment status
-        if ($request->has('payment_status') && $request->payment_status && $request->payment_status !== 'all') {
-            // We'll filter this after getting the data since it's a computed attribute
-        }
-
-        // Filter by date range
-        if ($request->has('date_from') && $request->date_from) {
+        // Date range
+        if ($request->filled('date_from')) {
             $query->whereDate('purchase_date', '>=', $request->date_from);
         }
-        if ($request->has('date_to') && $request->date_to) {
+        if ($request->filled('date_to')) {
             $query->whereDate('purchase_date', '<=', $request->date_to);
         }
 
         // Sort
-        $sortBy = $request->get('sort_by', 'purchase_date');
+        $sortBy    = $request->get('sort_by', 'purchase_date');
         $sortOrder = $request->get('sort_order', 'desc');
 
         $allowedSortFields = ['purchase_date', 'purchase_number', 'total_amount', 'status'];
-        if (in_array($sortBy, $allowedSortFields)) {
-            $query->orderBy($sortBy, $sortOrder);
-        } else {
-            $query->orderBy('purchase_date', 'desc');
-        }
-        $query->orderBy('id', 'desc');
+        $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'purchase_date', $sortOrder)
+            ->orderBy('id', 'desc');
 
-        $purchases = $query->get()->append(['total_paid', 'remaining_amount']);
+        // Default per-page 10
+        $perPage = $request->get('per_page', 10);
 
-        // Filter by payment status after getting data
-        if ($request->has('payment_status') && $request->payment_status && $request->payment_status !== 'all') {
-            $purchases = $purchases->filter(function ($purchase) use ($request) {
-                if ($request->payment_status === 'paid') {
-                    return $purchase->remaining_amount <= 0;
-                } elseif ($request->payment_status === 'unpaid') {
-                    return $purchase->remaining_amount > 0;
-                }
-                return true;
-            })->values();
+        // Query now paginated
+        $purchases = $query->paginate($perPage);
+
+        // Append computed attributes (only for current page)
+        $purchases->getCollection()->each->append(['total_paid', 'remaining_amount']);
+
+        // Filter by payment status AFTER append
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            $filtered = $purchases->getCollection()->filter(function ($purchase) use ($request) {
+                return $request->payment_status === 'paid'
+                    ? $purchase->remaining_amount <= 0
+                    : $purchase->remaining_amount > 0;
+            });
+
+            // Replace paginated collection with filtered version
+            $purchases->setCollection($filtered->values());
         }
 
         return Inertia::render('transaction/purchase/index', [
-            'purchases' => [
-                'data' => $purchases,
-            ],
-            'filters' => [
-                'search' => $request->get('search', ''),
-                'status' => $request->get('status', 'all'),
+            'purchases' => $purchases,
+            'filters'   => [
+                'search'         => $request->get('search', ''),
+                'status'         => $request->get('status', 'all'),
                 'payment_status' => $request->get('payment_status', 'all'),
-                'date_from' => $request->get('date_from', ''),
-                'date_to' => $request->get('date_to', ''),
-                'sort_by' => $sortBy,
-                'sort_order' => $sortOrder,
+                'date_from'      => $request->get('date_from', ''),
+                'date_to'        => $request->get('date_to', ''),
+                'sort_by'        => $sortBy,
+                'sort_order'     => $sortOrder,
+                'per_page'       => $perPage,
             ],
         ]);
     }
+
 
     /**
      * Show the form for creating a new resource.
