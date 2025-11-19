@@ -14,7 +14,7 @@ interface UOMTableProps {
 const UOMTable = (props: UOMTableProps) => {
     const { uoms, onEdit, onDelete, pageFrom } = props;
 
-    const tableColumn = ['Kode', 'Nama UOM', 'Aksi'];
+    const tableColumn = ['Nama UOM', 'Aksi'];
     return (
         <TableLayout
             tableName="UOM"
@@ -24,9 +24,6 @@ const UOMTable = (props: UOMTableProps) => {
             pageFrom={pageFrom}
             renderRow={(row) => (
                 <>
-                    <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.id}
-                    </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.name}
                     </TableCell>

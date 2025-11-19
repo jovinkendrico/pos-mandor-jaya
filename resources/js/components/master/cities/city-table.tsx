@@ -18,7 +18,7 @@ interface CityTableProps {
 const CityTable = (props: CityTableProps) => {
     const { cities, onEdit, onDelete, pageFrom } = props;
 
-    const tableColumn = ['Kode', 'Nama Kota', 'Aksi'];
+    const tableColumn = ['Nama Kota', 'Aksi'];
     return (
         <TableLayout
             tableName="Kota"
@@ -28,9 +28,6 @@ const CityTable = (props: CityTableProps) => {
             tableRow={cities}
             renderRow={(row) => (
                 <>
-                    <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.id}
-                    </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.name}
                     </TableCell>
