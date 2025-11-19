@@ -2,56 +2,25 @@ import PageTitle from '@/components/page-title';
 import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import FilterBar from '@/components/transaction/filter-bar';
 import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { create, index } from '@/routes/purchases';
-import { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { create, destroy as destroyPurchase, index } from '@/routes/purchases';
+import {
+    BreadcrumbItem,
+    PageProps as InertiaPageProps,
+    IPurchase,
+    PaginatedData,
+} from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-interface Supplier {
-    id: number;
-    name: string;
-}
-
-interface Item {
-    id: number;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-}
-
-interface PurchaseDetail {
-    id: number;
-    item: Item;
-    item_uom: ItemUom;
-    quantity: string;
-    price: string;
-    discount1_percent: string;
-    discount2_percent: string;
-    subtotal: string;
-}
-
-interface Purchase {
-    id: number;
-    purchase_number: string;
-    supplier?: Supplier;
-    purchase_date: string;
-    due_date?: string;
-    subtotal: string;
-    total_amount: string;
-    total_paid?: number;
-    remaining_amount?: number;
-    status: 'pending' | 'confirmed';
-    details: PurchaseDetail[];
-}
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface PageProps {
     purchases: {
-        data: Purchase[];
+        data: IPurchase[];
     };
     filters?: {
         search: string;
@@ -85,15 +54,36 @@ const PurchaseIndex = (props: PageProps) => {
         sort_by: 'purchase_date',
         sort_order: 'desc',
     } } = props;
-    const [selectedPurchase, setSelectedPurchase] = useState<Purchase | undefined>(undefined);
+    const { flash } = usePage<InertiaPageProps>().props;
+    const [selectedPurchase, setSelectedPurchase] = useState<IPurchase | undefined>(undefined);
     const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
+
+    useMemo(() => {
+        if (
+            flash?.success === 'Pembelian berhasil ditambahkan' ||
+            flash?.success === 'Pembelian berhasil diperbarui'
+        ) {
+            toast.success(flash.success);
+        }
+    }, [flash]);
 
     const handleCreate = () => {
         router.visit(create().url);
     };
 
-    const handleView = (purchase: Purchase) => {
+    const handleView = (purchase: IPurchase) => {
         router.visit(`/purchases/${purchase.id}`);
+    };
+
+    const handleDelete = (purchase: IPurchase) => {
+        setSelectedPurchase(purchase);
+        openDeleteModal();
     };
 
     const handleFilterChange = useCallback((newFilters: Record<string, string>) => {

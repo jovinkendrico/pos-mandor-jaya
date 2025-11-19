@@ -236,7 +236,7 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase): Response
     {
-        $purchase->load(['supplier', 'details.item', 'details.itemUom']);
+        $purchase->load(['supplier', 'details.item', 'details.itemUom.uom']);
 
         return Inertia::render('transaction/purchase/show', [
             'purchase' => $purchase,

@@ -8,41 +8,17 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { Eye } from 'lucide-react';
-
-interface Supplier {
-    id: number;
-    name: string;
-}
-
-interface Purchase {
-    id: number;
-    purchase_number: string;
-    supplier?: Supplier;
-    purchase_date: string;
-    due_date?: string;
-    total_amount: string;
-    total_paid?: number;
-    remaining_amount?: number;
-    status: 'pending' | 'confirmed';
-}
+import { IPurchase } from '@/types';
 
 interface PurchaseTableProps {
-    purchases: Purchase[];
-    onView: (purchase: Purchase) => void;
+    purchases: IPurchase[];
+    onView: (purchase: IPurchase) => void;
 }
 
 export default function PurchaseTable(props: PurchaseTableProps) {
-    const { purchases } = props;
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    };
+    const { purchases, onView } = props;
 
     return (
         <div className="rounded-md border">
@@ -72,7 +48,7 @@ export default function PurchaseTable(props: PurchaseTableProps) {
                         purchases.map((row) => {
                             const remaining = row.remaining_amount ?? Number(row.total_amount);
                             const isPaid = remaining <= 0;
-                            
+
                             return (
                                 <TableRow key={row.id}>
                                     <TableCell className="font-medium">{row.purchase_number}</TableCell>
@@ -106,7 +82,7 @@ export default function PurchaseTable(props: PurchaseTableProps) {
                                         <Button
                                             size="icon"
                                             variant="ghost"
-                                            onClick={() => props.onView(row)}
+                                            onClick={() => onView(row)}
                                         >
                                             <Eye className="h-4 w-4" />
                                         </Button>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUomRequest;
 use App\Http\Requests\UpdateUomRequest;
 use App\Models\Uom;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -79,22 +80,46 @@ class UomController extends Controller
     public function destroy(Uom $uom)
     {
 
-$itemUsingUom = DB::table('item_uoms')
-        ->join('items', 'item_uoms.item_id', '=', 'items.id')
-        ->where('item_uoms.uom_id', $uom->id)
-        ->whereNull('items.deleted_at')
-        ->select('items.name') 
-        ->first();             
+        $itemUsingUom = DB::table('item_uoms')
+            ->join('items', 'item_uoms.item_id', '=', 'items.id')
+            ->where('item_uoms.uom_id', $uom->id)
+            ->whereNull('items.deleted_at')
+            ->select('items.name')
+            ->first();
 
-    if ($itemUsingUom) {
-        $errorMessage = "UOM ini tidak dapat dihapus karena sedang digunakan oleh Barang: {$itemUsingUom->name}";
+        if ($itemUsingUom) {
+            $errorMessage = "UOM ini tidak dapat dihapus karena sedang digunakan oleh Barang: {$itemUsingUom->name}";
 
-        return redirect()->back()->withErrors(['msg' => $errorMessage]);
-    }
+            return redirect()->back()->withErrors(['msg' => $errorMessage]);
+        }
         $uom->delete();
 
         return redirect()->route('uoms.index')
             ->with('success', 'Uom berhasil dihapus.');
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $search = $request->get('search', '');
+        $limit  = $request->get('limit', 10);
+
+        $uoms = Uom::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->get()
+            ->map(function ($uoms) {
+                return [
+                    'value' => (string) $uoms->id,
+                    'label' => $uoms->name,
+                ];
+            });
+
+        return response()->json([
+            'data' => $uoms,
+        ]);
     }
 
 

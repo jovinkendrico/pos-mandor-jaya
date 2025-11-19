@@ -1,5 +1,5 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
-import { cn, formatCurrency, parseCurrency } from '@/lib/utils';
+import { cn, formatCurrency, parseStringtoNumber } from '@/lib/utils';
 import { IBank } from '@/types';
 import { Edit, Trash } from 'lucide-react';
 import { Badge } from '../../ui/badge';
