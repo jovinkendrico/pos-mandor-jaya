@@ -13,10 +13,16 @@ import {
     formatDatetoString,
     formatNumber,
 } from '@/lib/utils';
-import { edit, index } from '@/routes/purchases';
+import { edit, index, print } from '@/routes/purchases';
 import { BreadcrumbItem, IItem, IPurchase } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Pencil, XCircle } from 'lucide-react';
+import {
+    ArrowLeft,
+    CheckCircle2,
+    Download,
+    Pencil,
+    XCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
@@ -61,7 +67,7 @@ const PurchaseShow = (props: PageProps) => {
 
     const handleConfirm = () => {
         router.post(
-            `/purchases/${purchase.id}/confirm`,
+            print(purchase.id).url,
             {},
             {
                 onSuccess: () => {
@@ -96,7 +102,7 @@ const PurchaseShow = (props: PageProps) => {
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title={`Pembelian ${purchase.purchase_number}`} />
 
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-2 flex items-center justify-between">
                     <div>
                         <div className="flex flex-row items-center gap-2">
                             <Link href={index().url}>
@@ -155,6 +161,17 @@ const PurchaseShow = (props: PageProps) => {
                             </Button>
                         )}
                     </div>
+                </div>
+                <div className="flex w-full justify-end">
+                    <Button
+                        className="btn-primary"
+                        onClick={() => {
+                            window.location.href = print(purchase.id).url;
+                        }}
+                    >
+                        <Download />
+                        Download Invoice
+                    </Button>
                 </div>
 
                 {/* Purchase Info */}
