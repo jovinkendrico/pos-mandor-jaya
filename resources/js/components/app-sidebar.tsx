@@ -26,6 +26,7 @@ import { index as saleIndex } from '@/routes/sales';
 import { index as salePaymentIndex } from '@/routes/sale-payments';
 import { index as supplierIndex } from '@/routes/suppliers';
 import { index as uomIndex } from '@/routes/uoms';
+import { index as stockAdjustmentIndex } from '@/routes/stock-adjustments';
 import { index as userIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -70,6 +71,10 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'UOM',
                 href: uomIndex(),
+            },
+            {
+                title: 'Penyesuaian Stok',
+                href: stockAdjustmentIndex(),
             },
         ],
     },
