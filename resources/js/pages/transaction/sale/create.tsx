@@ -37,8 +37,8 @@ const SaleCreate = (props: PageProps) => {
                     <Link href={index().url}>
                         <ArrowLeft className="h-8 w-8" />
                     </Link>
+                    <PageTitle title="Tambah Penjualan" />
                 </div>
-                <PageTitle title="Tambah Penjualan" />
                 <SaleForm customerOptions={customers} items={items} />
             </AppLayout>
         </>

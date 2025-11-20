@@ -15,8 +15,8 @@ import {
 } from '@/lib/utils';
 import { edit, index } from '@/routes/sales';
 import { BreadcrumbItem, ISale } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { CheckCircle2, Pencil, XCircle } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, CheckCircle2, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
@@ -72,10 +72,13 @@ const SaleShow = (props: PageProps) => {
             {
                 onSuccess: () => {
                     toast.success('Penjualan dikonfirmasi');
-                    console.log(sale.status);
                     closeConfirmModal();
                 },
-                onError: () => toast.error('Gagal konfirmasi penjualan'),
+                onError: (errors: Record<string, string>) => {
+                    const message = errors.msg || 'Gagal konfirmasi penjualan';
+                    closeConfirmModal();
+                    toast.error(message);
+                },
             },
         );
     };
@@ -89,7 +92,10 @@ const SaleShow = (props: PageProps) => {
                     toast.success('Konfirmasi dibatalkan');
                     closeConfirmModal();
                 },
-                onError: () => toast.error('Gagal membatalkan konfirmasi'),
+                onError: () => {
+                    toast.error('Gagal membatalkan konfirmasi');
+                    closeConfirmModal();
+                },
             },
         );
     };
@@ -105,7 +111,14 @@ const SaleShow = (props: PageProps) => {
 
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <PageTitle title={`Penjualan ${sale.sale_number}`} />
+                        <div className="flex flex-row items-center gap-2">
+                            <Link href={index().url}>
+                                <ArrowLeft className="h-8 w-8" />
+                            </Link>
+                            <PageTitle
+                                title={`Penjualan ${sale.sale_number}`}
+                            />
+                        </div>
                         <div className="mt-2 flex items-center gap-2">
                             <Badge
                                 variant={

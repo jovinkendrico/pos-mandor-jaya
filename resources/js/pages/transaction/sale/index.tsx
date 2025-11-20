@@ -2,10 +2,11 @@ import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import SaleTable from '@/components/transaction/sales/sale-table';
 import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { create, index } from '@/routes/sales';
+import { create, destroy as destroySale, index } from '@/routes/sales';
 import { BreadcrumbItem, ISale, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -79,7 +80,7 @@ const SaleIndex = (props: PageProps) => {
                 <Head title="Penjualan" />
                 <div className="flex justify-between">
                     <PageTitle title="Penjualan" />
-                    <Button onClick={handleCreate}>
+                    <Button onClick={handleCreate} className="btn-primary">
                         <Plus />
                         Tambah Penjualan
                     </Button>
@@ -97,6 +98,15 @@ const SaleIndex = (props: PageProps) => {
                 <div className="mt-4">
                     <SaleTable sales={sales.data} onDelete={handleDelete} />
                 </div>
+                <DeleteModalLayout
+                    dataName={selectedSale?.sale_number}
+                    dataId={selectedSale?.id}
+                    dataType="Penjualan"
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedSale}
+                    getDeleteUrl={(id) => destroySale(id).url}
+                />
             </AppLayout>
         </>
     );
