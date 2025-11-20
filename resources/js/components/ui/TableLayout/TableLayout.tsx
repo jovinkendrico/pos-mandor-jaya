@@ -45,7 +45,7 @@ const TableLayout = <T,>(props: PropTypes<T>) => {
                                 className="flex w-full flex-row dark:border-b-1 dark:border-white/25"
                             >
                                 <TableCell className="flex w-full max-w-[40px] items-center justify-center text-center">
-                                    {pageFrom + rowIndex}
+                                    {pageFrom + rowIndex}.
                                 </TableCell>
                                 {renderRow(row, rowIndex)}
                             </TableRow>

@@ -38,7 +38,9 @@ const StockMovementTable = (props: StockMovementTableProps) => {
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {formatCurrency(
-                            parseStringtoNumber(String(row.unit_cost)),
+                            parseStringtoNumber(
+                                String(formatNumber(row.unit_cost)),
+                            ),
                         )}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
@@ -52,24 +54,6 @@ const StockMovementTable = (props: StockMovementTableProps) => {
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.notes ?? '-'}
                     </TableCell>
-                    {/* <TableCell className="flex w-full items-center justify-center gap-2 text-center">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onEdit?.(row)}
-                            className="btn-edit"
-                        >
-                            <Edit />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDelete?.(row)}
-                            className="btn-trash"
-                        >
-                            <Trash />
-                        </Button>
-                    </TableCell> */}
                 </>
             )}
         />

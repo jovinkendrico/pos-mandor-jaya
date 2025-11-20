@@ -9,11 +9,12 @@ import { Info, Trash } from 'lucide-react';
 
 interface SaleTableProps {
     sales: ISale[];
+    pageFrom: number;
     onDelete: (sale: ISale) => void;
 }
 
 const SaleTable = (props: SaleTableProps) => {
-    const { sales, onDelete } = props;
+    const { sales, pageFrom, onDelete } = props;
     const tableColumn = [
         'Kode',
         'Customer',
@@ -33,6 +34,7 @@ const SaleTable = (props: SaleTableProps) => {
             tableName="Penjualan"
             tableColumn={tableColumn}
             tableRow={sales}
+            pageFrom={pageFrom}
             text="Tidak ada data Penjualan"
             renderRow={(row) => {
                 const remaining =
@@ -40,7 +42,7 @@ const SaleTable = (props: SaleTableProps) => {
                 const isPaid = remaining <= 0;
                 return (
                     <>
-                        <TableCell className="flex w-full max-w-[120px] min-w-[105px] items-center justify-center text-center">
+                        <TableCell className="flex w-full max-w-[120px] min-w-[105px] items-center justify-center text-center font-mono">
                             {row.sale_number}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">

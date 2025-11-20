@@ -112,6 +112,7 @@ const PurchaseIndex = (props: PageProps) => {
                         { value: 'status', label: 'Status' },
                     ]}
                 />
+
                 <div className="mt-4">
                     <PurchaseTable
                         purchases={purchases.data}

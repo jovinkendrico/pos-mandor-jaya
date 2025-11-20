@@ -3,6 +3,7 @@ import FilterBar from '@/components/transaction/filter-bar';
 import SaleTable from '@/components/transaction/sales/sale-table';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
@@ -95,9 +96,16 @@ const SaleIndex = (props: PageProps) => {
                         { value: 'status', label: 'Status' },
                     ]}
                 />
+
                 <div className="mt-4">
-                    <SaleTable sales={sales.data} onDelete={handleDelete} />
+                    <SaleTable
+                        sales={sales.data}
+                        pageFrom={sales.from}
+                        onDelete={handleDelete}
+                    />
                 </div>
+
+                {sales.data.length !== 0 && <TablePagination data={sales} />}
                 <DeleteModalLayout
                     dataName={selectedSale?.sale_number}
                     dataId={selectedSale?.id}
