@@ -48,8 +48,27 @@ class SaleReturnController extends Controller
             ->orderBy('sale_date', 'desc')
             ->get();
 
+        // Get already returned quantities for each sale detail
+        $returnedQuantities = [];
+        foreach ($sales as $sale) {
+            foreach ($sale->details as $detail) {
+                $totalReturned = \App\Models\SaleReturnDetail::where('sale_detail_id', $detail->id)
+                    ->whereHas('saleReturn', function ($query) {
+                        $query->where('status', 'confirmed');
+                    })
+                    ->sum('quantity');
+
+                $returnedQuantities[$detail->id] = (float) $totalReturned;
+            }
+        }
+
+        // Get banks for refund selection
+        $banks = \App\Models\Bank::orderBy('name')->get();
+
         return Inertia::render('transaction/salereturn/create', [
             'sales' => $sales,
+            'returnedQuantities' => $returnedQuantities,
+            'banks' => $banks,
         ]);
     }
 
@@ -67,11 +86,11 @@ class SaleReturnController extends Controller
 
             foreach ($request->details as $detail) {
                 $amount = $detail['quantity'] * $detail['price'];
-                
+
                 $itemDiscount1Percent = $detail['discount1_percent'] ?? 0;
                 $itemDiscount1Amount = ($amount * $itemDiscount1Percent) / 100;
                 $afterDiscount1 = $amount - $itemDiscount1Amount;
-                
+
                 $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
                 $itemDiscount2Amount = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal = $afterDiscount1 - $itemDiscount2Amount;
@@ -126,6 +145,9 @@ class SaleReturnController extends Controller
                 'total_cost' => 0,
                 'total_profit_adjustment' => 0,
                 'status' => 'pending',
+                'return_type' => $request->return_type ?? 'stock_only',
+                'refund_bank_id' => $request->refund_bank_id ?? null,
+                'refund_method' => $request->refund_method ?? null,
                 'reason' => $request->reason,
             ]);
 

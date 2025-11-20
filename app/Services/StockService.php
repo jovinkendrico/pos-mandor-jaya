@@ -398,6 +398,57 @@ class StockService
             }
 
             $purchaseReturn->update(['status' => 'confirmed']);
+
+            // Handle refund based on refund_method
+            if ($purchaseReturn->return_type === 'stock_and_refund' && $purchaseReturn->refund_method) {
+                if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
+                    // Create payment for cash refund (we receive money back via bank)
+                    $purchasePayment = \App\Models\PurchasePayment::create([
+                        'payment_number' => \App\Models\PurchasePayment::generatePaymentNumber(),
+                        'payment_date' => $purchaseReturn->return_date,
+                        'total_amount' => $purchaseReturn->total_amount,
+                        'bank_id' => $purchaseReturn->refund_bank_id,
+                        'payment_method' => 'refund',
+                        'reference_number' => $purchaseReturn->return_number,
+                        'notes' => "Cash Refund untuk Retur Pembelian #{$purchaseReturn->return_number}",
+                        'status' => 'confirmed',
+                    ]);
+
+                    // Link payment to purchase
+                    \App\Models\PurchasePaymentItem::create([
+                        'purchase_payment_id' => $purchasePayment->id,
+                        'purchase_id' => $purchaseReturn->purchase_id,
+                        'amount' => $purchaseReturn->total_amount,
+                    ]);
+
+                    // Increase bank balance (we're receiving money)
+                    $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
+                    if ($bank) {
+                        $bank->increment('balance', (float) $purchaseReturn->total_amount);
+                    }
+                } elseif ($purchaseReturn->refund_method === 'reduce_payable') {
+                    // Create payment record to reduce payable (no bank transaction)
+                    // This payment record will reduce the remaining_amount automatically
+                    $purchasePayment = \App\Models\PurchasePayment::create([
+                        'payment_number' => \App\Models\PurchasePayment::generatePaymentNumber(),
+                        'payment_date' => $purchaseReturn->return_date,
+                        'total_amount' => $purchaseReturn->total_amount,
+                        'bank_id' => null, // No bank transaction
+                        'payment_method' => 'refund',
+                        'reference_number' => $purchaseReturn->return_number,
+                        'notes' => "Potong Hutang untuk Retur Pembelian #{$purchaseReturn->return_number}",
+                        'status' => 'confirmed',
+                    ]);
+
+                    // Link payment to purchase
+                    \App\Models\PurchasePaymentItem::create([
+                        'purchase_payment_id' => $purchasePayment->id,
+                        'purchase_id' => $purchaseReturn->purchase_id,
+                        'amount' => $purchaseReturn->total_amount,
+                    ]);
+                    // Note: No bank balance change - this is just reducing the payable
+                }
+            }
         });
     }
 
@@ -436,6 +487,29 @@ class StockService
             StockMovement::where('reference_type', 'PurchaseReturn')
                 ->where('reference_id', $purchaseReturn->id)
                 ->delete();
+
+            // Reverse refund if exists
+            if ($purchaseReturn->return_type === 'stock_and_refund' && $purchaseReturn->refund_method) {
+                // Find and delete payment created for this return
+                $payment = \App\Models\PurchasePayment::where('reference_number', $purchaseReturn->return_number)
+                    ->where('payment_method', 'refund')
+                    ->first();
+
+                if ($payment) {
+                    // If cash_refund, restore bank balance
+                    if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
+                        $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
+                        if ($bank) {
+                            $bank->decrement('balance', (float) $payment->total_amount);
+                        }
+                    }
+
+                    // Delete payment items
+                    $payment->items()->delete();
+                    // Delete payment
+                    $payment->delete();
+                }
+            }
 
             $purchaseReturn->update(['status' => 'pending']);
         });
@@ -584,6 +658,57 @@ class StockService
                 'total_cost'           => $totalCost,
                 'total_profit_adjustment' => $totalProfitAdjustment,
             ]);
+
+            // Handle refund based on refund_method
+            if ($saleReturn->return_type === 'stock_and_refund' && $saleReturn->refund_method) {
+                if ($saleReturn->refund_method === 'cash_refund' && $saleReturn->refund_bank_id) {
+                    // Create payment for cash refund (money is returned via bank)
+                    $salePayment = \App\Models\SalePayment::create([
+                        'payment_number' => \App\Models\SalePayment::generatePaymentNumber(),
+                        'payment_date' => $saleReturn->return_date,
+                        'total_amount' => $saleReturn->total_amount,
+                        'bank_id' => $saleReturn->refund_bank_id,
+                        'payment_method' => 'refund',
+                        'reference_number' => $saleReturn->return_number,
+                        'notes' => "Cash Refund untuk Retur Penjualan #{$saleReturn->return_number}",
+                        'status' => 'confirmed',
+                    ]);
+
+                    // Link payment to sale
+                    \App\Models\SalePaymentItem::create([
+                        'sale_payment_id' => $salePayment->id,
+                        'sale_id' => $saleReturn->sale_id,
+                        'amount' => $saleReturn->total_amount,
+                    ]);
+
+                    // Decrease bank balance (we're paying out)
+                    $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
+                    if ($bank) {
+                        $bank->decrement('balance', (float) $saleReturn->total_amount);
+                    }
+                } elseif ($saleReturn->refund_method === 'reduce_receivable') {
+                    // Create payment record to reduce receivable (no bank transaction)
+                    // This payment record will reduce the remaining_amount automatically
+                    $salePayment = \App\Models\SalePayment::create([
+                        'payment_number' => \App\Models\SalePayment::generatePaymentNumber(),
+                        'payment_date' => $saleReturn->return_date,
+                        'total_amount' => $saleReturn->total_amount,
+                        'bank_id' => null, // No bank transaction
+                        'payment_method' => 'refund',
+                        'reference_number' => $saleReturn->return_number,
+                        'notes' => "Potong Piutang untuk Retur Penjualan #{$saleReturn->return_number}",
+                        'status' => 'confirmed',
+                    ]);
+
+                    // Link payment to sale
+                    \App\Models\SalePaymentItem::create([
+                        'sale_payment_id' => $salePayment->id,
+                        'sale_id' => $saleReturn->sale_id,
+                        'amount' => $saleReturn->total_amount,
+                    ]);
+                    // Note: No bank balance change - this is just reducing the receivable
+                }
+            }
         });
     }
 
@@ -621,6 +746,27 @@ class StockService
                     'cost'             => 0,
                     'profit_adjustment' => 0,
                 ]);
+            }
+
+            // Reverse refund if exists
+            if ($saleReturn->return_type === 'stock_and_refund' && $saleReturn->refund_method === 'cash_refund' && $saleReturn->refund_bank_id) {
+                // Find and delete payment created for this return
+                $payment = \App\Models\SalePayment::where('reference_number', $saleReturn->return_number)
+                    ->where('payment_method', 'refund')
+                    ->first();
+
+                if ($payment) {
+                    // Restore bank balance (reverse the decrement)
+                    $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
+                    if ($bank) {
+                        $bank->increment('balance', (float) $payment->total_amount);
+                    }
+
+                    // Delete payment items
+                    $payment->items()->delete();
+                    // Delete payment
+                    $payment->delete();
+                }
             }
 
             $saleReturn->update([

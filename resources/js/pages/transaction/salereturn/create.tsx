@@ -40,8 +40,15 @@ interface Sale {
     details: SaleDetail[];
 }
 
+interface Bank {
+    id: number;
+    name: string;
+}
+
 interface PageProps {
     sales: Sale[];
+    returnedQuantities?: Record<number, number>;
+    banks?: Bank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -59,13 +66,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SaleReturnCreate({ sales }: PageProps) {
+export default function SaleReturnCreate({ sales, returnedQuantities = {}, banks = [] }: PageProps) {
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Tambah Retur Jual" />
                 <PageTitle title="Tambah Retur Penjualan" />
-                <SaleReturnForm sales={sales} />
+                <SaleReturnForm sales={sales} returnedQuantities={returnedQuantities} banks={banks} />
             </AppLayout>
         </>
     );
