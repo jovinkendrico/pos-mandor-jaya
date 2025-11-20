@@ -3,8 +3,8 @@ import {
     formatNumberWithSeparator,
     parseStringtoNumber,
 } from '@/lib/utils';
-import { destroy, store, update } from '@/routes/purchases';
-import { IPurchase, IPurchaseDetail } from '@/types';
+import { destroy, store, update } from '@/routes/sales';
+import { ISale, ISaleDetail } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
@@ -29,11 +29,11 @@ const detailsSchema = Yup.object().shape({
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
 });
 
-const purchaseSchema = Yup.object().shape({
-    supplier_id: Yup.number()
-        .required('Supplier harus dipilih.')
-        .min(1, 'Supplier harus dipilih.'),
-    purchase_date: Yup.date().required('Tanggal harus diisi.'),
+const saleSchema = Yup.object().shape({
+    customer_id: Yup.number()
+        .required('Customer harus dipilih.')
+        .min(1, 'Customer harus dipilih.'),
+    sale_date: Yup.date().required('Tanggal harus diisi.'),
     due_date: Yup.date().nullable(),
     discount1_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
@@ -48,7 +48,7 @@ const purchaseSchema = Yup.object().shape({
     details: Yup.array().of(detailsSchema).min(1, 'Minimal ada satu barang.'),
 });
 
-const usePurchase = () => {
+const useSale = () => {
     const {
         data,
         setData,
@@ -59,8 +59,8 @@ const usePurchase = () => {
         setError,
         clearErrors,
     } = useForm({
-        supplier_id: 0,
-        purchase_date: new Date(),
+        customer_id: 0,
+        sale_date: new Date(),
         due_date: null as unknown as null | Date,
         discount1_percent: 0,
         discount2_percent: 0,
@@ -75,19 +75,19 @@ const usePurchase = () => {
                 discount1_percent: 0,
                 discount2_percent: 0,
             },
-        ] as IPurchaseDetail[],
+        ] as ISaleDetail[],
     });
 
-    const handleSubmit = async (purchase?: IPurchase) => {
+    const handleSubmit = async (sale?: ISale) => {
         clearErrors();
 
         try {
-            await purchaseSchema.validate(data, { abortEarly: false });
-            submit(purchase ? update(purchase.id) : store(), {
+            await saleSchema.validate(data, { abortEarly: false });
+            submit(sale ? update(sale.id) : store(), {
                 onSuccess: () => {
                     reset();
                     toast.success(
-                        purchase
+                        sale
                             ? `Pembelian berhasil diupdate`
                             : `Pembelian berhasil ditambahkan`,
                     );
@@ -111,12 +111,12 @@ const usePurchase = () => {
         }
     };
 
-    const handleDelete = (purchase: IPurchase) => {
-        if (!purchase.id) return;
-        router.delete(destroy(purchase.id).url, {
+    const handleDelete = (sale: ISale) => {
+        if (!sale.id) return;
+        router.delete(destroy(sale.id).url, {
             onSuccess: () => {
                 toast.success(
-                    `Pembelian: ${purchase.purchase_number} berhasil dihapus`,
+                    `Penjualan: ${sale.sale_number} berhasil dihapus`,
                 );
             },
             onError: () => {
@@ -162,7 +162,7 @@ const usePurchase = () => {
 
     const handleChangeItem = (
         index: number,
-        field: keyof IPurchaseDetail | 'item_id' | 'item_name' | 'item_uom_id',
+        field: keyof ISaleDetail | 'item_id' | 'item_name' | 'item_uom_id',
         value: string | number | null,
     ) => {
         const updated = [...data.details];
@@ -253,7 +253,6 @@ const usePurchase = () => {
             ...priceDisplayValues.slice(index + 1),
         ]);
     };
-
     return {
         data,
         setData,
@@ -273,4 +272,4 @@ const usePurchase = () => {
     };
 };
 
-export default usePurchase;
+export default useSale;

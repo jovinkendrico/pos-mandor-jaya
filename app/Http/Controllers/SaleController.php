@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
@@ -108,7 +109,7 @@ class SaleController extends Controller
      */
     public function create(): Response
     {
-        $customers = Customer::orderBy('name')->limit(5)->get();
+        $customers = Customer::orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms.uom')->where('stock', '>', 0)->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/create', [
@@ -242,7 +243,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): Response
     {
-        $sale->load(['customer', 'details.item', 'details.itemUom']);
+        $sale->load(['customer', 'details.item', 'details.itemUom.uom']);
 
         return Inertia::render('transaction/sale/show', [
             'sale' => $sale,
@@ -374,8 +375,8 @@ class SaleController extends Controller
     {
         // Only allow delete if status is pending
         if ($sale->status === 'confirmed') {
-            return redirect()->route('sales.index')
-                ->with('error', 'Penjualan yang sudah dikonfirmasi tidak dapat dihapus.');
+            $errorMessage = "Penjualan yang sudah dikonfirmasi tidak dapat dihapus.";
+            return redirect()->back()->withErrors(['msg' => $errorMessage]);
         }
 
         $sale->delete();
@@ -398,8 +399,8 @@ class SaleController extends Controller
         foreach ($sale->details as $detail) {
             $baseQty = $detail->quantity * $detail->itemUom->conversion_value;
             if ($detail->item->stock < $baseQty) {
-                return redirect()->route('sales.show', $sale)
-                    ->with('error', "Stock {$detail->item->name} tidak mencukupi.");
+                $errorMessage = "Stok {$detail->item->name} tidak mencukupi.";
+                return redirect()->back()->withErrors(['msg' => $errorMessage]);
             }
         }
 

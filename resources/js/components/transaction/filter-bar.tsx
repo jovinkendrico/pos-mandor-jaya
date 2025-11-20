@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -8,99 +7,70 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Search, X, ArrowUpDown } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import {
+    type FilterState,
+    type Option,
+    defaultSortOptions,
+    defaultStatusOptions,
+    useFilterBar,
+} from '@/hooks/use-filterbar';
+import { ArrowUpDown, Search, X } from 'lucide-react';
+import { DatePicker } from '../date-picker';
+import { Card } from '../ui/card';
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupInput,
+} from '../ui/input-group';
 
 interface FilterBarProps {
-    filters: {
-        search: string;
-        status: string;
-        payment_status: string;
-        date_from: string;
-        date_to: string;
-        sort_by: string;
-        sort_order: string;
-    };
-    onFilterChange: (filters: Record<string, string>) => void;
-    statusOptions?: Array<{ value: string; label: string }>;
-    sortOptions?: Array<{ value: string; label: string }>;
+    filters: FilterState;
+    onFilterChange: (filters: FilterState) => void;
+    statusOptions?: Option[];
+    sortOptions?: Option[];
     showPaymentStatus?: boolean;
     showDateRange?: boolean;
 }
 
-export default function FilterBar({
-    filters,
-    onFilterChange,
-    statusOptions = [
-        { value: 'all', label: 'Semua Status' },
-        { value: 'pending', label: 'Pending' },
-        { value: 'confirmed', label: 'Confirmed' },
-    ],
-    sortOptions = [
-        { value: 'purchase_date', label: 'Tanggal' },
-        { value: 'purchase_number', label: 'Nomor' },
-        { value: 'total_amount', label: 'Total' },
-        { value: 'status', label: 'Status' },
-    ],
-    showPaymentStatus = true,
-    showDateRange = true,
-}: FilterBarProps) {
-    const [localFilters, setLocalFilters] = useState(filters);
+const FilterBar = (props: FilterBarProps) => {
+    const {
+        filters,
+        onFilterChange,
+        statusOptions = defaultStatusOptions,
+        sortOptions = defaultSortOptions,
+        showPaymentStatus = true,
+        showDateRange = true,
+    } = props;
 
-    // Sync local filters with props when they change
-    useEffect(() => {
-        setLocalFilters(filters);
-    }, [filters]);
-
-    const handleFilterChange = useCallback(
-        (key: string, value: string) => {
-            const newFilters = { ...localFilters, [key]: value };
-            setLocalFilters(newFilters);
-            onFilterChange(newFilters);
-        },
-        [localFilters, onFilterChange],
-    );
-
-    const handleReset = useCallback(() => {
-        const resetFilters = {
-            search: '',
-            status: 'all',
-            payment_status: 'all',
-            date_from: '',
-            date_to: '',
-            sort_by: sortOptions[0]?.value || 'purchase_date',
-            sort_order: 'desc',
-        };
-        setLocalFilters(resetFilters);
-        onFilterChange(resetFilters);
-    }, [onFilterChange, sortOptions]);
-
-    const hasActiveFilters =
-        localFilters.search ||
-        localFilters.status !== 'all' ||
-        localFilters.payment_status !== 'all' ||
-        localFilters.date_from ||
-        localFilters.date_to ||
-        localFilters.sort_by !== (sortOptions[0]?.value || 'purchase_date') ||
-        localFilters.sort_order !== 'desc';
+    const {
+        localFilters,
+        handleFilterChange,
+        handleReset,
+        handleSortOrderToggle,
+        hasActiveFilters,
+    } = useFilterBar({ initialFilters: filters, onFilterChange, sortOptions });
 
     return (
-        <div className="space-y-4 rounded-lg border bg-card p-4">
+        <Card className="content space-y-4 p-4">
             <div className="flex flex-wrap items-end gap-4">
                 {/* Search */}
-                <div className="flex-1 min-w-[200px]">
+                <div className="min-w-[200px] flex-1">
                     <Label htmlFor="search">Cari</Label>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
+                    <InputGroup className="input-box">
+                        <InputGroupInput
+                            placeholder="Cari nomor atau nama..."
+                            className=""
                             id="search"
                             type="text"
-                            placeholder="Cari nomor atau nama..."
                             value={localFilters.search}
-                            onChange={(e) => handleFilterChange('search', e.target.value)}
-                            className="pl-9"
+                            onChange={(e) =>
+                                handleFilterChange('search', e.target.value)
+                            }
                         />
-                    </div>
+                        <InputGroupAddon>
+                            <Search />
+                        </InputGroupAddon>
+                    </InputGroup>
                 </div>
 
                 {/* Status Filter */}
@@ -108,14 +78,19 @@ export default function FilterBar({
                     <Label htmlFor="status">Status</Label>
                     <Select
                         value={localFilters.status}
-                        onValueChange={(value) => handleFilterChange('status', value)}
+                        onValueChange={(value) =>
+                            handleFilterChange('status', value)
+                        }
                     >
-                        <SelectTrigger id="status">
+                        <SelectTrigger id="status" className="combobox">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            {statusOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
+                            {statusOptions.map((option: Option) => (
+                                <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                >
                                     {option.label}
                                 </SelectItem>
                             ))}
@@ -126,20 +101,27 @@ export default function FilterBar({
                 {/* Payment Status Filter */}
                 {showPaymentStatus && (
                     <div className="w-[180px]">
-                        <Label htmlFor="payment_status">Status Pembayaran</Label>
+                        <Label htmlFor="payment_status">
+                            Status Pembayaran
+                        </Label>
                         <Select
                             value={localFilters.payment_status}
                             onValueChange={(value) =>
                                 handleFilterChange('payment_status', value)
                             }
                         >
-                            <SelectTrigger id="payment_status">
+                            <SelectTrigger
+                                id="payment_status"
+                                className="combobox"
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua</SelectItem>
                                 <SelectItem value="paid">Lunas</SelectItem>
-                                <SelectItem value="unpaid">Belum Lunas</SelectItem>
+                                <SelectItem value="unpaid">
+                                    Belum Lunas
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -150,24 +132,30 @@ export default function FilterBar({
                     <>
                         <div className="w-[160px]">
                             <Label htmlFor="date_from">Dari Tanggal</Label>
-                            <Input
-                                id="date_from"
-                                type="date"
-                                value={localFilters.date_from}
-                                onChange={(e) =>
-                                    handleFilterChange('date_from', e.target.value)
+                            <DatePicker
+                                value={
+                                    localFilters.date_from
+                                        ? new Date(localFilters.date_from)
+                                        : undefined
                                 }
+                                onChange={(value) => {
+                                    handleFilterChange('date_from', value);
+                                }}
+                                className="input-box"
                             />
                         </div>
                         <div className="w-[160px]">
                             <Label htmlFor="date_to">Sampai Tanggal</Label>
-                            <Input
-                                id="date_to"
-                                type="date"
-                                value={localFilters.date_to}
-                                onChange={(e) =>
-                                    handleFilterChange('date_to', e.target.value)
+                            <DatePicker
+                                value={
+                                    localFilters.date_to
+                                        ? new Date(localFilters.date_to)
+                                        : undefined
                                 }
+                                onChange={(value) => {
+                                    handleFilterChange('date_to', value);
+                                }}
+                                className="input-box"
                             />
                         </div>
                     </>
@@ -179,14 +167,19 @@ export default function FilterBar({
                     <div className="flex gap-2">
                         <Select
                             value={localFilters.sort_by}
-                            onValueChange={(value) => handleFilterChange('sort_by', value)}
+                            onValueChange={(value) =>
+                                handleFilterChange('sort_by', value)
+                            }
                         >
-                            <SelectTrigger id="sort_by" className="flex-1">
+                            <SelectTrigger id="sort_by" className="combobox">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {sortOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                {sortOptions.map((option: Option) => (
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -195,17 +188,13 @@ export default function FilterBar({
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={() =>
-                                handleFilterChange(
-                                    'sort_order',
-                                    localFilters.sort_order === 'asc' ? 'desc' : 'asc',
-                                )
-                            }
+                            onClick={handleSortOrderToggle}
                             title={
                                 localFilters.sort_order === 'asc'
                                     ? 'Urutkan Naik'
                                     : 'Urutkan Turun'
                             }
+                            className="btn-secondary"
                         >
                             <ArrowUpDown className="h-4 w-4" />
                         </Button>
@@ -214,13 +203,18 @@ export default function FilterBar({
 
                 {/* Reset Button */}
                 {hasActiveFilters && (
-                    <Button variant="outline" onClick={handleReset}>
+                    <Button
+                        variant="outline"
+                        onClick={handleReset}
+                        className="btn-danger"
+                    >
                         <X className="mr-2 h-4 w-4" />
                         Reset
                     </Button>
                 )}
             </div>
-        </div>
+        </Card>
     );
-}
+};
 
+export default FilterBar;

@@ -368,8 +368,8 @@ class PurchaseController extends Controller
     {
         // Only allow delete if status is pending
         if ($purchase->status === 'confirmed') {
-            return redirect()->route('purchases.index')
-                ->with('error', 'Pembelian yang sudah dikonfirmasi tidak dapat dihapus.');
+            $errorMessage = "Pembelian yang sudah dikonfirmasi tidak dapat dihapus.";
+            return redirect()->back()->withErrors(['msg' => $errorMessage]);
         }
 
         $purchase->delete();

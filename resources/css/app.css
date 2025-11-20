@@ -294,3 +294,7 @@
 .combobox {
     @apply w-full dark:!bg-white dark:!text-primary-200;
 }
+
+.break_word {
+    word-wrap: break-word;
+}

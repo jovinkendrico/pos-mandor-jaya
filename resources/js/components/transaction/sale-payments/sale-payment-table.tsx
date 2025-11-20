@@ -8,24 +8,19 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils';
-import { Eye } from 'lucide-react';
+import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { SalePayment } from '@/types';
+import { Eye } from 'lucide-react';
 
 interface SalePaymentTableProps {
     payments: SalePayment[];
     onView: (payment: SalePayment) => void;
 }
 
-export default function SalePaymentTable({ payments, onView }: SalePaymentTableProps) {
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    };
-
+export default function SalePaymentTable({
+    payments,
+    onView,
+}: SalePaymentTableProps) {
     const formatPaymentMethod = (method: string) => {
         const methods: Record<string, string> = {
             cash: 'Tunai',
@@ -45,7 +40,9 @@ export default function SalePaymentTable({ payments, onView }: SalePaymentTableP
                         <TableHead>No. Pembayaran</TableHead>
                         <TableHead>Tanggal</TableHead>
                         <TableHead>Jumlah Invoice</TableHead>
-                        <TableHead className="text-right">Total Pembayaran</TableHead>
+                        <TableHead className="text-right">
+                            Total Pembayaran
+                        </TableHead>
                         <TableHead>Metode</TableHead>
                         <TableHead>Bank</TableHead>
                         <TableHead>Status</TableHead>
@@ -55,30 +52,60 @@ export default function SalePaymentTable({ payments, onView }: SalePaymentTableP
                 <TableBody>
                     {payments.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={8} className="text-center text-muted-foreground">
+                            <TableCell
+                                colSpan={8}
+                                className="text-center text-muted-foreground"
+                            >
                                 Tidak ada data pembayaran penjualan
                             </TableCell>
                         </TableRow>
                     ) : (
                         payments.map((payment) => (
                             <TableRow key={payment.id}>
-                                <TableCell className="font-medium">{payment.payment_number}</TableCell>
-                                <TableCell>{formatDate(payment.payment_date)}</TableCell>
+                                <TableCell className="font-medium">
+                                    {payment.payment_number}
+                                </TableCell>
                                 <TableCell>
-                                    {payment.items?.length || payment.sales?.length || 0} invoice
+                                    {formatDatetoString(
+                                        new Date(payment.payment_date),
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    {payment.items?.length ||
+                                        payment.sales?.length ||
+                                        0}{' '}
+                                    invoice
                                 </TableCell>
                                 <TableCell className="text-right font-medium">
                                     {formatCurrency(payment.total_amount)}
                                 </TableCell>
-                                <TableCell>{formatPaymentMethod(payment.payment_method)}</TableCell>
-                                <TableCell>{payment.bank?.name || '-'}</TableCell>
+                                <TableCell>
+                                    {formatPaymentMethod(
+                                        payment.payment_method,
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    {payment.bank?.name || '-'}
+                                </TableCell>
                                 <TableCell className="text-center">
-                                    <Badge variant={payment.status === 'confirmed' ? 'default' : 'secondary'}>
-                                        {payment.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                                    <Badge
+                                        variant={
+                                            payment.status === 'confirmed'
+                                                ? 'default'
+                                                : 'secondary'
+                                        }
+                                    >
+                                        {payment.status === 'confirmed'
+                                            ? 'Confirmed'
+                                            : 'Pending'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    <Button size="icon" variant="ghost" onClick={() => onView(payment)}>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => onView(payment)}
+                                    >
                                         <Eye className="h-4 w-4" />
                                     </Button>
                                 </TableCell>
@@ -90,4 +117,3 @@ export default function SalePaymentTable({ payments, onView }: SalePaymentTableP
         </div>
     );
 }
-

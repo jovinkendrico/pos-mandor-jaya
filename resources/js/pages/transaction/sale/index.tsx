@@ -1,36 +1,19 @@
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
-import SaleTable from '@/components/transaction/sales/sale-table';
 import FilterBar from '@/components/transaction/filter-bar';
+import SaleTable from '@/components/transaction/sales/sale-table';
+import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import useDisclosure from '@/hooks/use-disclosure';
+import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { index, create } from '@/routes/sales';
-import { BreadcrumbItem } from '@/types';
+import { create, destroy as destroySale, index } from '@/routes/sales';
+import { BreadcrumbItem, ISale, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useCallback, useEffect, useRef } from 'react';
-
-interface Customer {
-    id: number;
-    name: string;
-}
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: Customer;
-    sale_date: string;
-    due_date?: string;
-    total_amount: string;
-    total_profit: string;
-    total_paid?: number;
-    remaining_amount?: number;
-    status: 'pending' | 'confirmed';
-}
+import { useState } from 'react';
 
 interface PageProps {
-    sales: {
-        data: Sale[];
-    };
+    sales: PaginatedData<ISale>;
     filters?: {
         search: string;
         status: string;
@@ -53,54 +36,43 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SaleIndex({ sales, filters = {
-    search: '',
-    status: 'all',
-    payment_status: 'all',
-    date_from: '',
-    date_to: '',
-    sort_by: 'sale_date',
-    sort_order: 'desc',
-} }: PageProps) {
-    const searchTimeoutRef = useRef<NodeJS.Timeout>();
+const SaleIndex = (props: PageProps) => {
+    const {
+        sales,
+        filters = {
+            search: '',
+            status: 'all',
+            payment_status: 'all',
+            date_from: '',
+            date_to: '',
+            sort_by: 'sale_date',
+            sort_order: 'desc',
+        },
+    } = props;
+
+    const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
+        index,
+        filters,
+    );
+
+    const [selectedSale, setSelectedSale] = useState<ISale | undefined>(
+        undefined,
+    );
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
 
     const handleCreate = () => {
         router.visit(create().url);
     };
 
-    const handleView = (sale: Sale) => {
-        router.visit(`/sales/${sale.id}`);
+    const handleDelete = (sale: ISale) => {
+        setSelectedSale(sale);
+        openDeleteModal();
     };
-
-    const handleFilterChange = useCallback((newFilters: Record<string, string>) => {
-        // Debounce search input
-        if (newFilters.search !== filters.search) {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
-            }
-            searchTimeoutRef.current = setTimeout(() => {
-                router.get(index().url, newFilters, {
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true,
-                });
-            }, 500);
-        } else {
-            router.get(index().url, newFilters, {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            });
-        }
-    }, [filters.search]);
-
-    useEffect(() => {
-        return () => {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
-            }
-        };
-    }, []);
 
     return (
         <>
@@ -108,13 +80,13 @@ export default function SaleIndex({ sales, filters = {
                 <Head title="Penjualan" />
                 <div className="flex justify-between">
                     <PageTitle title="Penjualan" />
-                    <Button onClick={handleCreate}>
+                    <Button onClick={handleCreate} className="btn-primary">
                         <Plus />
                         Tambah Penjualan
                     </Button>
                 </div>
                 <FilterBar
-                    filters={filters}
+                    filters={{ ...allFilters, search: searchTerm }}
                     onFilterChange={handleFilterChange}
                     sortOptions={[
                         { value: 'sale_date', label: 'Tanggal' },
@@ -124,10 +96,20 @@ export default function SaleIndex({ sales, filters = {
                     ]}
                 />
                 <div className="mt-4">
-                    <SaleTable sales={sales.data} onView={handleView} />
+                    <SaleTable sales={sales.data} onDelete={handleDelete} />
                 </div>
+                <DeleteModalLayout
+                    dataName={selectedSale?.sale_number}
+                    dataId={selectedSale?.id}
+                    dataType="Penjualan"
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedSale}
+                    getDeleteUrl={(id) => destroySale(id).url}
+                />
             </AppLayout>
         </>
     );
-}
+};
 
+export default SaleIndex;

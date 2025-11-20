@@ -1,118 +1,120 @@
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils';
-import { Eye } from 'lucide-react';
-
-interface Customer {
-    id: number;
-    name: string;
-}
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: Customer;
-    sale_date: string;
-    due_date?: string;
-    total_amount: string;
-    total_profit: string;
-    total_paid?: number;
-    remaining_amount?: number;
-    status: 'pending' | 'confirmed';
-}
+import { Button } from '@/components/ui/button';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
+import { ISale } from '@/types';
+import { Link } from '@inertiajs/react';
+import { Info, Trash } from 'lucide-react';
 
 interface SaleTableProps {
-    sales: Sale[];
-    onView: (sale: Sale) => void;
+    sales: ISale[];
+    onDelete: (sale: ISale) => void;
 }
 
-export default function SaleTable({ sales, onView }: SaleTableProps) {
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    };
+const SaleTable = (props: SaleTableProps) => {
+    const { sales, onDelete } = props;
+    const tableColumn = [
+        'Kode',
+        'Customer',
+        'Tanggal',
+        'Jatuh Tempo',
+        'Total',
+        'Profit',
+        'Sudah Dibayar',
+        'Sisa',
+        'Status Pembayaran',
+        'Status',
+        'Aksi',
+    ];
 
     return (
-        <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[150px]">No. Penjualan</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Tanggal</TableHead>
-                        <TableHead>Jatuh Tempo</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="text-right">Profit</TableHead>
-                        <TableHead className="text-right">Sudah Dibayar</TableHead>
-                        <TableHead className="text-right">Sisa</TableHead>
-                        <TableHead className="text-center">Status Pembayaran</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-center w-[100px]">Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {sales.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={11} className="text-center text-muted-foreground">
-                                Tidak ada data penjualan
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        sales.map((sale) => {
-                            const remaining = sale.remaining_amount ?? Number(sale.total_amount);
-                            const isPaid = remaining <= 0;
-                            
-                            return (
-                                <TableRow key={sale.id}>
-                                    <TableCell className="font-medium">{sale.sale_number}</TableCell>
-                                    <TableCell>{sale.customer?.name || '-'}</TableCell>
-                                    <TableCell>{formatDate(sale.sale_date)}</TableCell>
-                                    <TableCell>{sale.due_date ? formatDate(sale.due_date) : '-'}</TableCell>
-                                    <TableCell className="text-right font-medium">
-                                        {formatCurrency(Number(sale.total_amount))}
-                                    </TableCell>
-                                    <TableCell className="text-right font-medium text-green-600">
-                                        {sale.status === 'confirmed' ? formatCurrency(Number(sale.total_profit)) : '-'}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {formatCurrency(sale.total_paid || 0)}
-                                    </TableCell>
-                                    <TableCell className="text-right font-medium">
-                                        {formatCurrency(remaining)}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant={isPaid ? 'success' : 'warning'}>
-                                            {isPaid ? 'Lunas' : 'Belum Lunas'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant={sale.status === 'confirmed' ? 'default' : 'secondary'}>
-                                            {sale.status === 'confirmed' ? 'Confirmed' : 'Pending'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <Button size="icon" variant="ghost" onClick={() => onView(sale)}>
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })
-                    )}
-                </TableBody>
-            </Table>
-        </div>
+        <TableLayout
+            tableName="Penjualan"
+            tableColumn={tableColumn}
+            tableRow={sales}
+            text="Tidak ada data Penjualan"
+            renderRow={(row) => {
+                const remaining =
+                    row.remaining_amount ?? Number(row.total_amount);
+                const isPaid = remaining <= 0;
+                return (
+                    <>
+                        <TableCell className="flex w-full max-w-[120px] min-w-[105px] items-center justify-center text-center">
+                            {row.sale_number}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {row.customer?.name || '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {formatDatetoString(new Date(row.sale_date))}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {row.due_date
+                                ? formatDatetoString(new Date(row.due_date))
+                                : '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {formatCurrency(Number(row.total_amount))}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-green-500">
+                            {row.status === 'confirmed'
+                                ? formatCurrency(Number(row.total_profit))
+                                : '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {formatCurrency(row.total_paid || 0)}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {formatCurrency(row.remaining_amount || 0)}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            <Badge variant={isPaid ? 'success' : 'warning'}>
+                                {isPaid ? 'Lunas' : 'Belum Lunas'}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            <Badge
+                                variant={
+                                    row.status === 'confirmed'
+                                        ? 'default'
+                                        : 'secondary'
+                                }
+                                className={cn(
+                                    row.status === 'pending'
+                                        ? 'badge-yellow-light'
+                                        : 'badge-green-light',
+                                )}
+                            >
+                                {row.status === 'confirmed'
+                                    ? 'Confirmed'
+                                    : 'Pending'}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                            <Link href={`/sales/${row.id}`}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="btn-info"
+                                >
+                                    <Info />
+                                </Button>
+                            </Link>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDelete(row)}
+                                className="btn-trash"
+                            >
+                                <Trash />
+                            </Button>
+                        </TableCell>
+                    </>
+                );
+            }}
+        />
     );
-}
+};
 
+export default SaleTable;
