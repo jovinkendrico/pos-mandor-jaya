@@ -655,5 +655,52 @@ class StockService
 
         $item->decrement('stock', $quantity);
     }
+
+    /**
+     * Create stock adjustment (increase or decrease stock)
+     */
+    public function adjustStock(Item $item, float $quantity, float $unitCost, $adjustmentDate, string $notes = ''): void
+    {
+        if ($quantity == 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($item, $quantity, $unitCost, $adjustmentDate, $notes) {
+            if ($quantity > 0) {
+                // Increase stock - add stock movement
+                StockMovement::create([
+                    'item_id'            => $item->id,
+                    'reference_type'     => 'StockAdjustment',
+                    'reference_id'       => $item->id,
+                    'quantity'           => $quantity,
+                    'unit_cost'          => $unitCost,
+                    'remaining_quantity' => $quantity,
+                    'movement_date'      => $adjustmentDate,
+                    'notes'              => $notes ?: 'Penyesuaian stok (IN)',
+                ]);
+
+                $item->increment('stock', $quantity);
+            } else {
+                // Decrease stock - use FIFO consumption
+                $absQuantity = abs($quantity);
+                $consumptionCost = $this->calculateFifoCost($item->id, $absQuantity, $adjustmentDate);
+                $avgUnitCost = $absQuantity > 0 ? $consumptionCost / $absQuantity : $unitCost;
+
+                // Create consumption movement
+                StockMovement::create([
+                    'item_id'            => $item->id,
+                    'reference_type'     => 'StockAdjustment',
+                    'reference_id'       => $item->id,
+                    'quantity'           => -$absQuantity,
+                    'unit_cost'          => $avgUnitCost,
+                    'remaining_quantity' => 0,
+                    'movement_date'      => $adjustmentDate,
+                    'notes'              => $notes ?: 'Penyesuaian stok (OUT)',
+                ]);
+
+                $item->decrement('stock', $absQuantity);
+            }
+        });
+    }
 }
 
