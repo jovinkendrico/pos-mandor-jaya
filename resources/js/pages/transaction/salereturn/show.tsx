@@ -11,6 +11,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { formatDatetoString } from '@/lib/utils';
 import { index } from '@/routes/sale-returns';
 import { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -99,14 +100,6 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
             currency: 'IDR',
             minimumFractionDigits: 0,
         }).format(num);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
     };
 
     const handleConfirm = () => {
@@ -230,7 +223,9 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                     Tanggal Retur:
                                 </span>
                                 <span className="font-medium">
-                                    {formatDate(returnData.return_date)}
+                                    {formatDatetoString(
+                                        new Date(returnData.return_date),
+                                    )}
                                 </span>
                             </div>
                             {returnData.reason && (

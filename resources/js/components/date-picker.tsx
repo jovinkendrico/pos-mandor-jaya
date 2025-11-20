@@ -43,14 +43,14 @@ export function DatePicker({
 }: DatePickerProps) {
     const [open, setOpen] = React.useState(false);
 
-    const [month, setMonth] = React.useState(value || undefined);
+    const [monthView, setMonthView] = React.useState<Date>(value || new Date());
 
     const months = [
         'Januari',
         'Februari',
         'Maret',
         'April',
-        ' Mei',
+        'Mei',
         'Juni',
         'Juli',
         'Agustus',
@@ -65,28 +65,29 @@ export function DatePicker({
     );
 
     const handleMonthChange = (monthStr: string) => {
-        if (!month) return;
-        const newDate = setMonthFns(month as Date, months.indexOf(monthStr));
-        setMonth(newDate);
+        const newDate = setMonthFns(monthView, months.indexOf(monthStr));
+        setMonthView(newDate);
     };
 
-    const handleYearChange = (year: string) => {
-        const newDate = setYearFns(year, parseInt(year));
-        setMonth(newDate);
+    const handleYearChange = (yearStr: string) => {
+        const newDate = setYearFns(monthView, parseInt(yearStr));
+        setMonthView(newDate);
     };
 
     const handleSelect = (selectedDate: Date | undefined) => {
         if (selectedDate) {
             onChange(selectedDate);
+            setMonthView(selectedDate);
         }
         setOpen(false);
     };
 
     React.useEffect(() => {
         if (value) {
-            setMonth(value);
+            setMonthView(value);
         }
     }, [value]);
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -98,22 +99,23 @@ export function DatePicker({
                         className,
                     )}
                 >
-                    <CalendarIcon />
+                    <CalendarIcon className="mr-2 h-4 w-4" />
                     {value ? (
                         format(value, 'yyyy-MM-dd')
                     ) : (
                         <span>Pick a date</span>
                     )}
-                    <ChevronDown />
+                    <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
                 <div className="flex justify-between p-2">
+                    {/* Month Select */}
                     <Select
                         onValueChange={handleMonthChange}
-                        value={months[getMonth(month as Date)]}
+                        value={months[getMonth(value || monthView)]}
                     >
-                        <SelectTrigger className="w-[110px]">
+                        <SelectTrigger className="combobox !w-[110px]">
                             <SelectValue placeholder="Month" />
                         </SelectTrigger>
                         <SelectContent>
@@ -124,15 +126,12 @@ export function DatePicker({
                             ))}
                         </SelectContent>
                     </Select>
+
                     <Select
                         onValueChange={handleYearChange}
-                        value={
-                            typeof month === 'string'
-                                ? 'Select Date'
-                                : getYear(month as Date).toString()
-                        }
+                        value={getYear(value || monthView).toString()}
                     >
-                        <SelectTrigger className="w-[110px]">
+                        <SelectTrigger className="combobox !w-[110px]">
                             <SelectValue placeholder="Year" />
                         </SelectTrigger>
                         <SelectContent>
@@ -144,12 +143,13 @@ export function DatePicker({
                         </SelectContent>
                     </Select>
                 </div>
+                {/* Calendar Component */}
                 <Calendar
                     mode="single"
                     selected={value}
                     onSelect={handleSelect}
-                    month={typeof month === 'string' ? undefined : month}
-                    onMonthChange={setMonth}
+                    month={monthView}
+                    onMonthChange={setMonthView}
                     locale={id}
                 />
             </PopoverContent>

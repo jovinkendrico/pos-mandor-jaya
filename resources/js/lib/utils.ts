@@ -22,16 +22,16 @@ export function parseCurrency(input: string): number | null {
 
     // Remove currency symbols, spaces, and non-numeric characters except dots and commas
     const cleaned = input.replace(/[^\d.,]/g, '');
-    
+
     // Remove dots (thousand separators) and replace comma with dot (decimal separator)
     const normalized = cleaned.replace(/\./g, '').replace(',', '.');
-    
+
     if (!normalized) {
         return null;
     }
 
     const parsed = parseFloat(normalized);
-    
+
     return isNaN(parsed) ? null : parsed;
 }
 
@@ -47,10 +47,13 @@ export function formatCurrency(input: number | null | undefined): string {
 
     // Round to 2 decimal places and format
     const rounded = Math.round(input * 100) / 100;
-    return 'Rp. ' + rounded.toLocaleString('id-ID', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
+    return (
+        'Rp. ' +
+        rounded.toLocaleString('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        })
+    );
 }
 
 export function formatNumber(input: number): number {
@@ -86,4 +89,12 @@ export function formatDiscount(input: string) {
     }
 
     return parsedInput;
+}
+
+export function formatDatetoString(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
 }

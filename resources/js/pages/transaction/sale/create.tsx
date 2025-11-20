@@ -2,32 +2,13 @@ import PageTitle from '@/components/page-title';
 import SaleForm from '@/components/transaction/sales/sale-form';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/sales';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-
-interface Customer {
-    id: number;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-    price: string;
-    conversion_value: number;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-    stock: string;
-    uoms: ItemUom[];
-}
+import { BreadcrumbItem, ICustomer, IItem } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    customers: Customer[];
-    items: Item[];
+    customers: ICustomer[];
+    items: IItem[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -45,15 +26,23 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SaleCreate({ customers, items }: PageProps) {
+const SaleCreate = (props: PageProps) => {
+    const { customers, items } = props;
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Tambah Penjualan" />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                </div>
                 <PageTitle title="Tambah Penjualan" />
-                <SaleForm customers={customers} items={items} />
+                <SaleForm customerOptions={customers} items={items} />
             </AppLayout>
         </>
     );
-}
+};
 
+export default SaleCreate;

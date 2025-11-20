@@ -1,10 +1,11 @@
 import PageTitle from '@/components/page-title';
-import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import FilterBar from '@/components/transaction/filter-bar';
+import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
+import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { create, destroy as destroyPurchase, index } from '@/routes/purchases';
 import {
@@ -15,13 +16,11 @@ import {
 } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 interface PageProps {
-    purchases: {
-        data: IPurchase[];
-    };
+    purchases: PaginatedData<IPurchase>;
     filters?: {
         search: string;
         status: string;
@@ -45,18 +44,28 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const PurchaseIndex = (props: PageProps) => {
-    const { purchases, filters = {
-        search: '',
-        status: 'all',
-        payment_status: 'all',
-        date_from: '',
-        date_to: '',
-        sort_by: 'purchase_date',
-        sort_order: 'desc',
-    } } = props;
+    const {
+        purchases,
+        filters = {
+            search: '',
+            status: 'all',
+            payment_status: 'all',
+            date_from: '',
+            date_to: '',
+            sort_by: 'purchase_date',
+            sort_order: 'desc',
+        },
+    } = props;
     const { flash } = usePage<InertiaPageProps>().props;
-    const [selectedPurchase, setSelectedPurchase] = useState<IPurchase | undefined>(undefined);
-    const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
+    const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
+        index,
+        filters,
+    );
+
+    const [selectedPurchase, setSelectedPurchase] = useState<
+        IPurchase | undefined
+    >(undefined);
 
     const {
         isOpen: isDeleteModalOpen,
@@ -66,8 +75,8 @@ const PurchaseIndex = (props: PageProps) => {
 
     useMemo(() => {
         if (
-            flash?.success === 'Pembelian berhasil ditambahkan' ||
-            flash?.success === 'Pembelian berhasil diperbarui'
+            flash?.success === 'Pembelian berhasil ditambahkan.' ||
+            flash?.success === 'Pembelian berhasil diperbarui.'
         ) {
             toast.success(flash.success);
         }
@@ -77,44 +86,10 @@ const PurchaseIndex = (props: PageProps) => {
         router.visit(create().url);
     };
 
-    const handleView = (purchase: IPurchase) => {
-        router.visit(`/purchases/${purchase.id}`);
-    };
-
     const handleDelete = (purchase: IPurchase) => {
         setSelectedPurchase(purchase);
         openDeleteModal();
     };
-
-    const handleFilterChange = useCallback((newFilters: Record<string, string>) => {
-        // Debounce search input
-        if (newFilters.search !== filters.search) {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
-            }
-            searchTimeoutRef.current = setTimeout(() => {
-                router.get(index().url, newFilters, {
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true,
-                });
-            }, 500);
-        } else {
-            router.get(index().url, newFilters, {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            });
-        }
-    }, [filters.search]);
-
-    useEffect(() => {
-        return () => {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
-            }
-        };
-    }, []);
 
     return (
         <>
@@ -128,18 +103,35 @@ const PurchaseIndex = (props: PageProps) => {
                     </Button>
                 </div>
                 <FilterBar
-                    filters={filters}
+                    filters={{ ...allFilters, search: searchTerm }}
                     onFilterChange={handleFilterChange}
                     sortOptions={[
                         { value: 'purchase_date', label: 'Tanggal' },
-                        { value: 'purchase_number', label: 'Nomor Pembelian' },
+                        { value: 'purchase_number', label: 'No. Pembelian' },
                         { value: 'total_amount', label: 'Total' },
                         { value: 'status', label: 'Status' },
                     ]}
                 />
                 <div className="mt-4">
-                    <PurchaseTable purchases={purchases.data} onView={handleView} />
+                    <PurchaseTable
+                        purchases={purchases.data}
+                        pageFrom={purchases.from}
+                        onDelete={handleDelete}
+                    />
                 </div>
+                {purchases.data.length !== 0 && (
+                    <TablePagination data={purchases} />
+                )}
+
+                <DeleteModalLayout
+                    dataName={selectedPurchase?.purchase_number}
+                    dataId={selectedPurchase?.id}
+                    dataType="Pembelian"
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedPurchase}
+                    getDeleteUrl={(id) => destroyPurchase(id).url}
+                />
             </AppLayout>
         </>
     );

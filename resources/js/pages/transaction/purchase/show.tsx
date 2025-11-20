@@ -7,7 +7,12 @@ import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { cn, formatCurrency, formatDate, formatNumber } from '@/lib/utils';
+import {
+    cn,
+    formatCurrency,
+    formatDatetoString,
+    formatNumber,
+} from '@/lib/utils';
 import { edit, index } from '@/routes/purchases';
 import { BreadcrumbItem, IItem, IPurchase } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
@@ -172,7 +177,9 @@ const PurchaseShow = (props: PageProps) => {
                                     Tanggal:
                                 </span>
                                 <span className="font-medium">
-                                    {formatDate(purchase.purchase_date)}
+                                    {formatDatetoString(
+                                        new Date(purchase.purchase_date),
+                                    )}
                                 </span>
                             </div>
                             {purchase.due_date && (
@@ -181,7 +188,9 @@ const PurchaseShow = (props: PageProps) => {
                                         Jatuh Tempo:
                                     </span>
                                     <span className="font-medium">
-                                        {formatDate(purchase.due_date)}
+                                        {formatDatetoString(
+                                            new Date(purchase.due_date),
+                                        )}
                                     </span>
                                 </div>
                             )}

@@ -2,76 +2,25 @@ import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import Modal from '@/components/ui/Modal/Modal';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
+import {
+    cn,
+    formatCurrency,
+    formatDatetoString,
+    formatNumber,
+} from '@/lib/utils';
 import { edit, index } from '@/routes/sales';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, ISale } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { CheckCircle2, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface Customer {
-    id: number;
-    name: string;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-}
-
-interface SaleDetail {
-    id: number;
-    item: Item;
-    item_uom: ItemUom;
-    quantity: string;
-    price: string;
-    discount1_percent: string;
-    discount1_amount: string;
-    discount2_percent: string;
-    discount2_amount: string;
-    subtotal: string;
-    cost: string;
-    profit: string;
-}
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: Customer;
-    sale_date: string;
-    due_date?: string;
-    subtotal: string;
-    discount1_percent: string;
-    discount1_amount: string;
-    discount2_percent: string;
-    discount2_amount: string;
-    total_after_discount: string;
-    ppn_percent: string;
-    ppn_amount: string;
-    total_amount: string;
-    total_cost: string;
-    total_profit: string;
-    status: 'pending' | 'confirmed';
-    notes?: string;
-    details: SaleDetail[];
-}
-
 interface PageProps {
-    sale: Sale;
+    sale: ISale;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -89,56 +38,60 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SaleShow({ sale }: PageProps) {
-    const formatCurrency = (value: string | number) => {
-        const num = typeof value === 'string' ? parseFloat(value) : value;
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(num);
-    };
+const SaleShow = (props: PageProps) => {
+    const { sale } = props;
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+    const {
+        isOpen: isConfirmModalOpen,
+        openModal: openConfirmModal,
+        closeModal: closeConfirmModal,
+    } = useDisclosure();
+
+    const tableColumn = [
+        'Kode',
+        'Nama Item',
+        'UOM',
+        'Kuantitas',
+        'Harga',
+        'Disc 1 (%)',
+        'Disc 2 (%)',
+        'Subtotal',
+        'Cost',
+        'Profit',
+    ];
+
+    if (sale.status === 'pending') {
+        tableColumn.pop();
+        tableColumn.pop();
+    }
 
     const handleConfirm = () => {
-        if (
-            confirm(
-                'Konfirmasi penjualan? Stock akan berkurang, profit akan dihitung, dan data tidak bisa diedit lagi.',
-            )
-        ) {
-            router.post(
-                `/sales/${sale.id}/confirm`,
-                {},
-                {
-                    onSuccess: () => toast.success('Penjualan dikonfirmasi'),
-                    onError: () => toast.error('Gagal konfirmasi penjualan'),
+        router.post(
+            `/sales/${sale.id}/confirm`,
+            {},
+            {
+                onSuccess: () => {
+                    toast.success('Penjualan dikonfirmasi');
+                    console.log(sale.status);
+                    closeConfirmModal();
                 },
-            );
-        }
+                onError: () => toast.error('Gagal konfirmasi penjualan'),
+            },
+        );
     };
 
     const handleUnconfirm = () => {
-        if (
-            confirm(
-                'Batalkan konfirmasi? Stock akan dikembalikan dan data bisa diedit kembali.',
-            )
-        ) {
-            router.post(
-                `/sales/${sale.id}/unconfirm`,
-                {},
-                {
-                    onSuccess: () => toast.success('Konfirmasi dibatalkan'),
-                    onError: () => toast.error('Gagal membatalkan konfirmasi'),
+        router.post(
+            `/sales/${sale.id}/unconfirm`,
+            {},
+            {
+                onSuccess: () => {
+                    toast.success('Konfirmasi dibatalkan');
+                    closeConfirmModal();
                 },
-            );
-        }
+                onError: () => toast.error('Gagal membatalkan konfirmasi'),
+            },
+        );
     };
 
     const handleEdit = () => {
@@ -160,7 +113,11 @@ export default function SaleShow({ sale }: PageProps) {
                                         ? 'default'
                                         : 'secondary'
                                 }
-                                className="text-sm"
+                                className={cn(
+                                    sale.status === 'pending'
+                                        ? 'badge-yellow-light'
+                                        : 'badge-green-light',
+                                )}
                             >
                                 {sale.status === 'confirmed'
                                     ? 'Confirmed'
@@ -171,11 +128,18 @@ export default function SaleShow({ sale }: PageProps) {
                     <div className="flex gap-2">
                         {sale.status === 'pending' && (
                             <>
-                                <Button onClick={handleEdit} variant="outline">
+                                <Button
+                                    onClick={handleEdit}
+                                    variant="secondary"
+                                    className="btn-secondary"
+                                >
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                 </Button>
-                                <Button onClick={handleConfirm}>
+                                <Button
+                                    onClick={openConfirmModal}
+                                    className="btn-primary"
+                                >
                                     <CheckCircle2 className="mr-2 h-4 w-4" />
                                     Konfirmasi
                                 </Button>
@@ -183,7 +147,7 @@ export default function SaleShow({ sale }: PageProps) {
                         )}
                         {sale.status === 'confirmed' && (
                             <Button
-                                onClick={handleUnconfirm}
+                                onClick={openConfirmModal}
                                 variant="destructive"
                             >
                                 <XCircle className="mr-2 h-4 w-4" />
@@ -195,7 +159,7 @@ export default function SaleShow({ sale }: PageProps) {
 
                 {/* Sale Info */}
                 <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <Card>
+                    <Card className="content">
                         <CardHeader>
                             <CardTitle>Informasi Penjualan</CardTitle>
                         </CardHeader>
@@ -213,7 +177,9 @@ export default function SaleShow({ sale }: PageProps) {
                                     Tanggal:
                                 </span>
                                 <span className="font-medium">
-                                    {formatDate(sale.sale_date)}
+                                    {formatDatetoString(
+                                        new Date(sale.sale_date),
+                                    )}
                                 </span>
                             </div>
                             {sale.due_date && (
@@ -222,7 +188,9 @@ export default function SaleShow({ sale }: PageProps) {
                                         Jatuh Tempo:
                                     </span>
                                     <span className="font-medium">
-                                        {formatDate(sale.due_date)}
+                                        {formatDatetoString(
+                                            new Date(sale.due_date),
+                                        )}
                                     </span>
                                 </div>
                             )}
@@ -239,7 +207,7 @@ export default function SaleShow({ sale }: PageProps) {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="content">
                         <CardHeader>
                             <CardTitle>Ringkasan</CardTitle>
                         </CardHeader>
@@ -248,33 +216,41 @@ export default function SaleShow({ sale }: PageProps) {
                                 <span className="text-muted-foreground">
                                     Subtotal:
                                 </span>
-                                <span>{formatCurrency(sale.subtotal)}</span>
+                                <span>
+                                    {formatCurrency(sale.subtotal ?? 0)}
+                                </span>
                             </div>
-                            {parseFloat(sale.discount1_percent) > 0 && (
+                            {formatNumber(sale.discount1_percent ?? 0) > 0 && (
                                 <div className="flex justify-between text-red-600">
                                     <span>
                                         Diskon 1 ({sale.discount1_percent}%):
                                     </span>
                                     <span>
-                                        -{formatCurrency(sale.discount1_amount)}
+                                        -
+                                        {formatCurrency(
+                                            sale.discount1_amount ?? 0,
+                                        )}
                                     </span>
                                 </div>
                             )}
-                            {parseFloat(sale.discount2_percent) > 0 && (
+                            {formatNumber(sale.discount2_percent ?? 0) > 0 && (
                                 <div className="flex justify-between text-red-600">
                                     <span>
                                         Diskon 2 ({sale.discount2_percent}%):
                                     </span>
                                     <span>
-                                        -{formatCurrency(sale.discount2_amount)}
+                                        -
+                                        {formatCurrency(
+                                            sale.discount2_amount ?? 0,
+                                        )}
                                     </span>
                                 </div>
                             )}
-                            {parseFloat(sale.ppn_percent) > 0 && (
-                                <div className="flex justify-between text-blue-600">
+                            {formatNumber(sale.ppn_percent ?? 0) > 0 && (
+                                <div className="flex justify-between text-blue-600 dark:text-blue-500">
                                     <span>PPN ({sale.ppn_percent}%):</span>
                                     <span>
-                                        +{formatCurrency(sale.ppn_amount)}
+                                        +{formatCurrency(sale.ppn_amount ?? 0)}
                                     </span>
                                 </div>
                             )}
@@ -284,13 +260,13 @@ export default function SaleShow({ sale }: PageProps) {
                             </div>
                             {sale.status === 'confirmed' && (
                                 <>
-                                    <div className="flex justify-between border-t pt-2 text-orange-600">
+                                    <div className="flex justify-between border-t pt-2 text-red-600 dark:text-red-500">
                                         <span>Total Cost (FIFO):</span>
                                         <span className="font-medium">
                                             {formatCurrency(sale.total_cost)}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-lg font-bold text-green-600">
+                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-green-500">
                                         <span>PROFIT:</span>
                                         <span>
                                             {formatCurrency(sale.total_profit)}
@@ -303,106 +279,107 @@ export default function SaleShow({ sale }: PageProps) {
                 </div>
 
                 {/* Items Table */}
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Detail Barang</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[100px]">
-                                        Kode
-                                    </TableHead>
-                                    <TableHead>Nama Item</TableHead>
-                                    <TableHead>UOM</TableHead>
-                                    <TableHead className="text-right">
-                                        Qty
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Harga
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Disc 1
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Disc 2
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Subtotal
-                                    </TableHead>
-                                    {sale.status === 'confirmed' && (
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <TableLayout
+                                tableColumn={tableColumn}
+                                tableRow={sale.details}
+                                pageFrom={1}
+                                renderRow={(detail) => {
+                                    return (
                                         <>
-                                            <TableHead className="text-right">
-                                                Cost
-                                            </TableHead>
-                                            <TableHead className="text-right">
-                                                Profit
-                                            </TableHead>
+                                            <TableCell className="flex w-full items-center justify-center text-center font-mono">
+                                                {detail.item?.code}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center">
+                                                {detail.item?.name}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center">
+                                                <Badge variant="outline">
+                                                    {detail.item_uom?.uom.name}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center">
+                                                {formatNumber(
+                                                    detail.quantity,
+                                                ).toLocaleString('id-ID')}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center">
+                                                {formatCurrency(detail.price)}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-red-500">
+                                                {formatNumber(
+                                                    detail.discount1_percent ??
+                                                        0,
+                                                ) > 0
+                                                    ? `${detail.discount1_percent}%`
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-red-500">
+                                                {formatNumber(
+                                                    detail.discount2_percent ??
+                                                        0,
+                                                ) > 0
+                                                    ? `${detail.discount2_percent}%`
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center">
+                                                {formatCurrency(
+                                                    detail.subtotal,
+                                                )}
+                                            </TableCell>
+                                            {sale.status === 'confirmed' && (
+                                                <>
+                                                    <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-red-500">
+                                                        {formatCurrency(
+                                                            detail.cost,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-green-500">
+                                                        {formatCurrency(
+                                                            detail.profit,
+                                                        )}
+                                                    </TableCell>
+                                                </>
+                                            )}
                                         </>
-                                    )}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {sale.details.map((detail) => (
-                                    <TableRow key={detail.id}>
-                                        <TableCell className="font-mono">
-                                            {detail.item.code}
-                                        </TableCell>
-                                        <TableCell>
-                                            {detail.item.name}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">
-                                                {detail.item_uom.uom_name}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {parseFloat(
-                                                detail.quantity,
-                                            ).toLocaleString('id-ID')}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {formatCurrency(detail.price)}
-                                        </TableCell>
-                                        <TableCell className="text-right text-red-600">
-                                            {parseFloat(
-                                                detail.discount1_percent,
-                                            ) > 0
-                                                ? `${detail.discount1_percent}%`
-                                                : '-'}
-                                        </TableCell>
-                                        <TableCell className="text-right text-red-600">
-                                            {parseFloat(
-                                                detail.discount2_percent,
-                                            ) > 0
-                                                ? `${detail.discount2_percent}%`
-                                                : '-'}
-                                        </TableCell>
-                                        <TableCell className="text-right font-medium">
-                                            {formatCurrency(detail.subtotal)}
-                                        </TableCell>
-                                        {sale.status === 'confirmed' && (
-                                            <>
-                                                <TableCell className="text-right text-orange-600">
-                                                    {formatCurrency(
-                                                        detail.cost,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-right font-medium text-green-600">
-                                                    {formatCurrency(
-                                                        detail.profit,
-                                                    )}
-                                                </TableCell>
-                                            </>
-                                        )}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                    );
+                                }}
+                            />
+                        </div>
                     </CardContent>
                 </Card>
+                <Modal
+                    titleDesc={
+                        sale.status === 'pending'
+                            ? 'Konfirmasi Pembelian?'
+                            : 'Batalkan Konfirmasi?'
+                    }
+                    contentDesc={
+                        sale.status === 'pending'
+                            ? 'Stock akan berkurang, profit akan dihitung, dan data tidak bisa diedit lagi.'
+                            : 'Stock akan dikembalikan dan data bisa diedit kembali.'
+                    }
+                    submitText={
+                        sale.status === 'pending'
+                            ? 'Konfirmasi'
+                            : 'Batalkan Konfirmasi'
+                    }
+                    isModalOpen={isConfirmModalOpen}
+                    onModalClose={closeConfirmModal}
+                    handleSubmit={
+                        sale.status === 'pending'
+                            ? handleConfirm
+                            : handleUnconfirm
+                    }
+                />
             </AppLayout>
         </>
     );
-}
+};
+
+export default SaleShow;

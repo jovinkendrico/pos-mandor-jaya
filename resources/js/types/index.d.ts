@@ -256,11 +256,14 @@ export enum PurchaseStatus {
     PENDING = 'pending',
     CONFIRMED = 'confirmed',
 }
+export enum SaleStatus {
+    PENDING = 'pending',
+    CONFIRMED = 'confirmed',
+}
 
 export interface Purchase {
     id: number;
     supplier_id: number;
-    purchase_number: string;
     purchase_number: string;
     supplier: Supplier;
     purchase_date: Date;
@@ -330,6 +333,92 @@ export type IPurchaseDetail = Pick<
     | 'discount2_percent'
     | 'subtotal'
 >;
+
+export interface Sale {
+    id: number;
+    customer_id: number;
+    sale_number: string;
+    customer: Customer;
+    sale_date: Date;
+    due_date?: Date;
+    subtotal?: number;
+    discount1_percent?: number;
+    discount1_amount?: number;
+    discount2_percent?: number;
+    discount2_amount?: number;
+    total_after_discount: number;
+    ppn_percent?: number;
+    ppn_amount?: number;
+    total_amount: number;
+    total_paid?: number;
+    remaining_amount?: number;
+    total_cost: number;
+    total_profit: number;
+    status?: SaleStatus;
+    notes: string;
+    details: PurchaseDetail[];
+}
+
+export type ISale = Pick<
+    Sale,
+    | 'id'
+    | 'customer_id'
+    | 'sale_number'
+    | 'sale_date'
+    | 'due_date'
+    | 'subtotal'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'discount1_amount'
+    | 'discount2_amount'
+    | 'ppn_percent'
+    | 'ppn_amount'
+    | 'total_amount'
+    | 'total_paid'
+    | 'remaining_amount'
+    | 'total_cost'
+    | 'total_profit'
+    | 'status'
+    | 'notes'
+> & {
+    customer: ICustomer;
+    details: ISaleDetail[];
+};
+
+export interface SaleDetail {
+    id?: number;
+    sale_id: number;
+    item_id: number;
+    item?: IItem;
+    item_uom_id: number;
+    item_uom?: IItemUOM;
+    quantity: number;
+    price: number;
+    discount1_percent?: number;
+    discount1_amount?: number;
+    discount2_percent?: number;
+    discount2_amount?: number;
+    subtotal?: number;
+    cost?: number;
+    profit?: number;
+}
+
+export type ISaleDetail = Pick<
+    SaleDetail,
+    | 'id'
+    | 'item_id'
+    | 'item_uom_id'
+    | 'item_uom'
+    | 'item'
+    | 'quantity'
+    | 'price'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'subtotal'
+    | 'cost'
+    | 'profit'
+>;
+
 export interface ChartOfAccount {
     id: number;
     code: string;

@@ -2,7 +2,7 @@ import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import {
     formatCurrency,
-    formatDate,
+    formatDatetoString,
     formatNumber,
     formatNumberWithSeparator,
     parseStringtoNumber,
@@ -47,7 +47,7 @@ const StockMovementTable = (props: StockMovementTableProps) => {
                         )}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {formatDate(row.movement_date)}
+                        {formatDatetoString(new Date(row.movement_date))}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.notes ?? '-'}
