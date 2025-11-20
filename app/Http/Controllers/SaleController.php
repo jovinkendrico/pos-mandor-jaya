@@ -13,6 +13,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SaleController extends Controller
 {
@@ -421,5 +423,35 @@ class SaleController extends Controller
 
         return redirect()->route('sales.show', $sale)
             ->with('success', 'Konfirmasi penjualan dibatalkan. Stock dikembalikan.');
+    }
+
+    /**
+     * Print sale as PDF
+     */
+    public function print(Sale $sale)
+    {
+        try {
+            $sale->load(['customer', 'details.item', 'details.itemUom.uom']);
+
+            $pdf = Pdf::loadView('pdf.sale', [
+                'title' => 'SALES ORDER - ' . $sale->sale_number,
+                'sale'  => $sale,
+            ])->setPaper([0, 0, 595.28, 420.94], 'landscape'); // 21cm x 14.85cm in points (width x height)
+
+            $filename = 'sale-' . $sale->sale_number . '.pdf';
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Sale - Exception caught', [
+                'sale_id' => $sale->id,
+                'error'   => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }
