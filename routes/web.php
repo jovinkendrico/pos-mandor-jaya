@@ -31,10 +31,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Purchase confirm/unconfirm routes (must be before resource)
     Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
     Route::post('purchases/{purchase}/unconfirm', [PurchaseController::class, 'unconfirm'])->name('purchases.unconfirm');
+    Route::get('purchases/{purchase}/print', [PurchaseController::class, 'print'])->name('purchases.print');
 
     // Sale confirm/unconfirm routes (must be before resource)
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/unconfirm', [SaleController::class, 'unconfirm'])->name('sales.unconfirm');
+    Route::get('sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
 
     // Purchase Return confirm/unconfirm routes (must be before resource)
     Route::post('purchase-returns/{purchase_return}/confirm', [PurchaseReturnController::class, 'confirm'])->name('purchase-returns.confirm');
@@ -53,20 +55,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sale-payments/{sale_payment}/unconfirm', [SalePaymentController::class, 'unconfirm'])->name('sale-payments.unconfirm');
 
     Route::resources([
-        'users'            => UserController::class,
-        'roles'            => RoleController::class,
-        'permissions'      => PermissionController::class,
-        'cities'           => CityController::class,
-        'customers'        => CustomerController::class,
-        'suppliers'        => SupplierController::class,
-        'banks'            => BankController::class,
+        'users'             => UserController::class,
+        'roles'             => RoleController::class,
+        'permissions'       => PermissionController::class,
+        'cities'            => CityController::class,
+        'customers'         => CustomerController::class,
+        'suppliers'         => SupplierController::class,
+        'banks'             => BankController::class,
         'chart-of-accounts' => ChartOfAccountController::class,
-        'uoms'             => UomController::class,
-        'items'            => ItemController::class,
-        'purchases'        => PurchaseController::class,
-        'sales'            => SaleController::class,
-        'purchase-returns' => PurchaseReturnController::class,
-        'sale-returns'     => SaleReturnController::class,
+        'uoms'              => UomController::class,
+        'items'             => ItemController::class,
+        'purchases'         => PurchaseController::class,
+        'sales'             => SaleController::class,
+        'purchase-returns'  => PurchaseReturnController::class,
+        'sale-returns'      => SaleReturnController::class,
         'purchase-payments' => PurchasePaymentController::class,
         'sale-payments'     => SalePaymentController::class,
     ]);

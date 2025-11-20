@@ -13,6 +13,8 @@ use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PurchaseController extends Controller
 {
@@ -406,5 +408,35 @@ class PurchaseController extends Controller
 
         return redirect()->route('purchases.show', $purchase)
             ->with('success', 'Konfirmasi pembelian dibatalkan. Stock dikembalikan.');
+    }
+
+    /**
+     * Print purchase as PDF
+     */
+    public function print(Purchase $purchase)
+    {
+        try {
+            $purchase->load(['supplier', 'details.item', 'details.itemUom.uom']);
+
+            $pdf = Pdf::loadView('pdf.purchase', [
+                'title'    => 'PURCHASE ORDER - ' . $purchase->purchase_number,
+                'purchase' => $purchase,
+            ])->setPaper([0, 0, 595.28, 420.94], 'landscape'); // 21cm x 14.85cm in points (width x height)
+
+            $filename = 'purchase-' . $purchase->purchase_number . '.pdf';
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Purchase - Exception caught', [
+                'purchase_id' => $purchase->id,
+                'error'       => $e->getMessage(),
+                'file'        => $e->getFile(),
+                'line'        => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }
