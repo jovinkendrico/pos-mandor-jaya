@@ -133,6 +133,17 @@ class StockAdjustmentController extends Controller
             $item = $stockAdjustment->item;
             $quantity = $stockAdjustment->quantity;
 
+            // Reverse journal entry if exists
+            try {
+                app(\App\Services\JournalService::class)->reverseStockAdjustment($stockAdjustment);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to reverse stock adjustment journal entry', [
+                    'stock_movement_id' => $stockAdjustment->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't throw - allow deletion even if journal reversal fails
+            }
+
             // Reverse the adjustment
             if ($quantity > 0) {
                 // Was an increase, so decrease

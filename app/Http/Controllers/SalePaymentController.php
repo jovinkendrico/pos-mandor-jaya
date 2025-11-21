@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateSalePaymentRequest;
 use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\Bank;
+use App\Models\CashIn;
+use App\Models\ChartOfAccount;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -218,11 +220,43 @@ class SalePaymentController extends Controller
         DB::transaction(function () use ($salePayment) {
             $salePayment->update(['status' => 'confirmed']);
 
-            // Update bank balance if bank is selected
+            // Create cash in record if bank is selected
+            // This will post: Debit Bank, Credit Piutang Usaha
             if ($salePayment->bank_id) {
-                $bank = \App\Models\Bank::lockForUpdate()->find($salePayment->bank_id);
-                if ($bank) {
-                    $bank->increment('balance', $salePayment->total_amount);
+                // Get receivable account (1201 - Piutang Usaha) for payment
+                $receivableAccount = ChartOfAccount::where('code', '1201')
+                    ->where('is_active', true)
+                    ->first();
+
+                if (!$receivableAccount) {
+                    $receivableAccount = ChartOfAccount::whereIn('type', ['asset', 'piutang'])
+                        ->where('is_active', true)
+                        ->orderBy('code')
+                        ->first();
+                }
+
+                if ($receivableAccount) {
+                    $cashIn = CashIn::create([
+                        'cash_in_number' => CashIn::generateCashInNumber(),
+                        'cash_in_date' => $salePayment->payment_date,
+                        'bank_id' => $salePayment->bank_id,
+                        'chart_of_account_id' => $receivableAccount->id, // Piutang Usaha, bukan pendapatan
+                        'amount' => $salePayment->total_amount,
+                        'description' => "Pembayaran Penjualan #{$salePayment->payment_number}",
+                        'status' => 'posted', // Auto post karena sudah confirmed
+                        'reference_type' => 'SalePayment',
+                        'reference_id' => $salePayment->id,
+                    ]);
+
+                    // Post to journal (this will also update bank balance)
+                    // JournalService akan membuat: Debit Bank, Credit Piutang Usaha
+                    app(\App\Services\JournalService::class)->postCashIn($cashIn);
+                } else {
+                    // If no receivable account found, still update bank balance manually
+                    $bank = \App\Models\Bank::lockForUpdate()->find($salePayment->bank_id);
+                    if ($bank) {
+                        $bank->increment('balance', $salePayment->total_amount);
+                    }
                 }
             }
         });
@@ -242,11 +276,23 @@ class SalePaymentController extends Controller
         }
 
         DB::transaction(function () use ($salePayment) {
-            // Restore bank balance if bank is selected
-            if ($salePayment->bank_id) {
-                $bank = \App\Models\Bank::lockForUpdate()->find($salePayment->bank_id);
-                if ($bank) {
-                    $bank->decrement('balance', $salePayment->total_amount);
+            // Find and reverse cash in if exists
+            $cashIn = CashIn::where('reference_type', 'SalePayment')
+                ->where('reference_id', $salePayment->id)
+                ->where('status', 'posted')
+                ->first();
+
+            if ($cashIn) {
+                // Reverse cash in (this will also update bank balance)
+                app(\App\Services\JournalService::class)->reverseCashIn($cashIn);
+                $cashIn->delete(); // Soft delete
+            } else {
+                // If no cash in found, restore bank balance manually
+                if ($salePayment->bank_id) {
+                    $bank = \App\Models\Bank::lockForUpdate()->find($salePayment->bank_id);
+                    if ($bank) {
+                        $bank->decrement('balance', $salePayment->total_amount);
+                    }
                 }
             }
 

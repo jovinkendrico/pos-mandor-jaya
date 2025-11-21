@@ -32,7 +32,7 @@ interface BankFormProps {
 }
 
 const BankForm = (props: BankFormProps) => {
-    const { bank, isModalOpen, onModalClose } = props;
+    const { bank, isModalOpen, onModalClose, chartsOfAccounts = [] } = props;
 
     const {
         data,
@@ -56,6 +56,7 @@ const BankForm = (props: BankFormProps) => {
                 account_name: bank.account_name || '',
                 balance: bank.balance || 0,
                 description: bank.description || '',
+                chart_of_account_id: bank.chart_of_account_id ? bank.chart_of_account_id.toString() : '',
             });
         } else {
             reset();
@@ -154,6 +155,41 @@ const BankForm = (props: BankFormProps) => {
                                     <InputError message={errors.type} />
                                 )}
                             </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="chart_of_account_id">
+                                Kode Perkiraan (COA)
+                            </Label>
+                            <Select
+                                value={data.chart_of_account_id || undefined}
+                                onValueChange={(value) =>
+                                    setData('chart_of_account_id', value || '')
+                                }
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih Kode Perkiraan (opsional)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {chartsOfAccounts.map((coa) => (
+                                        <SelectItem
+                                            key={coa.id}
+                                            value={coa.id.toString()}
+                                        >
+                                            {coa.code} - {coa.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Jika tidak dipilih, akan otomatis menggunakan{' '}
+                                {data.type === 'cash' ? 'Kas Kecil (1101)' : 'Bank BCA (1103)'}
+                            </p>
+                            {errors.chart_of_account_id && (
+                                <InputError
+                                    message={errors.chart_of_account_id}
+                                />
+                            )}
                         </div>
 
                         {data.type === 'bank' && (

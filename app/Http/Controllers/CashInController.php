@@ -1,0 +1,236 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreCashInRequest;
+use App\Http\Requests\UpdateCashInRequest;
+use App\Models\CashIn;
+use App\Models\Bank;
+use App\Models\ChartOfAccount;
+use App\Services\JournalService;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class CashInController extends Controller
+{
+    public function __construct(private readonly JournalService $journalService) {}
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
+    {
+        $query = CashIn::with(['bank', 'chartOfAccount'])
+            ->orderBy('cash_in_date', 'desc')
+            ->orderBy('id', 'desc');
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('cash_in_number', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('bank', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('chartOfAccount', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter by date range
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('cash_in_date', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('cash_in_date', '<=', $request->date_to);
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $cashIns = $query->paginate(15)->withQueryString();
+
+        return Inertia::render('transaction/cash-in/index', [
+            'cashIns' => $cashIns,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'date_from' => $request->get('date_from', ''),
+                'date_to' => $request->get('date_to', ''),
+                'status' => $request->get('status', 'all'),
+            ],
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(): Response
+    {
+        $banks = Bank::orderBy('name')->get();
+        // Get income accounts (type = 'income' or 'revenue')
+        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan'])
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get();
+
+        return Inertia::render('transaction/cash-in/create', [
+            'banks' => $banks,
+            'incomeAccounts' => $incomeAccounts,
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreCashInRequest $request): RedirectResponse
+    {
+        DB::transaction(function () use ($request) {
+            $cashIn = CashIn::create([
+                'cash_in_number' => CashIn::generateCashInNumber(),
+                'cash_in_date' => $request->cash_in_date,
+                'bank_id' => $request->bank_id,
+                'chart_of_account_id' => $request->chart_of_account_id,
+                'amount' => $request->amount,
+                'description' => $request->description,
+                'status' => $request->auto_post ? 'posted' : 'draft',
+                'reference_type' => 'Manual',
+            ]);
+
+            // Auto post to journal if requested
+            if ($request->auto_post) {
+                $this->journalService->postCashIn($cashIn);
+            }
+        });
+
+        return redirect()->route('cash-ins.index')
+            ->with('success', 'Kas masuk berhasil ditambahkan.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(CashIn $cashIn): Response
+    {
+        $cashIn->loadMissing(['bank', 'chartOfAccount']);
+
+        return Inertia::render('transaction/cash-in/show', [
+            'cashIn' => $cashIn,
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(CashIn $cashIn): Response
+    {
+        if ($cashIn->status === 'posted') {
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('error', 'Kas masuk yang sudah diposting tidak dapat diedit.');
+        }
+
+        $banks = Bank::orderBy('name')->get();
+        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan'])
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get();
+
+        return Inertia::render('transaction/cash-in/edit', [
+            'cashIn' => $cashIn,
+            'banks' => $banks,
+            'incomeAccounts' => $incomeAccounts,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateCashInRequest $request, CashIn $cashIn): RedirectResponse
+    {
+        if ($cashIn->status === 'posted') {
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('error', 'Kas masuk yang sudah diposting tidak dapat diedit.');
+        }
+
+        DB::transaction(function () use ($request, $cashIn) {
+            $updateData = array(
+                'cash_in_date' => $request->cash_in_date,
+                'bank_id' => $request->bank_id,
+                'chart_of_account_id' => $request->chart_of_account_id,
+                'amount' => $request->amount,
+                'description' => $request->description,
+            );
+            $cashIn->update($updateData);
+
+            // Auto post if requested
+            if ($request->auto_post && $cashIn->status === 'draft') {
+                $this->journalService->postCashIn($cashIn);
+            }
+        });
+
+        return redirect()->route('cash-ins.index')
+            ->with('success', 'Kas masuk berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(CashIn $cashIn): RedirectResponse
+    {
+        if ($cashIn->status === 'posted') {
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('error', 'Kas masuk yang sudah diposting tidak dapat dihapus. Silakan reverse terlebih dahulu.');
+        }
+
+        $cashIn->delete();
+
+        return redirect()->route('cash-ins.index')
+            ->with('success', 'Kas masuk berhasil dihapus.');
+    }
+
+    /**
+     * Post cash in to journal
+     */
+    public function post(CashIn $cashIn): RedirectResponse
+    {
+        if ($cashIn->status === 'posted') {
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('error', 'Kas masuk sudah diposting.');
+        }
+
+        try {
+            $this->journalService->postCashIn($cashIn);
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('success', 'Kas masuk berhasil diposting ke jurnal.');
+        } catch (\Exception $e) {
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('error', 'Gagal memposting: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reverse posted cash in
+     */
+    public function reverse(CashIn $cashIn): RedirectResponse
+    {
+        if ($cashIn->status !== 'posted') {
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('error', 'Hanya kas masuk yang sudah diposting yang dapat di-reverse.');
+        }
+
+        try {
+            $this->journalService->reverseCashIn($cashIn);
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('success', 'Kas masuk berhasil di-reverse.');
+        } catch (\Exception $e) {
+            return redirect()->route('cash-ins.show', $cashIn)
+                ->with('error', 'Gagal reverse: ' . $e->getMessage());
+        }
+    }
+}

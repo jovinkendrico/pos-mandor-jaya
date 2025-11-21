@@ -18,6 +18,11 @@ use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CashInController;
+use App\Http\Controllers\CashOutController;
+use App\Http\Controllers\JournalEntryController;
+use App\Http\Controllers\ProfitLossController;
+use App\Http\Controllers\GeneralLedgerController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -55,6 +60,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sale-payments/{sale_payment}/confirm', [SalePaymentController::class, 'confirm'])->name('sale-payments.confirm');
     Route::post('sale-payments/{sale_payment}/unconfirm', [SalePaymentController::class, 'unconfirm'])->name('sale-payments.unconfirm');
 
+    // Cash In post/reverse routes (must be before resource)
+    Route::post('cash-ins/{cash_in}/post', [CashInController::class, 'post'])->name('cash-ins.post');
+    Route::post('cash-ins/{cash_in}/reverse', [CashInController::class, 'reverse'])->name('cash-ins.reverse');
+
+    // Cash Out post/reverse routes (must be before resource)
+    Route::post('cash-outs/{cash_out}/post', [CashOutController::class, 'post'])->name('cash-outs.post');
+    Route::post('cash-outs/{cash_out}/reverse', [CashOutController::class, 'reverse'])->name('cash-outs.reverse');
+
+    // Accounting Reports
+    Route::get('profit-loss', [ProfitLossController::class, 'index'])->name('profit-loss.index');
+    Route::get('general-ledger', [GeneralLedgerController::class, 'index'])->name('general-ledger.index');
+    Route::get('general-ledger/{account}', [GeneralLedgerController::class, 'show'])->name('general-ledger.show');
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,
@@ -73,6 +91,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'purchase-payments' => PurchasePaymentController::class,
         'sale-payments'     => SalePaymentController::class,
         'stock-adjustments' => StockAdjustmentController::class,
+        'cash-ins'          => CashInController::class,
+        'cash-outs'          => CashOutController::class,
+        'journal-entries'   => JournalEntryController::class,
     ]);
 });
 

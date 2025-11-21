@@ -6,12 +6,16 @@ use App\Http\Requests\StoreBankRequest;
 use App\Http\Requests\UpdateBankRequest;
 use App\Models\Bank;
 use App\Models\ChartOfAccount;
+use App\Services\JournalService;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class BankController extends Controller
 {
+    public function __construct(private readonly JournalService $journalService) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -48,19 +52,27 @@ class BankController extends Controller
      */
     public function store(StoreBankRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        DB::transaction(function () use ($request) {
+            $data = $request->validated();
 
-        // Auto-assign chart_of_account_id based on type
-        if (!isset($data['chart_of_account_id'])) {
-            // Use child accounts: 1101 for cash, 1103 for bank (default)
-            $coaCode = $data['type'] === 'cash' ? '1101' : '1103';
-            $coa = ChartOfAccount::where('code', $coaCode)->first();
-            if ($coa) {
-                $data['chart_of_account_id'] = $coa->id;
+            // Auto-assign chart_of_account_id based on type only if not provided by user
+            if (empty($data['chart_of_account_id'])) {
+                // Use child accounts: 1101 for cash, 1103 for bank (default)
+                $coaCode = $data['type'] === 'cash' ? '1101' : '1103';
+                $coa = ChartOfAccount::where('code', $coaCode)->first();
+                if ($coa) {
+                    $data['chart_of_account_id'] = $coa->id;
+                }
             }
-        }
 
-        Bank::create($data);
+            $bank = Bank::create($data);
+
+            // Post opening balance to journal if balance > 0
+            $balance = (float) ($data['balance'] ?? 0);
+            if ($balance > 0 && $bank->chart_of_account_id) {
+                $this->journalService->postBankOpeningBalance($bank, 0);
+            }
+        });
 
         return redirect()->route('banks.index')
             ->with('success', 'Bank/Cash berhasil ditambahkan.');
@@ -93,19 +105,30 @@ class BankController extends Controller
      */
     public function update(UpdateBankRequest $request, Bank $bank): RedirectResponse
     {
-        $data = $request->validated();
+        DB::transaction(function () use ($request, $bank) {
+            $data = $request->validated();
 
-        // Auto-assign chart_of_account_id based on type if not provided
-        if (!isset($data['chart_of_account_id'])) {
-            // Use child accounts: 1101 for cash, 1103 for bank (default)
-            $coaCode = $data['type'] === 'cash' ? '1101' : '1103';
-            $coa = ChartOfAccount::where('code', $coaCode)->first();
-            if ($coa) {
-                $data['chart_of_account_id'] = $coa->id;
+            // Store old balance for comparison
+            $oldBalance = (float) $bank->balance;
+
+            // Auto-assign chart_of_account_id based on type only if not provided by user
+            if (empty($data['chart_of_account_id'])) {
+                // Use child accounts: 1101 for cash, 1103 for bank (default)
+                $coaCode = $data['type'] === 'cash' ? '1101' : '1103';
+                $coa = ChartOfAccount::where('code', $coaCode)->first();
+                if ($coa) {
+                    $data['chart_of_account_id'] = $coa->id;
+                }
             }
-        }
 
-        $bank->update($data);
+            $bank->update($data);
+
+            // Post balance adjustment to journal if balance changed
+            $newBalance = (float) ($data['balance'] ?? 0);
+            if (abs($newBalance - $oldBalance) > 0.01 && $bank->chart_of_account_id) {
+                $this->journalService->postBankOpeningBalance($bank, $oldBalance);
+            }
+        });
 
         return redirect()->route('banks.index')
             ->with('success', 'Bank/Cash berhasil diperbarui.');

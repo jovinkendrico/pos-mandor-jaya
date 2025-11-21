@@ -81,7 +81,7 @@ class AccountingService
         DB::beginTransaction();
         try {
             // Get accounts
-            $expenseAccount = ChartOfAccount::where('code', '5101')->first(); // Pembelian Barang
+            $expenseAccount = ChartOfAccount::where('code', '5101')->first(); // HPP
 
             if ($isCash && $bankId) {
                 $bank = \App\Models\Bank::find($bankId);
@@ -209,7 +209,7 @@ class AccountingService
     {
         DB::beginTransaction();
         try {
-            $expenseAccount = ChartOfAccount::where('code', '5101')->first(); // Pembelian Barang
+            $expenseAccount = ChartOfAccount::where('code', '5101')->first(); // HPP
 
             if ($isCash && $bankId) {
                 $bank = \App\Models\Bank::find($bankId);

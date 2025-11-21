@@ -9,6 +9,7 @@ use App\Models\StockMovement;
 use App\Models\Uom;
 use App\Services\ItemService;
 use App\Services\StockService;
+use App\Services\JournalService;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
-    public function __construct(private readonly StockService $stockService) {}
+    public function __construct(
+        private readonly StockService $stockService,
+        private readonly JournalService $journalService
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -61,7 +65,7 @@ class ItemController extends Controller
             }
 
             if ($openingStock > 0) {
-                $unitCost = (float) $request->modal_price;
+                $unitCost = (float) ($request->modal_price ?? 0);
 
                 StockMovement::create([
                     'item_id'            => $item->id,
@@ -73,6 +77,11 @@ class ItemController extends Controller
                     'movement_date'      => now(),
                     'notes'              => 'Opening balance saat pembuatan barang',
                 ]);
+
+                // Post opening stock to journal if unit cost > 0
+                if ($unitCost > 0) {
+                    $this->journalService->postItemOpeningStock($item, $openingStock, $unitCost);
+                }
             }
         });
 

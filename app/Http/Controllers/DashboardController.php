@@ -32,18 +32,18 @@ class DashboardController extends Controller
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
 
-        // Sales Statistics
+        // Sales Statistics (using total_after_discount for revenue, not total_amount)
         $todaySales = Sale::whereDate('sale_date', $today)
             ->where('status', 'confirmed')
-            ->sum('total_amount');
+            ->sum('total_after_discount'); // Revenue without PPN
 
         $monthSales = Sale::where('sale_date', '>=', $thisMonth)
             ->where('status', 'confirmed')
-            ->sum('total_amount');
+            ->sum('total_after_discount'); // Revenue without PPN
 
         $lastMonthSales = Sale::whereBetween('sale_date', [$lastMonth, $lastMonthEnd])
             ->where('status', 'confirmed')
-            ->sum('total_amount');
+            ->sum('total_after_discount'); // Revenue without PPN
 
         $todayProfit = Sale::whereDate('sale_date', $today)
             ->where('status', 'confirmed')
@@ -206,6 +206,7 @@ class DashboardController extends Controller
             : 0;
 
         // Top Selling Items (by quantity sold this month)
+        // Note: profit calculation in sale_details uses subtotal (after discount), which is correct
         $topSellingItems = SaleDetail::join('sales', 'sale_details.sale_id', '=', 'sales.id')
             ->join('items', 'sale_details.item_id', '=', 'items.id')
             ->where('sales.sale_date', '>=', $thisMonth)
@@ -214,7 +215,7 @@ class DashboardController extends Controller
                 'items.id',
                 'items.name',
                 DB::raw('SUM(sale_details.quantity) as total_quantity'),
-                DB::raw('SUM(sale_details.subtotal) as total_revenue'),
+                DB::raw('SUM(sale_details.subtotal) as total_revenue'), // Subtotal is after discount (correct for revenue)
                 DB::raw('SUM(sale_details.profit) as total_profit')
             )
             ->groupBy('items.id', 'items.name')

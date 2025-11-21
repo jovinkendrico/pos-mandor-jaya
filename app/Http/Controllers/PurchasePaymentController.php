@@ -7,6 +7,8 @@ use App\Http\Requests\UpdatePurchasePaymentRequest;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
 use App\Models\Bank;
+use App\Models\CashOut;
+use App\Models\ChartOfAccount;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -218,11 +220,43 @@ class PurchasePaymentController extends Controller
         DB::transaction(function () use ($purchasePayment) {
             $purchasePayment->update(['status' => 'confirmed']);
 
-            // Update bank balance if bank is selected
+            // Create cash out record if bank is selected
+            // This will post: Debit Hutang Usaha, Credit Bank
             if ($purchasePayment->bank_id) {
-                $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
-                if ($bank) {
-                    $bank->decrement('balance', $purchasePayment->total_amount);
+                // Get payable account (2101 - Hutang Usaha) for payment
+                $payableAccount = ChartOfAccount::where('code', '2101')
+                    ->where('is_active', true)
+                    ->first();
+
+                if (!$payableAccount) {
+                    $payableAccount = ChartOfAccount::whereIn('type', ['liability', 'hutang'])
+                        ->where('is_active', true)
+                        ->orderBy('code')
+                        ->first();
+                }
+
+                if ($payableAccount) {
+                    $cashOut = CashOut::create([
+                        'cash_out_number' => CashOut::generateCashOutNumber(),
+                        'cash_out_date' => $purchasePayment->payment_date,
+                        'bank_id' => $purchasePayment->bank_id,
+                        'chart_of_account_id' => $payableAccount->id, // Hutang Usaha, bukan biaya
+                        'amount' => $purchasePayment->total_amount,
+                        'description' => "Pembayaran Pembelian #{$purchasePayment->payment_number}",
+                        'status' => 'posted', // Auto post karena sudah confirmed
+                        'reference_type' => 'PurchasePayment',
+                        'reference_id' => $purchasePayment->id,
+                    ]);
+
+                    // Post to journal (this will also update bank balance)
+                    // JournalService akan membuat: Debit Hutang Usaha, Credit Bank
+                    app(\App\Services\JournalService::class)->postCashOut($cashOut);
+                } else {
+                    // If no payable account found, still update bank balance manually
+                    $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
+                    if ($bank) {
+                        $bank->decrement('balance', $purchasePayment->total_amount);
+                    }
                 }
             }
         });
@@ -242,11 +276,23 @@ class PurchasePaymentController extends Controller
         }
 
         DB::transaction(function () use ($purchasePayment) {
-            // Restore bank balance if bank is selected
-            if ($purchasePayment->bank_id) {
-                $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
-                if ($bank) {
-                    $bank->increment('balance', $purchasePayment->total_amount);
+            // Find and reverse cash out if exists
+            $cashOut = CashOut::where('reference_type', 'PurchasePayment')
+                ->where('reference_id', $purchasePayment->id)
+                ->where('status', 'posted')
+                ->first();
+
+            if ($cashOut) {
+                // Reverse cash out (this will also update bank balance)
+                app(\App\Services\JournalService::class)->reverseCashOut($cashOut);
+                $cashOut->delete(); // Soft delete
+            } else {
+                // If no cash out found, restore bank balance manually
+                if ($purchasePayment->bank_id) {
+                    $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
+                    if ($bank) {
+                        $bank->increment('balance', $purchasePayment->total_amount);
+                    }
                 }
             }
 

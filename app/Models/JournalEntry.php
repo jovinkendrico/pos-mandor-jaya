@@ -47,13 +47,18 @@ class JournalEntry extends Model
     public static function generateJournalNumber(): string
     {
         $date = now()->format('Ymd');
-        $lastJournal = static::whereDate('created_at', today())
-            ->orderBy('id', 'desc')
+        $prefix = 'JRN-' . $date . '-';
+
+        // Use lockForUpdate to prevent race conditions
+        $lastJournal = static::withTrashed()
+            ->where('journal_number', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderBy('journal_number', 'desc')
             ->first();
 
         $sequence = $lastJournal ? (int) substr($lastJournal->journal_number, -4) + 1 : 1;
 
-        return 'JRN-' . $date . '-' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**
