@@ -40,8 +40,15 @@ interface Purchase {
     details: PurchaseDetail[];
 }
 
+interface Bank {
+    id: number;
+    name: string;
+}
+
 interface PageProps {
     purchases: Purchase[];
+    returnedQuantities?: Record<number, number>;
+    banks?: Bank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -59,13 +66,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseReturnCreate({ purchases }: PageProps) {
+export default function PurchaseReturnCreate({ purchases, returnedQuantities = {}, banks = [] }: PageProps) {
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Tambah Retur Beli" />
                 <PageTitle title="Tambah Retur Pembelian" />
-                <PurchaseReturnForm purchases={purchases} />
+                <PurchaseReturnForm purchases={purchases} returnedQuantities={returnedQuantities} banks={banks} />
             </AppLayout>
         </>
     );

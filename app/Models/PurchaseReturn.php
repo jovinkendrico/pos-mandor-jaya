@@ -26,6 +26,9 @@ class PurchaseReturn extends Model
         'ppn_amount',
         'total_amount',
         'status',
+        'return_type',
+        'refund_bank_id',
+        'refund_method',
         'reason',
     ];
 

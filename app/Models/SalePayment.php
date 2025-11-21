@@ -60,13 +60,18 @@ class SalePayment extends Model
     public static function generatePaymentNumber(): string
     {
         $date = now()->format('Ymd');
-        $lastPayment = static::whereDate('created_at', today())
-            ->where('payment_number', 'like', 'SP' . $date . '%')
-            ->orderBy('id', 'desc')
+        $prefix = 'SP' . $date;
+
+        // Use lockForUpdate to prevent race conditions in concurrent requests
+        // Include soft deleted records to continue sequence even if payment was deleted
+        $lastPayment = static::withTrashed()
+            ->where('payment_number', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderBy('payment_number', 'desc')
             ->first();
 
         $sequence = $lastPayment ? (int) substr($lastPayment->payment_number, -4) + 1 : 1;
 
-        return 'SP' . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }

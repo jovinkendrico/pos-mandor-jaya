@@ -55,8 +55,15 @@ interface Purchase {
     details: PurchaseDetail[];
 }
 
+interface Bank {
+    id: number;
+    name: string;
+}
+
 interface PurchaseReturnFormProps {
     purchases: Purchase[];
+    returnedQuantities?: { [key: number]: number };
+    banks?: Bank[];
 }
 
 interface ReturnItemDetail {
@@ -74,18 +81,24 @@ interface ReturnItemDetail {
 interface PurchaseReturnFormData {
     purchase_id: string;
     return_date: string;
+    return_type: string;
+    refund_bank_id: string;
+    refund_method: string;
     ppn_percent: string;
     reason: string;
     details: any[];
 }
 
-export default function PurchaseReturnForm({ purchases }: PurchaseReturnFormProps) {
+export default function PurchaseReturnForm({ purchases, returnedQuantities = {}, banks = [] }: PurchaseReturnFormProps) {
     const [selectedPurchaseId, setSelectedPurchaseId] = useState<string>('');
     const [returnItems, setReturnItems] = useState<ReturnItemDetail[]>([]);
 
     const form = useForm<PurchaseReturnFormData>({
         purchase_id: '',
         return_date: new Date().toISOString().split('T')[0],
+        return_type: 'stock_only',
+        refund_bank_id: '',
+        refund_method: 'reduce_payable',
         ppn_percent: '0',
         reason: '',
         details: [],
@@ -97,24 +110,30 @@ export default function PurchaseReturnForm({ purchases }: PurchaseReturnFormProp
 
     const handlePurchaseChange = (purchaseId: string) => {
         setSelectedPurchaseId(purchaseId);
-        form.data.purchase_id = purchaseId;
+        form.setData('purchase_id', purchaseId);
 
         const purchase = purchases.find((p) => p.id.toString() === purchaseId);
         if (purchase) {
             // Initialize return items from purchase details
-            const items: ReturnItemDetail[] = purchase.details.map((detail) => ({
-                purchase_detail_id: detail.id,
-                item_id: detail.item.id,
-                item_uom_id: detail.item_uom.id,
-                quantity: detail.quantity,
-                max_quantity: detail.quantity,
-                price: detail.price,
-                discount1_percent: detail.discount1_percent,
-                discount2_percent: detail.discount2_percent,
-                selected: false,
-            }));
+            const items: ReturnItemDetail[] = purchase.details.map((detail) => {
+                const originalQuantity = parseFloat(detail.quantity);
+                const returnedQty = returnedQuantities[detail.id] || 0;
+                const remainingQty = originalQuantity - returnedQty;
+
+                return {
+                    purchase_detail_id: detail.id,
+                    item_id: detail.item.id,
+                    item_uom_id: detail.item_uom.id,
+                    quantity: remainingQty > 0 ? remainingQty.toString() : '0',
+                    max_quantity: remainingQty > 0 ? remainingQty.toString() : '0',
+                    price: detail.price,
+                    discount1_percent: detail.discount1_percent,
+                    discount2_percent: detail.discount2_percent,
+                    selected: false,
+                };
+            });
             setReturnItems(items);
-            form.data.ppn_percent = purchase.ppn_percent;
+            form.setData('ppn_percent', purchase.ppn_percent);
         }
     };
 
@@ -211,7 +230,7 @@ export default function PurchaseReturnForm({ purchases }: PurchaseReturnFormProp
         }));
 
         // Set details first, then post
-        form.data.details = details;
+        form.setData('details', details);
 
         form.post(store().url, {
             onSuccess: () => {
@@ -259,11 +278,89 @@ export default function PurchaseReturnForm({ purchases }: PurchaseReturnFormProp
                                 id="return_date"
                                 type="date"
                                 value={form.data.return_date}
-                                onChange={(e) => { form.data.return_date = e.target.value; }}
+                                onChange={(e) => { form.setData('return_date', e.target.value); }}
                                 required
                             />
                             <InputError message={form.errors.return_date} />
                         </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="return_type">
+                                Tipe Retur <span className="text-red-500">*</span>
+                            </Label>
+                            <Select
+                                value={form.data.return_type}
+                                onValueChange={(value) => {
+                                    form.setData('return_type', value);
+                                    if (value === 'stock_only') {
+                                        form.setData('refund_bank_id', '');
+                                    }
+                                }}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih tipe retur" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="stock_only">Retur Stok Saja</SelectItem>
+                                    <SelectItem value="stock_and_refund">Retur Stok + Refund (Potong Hutang/Terima Uang)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <InputError message={form.errors.return_type} />
+                        </div>
+
+                        {form.data.return_type === 'stock_and_refund' && (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="refund_method">
+                                        Metode Refund <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Select
+                                        value={form.data.refund_method}
+                                        onValueChange={(value) => {
+                                            form.setData('refund_method', value);
+                                            if (value === 'reduce_payable') {
+                                                form.setData('refund_bank_id', '');
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih metode refund" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="reduce_payable">Kurangi Hutang (Otomatis)</SelectItem>
+                                            <SelectItem value="cash_refund">Terima Uang (Cash Refund via Bank)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={form.errors.refund_method} />
+                                </div>
+
+                                {form.data.refund_method === 'cash_refund' && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="refund_bank_id">
+                                            Bank untuk Refund <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Select
+                                            value={form.data.refund_bank_id || undefined}
+                                            onValueChange={(value) => {
+                                                form.setData('refund_bank_id', value);
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Pilih bank" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {banks && banks.length > 0 && banks.map((bank) => (
+                                                    <SelectItem key={bank.id} value={bank.id.toString()}>
+                                                        {bank.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError message={form.errors.refund_bank_id} />
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -293,21 +390,48 @@ export default function PurchaseReturnForm({ purchases }: PurchaseReturnFormProp
                                 <TableBody>
                                     {returnItems.map((item, index) => {
                                         const detail = selectedPurchase.details[index];
+                                        const originalQuantity = parseFloat(detail.quantity);
+                                        const returnedQty = returnedQuantities[detail.id] || 0;
+                                        const remainingQty = originalQuantity - returnedQty;
+                                        const isFullyReturned = remainingQty <= 0;
+
                                         return (
-                                            <TableRow key={index}>
+                                            <TableRow key={index} className={isFullyReturned ? 'opacity-50' : ''}>
                                                 <TableCell>
                                                     <Checkbox
                                                         checked={item.selected}
-                                                        onCheckedChange={() => handleToggleItem(index)}
+                                                        onCheckedChange={() => !isFullyReturned && handleToggleItem(index)}
+                                                        disabled={isFullyReturned}
                                                     />
                                                 </TableCell>
                                                 <TableCell className="font-mono">{detail.item.code}</TableCell>
-                                                <TableCell>{detail.item.name}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{detail.item.name}</span>
+                                                        {returnedQty > 0 && (
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                Sudah direfund: {returnedQty.toLocaleString('id-ID')}
+                                                            </Badge>
+                                                        )}
+                                                        {isFullyReturned && (
+                                                            <Badge variant="destructive" className="text-xs">
+                                                                Sudah direfund sepenuhnya
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
                                                 <TableCell>
                                                     <Badge variant="outline">{detail.item_uom.uom_name}</Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    {parseFloat(item.max_quantity).toLocaleString('id-ID')}
+                                                    <div>
+                                                        <div>{parseFloat(item.max_quantity).toLocaleString('id-ID')}</div>
+                                                        {returnedQty > 0 && (
+                                                            <div className="text-xs text-muted-foreground">
+                                                                dari {originalQuantity.toLocaleString('id-ID')}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Input
@@ -318,7 +442,7 @@ export default function PurchaseReturnForm({ purchases }: PurchaseReturnFormProp
                                                         value={item.quantity}
                                                         onChange={(e) => handleQuantityChange(index, e.target.value)}
                                                         className="w-24 text-right"
-                                                        disabled={!item.selected}
+                                                        disabled={!item.selected || isFullyReturned}
                                                     />
                                                 </TableCell>
                                                 <TableCell className="text-right">{formatCurrency(parseFloat(item.price))}</TableCell>
@@ -350,7 +474,7 @@ export default function PurchaseReturnForm({ purchases }: PurchaseReturnFormProp
                             <Textarea
                                 id="reason"
                                 value={form.data.reason}
-                                onChange={(e) => { form.data.reason = e.target.value; }}
+                                onChange={(e) => { form.setData('reason', e.target.value); }}
                                 rows={4}
                                 placeholder="Alasan retur (optional)"
                             />
