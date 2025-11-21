@@ -313,7 +313,7 @@ const PurchaseShow = (props: PageProps) => {
                                 pageFrom={1}
                                 renderRow={(detail) => (
                                     <>
-                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                        <TableCell className="flex w-full items-center justify-center text-center font-mono">
                                             {detail.item?.code}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">

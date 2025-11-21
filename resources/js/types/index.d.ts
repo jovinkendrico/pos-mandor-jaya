@@ -261,6 +261,11 @@ export enum SaleStatus {
     CONFIRMED = 'confirmed',
 }
 
+export enum ReturnType {
+    STOCK_ONLY = 'stock_only',
+    STOCK_AND_REFUND = 'stock_and_refund',
+}
+
 export interface Purchase {
     id: number;
     supplier_id: number;
@@ -418,6 +423,52 @@ export type ISaleDetail = Pick<
     | 'cost'
     | 'profit'
 >;
+
+export interface PurchaseReturn {
+    id: number;
+    purchase_id: number;
+    purchase: Purchase;
+    return_number: string;
+    return_date: Date;
+    return_type: ReturnType;
+    refund_bank_id?: number;
+    refund_method?: number;
+    total_amount: number;
+    status: PurchaseStatus;
+    ppn_percent?: number;
+    ppn_amount?: number;
+    subtotal: number;
+    discount1_percent?: number;
+    discount2_percent?: number;
+    discount1_amount?: number;
+    discount2_amount?: number;
+    reason?: string;
+    details: PurchaseReturnDetail[];
+}
+
+export type IPurchaseReturn = Pick<
+    PurchaseReturn,
+    | 'id'
+    | 'purchase_id'
+    | 'return_number'
+    | 'return_date'
+    | 'return_type'
+    | 'refund_bank_id'
+    | 'refund_method'
+    | 'total_amount'
+    | 'status'
+    | 'ppn_percent'
+    | 'ppn_amount'
+    | 'subtotal'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'discount1_amount'
+    | 'discount2_amount'
+    | 'reason'
+> & {
+    purchase: IPurchase;
+    details: IPurchaseDetail[];
+};
 
 export interface ChartOfAccount {
     id: number;

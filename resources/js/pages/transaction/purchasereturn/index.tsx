@@ -1,36 +1,21 @@
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import PurchaseReturnTable from '@/components/transaction/purchasereturns/purchasereturn-table';
+import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { index, create } from '@/routes/purchase-returns';
-import { BreadcrumbItem } from '@/types';
+import {
+    create,
+    destroy as destroyPurchaseReturn,
+    index,
+} from '@/routes/purchase-returns';
+import { BreadcrumbItem, IPurchaseReturn, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-
-interface Supplier {
-    id: number;
-    name: string;
-}
-
-interface Purchase {
-    id: number;
-    purchase_number: string;
-    supplier?: Supplier;
-}
-
-interface PurchaseReturn {
-    id: number;
-    return_number: string;
-    purchase: Purchase;
-    return_date: string;
-    total_amount: string;
-    status: 'pending' | 'confirmed';
-}
+import { useState } from 'react';
 
 interface PageProps {
-    returns: {
-        data: PurchaseReturn[];
-    };
+    purchase_returns: PaginatedData<IPurchaseReturn>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -44,13 +29,26 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseReturnIndex({ returns }: PageProps) {
+const PurchaseReturnIndex = (props: PageProps) => {
+    const { purchase_returns } = props;
+
+    const [selectedPurchaseReturn, setSelectedPurchaseReturn] = useState<
+        IPurchaseReturn | undefined
+    >(undefined);
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
+
     const handleCreate = () => {
         router.visit(create().url);
     };
 
-    const handleView = (returnData: PurchaseReturn) => {
-        router.visit(`/purchase-returns/${returnData.id}`);
+    const handleDelete = (purchase_return: IPurchaseReturn) => {
+        setSelectedPurchaseReturn(purchase_return);
+        openDeleteModal();
     };
 
     return (
@@ -59,14 +57,27 @@ export default function PurchaseReturnIndex({ returns }: PageProps) {
                 <Head title="Retur Beli" />
                 <div className="flex justify-between">
                     <PageTitle title="Retur Pembelian" />
-                    <Button onClick={handleCreate}>
+                    <Button onClick={handleCreate} className="btn-primary">
                         <Plus />
                         Tambah Retur Beli
                     </Button>
                 </div>
-                <PurchaseReturnTable returns={returns.data} onView={handleView} />
+                <PurchaseReturnTable
+                    purchase_returns={purchase_returns.data}
+                    onDelete={handleDelete}
+                />
+                <DeleteModalLayout
+                    dataName={selectedPurchaseReturn?.return_number}
+                    dataId={selectedPurchaseReturn?.id}
+                    dataType="Retur Pembelian"
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
+                    setSelected={setSelectedPurchaseReturn}
+                    getDeleteUrl={(id) => destroyPurchaseReturn(id).url}
+                />
             </AppLayout>
         </>
     );
-}
+};
 
+export default PurchaseReturnIndex;
