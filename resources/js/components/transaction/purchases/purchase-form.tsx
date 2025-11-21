@@ -7,13 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -87,6 +80,26 @@ const PurchaseForm = (props: PurchaseFormProps) => {
     useEffect(() => {
         setLocalSuppliers(supplierOptions);
     }, [supplierOptions]);
+
+    const itemComboboxOptions: ComboboxOption[] = useMemo(() => {
+        return items.map((item) => ({
+            label: `${item.code} - ${item.name}`,
+            value: item.id.toString(),
+        }));
+    }, [items]);
+
+    const getItemUomComboboxOptions = (
+        itemId: number | null,
+    ): ComboboxOption[] => {
+        if (!itemId) return [];
+        const item = items.find((i) => i.id === itemId);
+        if (!item || !item.item_uoms) return [];
+
+        return item.item_uoms.map((itemUom) => ({
+            label: itemUom.uom.name,
+            value: itemUom.uom_id.toString(),
+        }));
+    };
 
     const supplierComboboxOptions: ComboboxOption[] = useMemo(() => {
         return localSuppliers.map((supplier) => ({
@@ -300,17 +313,20 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                             </TableHeader>
                             <TableBody>
                                 {dataPurchase.details.map((detail, index) => {
-                                    const selectedItem = items.find(
-                                        (item) =>
-                                            item.id === Number(detail.item_id),
-                                    );
+                                    const uomOptions =
+                                        getItemUomComboboxOptions(
+                                            Number(detail.item_id),
+                                        );
                                     return (
                                         <TableRow key={index}>
                                             <TableCell>
-                                                <Select
+                                                <Combobox
+                                                    options={
+                                                        itemComboboxOptions
+                                                    }
                                                     value={
                                                         detail?.item_id
-                                                            ? detail.item_id?.toString()
+                                                            ? detail?.item_id?.toString()
                                                             : ''
                                                     }
                                                     onValueChange={(value) => {
@@ -326,22 +342,10 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                             0,
                                                         );
                                                     }}
-                                                >
-                                                    <SelectTrigger className="combobox font-medium data-[placeholder]:text-black data-[placeholder]:opacity-100">
-                                                        <SelectValue placeholder="Pilih item..." />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {items.map((item) => (
-                                                            <SelectItem
-                                                                key={item.id}
-                                                                value={item.id.toString()}
-                                                            >
-                                                                {item.code} -{' '}
-                                                                {item.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                                    placeholder="Pilih item..."
+                                                    searchPlaceholder="Cari item..."
+                                                    className="combobox"
+                                                />
                                                 <InputError
                                                     message={
                                                         (
@@ -356,7 +360,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Select
+                                                <Combobox
+                                                    options={uomOptions}
                                                     value={
                                                         detail.item_uom_id
                                                             ? detail.item_uom_id.toString()
@@ -369,29 +374,14 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                             Number(value),
                                                         )
                                                     }
-                                                    disabled={!detail.item_id}
-                                                >
-                                                    <SelectTrigger className="combobox w-full font-medium data-[placeholder]:text-black data-[placeholder]:opacity-100">
-                                                        <SelectValue placeholder="Pilih UOM..." />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {selectedItem?.item_uoms.map(
-                                                            (uom) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        uom.uom_id
-                                                                    }
-                                                                    value={uom.uom_id.toString()}
-                                                                >
-                                                                    {
-                                                                        uom.uom
-                                                                            .name
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
+                                                    disabled={
+                                                        !detail.item_id ||
+                                                        uomOptions.length === 0
+                                                    }
+                                                    placeholder="Pilih UOM..."
+                                                    searchPlaceholder="Cari UOM..."
+                                                    className="combobox"
+                                                />
                                                 <InputError
                                                     message={
                                                         (

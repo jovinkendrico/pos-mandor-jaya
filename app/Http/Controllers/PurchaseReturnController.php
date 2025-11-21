@@ -224,10 +224,10 @@ class PurchaseReturnController extends Controller
      */
     public function show(PurchaseReturn $purchaseReturn): Response
     {
-        $purchaseReturn->load(['purchase.supplier', 'details.item', 'details.itemUom']);
+        $purchaseReturn->load(['purchase.supplier', 'details.item', 'details.itemUom.uom']);
 
         return Inertia::render('transaction/purchasereturn/show', [
-            'return' => $purchaseReturn,
+            'purchase_return' => $purchaseReturn,
         ]);
     }
 

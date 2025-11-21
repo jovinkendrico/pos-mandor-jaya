@@ -82,8 +82,9 @@ export default function PurchaseReturnIndex({
         router.visit(create().url);
     };
 
-    const handleView = (returnData: PurchaseReturn) => {
-        router.visit(`/purchase-returns/${returnData.id}`);
+    const handleDelete = (purchase_return: IPurchaseReturn) => {
+        setSelectedPurchaseReturn(purchase_return);
+        openDeleteModal();
     };
 
     return (
@@ -167,5 +168,6 @@ export default function PurchaseReturnIndex({
             )}
         </AppLayout>
     );
-}
+};
 
+export default PurchaseReturnIndex;
