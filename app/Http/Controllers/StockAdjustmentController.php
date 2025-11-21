@@ -76,9 +76,10 @@ class StockAdjustmentController extends Controller
 
         $adjustments = $query->paginate(15)->withQueryString();
 
-        // Get items for the form
+        // Get only first 10 items for initial display (will be searched via API)
         $items = Item::with('itemUoms.uom')
             ->orderBy('name')
+            ->limit(10)
             ->get();
 
         return Inertia::render('master/stock-adjustment/index', [
@@ -101,12 +102,58 @@ class StockAdjustmentController extends Controller
      */
     public function create(): Response
     {
+        // Get only first 10 items for initial display (will be searched via API)
         $items = Item::with('itemUoms.uom')
             ->orderBy('name')
+            ->limit(10)
             ->get();
 
         return Inertia::render('master/stock-adjustment/create', [
             'items' => $items,
+        ]);
+    }
+
+    /**
+     * Search items for combobox (API endpoint)
+     */
+    public function searchItems(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search = $request->get('search', '');
+        $itemId = $request->get('id', '');
+        $limit = 20; // Limit results to 20 items
+
+        $query = Item::with('itemUoms.uom')
+            ->orderBy('name');
+
+        // If searching by ID, get that specific item
+        if ($itemId) {
+            $query->where('id', $itemId);
+        } elseif ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->limit($limit)->get();
+
+        $options = $items->map(function ($item) {
+            return [
+                'value' => (string) $item->id,
+                'label' => ($item->code ? $item->code . ' - ' : '') . $item->name,
+                'item' => [
+                    'id' => $item->id,
+                    'code' => $item->code,
+                    'name' => $item->name,
+                    'stock' => $item->stock,
+                    'modal_price' => $item->modal_price,
+                    'itemUoms' => $item->itemUoms,
+                ],
+            ];
+        });
+
+        return response()->json([
+            'data' => $options,
         ]);
     }
 

@@ -69,7 +69,7 @@ class PurchaseController extends Controller
         $perPage = $request->get('per_page', 10);
 
         // Query now paginated
-        $purchases = $query->paginate($perPage);
+        $purchases = $query->paginate($perPage)->withQueryString();
 
         // Append computed attributes (only for current page)
         $purchases->getCollection()->each->append(['total_paid', 'remaining_amount']);

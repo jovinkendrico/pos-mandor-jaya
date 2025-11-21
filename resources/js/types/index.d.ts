@@ -302,6 +302,8 @@ export type IPurchase = Pick<
 > & {
     supplier: ISupplier;
     details: IPurchaseDetail[];
+    total_paid?: number;
+    remaining_amount?: number;
 };
 
 export interface PurchaseDetail {

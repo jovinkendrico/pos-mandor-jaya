@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/date-picker';
 import { formatCurrency } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -12,6 +14,9 @@ import { create as createSaleReturn } from '@/routes/sale-returns';
 import { create as createPurchaseReturn } from '@/routes/purchase-returns';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { Search, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import {
     TrendingUp,
     TrendingDown,
@@ -53,19 +58,19 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface Stats {
     sales: {
         today: number;
-        month: number;
-        lastMonth: number;
+        period: number;
+        previousPeriod: number;
         growth: number;
     };
     purchases: {
         today: number;
-        month: number;
-        lastMonth: number;
+        period: number;
+        previousPeriod: number;
         growth: number;
     };
     profit: {
         today: number;
-        month: number;
+        period: number;
         marginPercent: number;
     };
     payments: {
@@ -79,14 +84,19 @@ interface Stats {
     bankBalance: number;
     transactions: {
         todaySaleCount: number;
-        monthSaleCount: number;
+        periodSaleCount: number;
         todayPurchaseCount: number;
-        monthPurchaseCount: number;
+        periodPurchaseCount: number;
         avgSaleValue: number;
         avgPurchaseValue: number;
     };
     inventoryValue: number;
     returnRate: number;
+}
+
+interface Period {
+    date_from: string;
+    date_to: string;
 }
 
 interface Bank {
@@ -197,6 +207,7 @@ interface OverdueSale {
 }
 
 interface PageProps {
+    period: Period;
     stats: Stats;
     banks: Bank[];
     lowStockItems: LowStockItem[];
@@ -212,13 +223,46 @@ interface PageProps {
     topSuppliers: TopSupplier[];
 }
 
-export default function Dashboard({ stats, banks, lowStockItems, criticalStockItems, deadStockItems, recentSales, recentPurchases, salesDueSoon, overdueSales, purchasesDueSoon, topSellingItems, topCustomers, topSuppliers }: PageProps) {
+export default function Dashboard({ period, stats, banks, lowStockItems, criticalStockItems, deadStockItems, recentSales, recentPurchases, salesDueSoon, overdueSales, purchasesDueSoon, topSellingItems, topCustomers, topSuppliers }: PageProps) {
+    const [filters, setFilters] = useState({
+        date_from: period.date_from,
+        date_to: period.date_to,
+    });
+
+    const handleFilter = () => {
+        router.get('/dashboard', filters, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('id-ID', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
         });
+    };
+
+    useEffect(() => {
+        setFilters({
+            date_from: period.date_from,
+            date_to: period.date_to,
+        });
+    }, [period.date_from, period.date_to]);
+
+    const formatPeriod = () => {
+        if (!filters.date_from || !filters.date_to) return 'Bulan Ini';
+        const from = new Date(filters.date_from);
+        const to = new Date(filters.date_to);
+        const fromMonth = from.toLocaleDateString('id-ID', { month: 'long' });
+        const toMonth = to.toLocaleDateString('id-ID', { month: 'long' });
+        const year = from.getFullYear();
+
+        if (fromMonth === toMonth && from.getFullYear() === to.getFullYear()) {
+            return `${fromMonth} ${year}`;
+        }
+        return `${fromMonth} - ${toMonth} ${year}`;
     };
 
     const StatCard = ({
@@ -268,9 +312,67 @@ export default function Dashboard({ stats, banks, lowStockItems, criticalStockIt
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-                        <p className="text-muted-foreground mt-1">Ringkasan bisnis Anda hari ini</p>
+                        <p className="text-muted-foreground mt-1">Ringkasan bisnis Anda - {formatPeriod()}</p>
                     </div>
                 </div>
+
+                {/* Period Filter */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            <Calendar className="h-4 w-4" />
+                            Filter Periode
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="date_from">Dari Tanggal</Label>
+                                <DatePicker
+                                    value={filters.date_from ? new Date(filters.date_from) : undefined}
+                                    onChange={(date) =>
+                                        setFilters({
+                                            ...filters,
+                                            date_from: date ? format(date, 'yyyy-MM-dd') : '',
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="date_to">Sampai Tanggal</Label>
+                                <DatePicker
+                                    value={filters.date_to ? new Date(filters.date_to) : undefined}
+                                    onChange={(date) =>
+                                        setFilters({
+                                            ...filters,
+                                            date_to: date ? format(date, 'yyyy-MM-dd') : '',
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className="flex items-end gap-2">
+                                <Button onClick={handleFilter} className="w-full">
+                                    <Search className="mr-2 h-4 w-4" />
+                                    Tampilkan
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        const now = new Date();
+                                        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                                        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                                        setFilters({
+                                            date_from: format(startOfMonth, 'yyyy-MM-dd'),
+                                            date_to: format(endOfMonth, 'yyyy-MM-dd'),
+                                        });
+                                    }}
+                                >
+                                    Bulan Ini
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Quick Actions - Compact */}
                 <Card>
@@ -334,24 +436,24 @@ export default function Dashboard({ stats, banks, lowStockItems, criticalStockIt
                 {/* Main Financial Overview */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <StatCard
-                        title="Penjualan Bulan Ini"
-                        value={formatCurrency(stats.sales.month)}
+                        title={`Penjualan ${formatPeriod()}`}
+                        value={formatCurrency(stats.sales.period)}
                         description={`Hari ini: ${formatCurrency(stats.sales.today)}`}
                         icon={ShoppingCart}
                         trend={stats.sales.growth >= 0 ? 'up' : 'down'}
                         trendValue={stats.sales.growth}
                     />
                     <StatCard
-                        title="Pembelian Bulan Ini"
-                        value={formatCurrency(stats.purchases.month)}
+                        title={`Pembelian ${formatPeriod()}`}
+                        value={formatCurrency(stats.purchases.period)}
                         description={`Hari ini: ${formatCurrency(stats.purchases.today)}`}
                         icon={Package}
                         trend={stats.purchases.growth >= 0 ? 'up' : 'down'}
                         trendValue={stats.purchases.growth}
                     />
                     <StatCard
-                        title="Profit Bulan Ini"
-                        value={formatCurrency(stats.profit.month)}
+                        title={`Profit ${formatPeriod()}`}
+                        value={formatCurrency(stats.profit.period)}
                         description={`Margin: ${stats.profit.marginPercent.toFixed(1)}%`}
                         icon={DollarSign}
                     />
@@ -487,7 +589,7 @@ export default function Dashboard({ stats, banks, lowStockItems, criticalStockIt
                                     <div className={`text-2xl font-bold ${stats.returnRate > 5 ? 'text-red-600' : 'text-orange-600'}`}>
                                         {stats.returnRate.toFixed(2)}%
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">Retur penjualan bulan ini</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Retur penjualan {formatPeriod()}</p>
                                 </CardContent>
                             </Card>
                         )}
@@ -503,7 +605,7 @@ export default function Dashboard({ stats, banks, lowStockItems, criticalStockIt
                                 <BarChart3 className="h-4 w-4 text-blue-500" />
                                 Barang Terlaris
                             </CardTitle>
-                            <CardDescription className="text-xs">Top 5 bulan ini</CardDescription>
+                            <CardDescription className="text-xs">Top 5 {formatPeriod()}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {topSellingItems.length === 0 ? (
@@ -534,7 +636,7 @@ export default function Dashboard({ stats, banks, lowStockItems, criticalStockIt
                                 <Users className="h-4 w-4 text-green-500" />
                                 Pelanggan Teratas
                             </CardTitle>
-                            <CardDescription className="text-xs">Top 5 bulan ini</CardDescription>
+                            <CardDescription className="text-xs">Top 5 {formatPeriod()}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {topCustomers.length === 0 ? (
@@ -565,7 +667,7 @@ export default function Dashboard({ stats, banks, lowStockItems, criticalStockIt
                                 <Truck className="h-4 w-4 text-blue-500" />
                                 Supplier Teratas
                             </CardTitle>
-                            <CardDescription className="text-xs">Top 5 bulan ini</CardDescription>
+                            <CardDescription className="text-xs">Top 5 {formatPeriod()}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {topSuppliers.length === 0 ? (
