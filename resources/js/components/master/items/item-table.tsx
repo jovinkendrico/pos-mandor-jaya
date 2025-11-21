@@ -10,7 +10,7 @@ import {
 } from '@/lib/utils';
 import { IItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Edit, Info, Trash } from 'lucide-react';
+import { Edit, Info, Trash, Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface ItemTableProps {
@@ -137,8 +137,19 @@ const ItemTable = (props: ItemTableProps) => {
                                     variant="ghost"
                                     size="icon"
                                     className="btn-info"
+                                    title="Detail Barang"
                                 >
                                     <Info />
+                                </Button>
+                            </Link>
+                            <Link href={`/items/${row.id}/stock-card`}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="btn-info"
+                                    title="Kartu Stok"
+                                >
+                                    <Package />
                                 </Button>
                             </Link>
                             <Button

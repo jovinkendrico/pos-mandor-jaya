@@ -55,12 +55,26 @@ class ChartOfAccountSeeder extends Seeder
             ]
         );
 
-        ChartOfAccount::firstOrCreate(['code' => '1301'], ['name' => 'Persediaan Semen', 'type' => 'asset', 'parent_id' => $persediaanParent->id, 'description' => 'Stok semen', 'is_active' => true]);
-        ChartOfAccount::firstOrCreate(['code' => '1302'], ['name' => 'Persediaan Cat', 'type' => 'asset', 'parent_id' => $persediaanParent->id, 'description' => 'Stok cat', 'is_active' => true]);
-        ChartOfAccount::firstOrCreate(['code' => '1303'], ['name' => 'Persediaan Besi & Baja', 'type' => 'asset', 'parent_id' => $persediaanParent->id, 'description' => 'Stok besi dan baja', 'is_active' => true]);
-        ChartOfAccount::firstOrCreate(['code' => '1304'], ['name' => 'Persediaan Pipa', 'type' => 'asset', 'parent_id' => $persediaanParent->id, 'description' => 'Stok pipa', 'is_active' => true]);
-        ChartOfAccount::firstOrCreate(['code' => '1305'], ['name' => 'Persediaan Material Umum', 'type' => 'asset', 'parent_id' => $persediaanParent->id, 'description' => 'Stok material umum lainnya', 'is_active' => true]);
-        ChartOfAccount::firstOrCreate(['code' => '1309'], ['name' => 'Penyesuaian Persediaan', 'type' => 'asset', 'parent_id' => $persediaanParent->id, 'description' => 'Penyesuaian nilai persediaan', 'is_active' => true]);
+        // Hanya satu akun persediaan: Persediaan Barang (tidak dipisah per kategori)
+        ChartOfAccount::updateOrCreate(
+            ['code' => '1301'],
+            [
+                'name' => 'Persediaan Barang',
+                'type' => 'asset',
+                'parent_id' => $persediaanParent->id,
+                'description' => 'Persediaan barang dagang',
+                'is_active' => true,
+            ]
+        );
+
+        // Nonaktifkan akun persediaan lama jika ada
+        $oldInventoryCodes = ['1302', '1303', '1304', '1305', '1309'];
+        foreach ($oldInventoryCodes as $code) {
+            $oldAccount = ChartOfAccount::where('code', $code)->first();
+            if ($oldAccount) {
+                $oldAccount->update(['is_active' => false]);
+            }
+        }
 
         $uangMukaParent = ChartOfAccount::firstOrCreate(
             ['code' => '1400'],
@@ -167,7 +181,7 @@ class ChartOfAccountSeeder extends Seeder
             ]
         );
 
-        ChartOfAccount::firstOrCreate(['code' => '5101'], ['name' => 'Pembelian Barang', 'type' => 'expense', 'parent_id' => $hppParent->id, 'description' => 'HPP pembelian barang', 'is_active' => true]);
+        ChartOfAccount::updateOrCreate(['code' => '5101'], ['name' => 'HPP', 'type' => 'expense', 'parent_id' => $hppParent->id, 'description' => 'Harga Pokok Penjualan', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '5102'], ['name' => 'Retur Pembelian', 'type' => 'expense', 'parent_id' => $hppParent->id, 'description' => 'Retur pembelian (mengurangi HPP)', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '5103'], ['name' => 'Biaya Angkut Pembelian', 'type' => 'expense', 'parent_id' => $hppParent->id, 'description' => 'Biaya angkut untuk pembelian', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '5104'], ['name' => 'Penyesuaian Stok', 'type' => 'expense', 'parent_id' => $hppParent->id, 'description' => 'Penyesuaian nilai stok', 'is_active' => true]);

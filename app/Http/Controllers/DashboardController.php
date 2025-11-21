@@ -27,29 +27,46 @@ class DashboardController extends Controller
      */
     public function index(): Response
     {
-        $today = Carbon::today();
-        $thisMonth = Carbon::now()->startOfMonth();
-        $lastMonth = Carbon::now()->subMonth()->startOfMonth();
-        $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+        $request = request();
 
-        // Sales Statistics
+        // Get period from request or default to current month
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        if ($dateFrom && $dateTo) {
+            $periodStart = Carbon::parse($dateFrom)->startOfDay();
+            $periodEnd = Carbon::parse($dateTo)->endOfDay();
+        } else {
+            // Default to current month
+            $periodStart = Carbon::now()->startOfMonth();
+            $periodEnd = Carbon::now()->endOfMonth();
+        }
+
+        // Calculate previous period (same duration)
+        $periodDuration = $periodStart->diffInDays($periodEnd) + 1;
+        $previousPeriodStart = $periodStart->copy()->subDays($periodDuration);
+        $previousPeriodEnd = $periodStart->copy()->subDay();
+
+        $today = Carbon::today();
+
+        // Sales Statistics (using total_after_discount for revenue, not total_amount)
         $todaySales = Sale::whereDate('sale_date', $today)
             ->where('status', 'confirmed')
-            ->sum('total_amount');
+            ->sum('total_after_discount'); // Revenue without PPN
 
-        $monthSales = Sale::where('sale_date', '>=', $thisMonth)
+        $periodSales = Sale::whereBetween('sale_date', [$periodStart, $periodEnd])
             ->where('status', 'confirmed')
-            ->sum('total_amount');
+            ->sum('total_after_discount'); // Revenue without PPN
 
-        $lastMonthSales = Sale::whereBetween('sale_date', [$lastMonth, $lastMonthEnd])
+        $previousPeriodSales = Sale::whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd])
             ->where('status', 'confirmed')
-            ->sum('total_amount');
+            ->sum('total_after_discount'); // Revenue without PPN
 
         $todayProfit = Sale::whereDate('sale_date', $today)
             ->where('status', 'confirmed')
             ->sum('total_profit');
 
-        $monthProfit = Sale::where('sale_date', '>=', $thisMonth)
+        $periodProfit = Sale::whereBetween('sale_date', [$periodStart, $periodEnd])
             ->where('status', 'confirmed')
             ->sum('total_profit');
 
@@ -58,28 +75,42 @@ class DashboardController extends Controller
             ->where('status', 'confirmed')
             ->sum('total_amount');
 
-        $monthPurchases = Purchase::where('purchase_date', '>=', $thisMonth)
+        $periodPurchases = Purchase::whereBetween('purchase_date', [$periodStart, $periodEnd])
             ->where('status', 'confirmed')
             ->sum('total_amount');
 
-        $lastMonthPurchases = Purchase::whereBetween('purchase_date', [$lastMonth, $lastMonthEnd])
+        $previousPeriodPurchases = Purchase::whereBetween('purchase_date', [$previousPeriodStart, $previousPeriodEnd])
             ->where('status', 'confirmed')
             ->sum('total_amount');
 
-        // Payment Statistics
-        $totalReceivables = Sale::where('status', 'confirmed')
-            ->get()
-            ->append(['total_paid', 'remaining_amount'])
-            ->sum(function ($sale) {
-                return max(0, (float) $sale->remaining_amount);
-            });
+        // Payment Statistics - Optimized with subqueries
+        $totalReceivables = DB::table('sales')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    sale_id,
+                    SUM(amount) as total_paid
+                FROM sale_payment_items
+                INNER JOIN sale_payments ON sale_payment_items.sale_payment_id = sale_payments.id
+                WHERE sale_payments.status = "confirmed"
+                GROUP BY sale_id
+            ) as payments'), 'sales.id', '=', 'payments.sale_id')
+            ->where('sales.status', 'confirmed')
+            ->selectRaw('SUM(GREATEST(0, sales.total_amount - COALESCE(payments.total_paid, 0))) as total_receivables')
+            ->value('total_receivables') ?? 0;
 
-        $totalPayables = Purchase::where('status', 'confirmed')
-            ->get()
-            ->append(['total_paid', 'remaining_amount'])
-            ->sum(function ($purchase) {
-                return max(0, (float) $purchase->remaining_amount);
-            });
+        $totalPayables = DB::table('purchases')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    purchase_id,
+                    SUM(amount) as total_paid
+                FROM purchase_payment_items
+                INNER JOIN purchase_payments ON purchase_payment_items.purchase_payment_id = purchase_payments.id
+                WHERE purchase_payments.status = "confirmed"
+                GROUP BY purchase_id
+            ) as payments'), 'purchases.id', '=', 'payments.purchase_id')
+            ->where('purchases.status', 'confirmed')
+            ->selectRaw('SUM(GREATEST(0, purchases.total_amount - COALESCE(payments.total_paid, 0))) as total_payables')
+            ->value('total_payables') ?? 0;
 
         // Today's Payments
         $todaySalePayments = SalePayment::whereDate('payment_date', $today)
@@ -113,27 +144,45 @@ class DashboardController extends Controller
             ->limit(5)
             ->get(['id', 'purchase_number', 'supplier_id', 'purchase_date', 'total_amount', 'status']);
 
-        // Upcoming Due Dates (within 30 days)
+        // Upcoming Due Dates (within 30 days) - Optimized with subquery and limit
         $upcomingDueDate = Carbon::now()->addDays(30);
 
-        $salesDueSoon = Sale::with('customer')
-            ->where('status', 'confirmed')
-            ->whereNotNull('due_date')
-            ->where('due_date', '>=', $today)
-            ->where('due_date', '<=', $upcomingDueDate)
+        $salesDueSoon = DB::table('sales')
+            ->leftJoin('customers', 'sales.customer_id', '=', 'customers.id')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    sale_id,
+                    SUM(amount) as total_paid
+                FROM sale_payment_items
+                INNER JOIN sale_payments ON sale_payment_items.sale_payment_id = sale_payments.id
+                WHERE sale_payments.status = "confirmed"
+                GROUP BY sale_id
+            ) as payments'), 'sales.id', '=', 'payments.sale_id')
+            ->where('sales.status', 'confirmed')
+            ->whereNotNull('sales.due_date')
+            ->where('sales.due_date', '>=', $today)
+            ->where('sales.due_date', '<=', $upcomingDueDate)
+            ->selectRaw('
+                sales.id,
+                sales.sale_number,
+                sales.sale_date,
+                sales.due_date,
+                sales.total_amount,
+                COALESCE(payments.total_paid, 0) as total_paid,
+                GREATEST(0, sales.total_amount - COALESCE(payments.total_paid, 0)) as remaining_amount,
+                sales.status,
+                customers.id as customer_id,
+                customers.name as customer_name
+            ')
+            ->havingRaw('remaining_amount > 0')
+            ->orderBy('sales.due_date', 'asc')
+            ->limit(10)
             ->get()
-            ->append(['total_paid', 'remaining_amount'])
-            ->filter(function ($sale) {
-                return $sale->remaining_amount > 0;
-            })
-            ->sortBy('due_date')
-            ->take(10)
-            ->values()
             ->map(function ($sale) {
                 return [
                     'id' => $sale->id,
                     'sale_number' => $sale->sale_number,
-                    'customer' => $sale->customer,
+                    'customer' => $sale->customer_id ? ['id' => $sale->customer_id, 'name' => $sale->customer_name] : null,
                     'sale_date' => $sale->sale_date,
                     'due_date' => $sale->due_date,
                     'total_amount' => (float) $sale->total_amount,
@@ -143,24 +192,42 @@ class DashboardController extends Controller
                 ];
             });
 
-        $purchasesDueSoon = Purchase::with('supplier')
-            ->where('status', 'confirmed')
-            ->whereNotNull('due_date')
-            ->where('due_date', '>=', $today)
-            ->where('due_date', '<=', $upcomingDueDate)
+        $purchasesDueSoon = DB::table('purchases')
+            ->leftJoin('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    purchase_id,
+                    SUM(amount) as total_paid
+                FROM purchase_payment_items
+                INNER JOIN purchase_payments ON purchase_payment_items.purchase_payment_id = purchase_payments.id
+                WHERE purchase_payments.status = "confirmed"
+                GROUP BY purchase_id
+            ) as payments'), 'purchases.id', '=', 'payments.purchase_id')
+            ->where('purchases.status', 'confirmed')
+            ->whereNotNull('purchases.due_date')
+            ->where('purchases.due_date', '>=', $today)
+            ->where('purchases.due_date', '<=', $upcomingDueDate)
+            ->selectRaw('
+                purchases.id,
+                purchases.purchase_number,
+                purchases.purchase_date,
+                purchases.due_date,
+                purchases.total_amount,
+                COALESCE(payments.total_paid, 0) as total_paid,
+                GREATEST(0, purchases.total_amount - COALESCE(payments.total_paid, 0)) as remaining_amount,
+                purchases.status,
+                suppliers.id as supplier_id,
+                suppliers.name as supplier_name
+            ')
+            ->havingRaw('remaining_amount > 0')
+            ->orderBy('purchases.due_date', 'asc')
+            ->limit(10)
             ->get()
-            ->append(['total_paid', 'remaining_amount'])
-            ->filter(function ($purchase) {
-                return $purchase->remaining_amount > 0;
-            })
-            ->sortBy('due_date')
-            ->take(10)
-            ->values()
             ->map(function ($purchase) {
                 return [
                     'id' => $purchase->id,
                     'purchase_number' => $purchase->purchase_number,
-                    'supplier' => $purchase->supplier,
+                    'supplier' => $purchase->supplier_id ? ['id' => $purchase->supplier_id, 'name' => $purchase->supplier_name] : null,
                     'purchase_date' => $purchase->purchase_date,
                     'due_date' => $purchase->due_date,
                     'total_amount' => (float) $purchase->total_amount,
@@ -171,13 +238,13 @@ class DashboardController extends Controller
             });
 
         // Sales Growth
-        $salesGrowth = $lastMonthSales > 0
-            ? (($monthSales - $lastMonthSales) / $lastMonthSales) * 100
+        $salesGrowth = $previousPeriodSales > 0
+            ? (($periodSales - $previousPeriodSales) / $previousPeriodSales) * 100
             : 0;
 
         // Purchase Growth
-        $purchaseGrowth = $lastMonthPurchases > 0
-            ? (($monthPurchases - $lastMonthPurchases) / $lastMonthPurchases) * 100
+        $purchaseGrowth = $previousPeriodPurchases > 0
+            ? (($periodPurchases - $previousPeriodPurchases) / $previousPeriodPurchases) * 100
             : 0;
 
         // Transaction Counts
@@ -185,7 +252,7 @@ class DashboardController extends Controller
             ->where('status', 'confirmed')
             ->count();
 
-        $monthSaleCount = Sale::where('sale_date', '>=', $thisMonth)
+        $periodSaleCount = Sale::whereBetween('sale_date', [$periodStart, $periodEnd])
             ->where('status', 'confirmed')
             ->count();
 
@@ -193,28 +260,29 @@ class DashboardController extends Controller
             ->where('status', 'confirmed')
             ->count();
 
-        $monthPurchaseCount = Purchase::where('purchase_date', '>=', $thisMonth)
+        $periodPurchaseCount = Purchase::whereBetween('purchase_date', [$periodStart, $periodEnd])
             ->where('status', 'confirmed')
             ->count();
 
-        $avgSaleValue = $monthSaleCount > 0 ? $monthSales / $monthSaleCount : 0;
-        $avgPurchaseValue = $monthPurchaseCount > 0 ? $monthPurchases / $monthPurchaseCount : 0;
+        $avgSaleValue = $periodSaleCount > 0 ? $periodSales / $periodSaleCount : 0;
+        $avgPurchaseValue = $periodPurchaseCount > 0 ? $periodPurchases / $periodPurchaseCount : 0;
 
         // Profit Margin Percentage
-        $profitMarginPercent = $monthSales > 0
-            ? ($monthProfit / $monthSales) * 100
+        $profitMarginPercent = $periodSales > 0
+            ? ($periodProfit / $periodSales) * 100
             : 0;
 
-        // Top Selling Items (by quantity sold this month)
+        // Top Selling Items (by quantity sold in period)
+        // Note: profit calculation in sale_details uses subtotal (after discount), which is correct
         $topSellingItems = SaleDetail::join('sales', 'sale_details.sale_id', '=', 'sales.id')
             ->join('items', 'sale_details.item_id', '=', 'items.id')
-            ->where('sales.sale_date', '>=', $thisMonth)
+            ->whereBetween('sales.sale_date', [$periodStart, $periodEnd])
             ->where('sales.status', 'confirmed')
             ->select(
                 'items.id',
                 'items.name',
                 DB::raw('SUM(sale_details.quantity) as total_quantity'),
-                DB::raw('SUM(sale_details.subtotal) as total_revenue'),
+                DB::raw('SUM(sale_details.subtotal) as total_revenue'), // Subtotal is after discount (correct for revenue)
                 DB::raw('SUM(sale_details.profit) as total_profit')
             )
             ->groupBy('items.id', 'items.name')
@@ -231,21 +299,30 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Top Customers (by sales amount this month)
-        $topCustomers = Sale::with('customer')
-            ->where('sale_date', '>=', $thisMonth)
-            ->where('status', 'confirmed')
-            ->whereNotNull('customer_id')
-            ->select('customer_id', DB::raw('SUM(total_amount) as total_sales'), DB::raw('COUNT(*) as transaction_count'))
-            ->groupBy('customer_id')
+        // Top Customers (by sales amount in period) - Optimized
+        $topCustomers = DB::table('sales')
+            ->join('customers', 'sales.customer_id', '=', 'customers.id')
+            ->whereBetween('sales.sale_date', [$periodStart, $periodEnd])
+            ->where('sales.status', 'confirmed')
+            ->whereNotNull('sales.customer_id')
+            ->select(
+                'customers.id',
+                'customers.name',
+                DB::raw('SUM(sales.total_amount) as total_sales'),
+                DB::raw('COUNT(*) as transaction_count')
+            )
+            ->groupBy('customers.id', 'customers.name')
             ->orderBy('total_sales', 'desc')
             ->limit(5)
             ->get()
-            ->map(function ($sale) {
+            ->map(function ($row) {
                 return [
-                    'customer' => $sale->customer,
-                    'total_sales' => (float) $sale->total_sales,
-                    'transaction_count' => (int) $sale->transaction_count,
+                    'customer' => [
+                        'id' => $row->id,
+                        'name' => $row->name,
+                    ],
+                    'total_sales' => (float) $row->total_sales,
+                    'transaction_count' => (int) $row->transaction_count,
                 ];
             });
 
@@ -274,144 +351,191 @@ class DashboardController extends Controller
             ->limit(10)
             ->get(['id', 'name', 'stock']);
 
-        // Dead Stock / Slow-Moving Items (not sold in last 90 days)
+        // Dead Stock / Slow-Moving Items (not sold in last 90 days) - Optimized
         $ninetyDaysAgo = Carbon::now()->subDays(90);
-        $deadStockItems = Item::where('stock', '>', 0)
-            ->whereDoesntHave('stockMovements', function ($query) use ($ninetyDaysAgo) {
-                $query->where('reference_type', 'Sale')
-                    ->where('movement_date', '>=', $ninetyDaysAgo);
+        $deadStockItems = DB::table('items')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    item_id,
+                    MAX(movement_date) as last_sale_date
+                FROM stock_movements
+                WHERE reference_type = "Sale"
+                GROUP BY item_id
+            ) as last_sales'), 'items.id', '=', 'last_sales.item_id')
+            ->where('items.stock', '>', 0)
+            ->where(function ($query) use ($ninetyDaysAgo) {
+                $query->whereNull('last_sales.last_sale_date')
+                      ->orWhere('last_sales.last_sale_date', '<', $ninetyDaysAgo);
             })
-            ->orderBy('stock', 'desc')
+            ->whereNull('items.deleted_at')
+            ->selectRaw('
+                items.id,
+                items.name,
+                items.stock,
+                last_sales.last_sale_date,
+                DATEDIFF(NOW(), last_sales.last_sale_date) as days_since_last_sale
+            ')
+            ->orderBy('items.stock', 'desc')
             ->limit(10)
-            ->get(['id', 'name', 'stock'])
-            ->map(function ($item) use ($ninetyDaysAgo) {
-                // Get last sale date
-                $lastSale = StockMovement::where('item_id', $item->id)
-                    ->where('reference_type', 'Sale')
-                    ->orderBy('movement_date', 'desc')
-                    ->first();
-
-                $daysSinceLastSale = $lastSale
-                    ? Carbon::parse($lastSale->movement_date)->diffInDays(Carbon::now())
-                    : null;
-
+            ->get()
+            ->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
                     'stock' => (float) $item->stock,
-                    'days_since_last_sale' => $daysSinceLastSale,
+                    'days_since_last_sale' => $item->last_sale_date ? (int) $item->days_since_last_sale : null,
                 ];
             });
 
-        // Return Rate (Sale Returns vs Sales this month)
-        $monthSaleReturns = SaleReturn::where('return_date', '>=', $thisMonth)
+        // Return Rate (Sale Returns vs Sales in period)
+        $periodSaleReturns = SaleReturn::whereBetween('return_date', [$periodStart, $periodEnd])
             ->where('status', 'confirmed')
             ->sum('total_amount');
 
-        $returnRate = $monthSales > 0
-            ? ($monthSaleReturns / $monthSales) * 100
+        $returnRate = $periodSales > 0
+            ? ($periodSaleReturns / $periodSales) * 100
             : 0;
 
-        // Top Suppliers (by purchase amount this month)
-        $topSuppliers = Purchase::with('supplier')
-            ->where('purchase_date', '>=', $thisMonth)
-            ->where('status', 'confirmed')
-            ->whereNotNull('supplier_id')
-            ->select('supplier_id', DB::raw('SUM(total_amount) as total_purchases'), DB::raw('COUNT(*) as transaction_count'))
-            ->groupBy('supplier_id')
+        // Top Suppliers (by purchase amount in period) - Optimized
+        $topSuppliers = DB::table('purchases')
+            ->join('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
+            ->whereBetween('purchases.purchase_date', [$periodStart, $periodEnd])
+            ->where('purchases.status', 'confirmed')
+            ->whereNotNull('purchases.supplier_id')
+            ->select(
+                'suppliers.id',
+                'suppliers.name',
+                DB::raw('SUM(purchases.total_amount) as total_purchases'),
+                DB::raw('COUNT(*) as transaction_count')
+            )
+            ->groupBy('suppliers.id', 'suppliers.name')
             ->orderBy('total_purchases', 'desc')
             ->limit(5)
             ->get()
-            ->map(function ($purchase) {
+            ->map(function ($row) {
                 return [
-                    'supplier' => $purchase->supplier,
-                    'total_purchases' => (float) $purchase->total_purchases,
-                    'transaction_count' => (int) $purchase->transaction_count,
+                    'supplier' => [
+                        'id' => $row->id,
+                        'name' => $row->name,
+                    ],
+                    'total_purchases' => (float) $row->total_purchases,
+                    'transaction_count' => (int) $row->transaction_count,
                 ];
             });
 
-        // Overdue Receivables (past due date)
-        $overdueSales = Sale::with('customer')
-            ->where('status', 'confirmed')
-            ->whereNotNull('due_date')
-            ->where('due_date', '<', $today)
+        // Overdue Receivables (past due date) - Optimized with subquery and limit
+        $overdueSales = DB::table('sales')
+            ->leftJoin('customers', 'sales.customer_id', '=', 'customers.id')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    sale_id,
+                    SUM(amount) as total_paid
+                FROM sale_payment_items
+                INNER JOIN sale_payments ON sale_payment_items.sale_payment_id = sale_payments.id
+                WHERE sale_payments.status = "confirmed"
+                GROUP BY sale_id
+            ) as payments'), 'sales.id', '=', 'payments.sale_id')
+            ->where('sales.status', 'confirmed')
+            ->whereNotNull('sales.due_date')
+            ->where('sales.due_date', '<', $today)
+            ->selectRaw('
+                sales.id,
+                sales.sale_number,
+                sales.sale_date,
+                sales.due_date,
+                sales.total_amount,
+                COALESCE(payments.total_paid, 0) as total_paid,
+                GREATEST(0, sales.total_amount - COALESCE(payments.total_paid, 0)) as remaining_amount,
+                sales.status,
+                customers.id as customer_id,
+                customers.name as customer_name,
+                DATEDIFF(?, sales.due_date) as days_overdue
+            ', [$today])
+            ->havingRaw('remaining_amount > 0')
+            ->orderBy('sales.due_date', 'asc')
+            ->limit(10)
             ->get()
-            ->append(['total_paid', 'remaining_amount'])
-            ->filter(function ($sale) {
-                return $sale->remaining_amount > 0;
-            })
-            ->sortBy('due_date')
-            ->take(10)
-            ->values()
-            ->map(function ($sale) use ($today) {
-                $dueDate = Carbon::parse($sale->due_date)->startOfDay();
-                $todayDate = Carbon::parse($today)->startOfDay();
-                $daysOverdue = (int) $dueDate->diffInDays($todayDate, false);
+            ->map(function ($sale) {
                 return [
                     'id' => $sale->id,
                     'sale_number' => $sale->sale_number,
-                    'customer' => $sale->customer,
+                    'customer' => $sale->customer_id ? ['id' => $sale->customer_id, 'name' => $sale->customer_name] : null,
                     'sale_date' => $sale->sale_date,
                     'due_date' => $sale->due_date,
                     'total_amount' => (float) $sale->total_amount,
                     'total_paid' => (float) $sale->total_paid,
                     'remaining_amount' => (float) $sale->remaining_amount,
-                    'days_overdue' => $daysOverdue,
+                    'days_overdue' => (int) abs($sale->days_overdue), // Use abs to ensure positive
                     'status' => $sale->status,
                 ];
             });
 
-        $totalOverdueAmount = collect($overdueSales)->sum('remaining_amount');
+        $totalOverdueAmount = DB::table('sales')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    sale_id,
+                    SUM(amount) as total_paid
+                FROM sale_payment_items
+                INNER JOIN sale_payments ON sale_payment_items.sale_payment_id = sale_payments.id
+                WHERE sale_payments.status = "confirmed"
+                GROUP BY sale_id
+            ) as payments'), 'sales.id', '=', 'payments.sale_id')
+            ->where('sales.status', 'confirmed')
+            ->whereNotNull('sales.due_date')
+            ->where('sales.due_date', '<', $today)
+            ->selectRaw('SUM(GREATEST(0, sales.total_amount - COALESCE(payments.total_paid, 0))) as total_overdue')
+            ->value('total_overdue') ?? 0;
 
-        // Average Days to Pay (for receivables)
-        $paidSales = Sale::where('status', 'confirmed')
-            ->whereNotNull('due_date')
-            ->get()
-            ->append(['total_paid', 'remaining_amount'])
-            ->filter(function ($sale) {
-                return $sale->remaining_amount == 0 && $sale->total_paid > 0;
-            });
+        // Average Days to Pay (for receivables) - Optimized with subquery
+        $avgDaysToPayResult = DB::table('sales')
+            ->join(DB::raw('(
+                SELECT
+                    sale_id,
+                    MAX(sale_payments.payment_date) as last_payment_date
+                FROM sale_payment_items
+                INNER JOIN sale_payments ON sale_payment_items.sale_payment_id = sale_payments.id
+                WHERE sale_payments.status = "confirmed"
+                GROUP BY sale_id
+            ) as last_payments'), 'sales.id', '=', 'last_payments.sale_id')
+            ->leftJoin(DB::raw('(
+                SELECT
+                    sale_id,
+                    SUM(amount) as total_paid
+                FROM sale_payment_items
+                INNER JOIN sale_payments ON sale_payment_items.sale_payment_id = sale_payments.id
+                WHERE sale_payments.status = "confirmed"
+                GROUP BY sale_id
+            ) as payments'), 'sales.id', '=', 'payments.sale_id')
+            ->where('sales.status', 'confirmed')
+            ->whereNotNull('sales.due_date')
+            ->whereRaw('COALESCE(payments.total_paid, 0) >= sales.total_amount')
+            ->whereRaw('payments.total_paid > 0')
+            ->selectRaw('AVG(DATEDIFF(last_payments.last_payment_date, sales.due_date)) as avg_days')
+            ->value('avg_days');
 
-        $totalDays = 0;
-        $paidCount = 0;
-
-        foreach ($paidSales as $sale) {
-            $lastPaymentItem = SalePaymentItem::where('sale_id', $sale->id)
-                ->with('salePayment')
-                ->whereHas('salePayment', function ($query) {
-                    $query->where('status', 'confirmed');
-                })
-                ->orderBy('created_at', 'desc')
-                ->first();
-
-            if ($lastPaymentItem && $lastPaymentItem->salePayment && $sale->due_date) {
-                $paymentDate = Carbon::parse($lastPaymentItem->salePayment->payment_date);
-                $dueDate = Carbon::parse($sale->due_date);
-                $daysToPay = $dueDate->diffInDays($paymentDate);
-                $totalDays += $daysToPay;
-                $paidCount++;
-            }
-        }
-
-        $avgDaysToPay = $paidCount > 0 ? round($totalDays / $paidCount, 1) : 0;
+        $avgDaysToPay = $avgDaysToPayResult ? round((float) $avgDaysToPayResult, 1) : 0;
 
         return Inertia::render('dashboard', [
+            'period' => [
+                'date_from' => $dateFrom ?: $periodStart->format('Y-m-d'),
+                'date_to' => $dateTo ?: $periodEnd->format('Y-m-d'),
+            ],
             'stats' => [
                 'sales' => [
                     'today' => (float) $todaySales,
-                    'month' => (float) $monthSales,
-                    'lastMonth' => (float) $lastMonthSales,
+                    'period' => (float) $periodSales,
+                    'previousPeriod' => (float) $previousPeriodSales,
                     'growth' => round($salesGrowth, 2),
                 ],
                 'purchases' => [
                     'today' => (float) $todayPurchases,
-                    'month' => (float) $monthPurchases,
-                    'lastMonth' => (float) $lastMonthPurchases,
+                    'period' => (float) $periodPurchases,
+                    'previousPeriod' => (float) $previousPeriodPurchases,
                     'growth' => round($purchaseGrowth, 2),
                 ],
                 'profit' => [
                     'today' => (float) $todayProfit,
-                    'month' => (float) $monthProfit,
+                    'period' => (float) $periodProfit,
                     'marginPercent' => round($profitMarginPercent, 2),
                 ],
                 'payments' => [
@@ -425,9 +549,9 @@ class DashboardController extends Controller
                 'bankBalance' => (float) $totalBankBalance,
                 'transactions' => [
                     'todaySaleCount' => $todaySaleCount,
-                    'monthSaleCount' => $monthSaleCount,
+                    'periodSaleCount' => $periodSaleCount,
                     'todayPurchaseCount' => $todayPurchaseCount,
-                    'monthPurchaseCount' => $monthPurchaseCount,
+                    'periodPurchaseCount' => $periodPurchaseCount,
                     'avgSaleValue' => round($avgSaleValue, 2),
                     'avgPurchaseValue' => round($avgPurchaseValue, 2),
                 ],

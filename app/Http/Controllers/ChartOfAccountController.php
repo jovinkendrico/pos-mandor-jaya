@@ -20,18 +20,28 @@ class ChartOfAccountController extends Controller
     {
         $query = ChartOfAccount::query();
 
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
         // Filter by type
-        if ($request->has('type')) {
+        if ($request->has('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
         }
 
         // Filter by is_active
-        if ($request->has('is_active')) {
+        if ($request->has('is_active') && $request->is_active !== 'all') {
             $query->where('is_active', $request->boolean('is_active'));
         }
 
         // Filter by parent_id (null for root accounts)
-        if ($request->has('parent_id')) {
+        if ($request->has('parent_id') && $request->parent_id !== 'all') {
             if ($request->parent_id === 'null' || $request->parent_id === null) {
                 $query->whereNull('parent_id');
             } else {
@@ -39,10 +49,21 @@ class ChartOfAccountController extends Controller
             }
         }
 
+        // Sorting
+        $sortBy = $request->get('sort_by', 'code');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        $allowedSortFields = ['code', 'name', 'type'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('code', 'asc');
+        }
+        $query->orderBy('id', 'asc');
+
         $chartOfAccounts = $query->with('parent')
-            ->orderBy('type')
-            ->orderBy('code')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         // Get all accounts for parent selection (for form dropdown)
         $allAccounts = ChartOfAccount::where('is_active', true)
@@ -53,6 +74,14 @@ class ChartOfAccountController extends Controller
         return Inertia::render('master/chart-of-account/index', [
             'chartOfAccounts' => $chartOfAccounts,
             'allAccounts' => $allAccounts,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'type' => $request->get('type', 'all'),
+                'is_active' => $request->get('is_active', 'all'),
+                'parent_id' => $request->get('parent_id', 'all'),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 

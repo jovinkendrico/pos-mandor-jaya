@@ -15,11 +15,13 @@ class Item extends Model
         'code',
         'name',
         'stock',
+        'initial_stock',
         'description',
     ];
 
     protected $casts = [
         'stock' => 'decimal:2',
+        'initial_stock' => 'decimal:2',
     ];
 
     public function itemUoms(): HasMany

@@ -7,7 +7,7 @@ import * as Yup from 'yup';
 const bankSchema = Yup.object().shape({
     name: Yup.string().required('Nama Bank/Cash harus diisi.'),
     type: Yup.string(),
-    chart_of_account_id: Yup.number().nullable(),
+    chart_of_account_id: Yup.string().nullable(),
     account_number: Yup.string(),
     account_name: Yup.string(),
     balance: Yup.number(),
@@ -27,7 +27,7 @@ const useBanks = (closeModal: () => void) => {
     } = useForm({
         name: '',
         type: 'bank' as 'bank' | 'cash',
-        chart_of_account_id: null as number | null,
+        chart_of_account_id: '' as string,
         account_number: '',
         account_name: '',
         balance: 0,

@@ -7,7 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Combobox, ComboboxOption } from '@/components/ui/combobox';
+import { AsyncCombobox, AsyncComboboxOption } from '@/components/ui/async-combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -40,13 +40,14 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
     const [quantityDisplay, setQuantityDisplay] = useState('');
     const [unitCostDisplay, setUnitCostDisplay] = useState('');
 
-    const itemOptions: ComboboxOption[] = useMemo(() => {
+    const itemOptions: AsyncComboboxOption[] = useMemo(() => {
         if (!items || !Array.isArray(items)) {
             return [];
         }
         return items.map((item) => ({
             value: item.id.toString(),
             label: `${item.code || ''} - ${item.name}`.trim(),
+            item: item, // Include full item data
         }));
     }, [items]);
 
@@ -72,15 +73,47 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
         }
     }, [data.item_id, items, data.unit_cost, setData]);
 
-    const handleItemChange = (value: string) => {
+    const handleItemChange = async (value: string) => {
         setData('item_id', value ? Number(value) : '');
-        const item = items.find((i) => i.id === Number(value));
+        
+        if (!value) {
+            setSelectedItem(null);
+            return;
+        }
+        
+        // Try to find item in local items first
+        let item = items.find((i) => i.id === Number(value));
+        
+        // If not found, fetch from API
+        if (!item) {
+            try {
+                const response = await fetch(`/stock-adjustments/items/search?id=${value}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const foundOption = data.data?.find((opt: AsyncComboboxOption) => opt.value === value);
+                    if (foundOption?.item) {
+                        item = foundOption.item as IItem;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch item:', error);
+            }
+        }
+        
         if (item) {
             setSelectedItem(item);
             if (!data.unit_cost) {
                 setData('unit_cost', item.modal_price || 0);
                 setUnitCostDisplay(formatCurrency(item.modal_price || 0));
             }
+        } else {
+            setSelectedItem(null);
         }
     };
 
@@ -115,11 +148,14 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
                             <Label htmlFor="item_id" required>
                                 Barang
                             </Label>
-                            <Combobox
-                                options={itemOptions}
+                            <AsyncCombobox
+                                initialOptions={itemOptions}
                                 value={data.item_id ? data.item_id.toString() : ''}
                                 onValueChange={handleItemChange}
                                 placeholder="Pilih barang"
+                                searchUrl="/stock-adjustments/items/search"
+                                searchParam="search"
+                                debounceMs={300}
                             />
                             <InputError message={errors.item_id} />
                             {selectedItem && (

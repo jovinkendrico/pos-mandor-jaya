@@ -23,16 +23,79 @@ class SaleReturnController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(\Illuminate\Http\Request $request): Response
     {
-        $returns = SaleReturn::with(['sale.customer', 'details.item', 'details.itemUom'])
-            ->orderBy('return_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
+        $query = SaleReturn::with(['sale.customer', 'details.item', 'details.itemUom']);
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('return_number', 'like', "%{$search}%")
+                    ->orWhere('reason', 'like', "%{$search}%")
+                    ->orWhereHas('sale', function ($q) use ($search) {
+                        $q->where('sale_number', 'like', "%{$search}%")
+                            ->orWhereHas('customer', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
+                    });
+            });
+        }
+
+        // Filter by date range
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('return_date', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('return_date', '<=', $request->date_to);
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by return type
+        if ($request->has('return_type') && $request->return_type !== 'all') {
+            $query->where('return_type', $request->return_type);
+        }
+
+        // Filter by customer
+        if ($request->has('customer_id') && $request->customer_id) {
+            $query->whereHas('sale', function ($q) use ($request) {
+                $q->where('customer_id', $request->customer_id);
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'return_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSortFields = ['return_date', 'return_number', 'total_amount', 'status'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('return_date', 'desc');
+        }
+        $query->orderBy('id', 'desc');
+
+        $returns = $query->paginate(15)->withQueryString();
+
+        // Get customers for filter
+        $customers = \App\Models\Customer::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('transaction/salereturn/index', [
-            'returns' => [
-                'data' => $returns,
+            'returns' => $returns,
+            'customers' => $customers,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'date_from' => $request->get('date_from', ''),
+                'date_to' => $request->get('date_to', ''),
+                'status' => $request->get('status', 'all'),
+                'return_type' => $request->get('return_type', 'all'),
+                'customer_id' => $request->get('customer_id', ''),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
             ],
         ]);
     }

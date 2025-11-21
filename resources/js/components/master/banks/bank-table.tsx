@@ -1,10 +1,11 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { cn, formatCurrency, parseStringtoNumber } from '@/lib/utils';
 import { IBank } from '@/types';
-import { Edit, Trash } from 'lucide-react';
+import { Edit, Trash, TrendingUp } from 'lucide-react';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { TableCell } from '../../ui/table';
+import { Link } from '@inertiajs/react';
 
 interface BankTableProps {
     banks: IBank[];
@@ -75,6 +76,16 @@ const BankTable = (props: BankTableProps) => {
                         {formatCurrency(row.balance)}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <Link href={`/banks/${row.id}/cash-movement`}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="btn-info"
+                                title="Pergerakan Kas"
+                            >
+                                <TrendingUp />
+                            </Button>
+                        </Link>
                         <Button
                             variant="ghost"
                             size="icon"

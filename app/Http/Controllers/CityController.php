@@ -28,10 +28,35 @@ class CityController extends Controller
         }
 
         // Otherwise, return Inertia page
-        $cities = City::orderBy('name')->paginate(10);
+        $query = City::query();
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        $allowedSortFields = ['name'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        $query->orderBy('id', 'asc');
+
+        $cities = $query->paginate(10)->withQueryString();
 
         return Inertia::render('master/city/index', [
             'cities' => $cities,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 
