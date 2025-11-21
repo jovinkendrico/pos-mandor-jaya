@@ -25,14 +25,55 @@ class ItemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(\Illuminate\Http\Request $request): Response
     {
-        $items = Item::with('itemUoms.uom')->orderBy('name')->paginate(10);
+        $query = Item::with('itemUoms.uom');
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by stock level
+        if ($request->has('stock_filter') && $request->stock_filter !== 'all') {
+            if ($request->stock_filter === 'low') {
+                $query->where('stock', '<=', 10);
+            } elseif ($request->stock_filter === 'out') {
+                $query->where('stock', '<=', 0);
+            } elseif ($request->stock_filter === 'in_stock') {
+                $query->where('stock', '>', 0);
+            }
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        $allowedSortFields = ['name', 'code', 'stock'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        $query->orderBy('id', 'asc');
+
+        $items = $query->paginate(10)->withQueryString();
         $uoms  = Uom::orderBy('name')->get();
 
         return Inertia::render('master/item/index', [
             'items' => $items,
             'uoms'  => $uoms,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'stock_filter' => $request->get('stock_filter', 'all'),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 
@@ -57,6 +98,7 @@ class ItemController extends Controller
                 'code'        => $code,
                 'name'        => $request->name,
                 'stock'       => $openingStock,
+                'initial_stock' => $openingStock,
                 'description' => $request->description,
             ]);
 
@@ -106,6 +148,96 @@ class ItemController extends Controller
         return Inertia::render('master/item/show', [
             'item'           => $item,
             'stockMovements' => $stockMovements,
+        ]);
+    }
+
+    /**
+     * Display stock card for an item.
+     */
+    public function stockCard(\Illuminate\Http\Request $request, Item $item): Response
+    {
+        $query = StockMovement::where('item_id', $item->id)
+            ->orderBy('movement_date', 'asc')
+            ->orderBy('id', 'asc');
+
+        // Filter by date range if provided
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('movement_date', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('movement_date', '<=', $request->date_to);
+        }
+
+        // Filter by reference type
+        if ($request->has('reference_type') && $request->reference_type !== 'all') {
+            $query->where('reference_type', $request->reference_type);
+        }
+
+        $stockMovements = $query->get();
+
+        // Calculate opening stock using stored initial_stock
+        // Get initial stock from database (stored when item was created)
+        $initialStock = (float) ($item->initial_stock ?? 0);
+
+        if ($request->has('date_from') && $request->date_from) {
+            // Calculate opening stock before the date range
+            $firstTransactionDate = $request->date_from;
+            
+            // Get all movements before the date range
+            $movementsBefore = StockMovement::where('item_id', $item->id)
+                ->whereDate('movement_date', '<', $firstTransactionDate)
+                ->sum('quantity');
+            
+            // Opening stock = Initial stock + movements before date
+            $openingStock = $initialStock + (float) $movementsBefore;
+        } else {
+            // No date filter: opening stock is the initial stock when item was created
+            $openingStock = $initialStock;
+        }
+
+        // Calculate running balance
+        $runningStock = $openingStock;
+        $transactionsWithBalance = $stockMovements->map(function ($movement) use (&$runningStock) {
+            $runningStock = $runningStock + (float) $movement->quantity;
+            return [
+                'id' => $movement->id,
+                'date' => $movement->movement_date,
+                'reference_type' => $movement->reference_type,
+                'reference_id' => $movement->reference_id,
+                'notes' => $movement->notes,
+                'in' => (float) $movement->quantity > 0 ? (float) $movement->quantity : 0,
+                'out' => (float) $movement->quantity < 0 ? abs((float) $movement->quantity) : 0,
+                'balance' => $runningStock,
+            ];
+        });
+
+        // Paginate manually
+        $page = (int) $request->get('page', 1);
+        $perPage = 15;
+        $total = $transactionsWithBalance->count();
+        $items = $transactionsWithBalance->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Get reference details for display
+        $referenceTypes = $transactionsWithBalance->pluck('reference_type')->unique()->toArray();
+
+        return Inertia::render('master/item/stock-card', [
+            'item' => $item,
+            'transactions' => $paginatedData,
+            'openingStock' => $openingStock,
+            'closingStock' => $runningStock,
+            'filters' => [
+                'date_from' => $request->get('date_from', ''),
+                'date_to' => $request->get('date_to', ''),
+                'reference_type' => $request->get('reference_type', 'all'),
+            ],
         ]);
     }
 

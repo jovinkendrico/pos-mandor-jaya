@@ -48,6 +48,32 @@ class StockAdjustmentController extends Controller
             $query->whereDate('movement_date', '<=', $request->date_to);
         }
 
+        // Filter by item
+        if ($request->has('item_id') && $request->item_id) {
+            $query->where('item_id', $request->item_id);
+        }
+
+        // Filter by adjustment type (increase/decrease)
+        if ($request->has('adjustment_type') && $request->adjustment_type !== 'all') {
+            if ($request->adjustment_type === 'increase') {
+                $query->where('quantity', '>', 0);
+            } elseif ($request->adjustment_type === 'decrease') {
+                $query->where('quantity', '<', 0);
+            }
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'movement_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSortFields = ['movement_date', 'quantity', 'unit_cost'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('movement_date', 'desc');
+        }
+        $query->orderBy('id', 'desc');
+
         $adjustments = $query->paginate(15)->withQueryString();
 
         // Get items for the form
@@ -62,6 +88,10 @@ class StockAdjustmentController extends Controller
                 'search' => $request->get('search', ''),
                 'date_from' => $request->get('date_from', ''),
                 'date_to' => $request->get('date_to', ''),
+                'item_id' => $request->get('item_id', ''),
+                'adjustment_type' => $request->get('adjustment_type', 'all'),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
             ],
         ]);
     }

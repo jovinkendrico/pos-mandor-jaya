@@ -468,10 +468,18 @@ class StockService
                         'amount' => $purchaseReturn->total_amount,
                     ]);
 
-                    // Increase bank balance (we're receiving money)
+                    // Create cash movement (we're receiving money)
                     $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
                     if ($bank) {
-                        $bank->increment('balance', (float) $purchaseReturn->total_amount);
+                        app(\App\Services\CashMovementService::class)->createMovement(
+                            $bank,
+                            'PurchaseReturn',
+                            $purchaseReturn->id,
+                            $purchaseReturn->return_date,
+                            (float) $purchaseReturn->total_amount,
+                            0,
+                            "Refund Retur Pembelian #{$purchaseReturn->return_number}"
+                        );
                     }
                 } elseif ($purchaseReturn->refund_method === 'reduce_payable') {
                     // Create payment record to reduce payable (no bank transaction)
@@ -543,11 +551,14 @@ class StockService
                     ->first();
 
                 if ($payment) {
-                    // If cash_refund, restore bank balance
+                    // If cash_refund, delete cash movement
                     if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
-                        $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
-                        if ($bank) {
-                            $bank->decrement('balance', (float) $payment->total_amount);
+                        $cashMovement = \App\Models\CashMovement::where('reference_type', 'PurchaseReturn')
+                            ->where('reference_id', $purchaseReturn->id)
+                            ->first();
+
+                        if ($cashMovement) {
+                            app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
                         }
                     }
 
@@ -728,10 +739,18 @@ class StockService
                         'amount' => $saleReturn->total_amount,
                     ]);
 
-                    // Decrease bank balance (we're paying out)
+                    // Create cash movement (we're paying out)
                     $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
                     if ($bank) {
-                        $bank->decrement('balance', (float) $saleReturn->total_amount);
+                        app(\App\Services\CashMovementService::class)->createMovement(
+                            $bank,
+                            'SaleReturn',
+                            $saleReturn->id,
+                            $saleReturn->return_date,
+                            0,
+                            (float) $saleReturn->total_amount,
+                            "Refund Retur Penjualan #{$saleReturn->return_number}"
+                        );
                     }
                 } elseif ($saleReturn->refund_method === 'reduce_receivable') {
                     // Create payment record to reduce receivable (no bank transaction)
@@ -803,10 +822,13 @@ class StockService
                     ->first();
 
                 if ($payment) {
-                    // Restore bank balance (reverse the decrement)
-                    $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
-                    if ($bank) {
-                        $bank->increment('balance', (float) $payment->total_amount);
+                    // Delete cash movement (reverse the decrement)
+                    $cashMovement = \App\Models\CashMovement::where('reference_type', 'SaleReturn')
+                        ->where('reference_id', $saleReturn->id)
+                        ->first();
+
+                    if ($cashMovement) {
+                        app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
                     }
 
                     // Delete payment items

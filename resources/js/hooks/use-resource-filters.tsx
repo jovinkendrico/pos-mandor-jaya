@@ -12,11 +12,24 @@ type RouteFunction = () => ResourceRoute;
 interface Filters {
     search: string;
     status: string;
-    payment_status: string;
+    payment_status?: string;
     date_from: string;
     date_to: string;
     sort_by: string;
     sort_order: string;
+    bank_id?: string;
+    reference_type?: string;
+    payment_method?: string;
+    customer_id?: string;
+    supplier_id?: string;
+    return_type?: string;
+    type?: string;
+    city_id?: string;
+    is_active?: string;
+    parent_id?: string;
+    stock_filter?: string;
+    item_id?: string;
+    adjustment_type?: string;
 }
 
 const useResourceFilters = (
@@ -29,8 +42,8 @@ const useResourceFilters = (
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
     const handleFilterChange = useCallback(
-        (newFilters: FilterState) => {
-            if (newFilters.search !== searchTerm) {
+        (newFilters: FilterState | Partial<Filters>) => {
+            if (newFilters.search !== undefined && newFilters.search !== searchTerm) {
                 setSearchTerm(newFilters.search);
                 setAllFilters((prevFilters) => ({
                     ...prevFilters,

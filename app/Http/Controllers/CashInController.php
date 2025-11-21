@@ -55,15 +55,52 @@ class CashInController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by bank
+        if ($request->has('bank_id') && $request->bank_id) {
+            $query->where('bank_id', $request->bank_id);
+        }
+
+        // Filter by reference type
+        if ($request->has('reference_type') && $request->reference_type !== 'all') {
+            if ($request->reference_type === 'manual') {
+                $query->where(function ($q) {
+                    $q->whereNull('reference_type')
+                        ->orWhere('reference_type', '');
+                });
+            } else {
+                $query->where('reference_type', $request->reference_type);
+            }
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'cash_in_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSortFields = ['cash_in_date', 'cash_in_number', 'amount', 'status'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('cash_in_date', 'desc');
+        }
+        $query->orderBy('id', 'desc');
+
         $cashIns = $query->paginate(15)->withQueryString();
+
+        // Get banks for filter
+        $banks = \App\Models\Bank::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('transaction/cash-in/index', [
             'cashIns' => $cashIns,
+            'banks' => $banks,
             'filters' => [
                 'search' => $request->get('search', ''),
                 'date_from' => $request->get('date_from', ''),
                 'date_to' => $request->get('date_to', ''),
                 'status' => $request->get('status', 'all'),
+                'bank_id' => $request->get('bank_id', ''),
+                'reference_type' => $request->get('reference_type', 'all'),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
             ],
         ]);
     }
@@ -128,7 +165,7 @@ class CashInController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(CashIn $cashIn): Response
+    public function edit(CashIn $cashIn): \Illuminate\Http\RedirectResponse|Response
     {
         if ($cashIn->status === 'posted') {
             return redirect()->route('cash-ins.show', $cashIn)

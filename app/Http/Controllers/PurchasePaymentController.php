@@ -19,15 +19,89 @@ class PurchasePaymentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(\Illuminate\Http\Request $request): Response
     {
-        $payments = PurchasePayment::with(['purchases.supplier', 'bank', 'items.purchase'])
-            ->orderBy('payment_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $query = PurchasePayment::with(['purchases.supplier', 'bank', 'items.purchase']);
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('payment_number', 'like', "%{$search}%")
+                    ->orWhere('reference_number', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('bank', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items.purchase.supplier', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter by date range
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('payment_date', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('payment_date', '<=', $request->date_to);
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by bank
+        if ($request->has('bank_id') && $request->bank_id) {
+            $query->where('bank_id', $request->bank_id);
+        }
+
+        // Filter by payment method
+        if ($request->has('payment_method') && $request->payment_method !== 'all') {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // Filter by supplier
+        if ($request->has('supplier_id') && $request->supplier_id) {
+            $query->whereHas('items.purchase', function ($q) use ($request) {
+                $q->where('supplier_id', $request->supplier_id);
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'payment_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSortFields = ['payment_date', 'payment_number', 'total_amount', 'status'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('payment_date', 'desc');
+        }
+        $query->orderBy('id', 'desc');
+
+        $payments = $query->paginate(15)->withQueryString();
+
+        // Get banks and suppliers for filter
+        $banks = Bank::orderBy('name')->get(['id', 'name']);
+        $suppliers = \App\Models\Supplier::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('transaction/purchase-payment/index', [
             'payments' => $payments,
+            'banks' => $banks,
+            'suppliers' => $suppliers,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'date_from' => $request->get('date_from', ''),
+                'date_to' => $request->get('date_to', ''),
+                'status' => $request->get('status', 'all'),
+                'bank_id' => $request->get('bank_id', ''),
+                'payment_method' => $request->get('payment_method', 'all'),
+                'supplier_id' => $request->get('supplier_id', ''),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 
@@ -252,10 +326,18 @@ class PurchasePaymentController extends Controller
                     // JournalService akan membuat: Debit Hutang Usaha, Credit Bank
                     app(\App\Services\JournalService::class)->postCashOut($cashOut);
                 } else {
-                    // If no payable account found, still update bank balance manually
+                    // If no payable account found, still create cash movement
                     $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
                     if ($bank) {
-                        $bank->decrement('balance', $purchasePayment->total_amount);
+                        app(\App\Services\CashMovementService::class)->createMovement(
+                            $bank,
+                            'PurchasePayment',
+                            $purchasePayment->id,
+                            $purchasePayment->payment_date,
+                            0,
+                            (float) $purchasePayment->total_amount,
+                            "Pembayaran Pembelian #{$purchasePayment->payment_number}"
+                        );
                     }
                 }
             }
@@ -287,11 +369,14 @@ class PurchasePaymentController extends Controller
                 app(\App\Services\JournalService::class)->reverseCashOut($cashOut);
                 $cashOut->delete(); // Soft delete
             } else {
-                // If no cash out found, restore bank balance manually
+                // If no cash out found, delete cash movement manually
                 if ($purchasePayment->bank_id) {
-                    $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
-                    if ($bank) {
-                        $bank->increment('balance', $purchasePayment->total_amount);
+                    $cashMovement = \App\Models\CashMovement::where('reference_type', 'PurchasePayment')
+                        ->where('reference_id', $purchasePayment->id)
+                        ->first();
+
+                    if ($cashMovement) {
+                        app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
                     }
                 }
             }

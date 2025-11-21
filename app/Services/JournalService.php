@@ -55,8 +55,16 @@ class JournalService
                 'description' => "Kas Masuk #{$cashIn->cash_in_number}",
             ]);
 
-            // Update bank balance
-            $cashIn->bank->increment('balance', $cashIn->amount);
+            // Create cash movement and update bank balance
+            app(\App\Services\CashMovementService::class)->createMovement(
+                $cashIn->bank,
+                'CashIn',
+                $cashIn->id,
+                $cashIn->cash_in_date,
+                (float) $cashIn->amount,
+                0,
+                "Kas Masuk #{$cashIn->cash_in_number}: {$cashIn->description}"
+            );
 
             // Update cash in status
             $cashIn->update(['status' => 'posted']);
@@ -114,8 +122,16 @@ class JournalService
                 'description' => "Kas Keluar #{$cashOut->cash_out_number}",
             ]);
 
-            // Update bank balance
-            $cashOut->bank->decrement('balance', $cashOut->amount);
+            // Create cash movement and update bank balance
+            app(\App\Services\CashMovementService::class)->createMovement(
+                $cashOut->bank,
+                'CashOut',
+                $cashOut->id,
+                $cashOut->cash_out_date,
+                0,
+                (float) $cashOut->amount,
+                "Kas Keluar #{$cashOut->cash_out_number}: {$cashOut->description}"
+            );
 
             // Update cash out status
             $cashOut->update(['status' => 'posted']);
@@ -159,8 +175,14 @@ class JournalService
                 ]);
             }
 
-            // Reverse bank balance
-            $cashIn->bank->decrement('balance', $cashIn->amount);
+            // Delete cash movement and recalculate balances
+            $cashMovement = \App\Models\CashMovement::where('reference_type', 'CashIn')
+                ->where('reference_id', $cashIn->id)
+                ->first();
+
+            if ($cashMovement) {
+                app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
+            }
 
             // Update journal entry status
             $journalEntry->update(['status' => 'reversed']);
@@ -207,8 +229,14 @@ class JournalService
                 ]);
             }
 
-            // Reverse bank balance
-            $cashOut->bank->increment('balance', $cashOut->amount);
+            // Delete cash movement and recalculate balances
+            $cashMovement = \App\Models\CashMovement::where('reference_type', 'CashOut')
+                ->where('reference_id', $cashOut->id)
+                ->first();
+
+            if ($cashMovement) {
+                app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
+            }
 
             // Update journal entry status
             $journalEntry->update(['status' => 'reversed']);
@@ -525,6 +553,29 @@ class JournalService
                 'description' => "Saldo Awal " . ($bank->type === 'cash' ? 'Kas' : 'Bank') . ": {$bank->name}",
                 'status' => 'posted',
             ]);
+
+            // Create cash movement for opening balance adjustment
+            if ($balanceDifference > 0) {
+                app(\App\Services\CashMovementService::class)->createMovement(
+                    $bank,
+                    'Bank',
+                    $bank->id,
+                    now(),
+                    $balanceDifference,
+                    0,
+                    "Saldo Awal " . ($bank->type === 'cash' ? 'Kas' : 'Bank') . ": {$bank->name}"
+                );
+            } else {
+                app(\App\Services\CashMovementService::class)->createMovement(
+                    $bank,
+                    'Bank',
+                    $bank->id,
+                    now(),
+                    0,
+                    abs($balanceDifference),
+                    "Penyesuaian Saldo " . ($bank->type === 'cash' ? 'Kas' : 'Bank') . ": {$bank->name}"
+                );
+            }
 
             if ($balanceDifference > 0) {
                 // Saldo bertambah: Debit Bank, Credit Modal

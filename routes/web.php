@@ -73,6 +73,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('general-ledger', [GeneralLedgerController::class, 'index'])->name('general-ledger.index');
     Route::get('general-ledger/{account}', [GeneralLedgerController::class, 'show'])->name('general-ledger.show');
 
+    // Bank Cash Movement
+    Route::get('banks/{bank}/cash-movement', [BankController::class, 'cashMovement'])->name('banks.cash-movement');
+
+    // Item Stock Card
+    Route::get('items/{item}/stock-card', [ItemController::class, 'stockCard'])->name('items.stock-card');
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,

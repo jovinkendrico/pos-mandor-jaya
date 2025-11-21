@@ -19,15 +19,89 @@ class SalePaymentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(\Illuminate\Http\Request $request): Response
     {
-        $payments = SalePayment::with(['sales.customer', 'bank', 'items.sale'])
-            ->orderBy('payment_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $query = SalePayment::with(['sales.customer', 'bank', 'items.sale']);
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('payment_number', 'like', "%{$search}%")
+                    ->orWhere('reference_number', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('bank', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items.sale.customer', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter by date range
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('payment_date', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('payment_date', '<=', $request->date_to);
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by bank
+        if ($request->has('bank_id') && $request->bank_id) {
+            $query->where('bank_id', $request->bank_id);
+        }
+
+        // Filter by payment method
+        if ($request->has('payment_method') && $request->payment_method !== 'all') {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // Filter by customer
+        if ($request->has('customer_id') && $request->customer_id) {
+            $query->whereHas('items.sale', function ($q) use ($request) {
+                $q->where('customer_id', $request->customer_id);
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'payment_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSortFields = ['payment_date', 'payment_number', 'total_amount', 'status'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('payment_date', 'desc');
+        }
+        $query->orderBy('id', 'desc');
+
+        $payments = $query->paginate(15)->withQueryString();
+
+        // Get banks and customers for filter
+        $banks = Bank::orderBy('name')->get(['id', 'name']);
+        $customers = \App\Models\Customer::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('transaction/sale-payment/index', [
             'payments' => $payments,
+            'banks' => $banks,
+            'customers' => $customers,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'date_from' => $request->get('date_from', ''),
+                'date_to' => $request->get('date_to', ''),
+                'status' => $request->get('status', 'all'),
+                'bank_id' => $request->get('bank_id', ''),
+                'payment_method' => $request->get('payment_method', 'all'),
+                'customer_id' => $request->get('customer_id', ''),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 
@@ -252,10 +326,18 @@ class SalePaymentController extends Controller
                     // JournalService akan membuat: Debit Bank, Credit Piutang Usaha
                     app(\App\Services\JournalService::class)->postCashIn($cashIn);
                 } else {
-                    // If no receivable account found, still update bank balance manually
+                    // If no receivable account found, still create cash movement
                     $bank = \App\Models\Bank::lockForUpdate()->find($salePayment->bank_id);
                     if ($bank) {
-                        $bank->increment('balance', $salePayment->total_amount);
+                        app(\App\Services\CashMovementService::class)->createMovement(
+                            $bank,
+                            'SalePayment',
+                            $salePayment->id,
+                            $salePayment->payment_date,
+                            (float) $salePayment->total_amount,
+                            0,
+                            "Pembayaran Penjualan #{$salePayment->payment_number}"
+                        );
                     }
                 }
             }
@@ -287,11 +369,14 @@ class SalePaymentController extends Controller
                 app(\App\Services\JournalService::class)->reverseCashIn($cashIn);
                 $cashIn->delete(); // Soft delete
             } else {
-                // If no cash in found, restore bank balance manually
+                // If no cash in found, delete cash movement manually
                 if ($salePayment->bank_id) {
-                    $bank = \App\Models\Bank::lockForUpdate()->find($salePayment->bank_id);
-                    if ($bank) {
-                        $bank->decrement('balance', $salePayment->total_amount);
+                    $cashMovement = \App\Models\CashMovement::where('reference_type', 'SalePayment')
+                        ->where('reference_id', $salePayment->id)
+                        ->first();
+
+                    if ($cashMovement) {
+                        app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
                     }
                 }
             }
