@@ -71,7 +71,14 @@ const SaleTable = (props: SaleTableProps) => {
                             {formatCurrency(row.remaining_amount || 0)}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            <Badge variant={isPaid ? 'success' : 'warning'}>
+                            <Badge
+                                variant={isPaid ? 'success' : 'warning'}
+                                className={cn(
+                                    isPaid
+                                        ? 'badge-blue-light'
+                                        : 'badge-red-light',
+                                )}
+                            >
                                 {isPaid ? 'Lunas' : 'Belum Lunas'}
                             </Badge>
                         </TableCell>

@@ -13,10 +13,16 @@ import {
     formatDatetoString,
     formatNumber,
 } from '@/lib/utils';
-import { edit, index } from '@/routes/sales';
+import { edit, index, print } from '@/routes/sales';
 import { BreadcrumbItem, ISale } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Pencil, XCircle } from 'lucide-react';
+import {
+    ArrowLeft,
+    CheckCircle2,
+    Download,
+    Pencil,
+    XCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
@@ -168,6 +174,17 @@ const SaleShow = (props: PageProps) => {
                             </Button>
                         )}
                     </div>
+                </div>
+                <div className="flex w-full justify-end">
+                    <Button
+                        className="btn-primary"
+                        onClick={() => {
+                            window.location.href = print(sale.id).url;
+                        }}
+                    >
+                        <Download />
+                        Download Invoice
+                    </Button>
                 </div>
 
                 {/* Sale Info */}
