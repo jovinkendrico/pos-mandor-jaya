@@ -266,6 +266,11 @@ export enum ReturnType {
     STOCK_AND_REFUND = 'stock_and_refund',
 }
 
+export enum RefundMethod {
+    REDUCE_PAYABLE = 'reduce_payable',
+    CASH_REFUND = 'cash_refund',
+}
+
 export interface Purchase {
     id: number;
     supplier_id: number;
@@ -432,7 +437,7 @@ export interface PurchaseReturn {
     return_date: Date;
     return_type: ReturnType;
     refund_bank_id?: number;
-    refund_method?: number;
+    refund_method?: RefundMethod;
     total_amount: number;
     status: PurchaseStatus;
     ppn_percent?: number;
