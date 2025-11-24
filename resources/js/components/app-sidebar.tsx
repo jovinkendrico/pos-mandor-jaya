@@ -148,7 +148,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Laporan',
-        href: '#',
+        href: '/reports',
         icon: FileText,
         children: [
             {

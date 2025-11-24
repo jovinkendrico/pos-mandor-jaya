@@ -39,6 +39,7 @@ use App\Http\Controllers\PurchaseReturnReportController;
 use App\Http\Controllers\SalePaymentReportController;
 use App\Http\Controllers\PurchasePaymentReportController;
 use App\Http\Controllers\CashInOutReportController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -91,6 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('general-ledger/{account}', [GeneralLedgerController::class, 'show'])->name('general-ledger.show');
 
     // Business Reports
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/sale-report', [SaleReportController::class, 'index'])->name('reports.sale-report');
     Route::get('reports/purchase-report', [PurchaseReportController::class, 'index'])->name('reports.purchase-report');
     Route::get('reports/receivable-aging', [ReceivableAgingController::class, 'index'])->name('reports.receivable-aging');

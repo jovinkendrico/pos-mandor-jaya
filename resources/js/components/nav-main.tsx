@@ -44,6 +44,9 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         const isChildActive = item.children!.some((subItem) =>
                             isActiveLink(subItem.href),
                         );
+                        const itemHref = normalizeHref(item.href);
+                        const hasValidHref = itemHref !== '' && itemHref !== '#';
+                        const isActive = hasValidHref ? isActiveLink(item.href) : isChildActive;
 
                         return (
                             <Collapsible
@@ -52,17 +55,44 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 className="group/collapsible"
                             >
                                 <SidebarMenuItem>
-                                    <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton
-                                            isActive={isChildActive}
-                                            className="w-full justify-start"
-                                            tooltip={item.title}
-                                        >
-                                            {item.icon && <item.icon />}
-                                            <span>{item.title}</span>
-                                            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                                        </SidebarMenuButton>
-                                    </CollapsibleTrigger>
+                                    {hasValidHref ? (
+                                        <div className="flex items-center w-full group/item">
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={isActive}
+                                                className="flex-1 justify-start"
+                                                tooltip={item.title}
+                                            >
+                                                <Link
+                                                    href={itemHref}
+                                                    className="flex items-center gap-2 w-full"
+                                                >
+                                                    {item.icon && <item.icon />}
+                                                    <span className="truncate">{item.title}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton
+                                                    className="w-8 h-8 p-0 justify-center ml-1"
+                                                    tooltip="Toggle submenu"
+                                                >
+                                                    <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                        </div>
+                                    ) : (
+                                        <CollapsibleTrigger asChild>
+                                            <SidebarMenuButton
+                                                isActive={isChildActive}
+                                                className="w-full justify-start"
+                                                tooltip={item.title}
+                                            >
+                                                {item.icon && <item.icon />}
+                                                <span>{item.title}</span>
+                                                <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                                            </SidebarMenuButton>
+                                        </CollapsibleTrigger>
+                                    )}
 
                                     <CollapsibleContent>
                                         <SidebarMenuSub>
