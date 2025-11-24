@@ -71,7 +71,7 @@ class SaleController extends Controller
         $perPage = $request->get('per_page', 10);
 
         // Paginate at DB level
-        $sales = $query->paginate($perPage);
+        $sales = $query->paginate($perPage)->withQueryString();
 
         // Append computed attributes
         $sales->getCollection()->each->append(['total_paid', 'remaining_amount']);

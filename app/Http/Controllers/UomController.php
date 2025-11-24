@@ -15,13 +15,37 @@ class UomController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $uoms = Uom::orderBy('name')->paginate(10);
+        $query = Uom::query();
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        $allowedSortFields = ['name'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        $query->orderBy('id', 'asc');
+
+        $uoms = $query->paginate(10)->withQueryString();
 
         return Inertia::render('master/uom/index', [
             'uoms' => $uoms,
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
         ]);
     }
 

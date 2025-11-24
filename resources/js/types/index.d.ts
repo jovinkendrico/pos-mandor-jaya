@@ -312,6 +312,8 @@ export type IPurchase = Pick<
 > & {
     supplier: ISupplier;
     details: IPurchaseDetail[];
+    total_paid?: number;
+    remaining_amount?: number;
 };
 
 export interface PurchaseDetail {
@@ -588,3 +590,70 @@ export type ISalePayment = Pick<
 > & {
     items?: Array<Pick<SalePaymentItem, 'sale_id' | 'amount'>>;
 };
+
+export interface CashIn {
+    id: number;
+    cash_in_number: string;
+    cash_in_date: string;
+    bank_id: number;
+    bank?: Bank;
+    chart_of_account_id: number;
+    chart_of_account?: ChartOfAccount;
+    amount: number;
+    description?: string;
+    status: 'draft' | 'posted';
+    reference_type?: string;
+    reference_id?: number;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface CashOut {
+    id: number;
+    cash_out_number: string;
+    cash_out_date: string;
+    bank_id: number;
+    bank?: Bank;
+    chart_of_account_id: number;
+    chart_of_account?: ChartOfAccount;
+    amount: number;
+    description?: string;
+    status: 'draft' | 'posted';
+    reference_type?: string;
+    reference_id?: number;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface JournalEntryDetail {
+    id: number;
+    journal_entry_id: number;
+    chart_of_account_id: number;
+    chart_of_account?: ChartOfAccount;
+    debit: number;
+    credit: number;
+    description?: string;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export interface JournalEntry {
+    id: number;
+    journal_number: string;
+    journal_date: string;
+    reference_type?: string;
+    reference_id?: number;
+    description?: string;
+    status: 'draft' | 'posted' | 'reversed';
+    reversed_by?: number;
+    reversedBy?: JournalEntry;
+    details?: JournalEntryDetail[];
+    total_debit?: number;
+    total_credit?: number;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}

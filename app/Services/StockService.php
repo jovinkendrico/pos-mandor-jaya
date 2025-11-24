@@ -8,6 +8,7 @@ use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\StockMovement;
 use App\Models\FifoMapping;
+use App\Services\JournalService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -52,6 +53,17 @@ class StockService
             }
 
             $purchase->update(['status' => 'confirmed']);
+
+            // Post to journal
+            try {
+                app(JournalService::class)->postPurchase($purchase);
+            } catch (\Exception $e) {
+                Log::error('Failed to post purchase to journal', [
+                    'purchase_id' => $purchase->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't throw - allow purchase to be confirmed even if journal posting fails
+            }
         });
     }
 
@@ -76,6 +88,17 @@ class StockService
             }
 
             $purchase->update(['status' => 'pending']);
+
+            // Reverse journal entry
+            try {
+                app(JournalService::class)->reversePurchase($purchase);
+            } catch (\Exception $e) {
+                Log::error('Failed to reverse purchase journal entry', [
+                    'purchase_id' => $purchase->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't throw - allow unconfirm even if journal reversal fails
+            }
         });
     }
 
@@ -140,11 +163,24 @@ class StockService
                 $detail->item->decrement('stock', $baseQuantity);
             }
 
+            // Calculate profit using total_after_discount (without PPN) - same as in Profit Loss Report
+            $revenue = (float) $sale->total_after_discount;
             $sale->update([
                 'status'       => 'confirmed',
                 'total_cost'   => $totalCost,
-                'total_profit' => $sale->total_amount - $totalCost,
+                'total_profit' => $revenue - $totalCost, // Revenue (after discount, without PPN) - Cost
             ]);
+
+            // Post to journal
+            try {
+                app(JournalService::class)->postSale($sale);
+            } catch (\Exception $e) {
+                Log::error('Failed to post sale to journal', [
+                    'sale_id' => $sale->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't throw - allow sale to be confirmed even if journal posting fails
+            }
         });
     }
 
@@ -194,6 +230,17 @@ class StockService
                 'total_cost'   => 0,
                 'total_profit' => 0,
             ]);
+
+            // Reverse journal entry
+            try {
+                app(JournalService::class)->reverseSale($sale);
+            } catch (\Exception $e) {
+                Log::error('Failed to reverse sale journal entry', [
+                    'sale_id' => $sale->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't throw - allow unconfirm even if journal reversal fails
+            }
         });
     }
 
@@ -421,10 +468,18 @@ class StockService
                         'amount' => $purchaseReturn->total_amount,
                     ]);
 
-                    // Increase bank balance (we're receiving money)
+                    // Create cash movement (we're receiving money)
                     $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
                     if ($bank) {
-                        $bank->increment('balance', (float) $purchaseReturn->total_amount);
+                        app(\App\Services\CashMovementService::class)->createMovement(
+                            $bank,
+                            'PurchaseReturn',
+                            $purchaseReturn->id,
+                            $purchaseReturn->return_date,
+                            (float) $purchaseReturn->total_amount,
+                            0,
+                            "Refund Retur Pembelian #{$purchaseReturn->return_number}"
+                        );
                     }
                 } elseif ($purchaseReturn->refund_method === 'reduce_payable') {
                     // Create payment record to reduce payable (no bank transaction)
@@ -496,11 +551,14 @@ class StockService
                     ->first();
 
                 if ($payment) {
-                    // If cash_refund, restore bank balance
+                    // If cash_refund, delete cash movement
                     if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
-                        $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
-                        if ($bank) {
-                            $bank->decrement('balance', (float) $payment->total_amount);
+                        $cashMovement = \App\Models\CashMovement::where('reference_type', 'PurchaseReturn')
+                            ->where('reference_id', $purchaseReturn->id)
+                            ->first();
+
+                        if ($cashMovement) {
+                            app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
                         }
                     }
 
@@ -681,10 +739,18 @@ class StockService
                         'amount' => $saleReturn->total_amount,
                     ]);
 
-                    // Decrease bank balance (we're paying out)
+                    // Create cash movement (we're paying out)
                     $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
                     if ($bank) {
-                        $bank->decrement('balance', (float) $saleReturn->total_amount);
+                        app(\App\Services\CashMovementService::class)->createMovement(
+                            $bank,
+                            'SaleReturn',
+                            $saleReturn->id,
+                            $saleReturn->return_date,
+                            0,
+                            (float) $saleReturn->total_amount,
+                            "Refund Retur Penjualan #{$saleReturn->return_number}"
+                        );
                     }
                 } elseif ($saleReturn->refund_method === 'reduce_receivable') {
                     // Create payment record to reduce receivable (no bank transaction)
@@ -756,10 +822,13 @@ class StockService
                     ->first();
 
                 if ($payment) {
-                    // Restore bank balance (reverse the decrement)
-                    $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
-                    if ($bank) {
-                        $bank->increment('balance', (float) $payment->total_amount);
+                    // Delete cash movement (reverse the decrement)
+                    $cashMovement = \App\Models\CashMovement::where('reference_type', 'SaleReturn')
+                        ->where('reference_id', $saleReturn->id)
+                        ->first();
+
+                    if ($cashMovement) {
+                        app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
                     }
 
                     // Delete payment items
@@ -812,9 +881,11 @@ class StockService
         }
 
         DB::transaction(function () use ($item, $quantity, $unitCost, $adjustmentDate, $notes) {
+            $stockMovement = null;
+
             if ($quantity > 0) {
                 // Increase stock - add stock movement
-                StockMovement::create([
+                $stockMovement = StockMovement::create([
                     'item_id'            => $item->id,
                     'reference_type'     => 'StockAdjustment',
                     'reference_id'       => $item->id,
@@ -833,7 +904,7 @@ class StockService
                 $avgUnitCost = $absQuantity > 0 ? $consumptionCost / $absQuantity : $unitCost;
 
                 // Create consumption movement
-                StockMovement::create([
+                $stockMovement = StockMovement::create([
                     'item_id'            => $item->id,
                     'reference_type'     => 'StockAdjustment',
                     'reference_id'       => $item->id,
@@ -845,6 +916,19 @@ class StockService
                 ]);
 
                 $item->decrement('stock', $absQuantity);
+            }
+
+            // Post to journal if stock movement created and has valid cost
+            if ($stockMovement && $stockMovement->unit_cost > 0) {
+                try {
+                    app(JournalService::class)->postStockAdjustment($stockMovement);
+                } catch (\Exception $e) {
+                    Log::error('Failed to post stock adjustment to journal', [
+                        'stock_movement_id' => $stockMovement->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Don't throw - allow adjustment even if journal posting fails
+                }
             }
         });
     }

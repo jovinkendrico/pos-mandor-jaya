@@ -48,11 +48,38 @@ class StockAdjustmentController extends Controller
             $query->whereDate('movement_date', '<=', $request->date_to);
         }
 
+        // Filter by item
+        if ($request->has('item_id') && $request->item_id) {
+            $query->where('item_id', $request->item_id);
+        }
+
+        // Filter by adjustment type (increase/decrease)
+        if ($request->has('adjustment_type') && $request->adjustment_type !== 'all') {
+            if ($request->adjustment_type === 'increase') {
+                $query->where('quantity', '>', 0);
+            } elseif ($request->adjustment_type === 'decrease') {
+                $query->where('quantity', '<', 0);
+            }
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'movement_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSortFields = ['movement_date', 'quantity', 'unit_cost'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('movement_date', 'desc');
+        }
+        $query->orderBy('id', 'desc');
+
         $adjustments = $query->paginate(15)->withQueryString();
 
-        // Get items for the form
+        // Get only first 10 items for initial display (will be searched via API)
         $items = Item::with('itemUoms.uom')
             ->orderBy('name')
+            ->limit(10)
             ->get();
 
         return Inertia::render('master/stock-adjustment/index', [
@@ -62,6 +89,10 @@ class StockAdjustmentController extends Controller
                 'search' => $request->get('search', ''),
                 'date_from' => $request->get('date_from', ''),
                 'date_to' => $request->get('date_to', ''),
+                'item_id' => $request->get('item_id', ''),
+                'adjustment_type' => $request->get('adjustment_type', 'all'),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
             ],
         ]);
     }
@@ -71,12 +102,58 @@ class StockAdjustmentController extends Controller
      */
     public function create(): Response
     {
+        // Get only first 10 items for initial display (will be searched via API)
         $items = Item::with('itemUoms.uom')
             ->orderBy('name')
+            ->limit(10)
             ->get();
 
         return Inertia::render('master/stock-adjustment/create', [
             'items' => $items,
+        ]);
+    }
+
+    /**
+     * Search items for combobox (API endpoint)
+     */
+    public function searchItems(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search = $request->get('search', '');
+        $itemId = $request->get('id', '');
+        $limit = 20; // Limit results to 20 items
+
+        $query = Item::with('itemUoms.uom')
+            ->orderBy('name');
+
+        // If searching by ID, get that specific item
+        if ($itemId) {
+            $query->where('id', $itemId);
+        } elseif ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->limit($limit)->get();
+
+        $options = $items->map(function ($item) {
+            return [
+                'value' => (string) $item->id,
+                'label' => ($item->code ? $item->code . ' - ' : '') . $item->name,
+                'item' => [
+                    'id' => $item->id,
+                    'code' => $item->code,
+                    'name' => $item->name,
+                    'stock' => $item->stock,
+                    'modal_price' => $item->modal_price,
+                    'itemUoms' => $item->itemUoms,
+                ],
+            ];
+        });
+
+        return response()->json([
+            'data' => $options,
         ]);
     }
 
@@ -132,6 +209,17 @@ class StockAdjustmentController extends Controller
         DB::transaction(function () use ($stockAdjustment) {
             $item = $stockAdjustment->item;
             $quantity = $stockAdjustment->quantity;
+
+            // Reverse journal entry if exists
+            try {
+                app(\App\Services\JournalService::class)->reverseStockAdjustment($stockAdjustment);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to reverse stock adjustment journal entry', [
+                    'stock_movement_id' => $stockAdjustment->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't throw - allow deletion even if journal reversal fails
+            }
 
             // Reverse the adjustment
             if ($quantity > 0) {

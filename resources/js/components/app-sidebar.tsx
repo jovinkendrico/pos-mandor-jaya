@@ -28,9 +28,12 @@ import { index as supplierIndex } from '@/routes/suppliers';
 import { index as uomIndex } from '@/routes/uoms';
 import { index as stockAdjustmentIndex } from '@/routes/stock-adjustments';
 import { index as userIndex } from '@/routes/users';
+import { index as cashInIndex } from '@/routes/cash-ins';
+import { index as cashOutIndex } from '@/routes/cash-outs';
+import { index as journalEntryIndex } from '@/routes/journal-entries';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, ShoppingCart, User2, CreditCard } from 'lucide-react';
+import { Database, LayoutGrid, ShoppingCart, User2, CreditCard, BookOpen } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -113,6 +116,33 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Pembayaran Penjualan',
                 href: salePaymentIndex(),
+            },
+            {
+                title: 'Kas Masuk',
+                href: cashInIndex(),
+            },
+            {
+                title: 'Kas Keluar',
+                href: cashOutIndex(),
+            },
+        ],
+    },
+    {
+        title: 'Akuntansi',
+        href: '#',
+        icon: BookOpen,
+        children: [
+            {
+                title: 'Jurnal',
+                href: journalEntryIndex(),
+            },
+            {
+                title: 'Laporan Laba Rugi',
+                href: '/profit-loss',
+            },
+            {
+                title: 'Buku Besar',
+                href: '/general-ledger',
             },
         ],
     },
