@@ -111,9 +111,12 @@ class SalePaymentController extends Controller
     public function create(): Response
     {
         $banks = Bank::orderBy('name')->get();
+
+        // Only load initial 10 sales for display, rest will be loaded via search
         $sales = Sale::with('customer')
             ->orderBy('sale_date', 'desc')
             ->orderBy('id', 'desc')
+            ->limit(10)
             ->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($sale) {
@@ -136,6 +139,60 @@ class SalePaymentController extends Controller
         return Inertia::render('transaction/sale-payment/create', [
             'sales' => $sales,
             'banks' => $banks,
+        ]);
+    }
+
+    /**
+     * Search sales for async combobox (API endpoint)
+     */
+    public function searchSales(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search = $request->get('search', '');
+        $saleId = $request->get('id', '');
+        $limit = $request->get('limit', 20);
+
+        $query = Sale::with('customer')
+            ->orderBy('sale_date', 'desc')
+            ->orderBy('id', 'desc');
+
+        // If searching by ID, get that specific sale
+        if ($saleId) {
+            $query->where('id', $saleId);
+        } elseif ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('sale_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $sales = $query->limit($limit)->get()
+            ->append(['total_paid', 'remaining_amount'])
+            ->filter(function ($sale) {
+                // Only show sales that are not fully paid
+                return (float) $sale->remaining_amount > 0;
+            })
+            ->map(function ($sale) {
+                return [
+                    'value' => (string) $sale->id,
+                    'label' => "{$sale->sale_number} - " . ($sale->customer->name ?? 'No Customer') . " (" . number_format((float) $sale->total_amount, 0, ',', '.') . ")",
+                    'displayLabel' => $sale->sale_number,
+                    'sale' => [
+                        'id' => $sale->id,
+                        'sale_number' => $sale->sale_number,
+                        'customer' => $sale->customer,
+                        'sale_date' => $sale->sale_date,
+                        'total_amount' => (float) $sale->total_amount,
+                        'total_paid' => (float) $sale->total_paid,
+                        'remaining_amount' => (float) $sale->remaining_amount,
+                    ],
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'data' => $sales,
         ]);
     }
 
@@ -196,9 +253,21 @@ class SalePaymentController extends Controller
         // Get IDs of sales already in this payment
         $existingSaleIds = $salePayment->items->pluck('sale_id')->toArray();
 
+        // Load existing sales in payment + initial 10 other unpaid sales
         $sales = Sale::with('customer')
+            ->where(function ($query) use ($existingSaleIds) {
+                // Include sales already in this payment
+                if (!empty($existingSaleIds)) {
+                    $query->whereIn('id', $existingSaleIds);
+                }
+            })
+            ->orWhere(function ($query) {
+                // Include unpaid sales (will be filtered after)
+                $query->whereRaw('1 = 1'); // Placeholder, will filter after
+            })
             ->orderBy('sale_date', 'desc')
             ->orderBy('id', 'desc')
+            ->limit(10 + count($existingSaleIds))
             ->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($sale) use ($existingSaleIds) {
@@ -310,17 +379,40 @@ class SalePaymentController extends Controller
                 }
 
                 if ($receivableAccount) {
-                    $cashIn = CashIn::create([
-                        'cash_in_number' => CashIn::generateCashInNumber(),
-                        'cash_in_date' => $salePayment->payment_date,
-                        'bank_id' => $salePayment->bank_id,
-                        'chart_of_account_id' => $receivableAccount->id, // Piutang Usaha, bukan pendapatan
-                        'amount' => $salePayment->total_amount,
-                        'description' => "Pembayaran Penjualan #{$salePayment->payment_number}",
-                        'status' => 'posted', // Auto post karena sudah confirmed
-                        'reference_type' => 'SalePayment',
-                        'reference_id' => $salePayment->id,
-                    ]);
+                    // Generate cash in number with retry logic to handle race conditions
+                    $maxRetries = 5;
+                    $cashIn = null;
+
+                    for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+                        try {
+                            $cashInNumber = CashIn::generateCashInNumber();
+
+                            $cashIn = CashIn::create([
+                                'cash_in_number' => $cashInNumber,
+                                'cash_in_date' => $salePayment->payment_date,
+                                'bank_id' => $salePayment->bank_id,
+                                'chart_of_account_id' => $receivableAccount->id, // Piutang Usaha, bukan pendapatan
+                                'amount' => $salePayment->total_amount,
+                                'description' => "Pembayaran Penjualan #{$salePayment->payment_number}",
+                                'status' => 'posted', // Auto post karena sudah confirmed
+                                'reference_type' => 'SalePayment',
+                                'reference_id' => $salePayment->id,
+                            ]);
+
+                            break; // Success, exit retry loop
+                        } catch (\Illuminate\Database\QueryException $e) {
+                            // Check if it's a unique constraint violation (SQLSTATE 23000)
+                            if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'cash_in_number') || str_contains($e->getMessage(), 'cash_ins_cash_in_number_unique'))) {
+                                if ($attempt === $maxRetries - 1) {
+                                    throw $e; // Re-throw on last attempt
+                                }
+                                // Wait a tiny bit before retrying (microseconds)
+                                usleep(10000 * ($attempt + 1)); // 10ms, 20ms, 30ms, etc.
+                                continue;
+                            }
+                            throw $e; // Re-throw if it's a different error
+                        }
+                    }
 
                     // Post to journal (this will also update bank balance)
                     // JournalService akan membuat: Debit Bank, Credit Piutang Usaha

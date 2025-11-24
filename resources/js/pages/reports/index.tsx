@@ -18,6 +18,9 @@ import {
     Building2,
     Warehouse,
     Scale,
+    Trophy,
+    Zap,
+    Percent,
 } from 'lucide-react';
 
 const breadcrumbs = [
@@ -169,6 +172,51 @@ const reports = [
         icon: ArrowLeftRight,
         color: 'text-teal-600',
         bgColor: 'bg-teal-50',
+    },
+    {
+        id: 'best-seller',
+        title: 'Laporan Barang Paling Laku',
+        description: 'Ranking item terlaris berdasarkan quantity/revenue dengan tren penjualan',
+        href: '/reports/best-seller',
+        icon: Trophy,
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-50',
+    },
+    {
+        id: 'dead-stock',
+        title: 'Laporan Barang Paling Tidak Laku',
+        description: 'Item yang tidak terjual dalam periode tertentu dengan nilai persediaan menganggur',
+        href: '/reports/dead-stock',
+        icon: AlertTriangle,
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+    },
+    {
+        id: 'stock-turnover',
+        title: 'Laporan Perputaran Stok',
+        description: 'Analisis perputaran stok per item untuk identifikasi item cepat/lambat bergerak',
+        href: '/reports/stock-turnover',
+        icon: Zap,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+    },
+    {
+        id: 'margin-by-item',
+        title: 'Laporan Analisis Margin per Item',
+        description: 'Margin/profit per item dengan rekomendasi pricing untuk item paling/terkurang profitable',
+        href: '/reports/margin-by-item',
+        icon: Percent,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50',
+    },
+    {
+        id: 'margin-by-customer',
+        title: 'Laporan Analisis Margin per Customer',
+        description: 'Margin/profit per customer untuk strategi pricing per customer paling/terkurang profitable',
+        href: '/reports/margin-by-customer',
+        icon: Percent,
+        color: 'text-indigo-600',
+        bgColor: 'bg-indigo-50',
     },
 ];
 

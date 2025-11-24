@@ -46,6 +46,8 @@ class CashOut extends Model
 
     /**
      * Generate unique cash out number
+     * Format: COYYYYMMDDXXXXX (5 digits for sequence)
+     * Example: CO2025112400001
      */
     public static function generateCashOutNumber(): string
     {
@@ -59,8 +61,16 @@ class CashOut extends Model
             ->orderBy('cash_out_number', 'desc')
             ->first();
 
-        $sequence = $lastCashOut ? (int) substr($lastCashOut->cash_out_number, -4) + 1 : 1;
+        // Extract sequence from last 5 digits (handle both old 4-digit and new 5-digit formats)
+        if ($lastCashOut) {
+            $lastNumber = $lastCashOut->cash_out_number;
+            // Get the part after the prefix
+            $sequencePart = substr($lastNumber, strlen($prefix));
+            $sequence = (int) $sequencePart + 1;
+        } else {
+            $sequence = 1;
+        }
 
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
     }
 }

@@ -215,6 +215,26 @@ const mainNavItems: NavItem[] = [
                 title: 'Laporan Kas Masuk/Keluar',
                 href: '/reports/cash-in-out',
             },
+            {
+                title: 'Laporan Barang Paling Laku',
+                href: '/reports/best-seller',
+            },
+            {
+                title: 'Laporan Barang Paling Tidak Laku',
+                href: '/reports/dead-stock',
+            },
+            {
+                title: 'Laporan Perputaran Stok',
+                href: '/reports/stock-turnover',
+            },
+            {
+                title: 'Laporan Analisis Margin per Item',
+                href: '/reports/margin-by-item',
+            },
+            {
+                title: 'Laporan Analisis Margin per Customer',
+                href: '/reports/margin-by-customer',
+            },
         ],
     },
     {

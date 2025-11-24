@@ -40,6 +40,11 @@ use App\Http\Controllers\SalePaymentReportController;
 use App\Http\Controllers\PurchasePaymentReportController;
 use App\Http\Controllers\CashInOutReportController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\BestSellerReportController;
+use App\Http\Controllers\DeadStockReportController;
+use App\Http\Controllers\StockTurnoverReportController;
+use App\Http\Controllers\MarginByItemReportController;
+use App\Http\Controllers\MarginByCustomerReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -71,10 +76,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
 
     // Purchase Payment confirm/unconfirm routes (must be before resource)
+    Route::get('purchase-payments/search-purchases', [PurchasePaymentController::class, 'searchPurchases'])->name('purchase-payments.search-purchases');
     Route::post('purchase-payments/{purchase_payment}/confirm', [PurchasePaymentController::class, 'confirm'])->name('purchase-payments.confirm');
     Route::post('purchase-payments/{purchase_payment}/unconfirm', [PurchasePaymentController::class, 'unconfirm'])->name('purchase-payments.unconfirm');
 
     // Sale Payment confirm/unconfirm routes (must be before resource)
+    Route::get('sale-payments/search-sales', [SalePaymentController::class, 'searchSales'])->name('sale-payments.search-sales');
     Route::post('sale-payments/{sale_payment}/confirm', [SalePaymentController::class, 'confirm'])->name('sale-payments.confirm');
     Route::post('sale-payments/{sale_payment}/unconfirm', [SalePaymentController::class, 'unconfirm'])->name('sale-payments.unconfirm');
 
@@ -109,6 +116,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/sale-payment', [SalePaymentReportController::class, 'index'])->name('reports.sale-payment');
     Route::get('reports/purchase-payment', [PurchasePaymentReportController::class, 'index'])->name('reports.purchase-payment');
     Route::get('reports/cash-in-out', [CashInOutReportController::class, 'index'])->name('reports.cash-in-out');
+    Route::get('reports/best-seller', [BestSellerReportController::class, 'index'])->name('reports.best-seller');
+    Route::get('reports/dead-stock', [DeadStockReportController::class, 'index'])->name('reports.dead-stock');
+    Route::get('reports/stock-turnover', [StockTurnoverReportController::class, 'index'])->name('reports.stock-turnover');
+    Route::get('reports/margin-by-item', [MarginByItemReportController::class, 'index'])->name('reports.margin-by-item');
+    Route::get('reports/margin-by-customer', [MarginByCustomerReportController::class, 'index'])->name('reports.margin-by-customer');
 
     // Bank Cash Movement
     Route::get('banks/{bank}/cash-movement', [BankController::class, 'cashMovement'])->name('banks.cash-movement');

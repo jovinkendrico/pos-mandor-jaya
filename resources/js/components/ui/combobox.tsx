@@ -37,6 +37,9 @@ interface ComboboxProps {
     maxDisplayItems?: number;
     onAdd?: () => void;
     addLabel?: string;
+    searchUrl?: string; // Optional: URL for backend search
+    searchParam?: string; // Optional: Query parameter name for search
+    debounceMs?: number; // Optional: Debounce delay for search
 }
 
 export function Combobox({
@@ -51,12 +54,67 @@ export function Combobox({
     maxDisplayItems = 5,
     onAdd,
     addLabel = 'Add',
+    searchUrl,
+    searchParam = 'search',
+    debounceMs = 300,
 }: ComboboxProps) {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
+    const [searchResults, setSearchResults] = React.useState<ComboboxOption[]>([]);
+    const [loading, setLoading] = React.useState(false);
+
+    // Backend search effect
+    React.useEffect(() => {
+        if (!searchUrl || !searchValue.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        setLoading(true);
+        const timeoutId = setTimeout(async () => {
+            try {
+                const url = `${searchUrl}?${searchParam}=${encodeURIComponent(searchValue)}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const fetchedOptions = data.data || [];
+                    // Map backend response to ComboboxOption format
+                    setSearchResults(fetchedOptions.map((opt: any) => ({
+                        value: opt.value || String(opt.id),
+                        label: opt.label || `${opt.purchase_number || opt.sale_number || opt.code || ''} - ${opt.supplier?.name || opt.customer?.name || opt.name || ''}`,
+                        ...opt,
+                    })));
+                } else {
+                    setSearchResults([]);
+                }
+            } catch (error) {
+                console.error('Error fetching search results:', error);
+                setSearchResults([]);
+            } finally {
+                setLoading(false);
+            }
+        }, debounceMs);
+
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [searchValue, searchUrl, searchParam, debounceMs]);
 
     // Filter options based on search
     const filteredOptions = React.useMemo(() => {
+        // If backend search is enabled and there's a search value, use search results
+        if (searchUrl && searchValue.trim()) {
+            return searchResults;
+        }
+
+        // Otherwise, use client-side filtering
         if (!searchValue) {
             return options.slice(0, maxDisplayItems);
         }
@@ -74,10 +132,18 @@ export function Combobox({
             }
             return false;
         });
-    }, [options, searchValue, maxDisplayItems]);
+    }, [options, searchValue, maxDisplayItems, searchUrl, searchResults]);
 
-    // Get selected option
-    const selectedOption = options.find((option) => option.value === value);
+    // Get selected option from both options and search results
+    const selectedOption = React.useMemo(() => {
+        // First check in search results
+        if (searchUrl && searchResults.length > 0) {
+            const found = searchResults.find((opt) => opt.value === value);
+            if (found) return found;
+        }
+        // Then check in options
+        return options.find((option) => option.value === value);
+    }, [value, options, searchResults, searchUrl]);
 
     const handleSelect = (selectedValue: string) => {
         const newValue = selectedValue === value ? '' : selectedValue;
@@ -127,26 +193,35 @@ export function Combobox({
                         </>
                     )}
                     <CommandList>
-                        <CommandEmpty>{emptyText}</CommandEmpty>
-                        <CommandGroup>
-                            {filteredOptions.map((option) => (
-                                <CommandItem
-                                    key={option.value}
-                                    value={option.label}
-                                    onSelect={() => handleSelect(option.value)}
-                                >
-                                    {option.label}
-                                    <Check
-                                        className={cn(
-                                            'ml-auto h-4 w-4',
-                                            value === option.value
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
+                        {loading && (
+                            <div className="p-2 text-center text-sm text-muted-foreground">
+                                Searching...
+                            </div>
+                        )}
+                        {!loading && filteredOptions.length === 0 && (
+                            <CommandEmpty>{emptyText}</CommandEmpty>
+                        )}
+                        {!loading && filteredOptions.length > 0 && (
+                            <CommandGroup>
+                                {filteredOptions.map((option) => (
+                                    <CommandItem
+                                        key={option.value}
+                                        value={option.label}
+                                        onSelect={() => handleSelect(option.value)}
+                                    >
+                                        {option.label}
+                                        <Check
+                                            className={cn(
+                                                'ml-auto h-4 w-4',
+                                                value === option.value
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0',
+                                            )}
+                                        />
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        )}
                     </CommandList>
                 </Command>
             </PopoverContent>
