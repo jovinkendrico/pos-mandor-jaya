@@ -23,6 +23,22 @@ use App\Http\Controllers\CashOutController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\ProfitLossController;
 use App\Http\Controllers\GeneralLedgerController;
+use App\Http\Controllers\SaleReportController;
+use App\Http\Controllers\PurchaseReportController;
+use App\Http\Controllers\ReceivableAgingController;
+use App\Http\Controllers\PayableAgingController;
+use App\Http\Controllers\InventoryValuationController;
+use App\Http\Controllers\CashFlowController;
+use App\Http\Controllers\SaleByCustomerReportController;
+use App\Http\Controllers\SaleByItemReportController;
+use App\Http\Controllers\PurchaseBySupplierReportController;
+use App\Http\Controllers\StockMinMaxReportController;
+use App\Http\Controllers\BalanceSheetController;
+use App\Http\Controllers\SaleReturnReportController;
+use App\Http\Controllers\PurchaseReturnReportController;
+use App\Http\Controllers\SalePaymentReportController;
+use App\Http\Controllers\PurchasePaymentReportController;
+use App\Http\Controllers\CashInOutReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -73,6 +89,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('profit-loss', [ProfitLossController::class, 'index'])->name('profit-loss.index');
     Route::get('general-ledger', [GeneralLedgerController::class, 'index'])->name('general-ledger.index');
     Route::get('general-ledger/{account}', [GeneralLedgerController::class, 'show'])->name('general-ledger.show');
+
+    // Business Reports
+    Route::get('reports/sale-report', [SaleReportController::class, 'index'])->name('reports.sale-report');
+    Route::get('reports/purchase-report', [PurchaseReportController::class, 'index'])->name('reports.purchase-report');
+    Route::get('reports/receivable-aging', [ReceivableAgingController::class, 'index'])->name('reports.receivable-aging');
+    Route::get('reports/payable-aging', [PayableAgingController::class, 'index'])->name('reports.payable-aging');
+    Route::get('reports/inventory-valuation', [InventoryValuationController::class, 'index'])->name('reports.inventory-valuation');
+    Route::get('reports/cash-flow', [CashFlowController::class, 'index'])->name('reports.cash-flow');
+    Route::get('reports/sale-by-customer', [SaleByCustomerReportController::class, 'index'])->name('reports.sale-by-customer');
+    Route::get('reports/sale-by-item', [SaleByItemReportController::class, 'index'])->name('reports.sale-by-item');
+    Route::get('reports/purchase-by-supplier', [PurchaseBySupplierReportController::class, 'index'])->name('reports.purchase-by-supplier');
+    Route::get('reports/stock-min-max', [StockMinMaxReportController::class, 'index'])->name('reports.stock-min-max');
+    Route::get('reports/balance-sheet', [BalanceSheetController::class, 'index'])->name('reports.balance-sheet');
+    Route::get('reports/sale-return', [SaleReturnReportController::class, 'index'])->name('reports.sale-return');
+    Route::get('reports/purchase-return', [PurchaseReturnReportController::class, 'index'])->name('reports.purchase-return');
+    Route::get('reports/sale-payment', [SalePaymentReportController::class, 'index'])->name('reports.sale-payment');
+    Route::get('reports/purchase-payment', [PurchasePaymentReportController::class, 'index'])->name('reports.purchase-payment');
+    Route::get('reports/cash-in-out', [CashInOutReportController::class, 'index'])->name('reports.cash-in-out');
 
     // Bank Cash Movement
     Route::get('banks/{bank}/cash-movement', [BankController::class, 'cashMovement'])->name('banks.cash-movement');
