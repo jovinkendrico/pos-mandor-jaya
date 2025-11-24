@@ -2,13 +2,13 @@ import PageTitle from '@/components/page-title';
 import PurchaseReturnForm from '@/components/transaction/purchasereturns/purchasereturn-form';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/purchase-returns';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, IBank, IPurchase } from '@/types';
 import { Head } from '@inertiajs/react';
 
 interface PageProps {
-    purchases: Purchase[];
+    purchases: IPurchase[];
     returnedQuantities?: Record<number, number>;
-    banks?: Bank[];
+    banks?: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -26,11 +26,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseReturnCreate({
-    purchases,
-    returnedQuantities = {},
-    banks = [],
-}: PageProps) {
+const PurchaseReturnCreate = (props: PageProps) => {
+    const { purchases, returnedQuantities = {}, banks = [] } = props;
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -44,4 +42,6 @@ export default function PurchaseReturnCreate({
             </AppLayout>
         </>
     );
-}
+};
+
+export default PurchaseReturnCreate;

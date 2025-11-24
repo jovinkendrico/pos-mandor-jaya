@@ -106,7 +106,7 @@ class PurchaseReturnController extends Controller
     public function create(): Response
     {
         // Get confirmed purchases only
-        $purchases = Purchase::with(['supplier', 'details.item', 'details.itemUom'])
+        $purchases = Purchase::with(['supplier', 'details.item', 'details.itemUom.uom'])
             ->where('status', 'confirmed')
             ->orderBy('purchase_date', 'desc')
             ->get();

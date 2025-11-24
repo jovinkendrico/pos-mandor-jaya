@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 export interface FilterState {
     search: string;
     status: string;
-    payment_status: string;
+    payment_status?: string;
     date_from: string;
     date_to: string;
     sort_by: string;

@@ -1,3 +1,4 @@
+import { PurchaseStatus, SaleStatus } from '@/constants/enum';
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
@@ -171,7 +172,7 @@ export interface ItemUom {
 
 export type IItemUOM = Pick<
     ItemUom,
-    'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
+    'id' | 'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
 >;
 
 export interface ItemStockMovement {
@@ -250,25 +251,6 @@ export interface PaginatedData<T> {
     from: number;
     to: number;
     total: number;
-}
-
-export enum PurchaseStatus {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
-}
-export enum SaleStatus {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
-}
-
-export enum ReturnType {
-    STOCK_ONLY = 'stock_only',
-    STOCK_AND_REFUND = 'stock_and_refund',
-}
-
-export enum RefundMethod {
-    REDUCE_PAYABLE = 'reduce_payable',
-    CASH_REFUND = 'cash_refund',
 }
 
 export interface Purchase {

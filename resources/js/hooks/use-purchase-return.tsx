@@ -1,6 +1,7 @@
+import { RefundMethod } from '@/constants/enum';
 import { formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
 import { store } from '@/routes/purchase-returns';
-import { IPurchaseDetail, RefundMethod } from '@/types';
+import { IPurchaseDetail } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';

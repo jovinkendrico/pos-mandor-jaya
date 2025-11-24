@@ -96,7 +96,7 @@ const SaleForm = (props: SaleFormProps) => {
 
         return item.item_uoms.map((itemUom) => ({
             label: itemUom.uom.name,
-            value: itemUom.uom_id.toString(),
+            value: itemUom.id.toString(),
         }));
     };
 

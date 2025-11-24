@@ -97,7 +97,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
 
         return item.item_uoms.map((itemUom) => ({
             label: itemUom.uom.name,
-            value: itemUom.uom_id.toString(),
+            value: itemUom.id.toString(),
         }));
     };
 
@@ -367,13 +367,13 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                             ? detail.item_uom_id.toString()
                                                             : ''
                                                     }
-                                                    onValueChange={(value) =>
+                                                    onValueChange={(value) => {
                                                         handleChangeItem(
                                                             index,
                                                             'item_uom_id',
                                                             Number(value),
-                                                        )
-                                                    }
+                                                        );
+                                                    }}
                                                     disabled={
                                                         !detail.item_id ||
                                                         uomOptions.length === 0

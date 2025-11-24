@@ -1,6 +1,9 @@
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
+import PurchaseReturnTable from '@/components/transaction/purchasereturns/purchasereturn-table';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -9,32 +12,27 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
-import PurchaseReturnTable from '@/components/transaction/purchasereturns/purchasereturn-table';
+import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { index, create } from '@/routes/purchase-returns';
-import { BreadcrumbItem, Supplier, PaginatedData } from '@/types';
+import {
+    create,
+    destroy as destroyPurchaseReturn,
+    index,
+} from '@/routes/purchase-returns';
+import {
+    BreadcrumbItem,
+    IPurchaseReturn,
+    PaginatedData,
+    Supplier,
+} from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-
-interface PurchaseReturn {
-    id: number;
-    return_number: string;
-    purchase: {
-        id: number;
-        purchase_number: string;
-        supplier?: Supplier;
-    };
-    return_date: string;
-    total_amount: string;
-    status: 'pending' | 'confirmed';
-    return_type?: 'stock_only' | 'stock_and_refund';
-}
+import { useState } from 'react';
 
 interface PageProps {
-    returns: PaginatedData<PurchaseReturn>;
+    returns: PaginatedData<IPurchaseReturn>;
     suppliers?: Supplier[];
     filters?: {
         search: string;
@@ -59,24 +57,36 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseReturnIndex({
-    returns,
-    suppliers = [],
-    filters = {
-        search: '',
-        date_from: '',
-        date_to: '',
-        status: 'all',
-        return_type: 'all',
-        supplier_id: '',
-        sort_by: 'return_date',
-        sort_order: 'desc',
-    },
-}: PageProps) {
+const PurchaseReturnIndex = (props: PageProps) => {
+    const {
+        returns,
+        suppliers = [],
+        filters = {
+            search: '',
+            date_from: '',
+            date_to: '',
+            status: 'all',
+            return_type: 'all',
+            supplier_id: '',
+            sort_by: 'return_date',
+            sort_order: 'desc',
+        },
+    } = props;
+
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
         filters,
     );
+
+    const [selectedPurchaseReturn, setSelectedPurchaseReturn] = useState<
+        IPurchaseReturn | undefined
+    >(undefined);
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
 
     const handleCreate = () => {
         router.visit(create().url);
@@ -123,12 +133,17 @@ export default function PurchaseReturnIndex({
                                 handleFilterChange({ return_type: value })
                             }
                         >
-                            <SelectTrigger id="return_type" className="combobox">
+                            <SelectTrigger
+                                id="return_type"
+                                className="combobox"
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="stock_only">Retur Stok Saja</SelectItem>
+                                <SelectItem value="stock_only">
+                                    Retur Stok Saja
+                                </SelectItem>
                                 <SelectItem value="stock_and_refund">
                                     Retur Stok + Refund
                                 </SelectItem>
@@ -143,7 +158,10 @@ export default function PurchaseReturnIndex({
                                 handleFilterChange({ supplier_id: value || '' })
                             }
                         >
-                            <SelectTrigger id="supplier_id" className="combobox">
+                            <SelectTrigger
+                                id="supplier_id"
+                                className="combobox"
+                            >
                                 <SelectValue placeholder="Semua Supplier" />
                             </SelectTrigger>
                             <SelectContent>
@@ -161,11 +179,23 @@ export default function PurchaseReturnIndex({
                 </div>
             </Card>
             <div className="mt-4">
-                <PurchaseReturnTable returns={returns.data} onView={handleView} />
+                <PurchaseReturnTable
+                    purchase_returns={returns.data}
+                    pageFrom={returns.from}
+                    onDelete={handleDelete}
+                />
             </div>
-            {returns.data.length !== 0 && (
-                <TablePagination data={returns} />
-            )}
+            {returns.data.length !== 0 && <TablePagination data={returns} />}
+
+            <DeleteModalLayout
+                dataName={selectedPurchaseReturn?.return_number}
+                dataId={selectedPurchaseReturn?.id}
+                dataType="Retur Pembelian"
+                isModalOpen={isDeleteModalOpen}
+                onModalClose={closeDeleteModal}
+                setSelected={setSelectedPurchaseReturn}
+                getDeleteUrl={(id) => destroyPurchaseReturn(id).url}
+            />
         </AppLayout>
     );
 };
