@@ -11,6 +11,9 @@ export interface FilterState {
     supplier_id?: string;
     sort_by: string;
     sort_order: string;
+    bank_id?: string;
+    payment_method?: string;
+    customer_id?: string;
 }
 
 export interface Option {
@@ -98,6 +101,9 @@ export const useFilterBar = ({
             date_to: '',
             sort_by: sortOptions[0]?.value || 'purchase_date',
             sort_order: 'desc',
+            bank_id: '',
+            payment_method: 'all',
+            customer_id: '',
         };
         setLocalFilters(resetFilters);
         onFilterChange(resetFilters);
@@ -114,7 +120,10 @@ export const useFilterBar = ({
         (localFilters.date_from ?? '') !== '' ||
         (localFilters.date_to ?? '') !== '' ||
         localFilters.sort_by !== defaultSortBy ||
-        localFilters.sort_order !== 'desc';
+        localFilters.sort_order !== 'desc' ||
+        (localFilters.bank_id ?? '') !== '' ||
+        (localFilters.payment_method ?? 'all') !== 'all' ||
+        (localFilters.customer_id ?? '') !== '';
 
     return {
         localFilters,

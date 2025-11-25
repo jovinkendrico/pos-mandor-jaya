@@ -1,5 +1,6 @@
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
+import SaleReturnTable from '@/components/transaction/salereturns/salereturn-table';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -9,12 +10,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
-import SaleReturnTable from '@/components/transaction/salereturns/salereturn-table';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { index, create } from '@/routes/sale-returns';
+import { create, index } from '@/routes/sale-returns';
 import { BreadcrumbItem, Customer, ISaleReturn, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -107,56 +106,64 @@ export default function SaleReturnIndex({
                     { value: 'pending', label: 'Pending' },
                     { value: 'confirmed', label: 'Confirmed' },
                 ]}
-            />
-            <Card className="content mt-4 p-4">
-                <div className="flex flex-wrap items-end gap-4">
-                    <div className="w-[180px]">
-                        <Label htmlFor="return_type">Tipe Retur</Label>
-                        <Select
-                            value={allFilters.return_type || 'all'}
-                            onValueChange={(value) =>
-                                handleFilterChange({ return_type: value })
-                            }
-                        >
-                            <SelectTrigger id="return_type" className="combobox">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="stock_only">
-                                    Retur Stok Saja
-                                </SelectItem>
-                                <SelectItem value="stock_and_refund">
-                                    Retur Stok + Refund
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="w-[180px]">
-                        <Label htmlFor="customer_id">Customer</Label>
-                        <Select
-                            value={allFilters.customer_id || undefined}
-                            onValueChange={(value) =>
-                                handleFilterChange({ customer_id: value || '' })
-                            }
-                        >
-                            <SelectTrigger id="customer_id" className="combobox">
-                                <SelectValue placeholder="Semua Customer" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {customers.map((customer) => (
-                                    <SelectItem
-                                        key={customer.id}
-                                        value={customer.id.toString()}
-                                    >
-                                        {customer.name}
+                additionalFilters={
+                    <>
+                        <div className="w-[180px]">
+                            <Label htmlFor="return_type">Tipe Retur</Label>
+                            <Select
+                                value={allFilters.return_type || 'all'}
+                                onValueChange={(value) =>
+                                    handleFilterChange({ return_type: value })
+                                }
+                            >
+                                <SelectTrigger
+                                    id="return_type"
+                                    className="combobox"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua</SelectItem>
+                                    <SelectItem value="stock_only">
+                                        Retur Stok Saja
                                     </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </Card>
+                                    <SelectItem value="stock_and_refund">
+                                        Retur Stok + Refund
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="w-[180px]">
+                            <Label htmlFor="customer_id">Customer</Label>
+                            <Select
+                                value={allFilters.customer_id || undefined}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        customer_id: value || '',
+                                    })
+                                }
+                            >
+                                <SelectTrigger
+                                    id="customer_id"
+                                    className="combobox"
+                                >
+                                    <SelectValue placeholder="Semua Customer" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {customers.map((customer) => (
+                                        <SelectItem
+                                            key={customer.id}
+                                            value={customer.id.toString()}
+                                        >
+                                            {customer.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </>
+                }
+            />
             <div className="mt-4">
                 <SaleReturnTable
                     returns={returns.data}

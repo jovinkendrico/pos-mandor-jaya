@@ -54,7 +54,7 @@ export default function SaleReturnTable({
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {formatCurrency(row.total_amount)}
                     </TableCell>
-                    <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-green-500">
+                    <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-emerald-500">
                         {row.status === 'confirmed'
                             ? formatCurrency(row.total_profit_adjustment || 0)
                             : '-'}

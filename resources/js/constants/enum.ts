@@ -17,3 +17,17 @@ export enum RefundMethod {
     CASH_REFUND = 'cash_refund',
     REDUCE_RECEIVABLE = 'reduce_receivable',
 }
+
+export enum PurchasePaymentStatus {
+    PENDING = 'pending',
+    CONFIRMED = 'confirmed',
+}
+
+export enum PaymentMethod {
+    CASH = 'cash',
+    TRANSFER = 'transfer',
+    GIRO = 'giro',
+    CEK = 'cek',
+    OTHER = 'other',
+    REFUND = 'refund',
+}

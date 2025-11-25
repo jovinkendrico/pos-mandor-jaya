@@ -296,7 +296,7 @@ const SaleShow = (props: PageProps) => {
                                             {formatCurrency(sale.total_cost)}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-green-500">
+                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-emerald-500">
                                         <span>PROFIT:</span>
                                         <span>
                                             {formatCurrency(sale.total_profit)}
@@ -369,7 +369,7 @@ const SaleShow = (props: PageProps) => {
                                                             detail.cost,
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-green-500">
+                                                    <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-emerald-500">
                                                         {formatCurrency(
                                                             detail.profit,
                                                         )}
