@@ -280,7 +280,7 @@
 }
 
 .badge-green-light {
-    @apply rounded-4xl border-2 border-emerald-900 bg-green-200/50 !font-extrabold text-emerald-900 dark:border-green-500 dark:bg-emerald-800/30 dark:text-green-500;
+    @apply rounded-4xl border-2 border-emerald-900 bg-green-200/50 !font-extrabold text-emerald-900 dark:border-green-500 dark:bg-emerald-800/30 dark:text-emerald-500;
 }
 
 .badge-yellow-light {

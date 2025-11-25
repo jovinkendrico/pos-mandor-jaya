@@ -1,4 +1,4 @@
-import { PurchaseStatus, SaleStatus } from '@/constants/enum';
+import { PaymentMethod, PurchaseStatus, SaleStatus } from '@/constants/enum';
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
@@ -108,8 +108,10 @@ export interface Customer {
 
 export type ICustomer = Pick<
     Customer,
-    'id' | 'name' | 'address' | 'city_id' | 'city' | 'phone_number' | 'contact'
->;
+    'id' | 'name' | 'address' | 'city_id' | 'phone_number' | 'contact'
+> & {
+    city?: ICity;
+};
 
 export interface Supplier {
     id: number;
@@ -126,8 +128,10 @@ export interface Supplier {
 
 export type ISupplier = Pick<
     Supplier,
-    'id' | 'name' | 'address' | 'city_id' | 'city' | 'phone_number' | 'contact'
->;
+    'id' | 'name' | 'address' | 'city_id' | 'phone_number' | 'contact'
+> & {
+    city?: ICity;
+};
 
 export interface Bank {
     id: number;
@@ -419,6 +423,7 @@ export interface PurchaseReturn {
     id: number;
     purchase_id: number;
     purchase: Purchase;
+    purchase_payment_items: PurchasePaymentItem[];
     return_number: string;
     return_date: Date;
     return_type: ReturnType;
@@ -574,7 +579,7 @@ export type IChartOfAccount = Pick<
 export interface PurchasePayment {
     id: number;
     payment_number: string;
-    payment_date: string;
+    payment_date: Date;
     total_amount: number;
     bank_id?: number;
     bank?: Bank;
@@ -582,7 +587,8 @@ export interface PurchasePayment {
     reference_number?: string;
     notes?: string;
     status: 'pending' | 'confirmed';
-    purchases?: IPurchase[];
+    purchases?: Purchase[];
+    purchase_payment_items?: IPurchasePaymentItem[];
     items?: PurchasePaymentItem[];
     created_at: string;
     updated_at: string;
@@ -590,7 +596,7 @@ export interface PurchasePayment {
 }
 
 export interface PurchasePaymentItem {
-    id: number;
+    id?: number;
     purchase_payment_id: number;
     purchase_id: number;
     purchase?: IPurchase;
@@ -600,19 +606,29 @@ export interface PurchasePaymentItem {
     [key: string]: unknown;
 }
 
+export type IPurchasePaymentItem = Pick<
+    PurchasePaymentItem,
+    'id' | 'purchase_id' | 'purchase' | 'amount'
+>;
+
+export type IPurchasePaymentFormItem = Omit<IPurchasePaymentItem, 'purchase'>;
+
 export type IPurchasePayment = Pick<
     PurchasePayment,
     | 'id'
     | 'payment_number'
     | 'payment_date'
+    | 'purchase_id'
     | 'total_amount'
     | 'bank_id'
-    | 'payment_method'
     | 'reference_number'
     | 'notes'
     | 'status'
 > & {
-    items?: Array<Pick<PurchasePaymentItem, 'purchase_id' | 'amount'>>;
+    purchases?: IPurchase[];
+    bank?: IBank;
+    items: IPurchasePaymentItem[];
+    payment_method: PaymentMethod;
 };
 
 export interface SalePayment {
@@ -626,7 +642,7 @@ export interface SalePayment {
     reference_number?: string;
     notes?: string;
     status: 'pending' | 'confirmed';
-    sales?: any[]; // Sale interface array
+    sales?: Sale[];
     items?: SalePaymentItem[];
     created_at: string;
     updated_at: string;
@@ -637,7 +653,7 @@ export interface SalePaymentItem {
     id: number;
     sale_payment_id: number;
     sale_id: number;
-    sale?: any; // Sale interface
+    sale?: Sale;
     amount: number;
     created_at: string;
     updated_at: string;
@@ -656,7 +672,8 @@ export type ISalePayment = Pick<
     | 'notes'
     | 'status'
 > & {
-    items?: Array<Pick<SalePaymentItem, 'sale_id' | 'amount'>>;
+    sale: ISale;
+    items: IItem[];
 };
 
 export interface CashIn {

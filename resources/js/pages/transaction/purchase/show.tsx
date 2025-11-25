@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Modal from '@/components/ui/Modal/Modal';
 import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { PurchaseStatus } from '@/constants/enum';
 import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
 import {
@@ -118,25 +119,20 @@ const PurchaseShow = (props: PageProps) => {
                         </div>
                         <div className="mt-2 flex items-center gap-2">
                             <Badge
-                                variant={
-                                    purchase.status === 'confirmed'
-                                        ? 'default'
-                                        : 'secondary'
-                                }
                                 className={cn(
-                                    purchase.status === 'pending'
+                                    purchase.status === PurchaseStatus.PENDING
                                         ? 'badge-yellow-light'
                                         : 'badge-green-light',
                                 )}
                             >
-                                {purchase.status === 'confirmed'
+                                {purchase.status === PurchaseStatus.CONFIRMED
                                     ? 'Confirmed'
                                     : 'Pending'}
                             </Badge>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        {purchase.status === 'pending' && (
+                        {purchase.status === PurchaseStatus.PENDING && (
                             <>
                                 <Button
                                     onClick={handleEdit}
@@ -155,7 +151,7 @@ const PurchaseShow = (props: PageProps) => {
                                 </Button>
                             </>
                         )}
-                        {purchase.status === 'confirmed' && (
+                        {purchase.status === PurchaseStatus.CONFIRMED && (
                             <Button
                                 onClick={openConfirmModal}
                                 className="btn-danger"

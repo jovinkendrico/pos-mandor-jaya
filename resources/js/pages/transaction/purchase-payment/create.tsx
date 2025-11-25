@@ -1,22 +1,14 @@
 import PageTitle from '@/components/page-title';
 import PurchasePaymentForm from '@/components/transaction/purchase-payments/purchase-payment-form';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Bank, IPurchase } from '@/types';
-import { Head } from '@inertiajs/react';
-
-interface Purchase {
-    id: number;
-    purchase_number: string;
-    supplier?: { name: string };
-    purchase_date: string;
-    total_amount: number;
-    total_paid?: number;
-    remaining_amount?: number;
-}
+import { index } from '@/routes/purchase-payments';
+import { BreadcrumbItem, IBank, IPurchase } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    purchases: Purchase[];
-    banks: Bank[];
+    purchases: IPurchase[];
+    banks: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -34,13 +26,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchasePaymentCreate({ purchases, banks }: PageProps) {
+const PurchasePaymentCreate = ({ purchases, banks }: PageProps) => {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Pembayaran Pembelian" />
-            <PageTitle title="Tambah Pembayaran Pembelian" />
+            <div className="flex flex-row items-center gap-2">
+                <Link href={index().url}>
+                    <ArrowLeft className="h-8 w-8" />
+                </Link>
+                <PageTitle title="Tambah Pembayaran Pembelian" />
+            </div>
             <PurchasePaymentForm purchases={purchases} banks={banks} />
         </AppLayout>
     );
-}
+};
 
+export default PurchasePaymentCreate;

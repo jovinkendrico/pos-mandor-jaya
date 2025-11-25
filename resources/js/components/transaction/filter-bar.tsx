@@ -165,6 +165,9 @@ const FilterBar = (props: FilterBarProps) => {
                 )}
 
                 {/* Sort */}
+
+                {additionalFilters && additionalFilters}
+
                 <div className="w-[180px]">
                     <Label htmlFor="sort_by">Urutkan</Label>
                     <div className="flex gap-2">
@@ -203,8 +206,6 @@ const FilterBar = (props: FilterBarProps) => {
                         </Button>
                     </div>
                 </div>
-
-                {additionalFilters && additionalFilters}
 
                 {/* Reset Button */}
                 {hasActiveFilters && (

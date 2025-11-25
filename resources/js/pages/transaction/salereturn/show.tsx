@@ -287,7 +287,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                             )}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-green-500">
+                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-emerald-500">
                                         <span>PROFIT ADJ.:</span>
                                         <span>
                                             {formatCurrency(
@@ -357,7 +357,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                                         detail.cost || 0,
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="flex w-full items-center justify-center text-center font-medium text-green-600 dark:text-green-500">
+                                                <TableCell className="flex w-full items-center justify-center text-center font-medium text-green-600 dark:text-emerald-500">
                                                     {formatCurrency(
                                                         detail.profit_adjustment ||
                                                             0,
