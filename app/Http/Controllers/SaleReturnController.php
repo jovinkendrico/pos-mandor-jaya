@@ -68,7 +68,7 @@ class SaleReturnController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'return_date');
+        $sortBy    = $request->get('sort_by', 'return_date');
         $sortOrder = $request->get('sort_order', 'desc');
 
         $allowedSortFields = ['return_date', 'return_number', 'total_amount', 'status'];
@@ -85,17 +85,17 @@ class SaleReturnController extends Controller
         $customers = \App\Models\Customer::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('transaction/salereturn/index', [
-            'returns' => $returns,
+            'returns'   => $returns,
             'customers' => $customers,
-            'filters' => [
-                'search' => $request->get('search', ''),
-                'date_from' => $request->get('date_from', ''),
-                'date_to' => $request->get('date_to', ''),
-                'status' => $request->get('status', 'all'),
+            'filters'   => [
+                'search'      => $request->get('search', ''),
+                'date_from'   => $request->get('date_from', ''),
+                'date_to'     => $request->get('date_to', ''),
+                'status'      => $request->get('status', 'all'),
                 'return_type' => $request->get('return_type', 'all'),
                 'customer_id' => $request->get('customer_id', ''),
-                'sort_by' => $sortBy,
-                'sort_order' => $sortOrder,
+                'sort_by'     => $sortBy,
+                'sort_order'  => $sortOrder,
             ],
         ]);
     }
@@ -129,9 +129,9 @@ class SaleReturnController extends Controller
         $banks = \App\Models\Bank::orderBy('name')->get();
 
         return Inertia::render('transaction/salereturn/create', [
-            'sales' => $sales,
+            'sales'              => $sales,
             'returnedQuantities' => $returnedQuantities,
-            'banks' => $banks,
+            'banks'              => $banks,
         ]);
     }
 
@@ -142,76 +142,76 @@ class SaleReturnController extends Controller
     {
         DB::transaction(function () use ($request) {
             // Calculate totals from items (same logic as sale)
-            $subtotal = 0;
+            $subtotal             = 0;
             $totalDiscount1Amount = 0;
             $totalDiscount2Amount = 0;
-            $detailsData = [];
+            $detailsData          = [];
 
             foreach ($request->details as $detail) {
                 $amount = $detail['quantity'] * $detail['price'];
 
                 $itemDiscount1Percent = $detail['discount1_percent'] ?? 0;
-                $itemDiscount1Amount = ($amount * $itemDiscount1Percent) / 100;
-                $afterDiscount1 = $amount - $itemDiscount1Amount;
+                $itemDiscount1Amount  = ($amount * $itemDiscount1Percent) / 100;
+                $afterDiscount1       = $amount - $itemDiscount1Amount;
 
                 $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
-                $itemDiscount2Amount = ($afterDiscount1 * $itemDiscount2Percent) / 100;
-                $itemSubtotal = $afterDiscount1 - $itemDiscount2Amount;
+                $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
+                $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal += $amount;
+                $subtotal             += $amount;
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
 
                 $detailsData[] = [
-                    'sale_detail_id' => $detail['sale_detail_id'] ?? null,
-                    'item_id' => $detail['item_id'],
-                    'item_uom_id' => $detail['item_uom_id'],
-                    'quantity' => $detail['quantity'],
-                    'price' => $detail['price'],
+                    'sale_detail_id'    => $detail['sale_detail_id'] ?? null,
+                    'item_id'           => $detail['item_id'],
+                    'item_uom_id'       => $detail['item_uom_id'],
+                    'quantity'          => $detail['quantity'],
+                    'price'             => $detail['price'],
                     'discount1_percent' => $itemDiscount1Percent,
-                    'discount1_amount' => $itemDiscount1Amount,
+                    'discount1_amount'  => $itemDiscount1Amount,
                     'discount2_percent' => $itemDiscount2Percent,
-                    'discount2_amount' => $itemDiscount2Amount,
-                    'subtotal' => $itemSubtotal,
-                    'cost' => 0,
+                    'discount2_amount'  => $itemDiscount2Amount,
+                    'subtotal'          => $itemSubtotal,
+                    'cost'              => 0,
                     'profit_adjustment' => 0,
                 ];
             }
 
-            $discount1Amount = $totalDiscount1Amount;
+            $discount1Amount  = $totalDiscount1Amount;
             $discount1Percent = $subtotal > 0 ? ($discount1Amount / $subtotal) * 100 : 0;
 
-            $afterDiscount1 = $subtotal - $discount1Amount;
-            $discount2Amount = $totalDiscount2Amount;
+            $afterDiscount1   = $subtotal - $discount1Amount;
+            $discount2Amount  = $totalDiscount2Amount;
             $discount2Percent = $afterDiscount1 > 0 ? ($discount2Amount / $afterDiscount1) * 100 : 0;
 
             $totalAfterDiscount = $afterDiscount1 - $discount2Amount;
 
             $ppnPercent = $request->ppn_percent ?? 0;
-            $ppnAmount = ($totalAfterDiscount * $ppnPercent) / 100;
+            $ppnAmount  = ($totalAfterDiscount * $ppnPercent) / 100;
 
             $totalAmount = $totalAfterDiscount + $ppnAmount;
 
             $saleReturn = SaleReturn::create([
-                'return_number' => SaleReturn::generateReturnNumber(),
-                'sale_id' => $request->sale_id,
-                'return_date' => $request->return_date,
-                'subtotal' => $subtotal,
-                'discount1_percent' => $discount1Percent,
-                'discount1_amount' => $discount1Amount,
-                'discount2_percent' => $discount2Percent,
-                'discount2_amount' => $discount2Amount,
-                'total_after_discount' => $totalAfterDiscount,
-                'ppn_percent' => $ppnPercent,
-                'ppn_amount' => $ppnAmount,
-                'total_amount' => $totalAmount,
-                'total_cost' => 0,
+                'return_number'           => SaleReturn::generateReturnNumber($request->return_date),
+                'sale_id'                 => $request->sale_id,
+                'return_date'             => $request->return_date,
+                'subtotal'                => $subtotal,
+                'discount1_percent'       => $discount1Percent,
+                'discount1_amount'        => $discount1Amount,
+                'discount2_percent'       => $discount2Percent,
+                'discount2_amount'        => $discount2Amount,
+                'total_after_discount'    => $totalAfterDiscount,
+                'ppn_percent'             => $ppnPercent,
+                'ppn_amount'              => $ppnAmount,
+                'total_amount'            => $totalAmount,
+                'total_cost'              => 0,
                 'total_profit_adjustment' => 0,
-                'status' => 'pending',
-                'return_type' => $request->return_type ?? 'stock_only',
-                'refund_bank_id' => $request->refund_bank_id ?? null,
-                'refund_method' => $request->refund_method ?? null,
-                'reason' => $request->reason,
+                'status'                  => 'pending',
+                'return_type'             => $request->return_type ?? 'stock_only',
+                'refund_bank_id'          => $request->refund_bank_id ?? null,
+                'refund_method'           => $request->refund_method ?? null,
+                'reason'                  => $request->reason,
             ]);
 
             foreach ($detailsData as $detailData) {
