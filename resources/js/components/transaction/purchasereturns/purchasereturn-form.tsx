@@ -56,11 +56,9 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
         setData: setDataPurchaseReturn,
         errors: errorsPurchaseReturn,
         processing: processingPurchaseReturn,
-        reset: resetPurchaseReturn,
 
         handleSubmit: handleSubmitPurchaseReturn,
         handleCancel: handleCancelPurchaseReturn,
-        handleChangeItem,
         handleQuantityChange,
     } = usePurchaseReturn();
 
@@ -202,6 +200,17 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                             ? ReturnType.STOCK_ONLY
                                             : ReturnType.STOCK_AND_REFUND;
                                     setDataPurchaseReturn('return_type', type);
+
+                                    if (type === ReturnType.STOCK_ONLY) {
+                                        setDataPurchaseReturn(
+                                            'refund_method',
+                                            null,
+                                        );
+                                        setDataPurchaseReturn(
+                                            'refund_bank_id',
+                                            null,
+                                        );
+                                    }
                                 }}
                             >
                                 <SelectTrigger className="combobox">
@@ -231,7 +240,10 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                         <span className="text-red-500">*</span>
                                     </Label>
                                     <Select
-                                        value={dataPurchaseReturn.refund_method}
+                                        value={
+                                            dataPurchaseReturn.refund_method ??
+                                            undefined
+                                        }
                                         onValueChange={(value) => {
                                             const method =
                                                 value ===
@@ -480,7 +492,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         ),
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-center text-red-600 dark:text-red-500">
+                                                <TableCell className="text-center text-red-600 dark:text-danger-500">
                                                     {formatNumber(
                                                         item.discount1_percent ??
                                                             0,
@@ -488,7 +500,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         ? `${item.discount1_percent}%`
                                                         : '-'}
                                                 </TableCell>
-                                                <TableCell className="text-center text-red-600 dark:text-red-500">
+                                                <TableCell className="text-center text-red-600 dark:text-danger-500">
                                                     {formatNumber(
                                                         item.discount2_percent ??
                                                             0,

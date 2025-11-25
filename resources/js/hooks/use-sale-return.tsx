@@ -1,7 +1,7 @@
 import { RefundMethod, ReturnType } from '@/constants/enum';
 import { formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
-import { store } from '@/routes/purchase-returns';
-import { IPurchaseDetail } from '@/types';
+import { store } from '@/routes/sale-returns';
+import { ISaleDetail } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
@@ -28,11 +28,11 @@ const detailsSchema = Yup.object().shape({
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
 });
 
-const purchaseReturnSchema = Yup.object().shape({
-    purchase_id: Yup.number().required('Pembelian harus dipilih.'),
+const saleReturnSchema = Yup.object().shape({
+    sale_id: Yup.number().required('Penjualan harus dipilih.'),
     return_date: Yup.date().required('Tanggal retur harus diisi.'),
     return_type: Yup.string().required('Tipe retur harus dipilih.'),
-    refund_bank: Yup.number().nullable(),
+    refund_bank_id: Yup.number().nullable(),
     refund_method: Yup.mixed<RefundMethod>().when('return_type', {
         is: ReturnType.STOCK_AND_REFUND,
 
@@ -58,7 +58,7 @@ const purchaseReturnSchema = Yup.object().shape({
     details: Yup.array().of(detailsSchema).min(1, 'Minimal ada satu barang.'),
 });
 
-const usePurchaseReturn = () => {
+const useSaleReturn = () => {
     const {
         data,
         setData,
@@ -69,11 +69,11 @@ const usePurchaseReturn = () => {
         setError,
         clearErrors,
     } = useForm({
-        purchase_id: 0,
+        sale_id: 0,
         return_date: new Date(),
         return_type: ReturnType.STOCK_ONLY,
         refund_bank_id: null as number | null,
-        refund_method: RefundMethod.CASH_REFUND as RefundMethod | null,
+        refund_method: RefundMethod.REDUCE_RECEIVABLE as RefundMethod | null,
         ppn_percent: 0,
         reason: '',
         details: [
@@ -85,18 +85,18 @@ const usePurchaseReturn = () => {
                 discount1_percent: 0,
                 discount2_percent: 0,
             },
-        ] as IPurchaseDetail[],
+        ] as ISaleDetail[],
     });
 
     const handleSubmit = async () => {
         clearErrors();
 
         try {
-            await purchaseReturnSchema.validate(data, { abortEarly: false });
+            await saleReturnSchema.validate(data, { abortEarly: false });
             submit(store(), {
                 onSuccess: () => {
                     reset();
-                    toast.success(`Return pembelian berhasil ditambahkan`);
+                    toast.success(`Retur penjualan berhasil ditambahkan`);
                 },
 
                 onError: () => {
@@ -113,24 +113,20 @@ const usePurchaseReturn = () => {
                 });
                 setError(yupErrors);
                 toast.error('Validasi gagal, periksa input Anda.');
+                console.log(yupErrors);
             }
         }
     };
 
     const handleCancel = () => {
         clearErrors();
-        handleChangeItem(0, 'item_id', 0);
-        handleChangeItem(0, 'item_uom_id', 0);
-        handleChangeItem(0, 'quantity', 0);
-        handleChangeItem(0, 'price', 0);
-        handleChangeItem(0, 'discount1_percent', 0);
-        handleChangeItem(0, 'discount2_percent', 0);
+        // Resetting the first item to empty state if needed, or just reset the whole form
         reset();
     };
 
     const handleChangeItem = (
         index: number,
-        field: keyof IPurchaseDetail | 'item_id' | 'item_name' | 'item_uom_id',
+        field: keyof ISaleDetail | 'item_id' | 'item_uom_id',
         value: string | number | null,
     ) => {
         const updated = [...data.details];
@@ -208,4 +204,4 @@ const usePurchaseReturn = () => {
     };
 };
 
-export default usePurchaseReturn;
+export default useSaleReturn;

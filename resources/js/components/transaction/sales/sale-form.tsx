@@ -602,7 +602,7 @@ const SaleForm = (props: SaleFormProps) => {
                             </span>
                         </div>
                         {calculations.totalDiscount1Amount > 0 && (
-                            <div className="flex justify-between text-sm text-red-600 dark:text-red-500">
+                            <div className="flex justify-between text-sm text-red-600 dark:text-danger-500">
                                 <span>Total Diskon 1 (dari items):</span>
                                 <span>
                                     -
@@ -613,7 +613,7 @@ const SaleForm = (props: SaleFormProps) => {
                             </div>
                         )}
                         {calculations.totalDiscount2Amount > 0 && (
-                            <div className="flex justify-between text-sm text-red-600 dark:text-red-500">
+                            <div className="flex justify-between text-sm text-red-600 dark:text-danger-500">
                                 <span>Total Diskon 2 (dari items):</span>
                                 <span>
                                     -

@@ -2,79 +2,25 @@ import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import Modal from '@/components/ui/Modal/Modal';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { formatDatetoString } from '@/lib/utils';
+import {
+    cn,
+    formatCurrency,
+    formatDatetoString,
+    formatNumber,
+} from '@/lib/utils';
 import { index } from '@/routes/sale-returns';
-import { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { CheckCircle2, Trash2, XCircle } from 'lucide-react';
+import { BreadcrumbItem, ISaleReturn } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, CheckCircle2, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface Customer {
-    id: number;
-    name: string;
-}
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: Customer;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-}
-
-interface SaleReturnDetail {
-    id: number;
-    item: Item;
-    item_uom: ItemUom;
-    quantity: string;
-    price: string;
-    discount1_percent: string;
-    discount2_percent: string;
-    subtotal: string;
-    cost: string;
-    profit_adjustment: string;
-}
-
-interface SaleReturn {
-    id: number;
-    return_number: string;
-    sale: Sale;
-    return_date: string;
-    subtotal: string;
-    discount1_percent: string;
-    discount1_amount: string;
-    discount2_percent: string;
-    discount2_amount: string;
-    ppn_percent: string;
-    ppn_amount: string;
-    total_amount: string;
-    total_cost: string;
-    total_profit_adjustment: string;
-    status: 'pending' | 'confirmed';
-    reason?: string;
-    details: SaleReturnDetail[];
-}
-
 interface PageProps {
-    return: SaleReturn;
+    return: ISaleReturn;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -93,53 +39,75 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function SaleReturnShow({ return: returnData }: PageProps) {
-    const formatCurrency = (value: string | number) => {
-        const num = typeof value === 'string' ? parseFloat(value) : value;
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(num);
-    };
+    const {
+        isOpen: isConfirmModalOpen,
+        openModal: openConfirmModal,
+        closeModal: closeConfirmModal,
+    } = useDisclosure();
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
+
+    const tableColumn = [
+        'Kode',
+        'Nama Item',
+        'UOM',
+        'Kuantitas',
+        'Harga',
+        'Disc 1 (%)',
+        'Disc 2 (%)',
+        'Subtotal',
+        ...(returnData.status === 'confirmed' ? ['Cost', 'Profit Adj.'] : []),
+    ];
 
     const handleConfirm = () => {
-        if (
-            confirm(
-                'Konfirmasi retur? Stock akan bertambah, profit akan di-adjust, dan data tidak bisa diedit lagi.',
-            )
-        ) {
-            router.post(
-                `/sale-returns/${returnData.id}/confirm`,
-                {},
-                {
-                    onSuccess: () =>
-                        toast.success('Retur penjualan dikonfirmasi'),
-                    onError: () => toast.error('Gagal konfirmasi retur'),
+        router.post(
+            `/sale-returns/${returnData.id}/confirm`,
+            {},
+            {
+                onSuccess: () => {
+                    toast.success('Retur penjualan dikonfirmasi');
+                    closeConfirmModal();
                 },
-            );
-        }
+                onError: () => {
+                    toast.error('Gagal konfirmasi retur');
+                    closeConfirmModal();
+                },
+            },
+        );
     };
 
     const handleUnconfirm = () => {
-        if (confirm('Batalkan konfirmasi? Stock akan dikurangi kembali.')) {
-            router.post(
-                `/sale-returns/${returnData.id}/unconfirm`,
-                {},
-                {
-                    onSuccess: () => toast.success('Konfirmasi dibatalkan'),
-                    onError: () => toast.error('Gagal membatalkan konfirmasi'),
+        router.post(
+            `/sale-returns/${returnData.id}/unconfirm`,
+            {},
+            {
+                onSuccess: () => {
+                    toast.success('Konfirmasi dibatalkan');
+                    closeConfirmModal();
                 },
-            );
-        }
+                onError: () => {
+                    toast.error('Gagal membatalkan konfirmasi');
+                    closeConfirmModal();
+                },
+            },
+        );
     };
 
     const handleDelete = () => {
-        if (confirm('Hapus retur penjualan ini?')) {
-            router.delete(`/sale-returns/${returnData.id}`, {
-                onSuccess: () => toast.success('Retur penjualan dihapus'),
-                onError: () => toast.error('Gagal menghapus retur'),
-            });
-        }
+        router.delete(`/sale-returns/${returnData.id}`, {
+            onSuccess: () => {
+                toast.success('Retur penjualan dihapus');
+                closeDeleteModal();
+            },
+            onError: () => {
+                toast.error('Gagal menghapus retur');
+                closeDeleteModal();
+            },
+        });
     };
 
     return (
@@ -149,9 +117,14 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
 
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <PageTitle
-                            title={`Retur Jual ${returnData.return_number}`}
-                        />
+                        <div className="flex flex-row items-center gap-2">
+                            <Link href={index().url}>
+                                <ArrowLeft className="h-8 w-8" />
+                            </Link>
+                            <PageTitle
+                                title={`Retur Jual ${returnData.return_number}`}
+                            />
+                        </div>
                         <div className="mt-2 flex items-center gap-2">
                             <Badge
                                 variant={
@@ -159,7 +132,11 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                         ? 'default'
                                         : 'secondary'
                                 }
-                                className="text-sm"
+                                className={cn(
+                                    returnData.status === 'pending'
+                                        ? 'badge-yellow-light'
+                                        : 'badge-green-light',
+                                )}
                             >
                                 {returnData.status === 'confirmed'
                                     ? 'Confirmed'
@@ -171,13 +148,16 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                         {returnData.status === 'pending' && (
                             <>
                                 <Button
-                                    onClick={handleDelete}
+                                    onClick={openDeleteModal}
                                     variant="destructive"
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Hapus
                                 </Button>
-                                <Button onClick={handleConfirm}>
+                                <Button
+                                    onClick={openConfirmModal}
+                                    className="btn-primary"
+                                >
                                     <CheckCircle2 className="mr-2 h-4 w-4" />
                                     Konfirmasi
                                 </Button>
@@ -185,8 +165,8 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                         )}
                         {returnData.status === 'confirmed' && (
                             <Button
-                                onClick={handleUnconfirm}
-                                variant="destructive"
+                                onClick={openConfirmModal}
+                                className="btn-danger"
                             >
                                 <XCircle className="mr-2 h-4 w-4" />
                                 Batalkan Konfirmasi
@@ -197,7 +177,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
 
                 {/* Return Info */}
                 <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <Card>
+                    <Card className="content">
                         <CardHeader>
                             <CardTitle>Informasi Retur</CardTitle>
                         </CardHeader>
@@ -241,7 +221,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="content">
                         <CardHeader>
                             <CardTitle>Ringkasan</CardTitle>
                         </CardHeader>
@@ -254,35 +234,40 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                     {formatCurrency(returnData.subtotal)}
                                 </span>
                             </div>
-                            {parseFloat(returnData.discount1_amount) > 0 && (
-                                <div className="flex justify-between text-red-600">
+                            {formatNumber(returnData.discount1_amount ?? 0) >
+                                0 && (
+                                <div className="flex justify-between text-red-600 dark:text-danger-400">
                                     <span>Total Diskon 1:</span>
                                     <span>
                                         -
                                         {formatCurrency(
-                                            returnData.discount1_amount,
+                                            returnData.discount1_amount ?? 0,
                                         )}
                                     </span>
                                 </div>
                             )}
-                            {parseFloat(returnData.discount2_amount) > 0 && (
-                                <div className="flex justify-between text-red-600">
+                            {formatNumber(returnData.discount2_amount ?? 0) >
+                                0 && (
+                                <div className="flex justify-between text-red-600 dark:text-danger-400">
                                     <span>Total Diskon 2:</span>
                                     <span>
                                         -
                                         {formatCurrency(
-                                            returnData.discount2_amount,
+                                            returnData.discount2_amount ?? 0,
                                         )}
                                     </span>
                                 </div>
                             )}
-                            {parseFloat(returnData.ppn_amount) > 0 && (
-                                <div className="flex justify-between text-blue-600">
+                            {formatNumber(returnData.ppn_amount ?? 0) > 0 && (
+                                <div className="flex justify-between text-blue-600 dark:text-primary-700">
                                     <span>
                                         PPN ({returnData.ppn_percent}%):
                                     </span>
                                     <span>
-                                        +{formatCurrency(returnData.ppn_amount)}
+                                        +
+                                        {formatCurrency(
+                                            returnData.ppn_amount ?? 0,
+                                        )}
                                     </span>
                                 </div>
                             )}
@@ -294,7 +279,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                             </div>
                             {returnData.status === 'confirmed' && (
                                 <>
-                                    <div className="flex justify-between border-t pt-2 text-orange-600">
+                                    <div className="flex justify-between border-t pt-2 text-red-600 dark:text-danger-500">
                                         <span>Total Cost:</span>
                                         <span className="font-medium">
                                             {formatCurrency(
@@ -302,7 +287,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                             )}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-lg font-bold text-red-600">
+                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-green-500">
                                         <span>PROFIT ADJ.:</span>
                                         <span>
                                             {formatCurrency(
@@ -317,105 +302,107 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                 </div>
 
                 {/* Items Table */}
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Detail Barang Diretur</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[100px]">
-                                        Kode
-                                    </TableHead>
-                                    <TableHead>Nama Item</TableHead>
-                                    <TableHead>UOM</TableHead>
-                                    <TableHead className="text-right">
-                                        Qty Retur
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Harga
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Disc 1
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Disc 2
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Subtotal
-                                    </TableHead>
-                                    {returnData.status === 'confirmed' && (
-                                        <>
-                                            <TableHead className="text-right">
-                                                Cost
-                                            </TableHead>
-                                            <TableHead className="text-right">
-                                                Profit Adj.
-                                            </TableHead>
-                                        </>
-                                    )}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {returnData.details.map((detail) => (
-                                    <TableRow key={detail.id}>
-                                        <TableCell className="font-mono">
-                                            {detail.item.code}
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <TableLayout
+                                tableColumn={tableColumn}
+                                tableRow={returnData.details}
+                                pageFrom={1}
+                                renderRow={(detail) => (
+                                    <>
+                                        <TableCell className="flex w-full items-center justify-center text-center font-mono">
+                                            {detail.item?.code}
                                         </TableCell>
-                                        <TableCell>
-                                            {detail.item.name}
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            {detail.item?.name}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="flex w-full items-center justify-center text-center">
                                             <Badge variant="outline">
-                                                {detail.item_uom.uom_name}
+                                                {detail.item_uom?.uom.name}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right">
-                                            {parseFloat(
+                                        <TableCell className="flex w-full items-center justify-center text-center">
+                                            {formatNumber(
                                                 detail.quantity,
                                             ).toLocaleString('id-ID')}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell className="flex w-full items-center justify-center text-center">
                                             {formatCurrency(detail.price)}
                                         </TableCell>
-                                        <TableCell className="text-right text-red-600">
-                                            {parseFloat(
-                                                detail.discount1_percent,
+                                        <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
+                                            {formatNumber(
+                                                detail.discount1_percent ?? 0,
                                             ) > 0
                                                 ? `${detail.discount1_percent}%`
                                                 : '-'}
                                         </TableCell>
-                                        <TableCell className="text-right text-red-600">
-                                            {parseFloat(
-                                                detail.discount2_percent,
+                                        <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
+                                            {formatNumber(
+                                                detail.discount2_percent ?? 0,
                                             ) > 0
                                                 ? `${detail.discount2_percent}%`
                                                 : '-'}
                                         </TableCell>
-                                        <TableCell className="text-right font-medium">
+                                        <TableCell className="flex w-full items-center justify-center text-center">
                                             {formatCurrency(detail.subtotal)}
                                         </TableCell>
                                         {returnData.status === 'confirmed' && (
                                             <>
-                                                <TableCell className="text-right text-orange-600">
+                                                <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-500">
                                                     {formatCurrency(
-                                                        detail.cost,
+                                                        detail.cost || 0,
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-right font-medium text-red-600">
+                                                <TableCell className="flex w-full items-center justify-center text-center font-medium text-green-600 dark:text-green-500">
                                                     {formatCurrency(
-                                                        detail.profit_adjustment,
+                                                        detail.profit_adjustment ||
+                                                            0,
                                                     )}
                                                 </TableCell>
                                             </>
                                         )}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                    </>
+                                )}
+                            />
+                        </div>
                     </CardContent>
                 </Card>
+                <Modal
+                    titleDesc={
+                        returnData.status === 'pending'
+                            ? 'Konfirmasi Retur Penjualan?'
+                            : 'Batalkan Konfirmasi?'
+                    }
+                    contentDesc={
+                        returnData.status === 'pending'
+                            ? 'Stock akan bertambah, profit akan di-adjust, dan data tidak bisa diedit lagi.'
+                            : 'Stock akan dikurangi kembali.'
+                    }
+                    submitText={
+                        returnData.status === 'pending'
+                            ? 'Konfirmasi'
+                            : 'Batalkan Konfirmasi'
+                    }
+                    isModalOpen={isConfirmModalOpen}
+                    onModalClose={closeConfirmModal}
+                    handleSubmit={
+                        returnData.status === 'pending'
+                            ? handleConfirm
+                            : handleUnconfirm
+                    }
+                />
+                <Modal
+                    titleDesc="Hapus Retur Penjualan?"
+                    contentDesc="Apakah Anda yakin ingin menghapus data retur penjualan ini? Data yang dihapus tidak dapat dikembalikan."
+                    submitText="Hapus"
+                    isModalOpen={isDeleteModalOpen}
+                    onModalClose={closeDeleteModal}
+                    handleSubmit={handleDelete}
+                />
             </AppLayout>
         </>
     );

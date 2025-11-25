@@ -15,4 +15,5 @@ export enum ReturnType {
 export enum RefundMethod {
     REDUCE_PAYABLE = 'reduce_payable',
     CASH_REFUND = 'cash_refund',
+    REDUCE_RECEIVABLE = 'reduce_receivable',
 }
