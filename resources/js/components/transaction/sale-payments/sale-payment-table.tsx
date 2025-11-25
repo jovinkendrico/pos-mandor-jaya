@@ -31,8 +31,6 @@ const SalePaymentTable = ({
         'Aksi',
     ];
 
-    console.log(payments);
-
     return (
         <TableLayout
             tableName="Pembayaran Penjualan"

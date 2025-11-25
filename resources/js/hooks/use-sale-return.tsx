@@ -113,7 +113,6 @@ const useSaleReturn = () => {
                 });
                 setError(yupErrors);
                 toast.error('Validasi gagal, periksa input Anda.');
-                console.log(yupErrors);
             }
         }
     };
