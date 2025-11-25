@@ -106,7 +106,7 @@ class SaleReturnController extends Controller
     public function create(): Response
     {
         // Get confirmed sales only
-        $sales = Sale::with(['customer', 'details.item', 'details.itemUom'])
+        $sales = Sale::with(['customer', 'details.item', 'details.itemUom.uom'])
             ->where('status', 'confirmed')
             ->orderBy('sale_date', 'desc')
             ->get();
@@ -228,7 +228,7 @@ class SaleReturnController extends Controller
      */
     public function show(SaleReturn $saleReturn): Response
     {
-        $saleReturn->load(['sale.customer', 'details.item', 'details.itemUom']);
+        $saleReturn->load(['sale.customer', 'details.item', 'details.itemUom.uom']);
 
         return Inertia::render('transaction/salereturn/show', [
             'return' => $saleReturn,

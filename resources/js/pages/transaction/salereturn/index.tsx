@@ -15,27 +15,13 @@ import SaleReturnTable from '@/components/transaction/salereturns/salereturn-tab
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { index, create } from '@/routes/sale-returns';
-import { BreadcrumbItem, Customer, PaginatedData } from '@/types';
+import { BreadcrumbItem, Customer, ISaleReturn, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-
-interface SaleReturn {
-    id: number;
-    return_number: string;
-    sale: {
-        id: number;
-        sale_number: string;
-        customer?: Customer;
-    };
-    return_date: string;
-    total_amount: string;
-    total_profit_adjustment: string;
-    status: 'pending' | 'confirmed';
-    return_type?: 'stock_only' | 'stock_and_refund';
-}
+import { toast } from 'sonner';
 
 interface PageProps {
-    returns: PaginatedData<SaleReturn>;
+    returns: PaginatedData<ISaleReturn>;
     customers?: Customer[];
     filters?: {
         search: string;
@@ -83,8 +69,17 @@ export default function SaleReturnIndex({
         router.visit(create().url);
     };
 
-    const handleView = (returnData: SaleReturn) => {
-        router.visit(`/sale-returns/${returnData.id}`);
+    const handleDelete = (saleReturn: ISaleReturn) => {
+        if (confirm('Apakah Anda yakin ingin menghapus retur penjualan ini?')) {
+            router.delete(`/sale-returns/${saleReturn.id}`, {
+                onSuccess: () => {
+                    toast.success('Retur penjualan berhasil dihapus');
+                },
+                onError: () => {
+                    toast.error('Gagal menghapus retur penjualan');
+                },
+            });
+        }
     };
 
     return (
@@ -128,7 +123,9 @@ export default function SaleReturnIndex({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="stock_only">Retur Stok Saja</SelectItem>
+                                <SelectItem value="stock_only">
+                                    Retur Stok Saja
+                                </SelectItem>
                                 <SelectItem value="stock_and_refund">
                                     Retur Stok + Refund
                                 </SelectItem>
@@ -161,12 +158,13 @@ export default function SaleReturnIndex({
                 </div>
             </Card>
             <div className="mt-4">
-                <SaleReturnTable returns={returns.data} onView={handleView} />
+                <SaleReturnTable
+                    returns={returns.data}
+                    pageFrom={returns.from}
+                    onDelete={handleDelete}
+                />
             </div>
-            {returns.data.length !== 0 && (
-                <TablePagination data={returns} />
-            )}
+            {returns.data.length !== 0 && <TablePagination data={returns} />}
         </AppLayout>
     );
 }
-

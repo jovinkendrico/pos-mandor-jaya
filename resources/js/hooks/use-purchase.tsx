@@ -3,9 +3,9 @@ import {
     formatNumberWithSeparator,
     parseStringtoNumber,
 } from '@/lib/utils';
-import { destroy, store, update } from '@/routes/purchases';
+import { store, update } from '@/routes/purchases';
 import { IPurchase, IPurchaseDetail } from '@/types';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
@@ -19,7 +19,7 @@ const detailsSchema = Yup.object().shape({
         .min(1, 'UOM harus dipilih.'),
     quantity: Yup.number()
         .required('Jumlah barang harus diisi.')
-        .min(1, 'Jumlah barang minimal 1.'),
+        .min(1, 'Kuantitas min. 1.'),
     price: Yup.number().required('Harga barang harus diisi.'),
     discount1_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
@@ -109,20 +109,6 @@ const usePurchase = () => {
                 toast.error('Validasi gagal, periksa input Anda.');
             }
         }
-    };
-
-    const handleDelete = (purchase: IPurchase) => {
-        if (!purchase.id) return;
-        router.delete(destroy(purchase.id).url, {
-            onSuccess: () => {
-                toast.success(
-                    `Pembelian: ${purchase.purchase_number} berhasil dihapus`,
-                );
-            },
-            onError: () => {
-                toast.error('Gagal menghapus pembelian');
-            },
-        });
     };
 
     const handleCancel = () => {
@@ -265,7 +251,6 @@ const usePurchase = () => {
         removeItem,
 
         handleSubmit,
-        handleDelete,
         handleCancel,
         handleChangeItem,
         handleQuantityChange,

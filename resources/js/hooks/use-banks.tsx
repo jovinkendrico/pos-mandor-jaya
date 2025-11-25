@@ -1,6 +1,6 @@
-import { destroy, store, update } from '@/routes/banks';
-import { IBank, ICity } from '@/types';
-import { router, useForm } from '@inertiajs/react';
+import { store, update } from '@/routes/banks';
+import { IBank } from '@/types';
+import { useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
@@ -68,17 +68,6 @@ const useBanks = (closeModal: () => void) => {
         }
     };
 
-    const handleDelete = (bank: ICity) => {
-        router.delete(destroy(bank.id).url, {
-            onSuccess: () => {
-                toast.success('Bank/Cash berhasil dihapus');
-            },
-            onError: () => {
-                toast.error('Gagal menghapus Bank/Cash');
-            },
-        });
-    };
-
     const handleCancel = () => {
         reset();
         closeModal();
@@ -92,7 +81,6 @@ const useBanks = (closeModal: () => void) => {
 
         handleSubmit,
         handleCancel,
-        handleDelete,
     };
 };
 

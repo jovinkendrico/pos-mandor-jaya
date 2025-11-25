@@ -95,13 +95,10 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         const item = items.find((i) => i.id === itemId);
         if (!item || !item.item_uoms) return [];
 
-        // Include all UOMs including base UOM
-        return item.item_uoms
-            .filter((itemUom) => itemUom.uom) // Ensure UOM exists
-            .map((itemUom) => ({
-                label: itemUom.uom.name,
-                value: itemUom.uom_id.toString(),
-            }));
+        return item.item_uoms.map((itemUom) => ({
+            label: itemUom.uom.name,
+            value: itemUom.id.toString(),
+        }));
     };
 
     const supplierComboboxOptions: ComboboxOption[] = useMemo(() => {
@@ -366,24 +363,17 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 <Combobox
                                                     options={uomOptions}
                                                     value={
-                                                        detail.item_uom_id && detail.item_uom_id > 0
+                                                        detail.item_uom_id &&
+                                                        detail.item_uom_id > 0
                                                             ? detail.item_uom_id.toString()
                                                             : ''
                                                     }
                                                     onValueChange={(value) => {
-                                                        if (value && value !== '') {
-                                                            handleChangeItem(
-                                                                index,
-                                                                'item_uom_id',
-                                                                Number(value),
-                                                            );
-                                                        } else {
-                                                            handleChangeItem(
-                                                                index,
-                                                                'item_uom_id',
-                                                                0,
-                                                            );
-                                                        }
+                                                        handleChangeItem(
+                                                            index,
+                                                            'item_uom_id',
+                                                            Number(value),
+                                                        );
                                                     }}
                                                     disabled={
                                                         !detail.item_id ||

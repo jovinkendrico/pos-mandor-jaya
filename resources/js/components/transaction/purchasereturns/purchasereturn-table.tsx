@@ -33,6 +33,7 @@ const PurchaseReturnTable = (props: PurchaseReturnTableProps) => {
             tableRow={purchase_returns}
             pageFrom={pageFrom}
             text="Tidak ada data Retur Pembelian"
+            className="min-w-[135px]"
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center font-mono">

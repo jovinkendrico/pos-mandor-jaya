@@ -1,4 +1,4 @@
-import { destroy, store, update } from '@/routes/cities';
+import { store, update } from '@/routes/cities';
 import { ICity } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import axios from 'axios';
@@ -67,14 +67,6 @@ const useCity = (
         }
     };
 
-    const handleDelete = (city: ICity) => {
-        router.delete(destroy(city.id).url, {
-            onSuccess: () => {
-                toast.success('Kota berhasil dihapus');
-            },
-        });
-    };
-
     const getCityData = useCallback(async () => {
         try {
             const response = await axios.get('/cities/search');
@@ -99,7 +91,6 @@ const useCity = (
 
         handleSubmit,
         handleCancel,
-        handleDelete,
     };
 };
 

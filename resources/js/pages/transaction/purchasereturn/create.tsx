@@ -2,13 +2,14 @@ import PageTitle from '@/components/page-title';
 import PurchaseReturnForm from '@/components/transaction/purchasereturns/purchasereturn-form';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/purchase-returns';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { BreadcrumbItem, IBank, IPurchase } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    purchases: Purchase[];
+    purchases: IPurchase[];
     returnedQuantities?: Record<number, number>;
-    banks?: Bank[];
+    banks?: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -26,16 +27,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchaseReturnCreate({
-    purchases,
-    returnedQuantities = {},
-    banks = [],
-}: PageProps) {
+const PurchaseReturnCreate = (props: PageProps) => {
+    const { purchases, returnedQuantities = {}, banks = [] } = props;
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Tambah Retur Beli" />
-                <PageTitle title="Tambah Retur Pembelian" />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle title="Tambah Retur Pembelian" />
+                </div>
                 <PurchaseReturnForm
                     purchases={purchases}
                     returnedQuantities={returnedQuantities}
@@ -44,4 +48,6 @@ export default function PurchaseReturnCreate({
             </AppLayout>
         </>
     );
-}
+};
+
+export default PurchaseReturnCreate;

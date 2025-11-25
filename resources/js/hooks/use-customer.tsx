@@ -1,6 +1,6 @@
-import { destroy, store, update } from '@/routes/customers';
+import { store, update } from '@/routes/customers';
 import { ICustomer } from '@/types';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
@@ -76,14 +76,6 @@ const useCustomer = (closeModal: () => void) => {
         }
     };
 
-    const handleDelete = (customer: ICustomer) => {
-        router.delete(destroy(customer.id).url, {
-            onSuccess: () => {
-                toast.success('Customer berhasil dihapus');
-            },
-        });
-    };
-
     const handleCancel = () => {
         reset();
         closeModal();
@@ -97,7 +89,6 @@ const useCustomer = (closeModal: () => void) => {
 
         handleSubmit,
         handleCancel,
-        handleDelete,
     };
 };
 

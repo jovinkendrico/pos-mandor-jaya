@@ -1,14 +1,13 @@
-import {
-    formatCurrency,
-    formatNumberWithSeparator,
-    parseStringtoNumber,
-} from '@/lib/utils';
-import { store, update } from '@/routes/sales';
-import { ISale, ISaleDetail } from '@/types';
+import { RefundMethod, ReturnType } from '@/constants/enum';
+import { formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
+import { store } from '@/routes/sale-returns';
+import { ISaleDetail } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
+
+const RefundMethodValues = Object.values(RefundMethod);
 
 const detailsSchema = Yup.object().shape({
     item_id: Yup.number()
@@ -29,26 +28,37 @@ const detailsSchema = Yup.object().shape({
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
 });
 
-const saleSchema = Yup.object().shape({
-    customer_id: Yup.number()
-        .required('Customer harus dipilih.')
-        .min(1, 'Customer harus dipilih.'),
-    sale_date: Yup.date().required('Tanggal harus diisi.'),
-    due_date: Yup.date().nullable(),
-    discount1_percent: Yup.number()
-        .min(0, 'Diskon tidak boleh negatif.')
-        .max(100, 'Diskon tidak boleh lebih dari 100.'),
-    discount2_percent: Yup.number()
-        .min(0, 'Diskon tidak boleh negatif.')
-        .max(100, 'Diskon tidak boleh lebih dari 100.'),
+const saleReturnSchema = Yup.object().shape({
+    sale_id: Yup.number().required('Penjualan harus dipilih.'),
+    return_date: Yup.date().required('Tanggal retur harus diisi.'),
+    return_type: Yup.string().required('Tipe retur harus dipilih.'),
+    refund_bank_id: Yup.number().nullable(),
+    refund_method: Yup.mixed<RefundMethod>().when('return_type', {
+        is: ReturnType.STOCK_AND_REFUND,
+
+        then: (schema) =>
+            schema
+                .required(
+                    'Metode retur harus dipilih jika tipe retur adalah Stok & Refund.',
+                )
+                .oneOf(RefundMethodValues, 'Metode retur tidak valid.'),
+
+        otherwise: (schema) =>
+            schema
+                .nullable()
+                .oneOf(
+                    [...RefundMethodValues, null, undefined],
+                    'Metode retur tidak valid.',
+                ),
+    }),
     ppn_percent: Yup.number()
         .min(0, 'PPN tidak boleh negatif.')
         .max(100, 'PPN tidak boleh lebih dari 100.'),
-    notes: Yup.string().max(255, 'Maksimal 255 karakter.'),
+    reason: Yup.string().max(255, 'Maksimal 255 karakter.'),
     details: Yup.array().of(detailsSchema).min(1, 'Minimal ada satu barang.'),
 });
 
-const useSale = () => {
+const useSaleReturn = () => {
     const {
         data,
         setData,
@@ -59,13 +69,13 @@ const useSale = () => {
         setError,
         clearErrors,
     } = useForm({
-        customer_id: 0,
-        sale_date: new Date(),
-        due_date: null as unknown as null | Date,
-        discount1_percent: 0,
-        discount2_percent: 0,
+        sale_id: 0,
+        return_date: new Date(),
+        return_type: ReturnType.STOCK_ONLY,
+        refund_bank_id: null as number | null,
+        refund_method: RefundMethod.REDUCE_RECEIVABLE as RefundMethod | null,
         ppn_percent: 0,
-        notes: '',
+        reason: '',
         details: [
             {
                 item_id: 0,
@@ -78,19 +88,15 @@ const useSale = () => {
         ] as ISaleDetail[],
     });
 
-    const handleSubmit = async (sale?: ISale) => {
+    const handleSubmit = async () => {
         clearErrors();
 
         try {
-            await saleSchema.validate(data, { abortEarly: false });
-            submit(sale ? update(sale.id) : store(), {
+            await saleReturnSchema.validate(data, { abortEarly: false });
+            submit(store(), {
                 onSuccess: () => {
                     reset();
-                    toast.success(
-                        sale
-                            ? `Pembelian berhasil diupdate`
-                            : `Pembelian berhasil ditambahkan`,
-                    );
+                    toast.success(`Retur penjualan berhasil ditambahkan`);
                 },
 
                 onError: () => {
@@ -107,48 +113,20 @@ const useSale = () => {
                 });
                 setError(yupErrors);
                 toast.error('Validasi gagal, periksa input Anda.');
+                console.log(yupErrors);
             }
         }
     };
 
     const handleCancel = () => {
         clearErrors();
-        handleChangeItem(0, 'item_id', 0);
-        handleChangeItem(0, 'item_uom_id', 0);
-        handleChangeItem(0, 'quantity', 0);
-        handleChangeItem(0, 'price', 0);
-        handleChangeItem(0, 'discount1_percent', 0);
-        handleChangeItem(0, 'discount2_percent', 0);
+        // Resetting the first item to empty state if needed, or just reset the whole form
         reset();
-    };
-
-    const addItem = () => {
-        setData('details', [
-            ...data.details,
-            {
-                item_id: 0,
-                item_uom_id: 0,
-                quantity: 0,
-                price: 0,
-                discount1_percent: 0,
-                discount2_percent: 0,
-            },
-        ]);
-    };
-
-    const removeItem = (index: number) => {
-        if (data.details.length === 1 || index >= data.details.length) return;
-
-        const updated = [...data.details];
-
-        updated.splice(index, 1);
-
-        setData('details', updated);
     };
 
     const handleChangeItem = (
         index: number,
-        field: keyof ISaleDetail | 'item_id' | 'item_name' | 'item_uom_id',
+        field: keyof ISaleDetail | 'item_id' | 'item_uom_id',
         value: string | number | null,
     ) => {
         const updated = [...data.details];
@@ -212,33 +190,6 @@ const useSale = () => {
         ]);
     };
 
-    const handlePriceChange = (
-        index: number,
-        e: ChangeEvent<HTMLInputElement>,
-        priceDisplayValues: string[],
-        setPriceDisplayValues: Dispatch<SetStateAction<string[]>>,
-    ) => {
-        const input = e.target.value;
-
-        if (input === '') {
-            handleChangeItem(index, 'price', 0);
-            setPriceDisplayValues([
-                ...priceDisplayValues.slice(0, index),
-                '',
-                ...priceDisplayValues.slice(index + 1),
-            ]);
-            return;
-        }
-
-        const rawValue = parseStringtoNumber(input);
-
-        handleChangeItem(index, 'price', rawValue);
-        setPriceDisplayValues([
-            ...priceDisplayValues.slice(0, index),
-            formatCurrency(rawValue ?? 0),
-            ...priceDisplayValues.slice(index + 1),
-        ]);
-    };
     return {
         data,
         setData,
@@ -246,15 +197,11 @@ const useSale = () => {
         processing,
         reset,
 
-        addItem,
-        removeItem,
-
         handleSubmit,
         handleCancel,
         handleChangeItem,
         handleQuantityChange,
-        handlePriceChange,
     };
 };
 
-export default useSale;
+export default useSaleReturn;

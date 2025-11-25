@@ -10,7 +10,7 @@ import {
 } from '@/lib/utils';
 import { IItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Edit, Info, Trash, Package } from 'lucide-react';
+import { Edit, Info, Package, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface ItemTableProps {
@@ -131,7 +131,7 @@ const ItemTable = (props: ItemTableProps) => {
                                 ),
                             )}
                         </TableCell>
-                        <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <TableCell className="flex w-full flex-wrap items-center justify-start gap-2">
                             <Link href={`/items/${row.id}`}>
                                 <Button
                                     variant="ghost"

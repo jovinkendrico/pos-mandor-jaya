@@ -16,7 +16,7 @@ import {
 } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface PageProps {
@@ -73,12 +73,13 @@ const PurchaseIndex = (props: PageProps) => {
         closeModal: closeDeleteModal,
     } = useDisclosure();
 
-    useMemo(() => {
+    useEffect(() => {
         if (
             flash?.success === 'Pembelian berhasil ditambahkan.' ||
             flash?.success === 'Pembelian berhasil diperbarui.'
         ) {
             toast.success(flash.success);
+            flash.success = null;
         }
     }, [flash]);
 

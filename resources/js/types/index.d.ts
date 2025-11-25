@@ -1,3 +1,4 @@
+import { PurchaseStatus, SaleStatus } from '@/constants/enum';
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
@@ -171,7 +172,7 @@ export interface ItemUom {
 
 export type IItemUOM = Pick<
     ItemUom,
-    'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
+    'id' | 'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
 >;
 
 export interface ItemStockMovement {
@@ -227,8 +228,8 @@ export interface PageProps {
     auth: Auth;
     [key: string]: unknown;
     flash: {
-        success?: string;
-        error?: string;
+        success?: string | null;
+        error?: string | null;
     };
 }
 
@@ -250,20 +251,6 @@ export interface PaginatedData<T> {
     from: number;
     to: number;
     total: number;
-}
-
-export enum PurchaseStatus {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
-}
-export enum SaleStatus {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
-}
-
-export enum ReturnType {
-    STOCK_ONLY = 'stock_only',
-    STOCK_AND_REFUND = 'stock_and_refund',
 }
 
 export interface Purchase {
@@ -363,7 +350,7 @@ export interface Sale {
     total_profit: number;
     status?: SaleStatus;
     notes: string;
-    details: PurchaseDetail[];
+    details: SaleDetail[];
 }
 
 export type ISale = Pick<
@@ -408,6 +395,7 @@ export interface SaleDetail {
     subtotal?: number;
     cost?: number;
     profit?: number;
+    profit_adjustment?: number;
 }
 
 export type ISaleDetail = Pick<
@@ -424,6 +412,7 @@ export type ISaleDetail = Pick<
     | 'subtotal'
     | 'cost'
     | 'profit'
+    | 'profit_adjustment'
 >;
 
 export interface PurchaseReturn {
@@ -434,7 +423,7 @@ export interface PurchaseReturn {
     return_date: Date;
     return_type: ReturnType;
     refund_bank_id?: number;
-    refund_method?: number;
+    refund_method?: RefundMethod;
     total_amount: number;
     status: PurchaseStatus;
     ppn_percent?: number;
@@ -471,6 +460,90 @@ export type IPurchaseReturn = Pick<
     purchase: IPurchase;
     details: IPurchaseDetail[];
 };
+
+export interface SaleReturn {
+    id: number;
+    sale_id: number;
+    sale: Sale;
+    return_number: string;
+    return_date: Date;
+    return_type: ReturnType;
+    refund_bank_id?: number;
+    refund_method?: RefundMethod;
+    total_amount: number;
+    total_profit_adjustment: number;
+    total_cost: number;
+    status: SaleStatus;
+    ppn_percent?: number;
+    ppn_amount?: number;
+    subtotal: number;
+    discount1_percent?: number;
+    discount2_percent?: number;
+    discount1_amount?: number;
+    discount2_amount?: number;
+    reason?: string;
+    details: SaleReturnDetail[];
+}
+
+export type ISaleReturn = Pick<
+    SaleReturn,
+    | 'id'
+    | 'sale_id'
+    | 'return_number'
+    | 'return_date'
+    | 'return_type'
+    | 'refund_bank_id'
+    | 'refund_method'
+    | 'total_amount'
+    | 'total_profit_adjustment'
+    | 'total_cost'
+    | 'status'
+    | 'ppn_percent'
+    | 'ppn_amount'
+    | 'subtotal'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'discount1_amount'
+    | 'discount2_amount'
+    | 'reason'
+> & {
+    sale: ISale;
+    details: ISaleDetail[];
+};
+
+export interface SaleReturnDetail {
+    id?: number;
+    sale_return_id: number;
+    item_id: number;
+    item?: IItem;
+    item_uom_id: number;
+    item_uom?: IItemUOM;
+    quantity: number;
+    price: number;
+    discount1_percent?: number;
+    discount1_amount?: number;
+    discount2_percent?: number;
+    discount2_amount?: number;
+    subtotal?: number;
+    cost?: number;
+    profit_adjustment?: number;
+}
+
+export type ISaleReturnDetail = Pick<
+    SaleReturnDetail,
+    | 'id'
+    | 'item_id'
+    | 'item_uom_id'
+    | 'item_uom'
+    | 'item'
+    | 'quantity'
+    | 'price'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'subtotal'
+    | 'cost'
+    | 'profit_adjustment'
+>;
 
 export interface ChartOfAccount {
     id: number;

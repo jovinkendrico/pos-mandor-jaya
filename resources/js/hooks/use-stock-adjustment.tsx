@@ -1,4 +1,4 @@
-import { store, destroy } from '@/routes/stock-adjustments';
+import { destroy, store } from '@/routes/stock-adjustments';
 import { router, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 
@@ -11,19 +11,14 @@ interface StockAdjustmentFormData {
 }
 
 const useStockAdjustment = (closeModal: () => void = () => {}) => {
-    const {
-        data,
-        setData,
-        errors,
-        processing,
-        reset,
-    } = useForm<StockAdjustmentFormData>({
-        item_id: '',
-        quantity: '',
-        unit_cost: '',
-        adjustment_date: new Date(),
-        notes: '',
-    });
+    const { data, setData, errors, processing, reset } =
+        useForm<StockAdjustmentFormData>({
+            item_id: '',
+            quantity: '',
+            unit_cost: '',
+            adjustment_date: new Date(),
+            notes: '',
+        });
 
     const handleSubmit = (e?: React.FormEvent) => {
         if (e) {
@@ -73,4 +68,3 @@ const useStockAdjustment = (closeModal: () => void = () => {}) => {
 };
 
 export default useStockAdjustment;
-

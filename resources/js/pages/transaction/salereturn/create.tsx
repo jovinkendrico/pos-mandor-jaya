@@ -2,53 +2,14 @@ import PageTitle from '@/components/page-title';
 import SaleReturnForm from '@/components/transaction/salereturns/salereturn-form';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/sale-returns';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-
-interface Customer {
-    id: number;
-    name: string;
-}
-
-interface Item {
-    id: number;
-    code: string;
-    name: string;
-}
-
-interface ItemUom {
-    id: number;
-    uom_name: string;
-}
-
-interface SaleDetail {
-    id: number;
-    item: Item;
-    item_uom: ItemUom;
-    quantity: string;
-    price: string;
-    discount1_percent: string;
-    discount2_percent: string;
-}
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: Customer;
-    sale_date: string;
-    ppn_percent: string;
-    details: SaleDetail[];
-}
-
-interface Bank {
-    id: number;
-    name: string;
-}
+import { BreadcrumbItem, IBank, ISale } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    sales: Sale[];
+    sales: ISale[];
     returnedQuantities?: Record<number, number>;
-    banks?: Bank[];
+    banks?: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -66,15 +27,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SaleReturnCreate({ sales, returnedQuantities = {}, banks = [] }: PageProps) {
+export default function SaleReturnCreate({
+    sales,
+    returnedQuantities = {},
+    banks = [],
+}: PageProps) {
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Tambah Retur Jual" />
-                <PageTitle title="Tambah Retur Penjualan" />
-                <SaleReturnForm sales={sales} returnedQuantities={returnedQuantities} banks={banks} />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle title="Tambah Retur Penjualan" />
+                </div>
+                <SaleReturnForm
+                    sales={sales}
+                    returnedQuantities={returnedQuantities}
+                    banks={banks}
+                />
             </AppLayout>
         </>
     );
 }
-

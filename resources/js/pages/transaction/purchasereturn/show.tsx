@@ -15,8 +15,8 @@ import {
 } from '@/lib/utils';
 import { index } from '@/routes/purchase-returns';
 import { BreadcrumbItem, IPurchaseReturn } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { CheckCircle2, Trash2, XCircle } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
@@ -92,15 +92,6 @@ const PurchaseReturnShow = (props: PageProps) => {
         );
     };
 
-    const handleDelete = () => {
-        if (confirm('Hapus retur pembelian ini?')) {
-            router.delete(`/purchase-returns/${purchase_return.id}`, {
-                onSuccess: () => toast.success('Retur pembelian dihapus'),
-                onError: () => toast.error('Gagal menghapus retur'),
-            });
-        }
-    };
-
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -108,9 +99,14 @@ const PurchaseReturnShow = (props: PageProps) => {
 
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <PageTitle
-                            title={`Retur Beli ${purchase_return.return_number}`}
-                        />
+                        <div className="flex flex-row items-center gap-2">
+                            <Link href={index().url}>
+                                <ArrowLeft className="h-8 w-8" />
+                            </Link>
+                            <PageTitle
+                                title={`Retur Beli ${purchase_return.return_number}`}
+                            />
+                        </div>
                         <div className="mt-2 flex items-center gap-2">
                             <Badge
                                 variant={
@@ -133,13 +129,6 @@ const PurchaseReturnShow = (props: PageProps) => {
                     <div className="flex gap-2">
                         {purchase_return.status === 'pending' && (
                             <>
-                                <Button
-                                    onClick={handleDelete}
-                                    className="btn-danger"
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Hapus
-                                </Button>
                                 <Button
                                     onClick={openConfirmModal}
                                     className="btn-primary"
