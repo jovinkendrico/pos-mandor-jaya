@@ -1,23 +1,15 @@
 import PageTitle from '@/components/page-title';
 import SalePaymentForm from '@/components/transaction/sale-payments/sale-payment-form';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Bank, SalePayment } from '@/types';
-import { Head } from '@inertiajs/react';
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: { name: string };
-    sale_date: string;
-    total_amount: number;
-    total_paid?: number;
-    remaining_amount?: number;
-}
+import { index } from '@/routes/sale-payments';
+import { BreadcrumbItem, IBank, ISale, ISalePayment } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    payment: SalePayment;
-    sales: Sale[];
-    banks: Bank[];
+    sale_payment: ISalePayment;
+    sales: ISale[];
+    banks: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -35,13 +27,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SalePaymentEdit({ payment, sales, banks }: PageProps) {
+const SalePaymentEdit = (props: PageProps) => {
+    const { sale_payment, sales, banks } = props;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit Pembayaran ${payment.payment_number}`} />
-            <PageTitle title={`Edit Pembayaran ${payment.payment_number}`} />
-            <SalePaymentForm payment={payment} sales={sales} banks={banks} />
+            <Head title={`Edit Pembayaran ${sale_payment.payment_number}`} />
+            <div className="flex flex-row items-center gap-2">
+                <Link href={index().url}>
+                    <ArrowLeft className="h-8 w-8" />
+                </Link>
+                <PageTitle
+                    title={`Edit Pembayaran ${sale_payment.payment_number}`}
+                />
+            </div>
+            <SalePaymentForm
+                sale_payment={sale_payment}
+                sales={sales}
+                banks={banks}
+            />
         </AppLayout>
     );
-}
+};
 
+export default SalePaymentEdit;

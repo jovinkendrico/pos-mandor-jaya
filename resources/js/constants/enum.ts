@@ -23,6 +23,11 @@ export enum PurchasePaymentStatus {
     CONFIRMED = 'confirmed',
 }
 
+export enum SalePaymentStatus {
+    PENDING = 'pending',
+    CONFIRMED = 'confirmed',
+}
+
 export enum PaymentMethod {
     CASH = 'cash',
     TRANSFER = 'transfer',

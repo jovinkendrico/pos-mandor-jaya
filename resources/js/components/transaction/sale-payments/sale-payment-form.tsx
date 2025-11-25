@@ -1,3 +1,4 @@
+import { DatePicker } from '@/components/date-picker';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -20,294 +22,224 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { formatCurrency, parseCurrency } from '@/lib/utils';
-import { router, useForm } from '@inertiajs/react';
+import { PaymentMethod, SalePaymentStatus } from '@/constants/enum';
+import useSalePayments from '@/hooks/use-sale-payment';
+import { formatCurrency, formatNumberWithSeparator } from '@/lib/utils';
+import { IBank, ISale, ISalePayment } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { Bank, SalePayment } from '@/types';
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: { name: string };
-    sale_date: string;
-    total_amount: number;
-    total_paid?: number;
-    remaining_amount?: number;
-}
 
 interface SalePaymentFormProps {
-    payment?: SalePayment;
-    sales: Sale[];
-    banks: Bank[];
+    sale_payment?: ISalePayment;
+    sales: ISale[];
+    banks: IBank[];
 }
 
-export default function SalePaymentForm({
-    payment,
-    sales,
-    banks,
-}: SalePaymentFormProps) {
-    const [displayAmounts, setDisplayAmounts] = useState<Record<number, string>>({});
-    // Store selected sales data for calculations
-    const [selectedSales, setSelectedSales] = useState<Record<number, Sale>>({});
+const SalePaymentForm = (props: SalePaymentFormProps) => {
+    const { sale_payment, sales, banks } = props;
 
-    const form = useForm({
-        payment_date: payment?.payment_date || new Date().toISOString().split('T')[0],
-        items: (payment?.items?.length
-            ? payment.items.map((item) => ({
-                  sale_id: item.sale_id,
-                  amount: item.amount,
-              }))
-            : [{ sale_id: 0, amount: 0 }]) as Array<{ sale_id: number; amount: number }>,
-        bank_id: payment?.bank_id ? payment.bank_id.toString() : undefined,
-        payment_method: payment?.payment_method || 'cash',
-        reference_number: payment?.reference_number || '',
-        notes: payment?.notes || '',
-    });
+    const [isReady, setIsReady] = useState(false);
+    const [amountDisplayValues, setAmountDisplayValues] = useState<string[]>(
+        [],
+    );
+
+    const {
+        data: dataSalePayment,
+        setData: setDataSalePayment,
+        processing: processingSalePayment,
+        errors: errorsSalePayment,
+        reset: resetSalePayment,
+
+        addInvoice,
+        removeInvoice,
+
+        handleSubmit: handleSubmitSalePayment,
+        handleCancel: handleCancelSalePayment,
+        handleChangeInvoice,
+        handleAmountChange,
+    } = useSalePayments();
 
     useEffect(() => {
-        if (payment?.items) {
-            const amounts: Record<number, string> = {};
-            const salesMap: Record<number, Sale> = {};
-            payment.items.forEach((item) => {
-                amounts[item.sale_id] = formatCurrency(item.amount);
-                const sale = sales.find((s) => s.id === item.sale_id);
-                if (sale) {
-                    salesMap[item.sale_id] = sale;
-                }
-            });
-            setDisplayAmounts(amounts);
-            setSelectedSales(salesMap);
+        if (sale_payment) {
+            setDataSalePayment(
+                'payment_date',
+                sale_payment.payment_date,
+            );
+            setDataSalePayment(
+                'payment_method',
+                sale_payment.payment_method,
+            );
+            setDataSalePayment('bank_id', sale_payment.bank_id ?? null);
+            setDataSalePayment(
+                'reference_number',
+                sale_payment.reference_number ?? '',
+            );
+            setDataSalePayment('notes', sale_payment.notes ?? '');
+            setDataSalePayment(
+                'status',
+                sale_payment.status as SalePaymentStatus,
+            );
+            const formattedAmount = sale_payment.items.map((item) =>
+                item.amount ? formatNumberWithSeparator(item.amount) : '0',
+            );
+            setAmountDisplayValues(formattedAmount);
+            setDataSalePayment('items', sale_payment.items);
+            setIsReady(true);
+        } else {
+            resetSalePayment();
+            setAmountDisplayValues([]);
+            setIsReady(true);
         }
-    }, [payment, sales]);
+    }, [sale_payment, setDataSalePayment, resetSalePayment]);
 
-    // Convert sales to options for Combobox
-    const saleComboboxOptions: ComboboxOption[] = sales.map((s) => ({
-        value: String(s.id),
-        label: `${s.sale_number} - ${s.customer?.name || 'No Customer'} (${formatCurrency(s.total_amount)})`,
-    }));
+    const saleComboboxOptions: ComboboxOption[] = sales.map(
+        (sale) => ({
+            value: sale.id.toString(),
+            label: `${sale.sale_number} - ${sale.customer.name} - ${formatCurrency(sale.total_amount)}`,
+        }),
+    );
 
     const totalAmount = useMemo(() => {
-        return form.data.items.reduce((sum, item) => sum + (item.amount || 0), 0);
-    }, [form.data.items]);
+        return dataSalePayment.items.reduce(
+            (sum, item) => sum + (item.amount || 0),
+            0,
+        );
+    }, [dataSalePayment.items]);
 
-    const handleAddItem = () => {
-        form.setData('items', [
-            ...form.data.items,
-            {
-                sale_id: 0,
-                amount: 0,
-            },
-        ]);
-    };
-
-    const handleRemoveItem = (index: number) => {
-        if (form.data.items.length === 1) {
-            toast.error('Minimal harus ada 1 invoice');
-            return;
-        }
-        const newItems = form.data.items.filter((_, i) => i !== index);
-        form.setData('items', newItems);
-        const saleId = form.data.items[index]?.sale_id;
-        if (saleId) {
-            setDisplayAmounts((prev) => {
-                const newAmounts = { ...prev };
-                delete newAmounts[saleId];
-                return newAmounts;
-            });
-        }
-    };
-
-    const handleSaleChange = async (index: number, saleId: string) => {
-        const newItems = [...form.data.items];
-        const saleIdNum = Number(saleId);
-
-        // Find sale in local sales first
-        let sale = sales.find((s) => s.id === saleIdNum);
-
-        // If not found, fetch from API
-        if (!sale) {
-            try {
-                const response = await fetch(`/sale-payments/search-sales?id=${saleIdNum}`);
-                const data = await response.json();
-                if (data.data && data.data.length > 0) {
-                    const found = data.data[0];
-                    if (found.sale) {
-                        sale = {
-                            id: found.sale.id,
-                            sale_number: found.sale.sale_number,
-                            customer: found.sale.customer,
-                            sale_date: found.sale.sale_date,
-                            total_amount: found.sale.total_amount,
-                            total_paid: found.sale.total_paid,
-                            remaining_amount: found.sale.remaining_amount,
-                        };
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching sale:', error);
-            }
-        }
-
-        if (sale) {
-            // Store sale data
-            setSelectedSales((prev) => ({
-                ...prev,
-                [sale.id]: sale,
-            }));
-
-            // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
-            const remaining = sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0));
-            newItems[index] = {
-                ...newItems[index],
-                sale_id: saleIdNum,
-                amount: Math.min(newItems[index].amount || 0, remaining),
-            };
-            form.setData('items', newItems);
-            setDisplayAmounts((prev) => ({
-                ...prev,
-                [sale.id]: formatCurrency(newItems[index].amount),
-            }));
-        }
-    };
-
-    const handleAmountChange = (index: number, value: string) => {
-        const rawValue = parseCurrency(value) || 0;
-        const newItems = [...form.data.items];
-        const saleId = newItems[index].sale_id;
-        const sale = selectedSales[saleId] || sales.find((s) => s.id === saleId);
-
-        if (sale) {
-            // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
-            const remaining = sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0));
-            const amount = Math.min(Math.max(0, rawValue), remaining);
-            newItems[index] = {
-                ...newItems[index],
-                amount,
-            };
-            form.setData('items', newItems);
-            setDisplayAmounts((prev) => ({
-                ...prev,
-                [saleId]: formatCurrency(amount),
-            }));
-        } else if (rawValue > 0) {
-            // Allow typing even if sale not selected yet
-            newItems[index] = {
-                ...newItems[index],
-                amount: rawValue,
-            };
-            form.setData('items', newItems);
-            if (saleId) {
-                setDisplayAmounts((prev) => ({
-                    ...prev,
-                    [saleId]: formatCurrency(rawValue),
-                }));
-            }
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (form.data.items.length === 0) {
-            toast.error('Minimal harus ada 1 invoice');
-            return;
-        }
-
-        if (form.data.items.some((item) => !item.sale_id || item.amount <= 0)) {
-            toast.error('Semua invoice harus dipilih dan memiliki amount > 0');
-            return;
-        }
-
-        const url = payment
-            ? `/sale-payments/${payment.id}`
-            : '/sale-payments';
-
-        form.submit(payment ? 'put' : 'post', url, {
-            onSuccess: () => {
-                toast.success(
-                    payment
-                        ? 'Pembayaran berhasil diperbarui'
-                        : 'Pembayaran berhasil ditambahkan',
-                );
-                router.visit('/sale-payments');
-            },
-            onError: () => {
-                toast.error('Terjadi kesalahan, periksa input Anda.');
-            },
-        });
-    };
+    if (!isReady) {
+        return <Skeleton className="h-full w-full" />;
+    }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <Card>
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmitSalePayment(sale_payment);
+            }}
+            className="space-y-6"
+        >
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Informasi Pembayaran</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="payment_date">Tanggal Pembayaran *</Label>
-                            <Input
-                                id="payment_date"
-                                type="date"
-                                value={form.data.payment_date}
-                                onChange={(e) => form.setData('payment_date', e.target.value)}
-                                required
+                        <div className="flex flex-col items-start gap-2">
+                            <Label htmlFor="payment_date">
+                                Tanggal Pembayaran{' '}
+                                <span className="text-red-500">*</span>
+                            </Label>
+                            <DatePicker
+                                value={dataSalePayment.payment_date}
+                                onChange={(value) =>
+                                    setDataSalePayment(
+                                        'payment_date',
+                                        value as Date,
+                                    )
+                                }
+                                className="input-box"
                             />
-                            <InputError message={form.errors.payment_date} />
+                            <InputError
+                                message={errorsSalePayment.payment_date}
+                            />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="payment_method">Metode Pembayaran *</Label>
+                            <Label htmlFor="payment_method">
+                                Metode Pembayaran{' '}
+                                <span className="text-red-500">*</span>
+                            </Label>
                             <Select
-                                value={form.data.payment_method}
-                                onValueChange={(value) => form.setData('payment_method', value as 'cash' | 'transfer' | 'giro' | 'cek' | 'other')}
+                                value={dataSalePayment.payment_method}
+                                onValueChange={(value) => {
+                                    setDataSalePayment(
+                                        'payment_method',
+                                        value as PaymentMethod,
+                                    );
+
+                                    if (value === PaymentMethod.CASH) {
+                                        setDataSalePayment('bank_id', null);
+                                    }
+                                }}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="combobox">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="cash">Tunai</SelectItem>
-                                    <SelectItem value="transfer">Transfer</SelectItem>
+                                    <SelectItem value="transfer">
+                                        Transfer
+                                    </SelectItem>
                                     <SelectItem value="giro">Giro</SelectItem>
                                     <SelectItem value="cek">Cek</SelectItem>
-                                    <SelectItem value="other">Lainnya</SelectItem>
+                                    <SelectItem value="other">
+                                        Lainnya
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError message={form.errors.payment_method} />
+                            <InputError
+                                message={errorsSalePayment.payment_method}
+                            />
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="bank_id">Bank</Label>
                             <Select
-                                value={form.data.bank_id}
-                                onValueChange={(value) => form.setData('bank_id', value)}
+                                value={
+                                    dataSalePayment.bank_id?.toString() ??
+                                    ''
+                                }
+                                onValueChange={(value) =>
+                                    setDataSalePayment(
+                                        'bank_id',
+                                        Number(value),
+                                    )
+                                }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger
+                                    className="combobox"
+                                    disabled={
+                                        dataSalePayment.payment_method ===
+                                        PaymentMethod.CASH
+                                    }
+                                >
                                     <SelectValue placeholder="Pilih bank..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {banks.map((bank) => (
-                                        <SelectItem key={bank.id} value={bank.id.toString()}>
+                                        <SelectItem
+                                            key={bank.id}
+                                            value={bank.id.toString()}
+                                        >
                                             {bank.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <InputError message={form.errors.bank_id} />
+                            <InputError
+                                message={errorsSalePayment.bank_id}
+                            />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="reference_number">No. Referensi</Label>
+                            <Label htmlFor="reference_number">
+                                No. Referensi
+                            </Label>
                             <Input
                                 id="reference_number"
-                                value={form.data.reference_number}
-                                onChange={(e) => form.setData('reference_number', e.target.value)}
+                                value={dataSalePayment.reference_number}
+                                onChange={(e) =>
+                                    setDataSalePayment(
+                                        'reference_number',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="No. transfer, cek, dll"
+                                className="input-box"
                             />
-                            <InputError message={form.errors.reference_number} />
+                            <InputError
+                                message={errorsSalePayment.reference_number}
+                            />
                         </div>
                     </div>
 
@@ -315,119 +247,218 @@ export default function SalePaymentForm({
                         <Label htmlFor="notes">Catatan</Label>
                         <Textarea
                             id="notes"
-                            value={form.data.notes}
-                            onChange={(e) => form.setData('notes', e.target.value)}
+                            value={dataSalePayment.notes}
+                            onChange={(e) =>
+                                setDataSalePayment('notes', e.target.value)
+                            }
                             rows={3}
+                            className="input-box"
                         />
-                        <InputError message={form.errors.notes} />
+                        <InputError message={errorsSalePayment.notes} />
                     </div>
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="content">
                 <CardHeader>
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                         <CardTitle>Invoice Penjualan</CardTitle>
-                        <Button type="button" onClick={handleAddItem} variant="outline" size="sm">
-                            <Plus className="h-4 w-4 mr-2" />
+                        <Button
+                            type="button"
+                            onClick={addInvoice}
+                            variant="outline"
+                            size="sm"
+                            className="btn-primary"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
                             Tambah Invoice
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <Table className="content">
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>Invoice</TableHead>
-                                    <TableHead>Customer</TableHead>
-                                    <TableHead>Total Invoice</TableHead>
-                                    <TableHead>Sudah Dibayar</TableHead>
-                                    <TableHead>Sisa</TableHead>
-                                    <TableHead className="text-right">Jumlah Pembayaran</TableHead>
+                                <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="min-w-[200px] text-center">
+                                        Invoice
+                                    </TableHead>
+                                    <TableHead className="min-w-[100px] text-center">
+                                        Customer
+                                    </TableHead>
+                                    <TableHead className="min-w-[100px] text-center">
+                                        Total Invoice
+                                    </TableHead>
+                                    <TableHead className="min-w-[100px] text-center">
+                                        Sudah Dibayar
+                                    </TableHead>
+                                    <TableHead className="min-w-[100px] text-center">
+                                        Sisa
+                                    </TableHead>
+                                    <TableHead className="min-w-[100px] text-center">
+                                        Jumlah Pembayaran
+                                    </TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {form.data.items.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center text-muted-foreground">
-                                            Belum ada invoice. Klik "Tambah Invoice" untuk menambahkan.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    form.data.items.map((item, index) => {
-                                        const sale = selectedSales[item.sale_id] || sales.find((s) => s.id === item.sale_id);
-                                        // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
+                                {dataSalePayment.items.map(
+                                    (item, index) => {
+                                        const sale = sales.find(
+                                            (s) =>
+                                                s.id ===
+                                                Number(item.sale_id),
+                                        );
                                         const remaining = sale
-                                            ? (sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0)))
+                                            ? (sale.remaining_amount ??
+                                              Number(sale.total_amount) -
+                                                  (sale.total_paid || 0))
                                             : 0;
 
                                         return (
                                             <TableRow key={index}>
                                                 <TableCell>
                                                     <Combobox
-                                                        options={saleComboboxOptions}
-                                                        value={item.sale_id ? item.sale_id.toString() : ''}
-                                                        onValueChange={(value) => handleSaleChange(index, value)}
+                                                        options={
+                                                            saleComboboxOptions
+                                                        }
+                                                        value={
+                                                            item.sale_id
+                                                                ? item.sale_id.toString()
+                                                                : ''
+                                                        }
+                                                        onValueChange={(
+                                                            value,
+                                                        ) => {
+                                                            handleChangeInvoice(
+                                                                index,
+                                                                'sale_id',
+                                                                value,
+                                                            );
+                                                        }}
                                                         placeholder="Pilih invoice..."
                                                         searchPlaceholder="Cari invoice..."
-                                                        className="w-[200px]"
-                                                        searchUrl="/sale-payments/search-sales"
-                                                        searchParam="search"
+                                                        className="combobox"
                                                     />
-                                                    <InputError message={form.errors[`items.${index}.sale_id`]} />
+                                                    <InputError
+                                                        message={
+                                                            (
+                                                                errorsSalePayment as Record<
+                                                                    string,
+                                                                    string
+                                                                >
+                                                            )[
+                                                                `items[${index}].sale_id`
+                                                            ]
+                                                        }
+                                                    />
                                                 </TableCell>
-                                                <TableCell>
-                                                    {sale?.customer?.name || '-'}
+                                                <TableCell className="text-center">
+                                                    {sale?.customer?.name ||
+                                                        '-'}
                                                 </TableCell>
-                                                <TableCell>
-                                                    {sale ? formatCurrency(sale.total_amount) : '-'}
+                                                <TableCell className="text-center">
+                                                    {sale
+                                                        ? formatCurrency(
+                                                              sale.total_amount,
+                                                          )
+                                                        : '-'}
                                                 </TableCell>
-                                                <TableCell>
-                                                    {sale ? formatCurrency(sale.total_paid || 0) : '-'}
+                                                <TableCell className="text-center">
+                                                    {sale
+                                                        ? formatCurrency(
+                                                              sale.total_paid ||
+                                                                  0,
+                                                          )
+                                                        : '-'}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="text-center">
                                                     {sale ? (
-                                                        <span className={remaining > 0 ? 'text-orange-600 font-medium' : 'text-green-600 font-medium'}>
-                                                            {formatCurrency(remaining)}
+                                                        <span
+                                                            className={
+                                                                remaining > 0
+                                                                    ? 'font-medium text-red-600 dark:text-danger-500'
+                                                                    : 'font-medium text-green-600 dark:text-emerald-500'
+                                                            }
+                                                        >
+                                                            {formatCurrency(
+                                                                remaining,
+                                                            )}
                                                         </span>
-                                                    ) : '-'}
+                                                    ) : (
+                                                        '-'
+                                                    )}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="text-center">
                                                     <Input
                                                         type="text"
-                                                        value={displayAmounts[item.sale_id] || ''}
-                                                        onChange={(e) => handleAmountChange(index, e.target.value)}
+                                                        value={
+                                                            amountDisplayValues[
+                                                                index
+                                                            ] ?? '0'
+                                                        }
+                                                        onChange={(e) => {
+                                                            handleAmountChange(
+                                                                index,
+                                                                e,
+                                                                amountDisplayValues,
+                                                                setAmountDisplayValues,
+                                                            );
+                                                        }}
                                                         placeholder="0"
-                                                        className="text-right"
-                                                        disabled={!item.sale_id}
+                                                        className="input-box text-right"
+                                                        disabled={
+                                                            !item.sale_id
+                                                        }
                                                     />
-                                                    <InputError message={form.errors[`items.${index}.amount`]} />
+                                                    <InputError
+                                                        message={
+                                                            (
+                                                                errorsSalePayment as Record<
+                                                                    string,
+                                                                    string
+                                                                >
+                                                            )[
+                                                                `items[${index}].amount`
+                                                            ]
+                                                        }
+                                                        className="text-left"
+                                                    />
                                                 </TableCell>
                                                 <TableCell>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleRemoveItem(index)}
-                                                        disabled={form.data.items.length === 1}
+                                                        onClick={() =>
+                                                            removeInvoice(index)
+                                                        }
+                                                        disabled={
+                                                            dataSalePayment
+                                                                .items
+                                                                .length === 1
+                                                        }
+                                                        className="btn-trash"
                                                     >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                        <Trash2 />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
                                         );
-                                    })
+                                    },
                                 )}
                             </TableBody>
                         </Table>
                     </div>
 
                     <div className="mt-4 flex justify-end">
-                        <div className="text-right space-y-1">
-                            <div className="text-sm text-muted-foreground">Total Pembayaran</div>
-                            <div className="text-2xl font-bold">{formatCurrency(totalAmount)}</div>
+                        <div className="space-y-1 text-right">
+                            <div className="text-sm text-muted-foreground">
+                                Total Pembayaran
+                            </div>
+                            <div className="text-2xl font-bold">
+                                {formatCurrency(totalAmount)}
+                            </div>
                         </div>
                     </div>
                 </CardContent>
@@ -437,15 +468,26 @@ export default function SalePaymentForm({
                 <Button
                     type="button"
                     variant="outline"
-                    onClick={() => router.visit('/sale-payments')}
+                    onClick={handleCancelSalePayment}
+                    className="btn-secondary"
                 >
-                    Batal
+                    Reset
                 </Button>
-                <Button type="submit" disabled={form.processing}>
-                    {form.processing ? 'Menyimpan...' : payment ? 'Perbarui' : 'Simpan'}
+                <Button
+                    type="submit"
+                    disabled={processingSalePayment}
+                    className="btn-primary"
+                >
+                    {processingSalePayment
+                        ? 'Menyimpan...'
+                        : sale_payment
+                          ? 'Perbarui'
+                          : 'Simpan'}
                 </Button>
             </div>
         </form>
     );
-}
+};
+
+export default SalePaymentForm;
 

@@ -634,7 +634,7 @@ export type IPurchasePayment = Pick<
 export interface SalePayment {
     id: number;
     payment_number: string;
-    payment_date: string;
+    payment_date: Date;
     total_amount: number;
     bank_id?: number;
     bank?: Bank;
@@ -650,7 +650,7 @@ export interface SalePayment {
 }
 
 export interface SalePaymentItem {
-    id: number;
+    id?: number;
     sale_payment_id: number;
     sale_id: number;
     sale?: Sale;
@@ -660,6 +660,13 @@ export interface SalePaymentItem {
     [key: string]: unknown;
 }
 
+export type ISalePaymentItem = Pick<
+    SalePaymentItem,
+    'id' | 'sale_id' | 'sale' | 'amount'
+>;
+
+export type ISalePaymentFormItem = Omit<ISalePaymentItem, 'sale'>;
+
 export type ISalePayment = Pick<
     SalePayment,
     | 'id'
@@ -667,13 +674,14 @@ export type ISalePayment = Pick<
     | 'payment_date'
     | 'total_amount'
     | 'bank_id'
-    | 'payment_method'
     | 'reference_number'
     | 'notes'
     | 'status'
 > & {
-    sale: ISale;
-    items: IItem[];
+    sales?: ISale[];
+    bank?: IBank;
+    items: ISalePaymentItem[];
+    payment_method: PaymentMethod;
 };
 
 export interface CashIn {
