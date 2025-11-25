@@ -33,16 +33,16 @@ class PurchaseReturn extends Model
     ];
 
     protected $casts = [
-        'return_date' => 'date',
-        'subtotal' => 'decimal:2',
-        'discount1_percent' => 'decimal:2',
-        'discount1_amount' => 'decimal:2',
-        'discount2_percent' => 'decimal:2',
-        'discount2_amount' => 'decimal:2',
+        'return_date'          => 'date',
+        'subtotal'             => 'decimal:2',
+        'discount1_percent'    => 'decimal:2',
+        'discount1_amount'     => 'decimal:2',
+        'discount2_percent'    => 'decimal:2',
+        'discount2_amount'     => 'decimal:2',
         'total_after_discount' => 'decimal:2',
-        'ppn_percent' => 'decimal:2',
-        'ppn_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'ppn_percent'          => 'decimal:2',
+        'ppn_amount'           => 'decimal:2',
+        'total_amount'         => 'decimal:2',
     ];
 
     public function purchase(): BelongsTo
@@ -55,15 +55,20 @@ class PurchaseReturn extends Model
         return $this->hasMany(PurchaseReturnDetail::class);
     }
 
-    public static function generateReturnNumber(): string
+    public static function generateReturnNumber($returnDate = null): string
     {
-        $date = now()->format('Ymd');
-        $lastReturn = self::whereDate('created_at', now()->toDateString())
+        $date = $returnDate ? date('Ymd', strtotime($returnDate)) : now()->format('Ymd');
+
+        // Use lockForUpdate to prevent race conditions in concurrent requests
+        // Include soft deleted records to continue sequence even if return was deleted
+        $lastReturn = static::withTrashed()
+            ->whereDate('return_date', $returnDate ? date('Y-m-d', strtotime($returnDate)) : today())
+            ->lockForUpdate()
             ->orderBy('id', 'desc')
             ->first();
 
-        $sequence = $lastReturn ? (int) substr($lastReturn->return_number, -6) + 1 : 1;
+        $sequence = $lastReturn ? (int) substr($lastReturn->return_number, -4) + 1 : 1;
 
-        return 'RB' . $date . str_pad($sequence, 6, '0', STR_PAD_LEFT);
+        return 'RB' . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }
