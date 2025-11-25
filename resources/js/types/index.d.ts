@@ -228,8 +228,8 @@ export interface PageProps {
     auth: Auth;
     [key: string]: unknown;
     flash: {
-        success?: string;
-        error?: string;
+        success?: string | null;
+        error?: string | null;
     };
 }
 

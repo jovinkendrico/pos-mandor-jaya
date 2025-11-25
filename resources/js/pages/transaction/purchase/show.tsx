@@ -67,14 +67,18 @@ const PurchaseShow = (props: PageProps) => {
 
     const handleConfirm = () => {
         router.post(
-            print(purchase.id).url,
+            `/purchases/${purchase.id}/confirm`,
             {},
             {
                 onSuccess: () => {
                     toast.success('Pembelian dikonfirmasi');
                     closeConfirmModal();
                 },
-                onError: () => toast.error('Gagal konfirmasi pembelian'),
+                onError: (errors: Record<string, string>) => {
+                    const message = errors.msg || 'Gagal konfirmasi pembelian';
+                    closeConfirmModal();
+                    toast.error(message);
+                },
             },
         );
     };

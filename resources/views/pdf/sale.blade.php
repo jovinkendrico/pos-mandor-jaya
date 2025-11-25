@@ -9,135 +9,135 @@
             size: 21cm 14.85cm;
             margin: 0.5cm;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: Arial, sans-serif;
             font-size: 11px;
             padding: 10px;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 15px;
             border-bottom: 2px solid #000;
             padding-bottom: 8px;
         }
-        
+
         .header h1 {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
         }
-        
+
         .info-section {
             margin-bottom: 12px;
         }
-        
+
         .info-row {
             display: flex;
             margin-bottom: 5px;
         }
-        
+
         .info-label {
             width: 120px;
             font-weight: bold;
         }
-        
+
         .info-value {
             flex: 1;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
             font-size: 10px;
         }
-        
+
         table th,
         table td {
             border: 1px solid #000;
             padding: 5px;
             text-align: left;
         }
-        
+
         table th {
             background-color: #f0f0f0;
             font-weight: bold;
             text-align: center;
         }
-        
+
         table td {
             text-align: left;
         }
-        
+
         .text-right {
             text-align: right;
         }
-        
+
         .text-center {
             text-align: center;
         }
-        
+
         .footer {
             margin-top: 20px;
             padding-top: 15px;
             border-top: 1px solid #000;
         }
-        
+
         .summary-section {
             margin-top: 10px;
             width: 100%;
         }
-        
+
         .summary-table {
             width: 100%;
             border-collapse: collapse;
             margin-left: auto;
             max-width: 400px;
         }
-        
+
         .summary-table td {
             padding: 3px 5px;
             text-align: right;
         }
-        
+
         .summary-table td:first-child {
             text-align: left;
             font-weight: bold;
         }
-        
+
         .signature-section {
             margin-top: 30px;
             width: 100%;
         }
-        
+
         .signature-table {
             width: 100%;
             border-collapse: collapse;
             margin-left: auto;
             max-width: 600px;
         }
-        
+
         .signature-table td {
             width: 33.33%;
             text-align: center;
             vertical-align: bottom;
             padding: 0 15px;
         }
-        
+
         .signature-box {
             display: inline-block;
             width: 100%;
             text-align: center;
         }
-        
+
         .signature-line {
             border-top: 1px solid #000;
             margin-top: 50px;
@@ -151,7 +151,7 @@
     <div class="header">
         <h1>SALES ORDER</h1>
     </div>
-    
+
     <div class="info-section">
         <div class="info-row">
             <div class="info-label">Tanggal:</div>
@@ -184,7 +184,7 @@
         </div>
         @endif
     </div>
-    
+
     <table>
         <thead>
             <tr>
@@ -233,7 +233,7 @@
             @endif
         </tbody>
     </table>
-    
+
     <div class="footer">
         <div class="summary-section">
             <table class="summary-table">
@@ -279,7 +279,7 @@
                 @endif
             </table>
         </div>
-        
+
         <div class="signature-section">
             <table class="signature-table">
                 <tr>

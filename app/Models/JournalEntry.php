@@ -44,76 +44,66 @@ class JournalEntry extends Model
 
     /**
      * Generate unique journal number
+     * Format: JRN-YYYYMMDD-XXXXX
+     * Example: JRN-20251124-00001
+     *
+     * This method should be called within a database transaction
      */
     public static function generateJournalNumber(): string
     {
-        $maxRetries = 20;
-        $retry = 0;
+        $date = now()->format('Ymd'); // YYYYMMDD format
+        $prefix = 'JRN-' . $date . '-';
 
-        while ($retry < $maxRetries) {
-            try {
-                $date = now()->format('Ymd');
-                $prefix = 'JRN-' . $date . '-';
+        // Use a transaction with proper locking to prevent race conditions
+        return DB::transaction(function () use ($prefix) {
+            // Lock all rows with the same prefix to prevent concurrent access
+            $lastJournal = DB::table('journal_entries')
+                ->where('journal_number', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->orderBy('journal_number', 'desc')
+                ->value('journal_number');
 
-                // Use lockForUpdate to prevent race conditions
-                // Lock the entire table section to prevent concurrent access
-                $lastJournal = DB::table('journal_entries')
+            // Extract sequence number from format JRN-YYYYMMDD-XXXXX
+            // Handle both old 4-digit and new 5-digit formats
+            if ($lastJournal) {
+                // Get the part after the last dash
+                $parts = explode('-', $lastJournal);
+                $lastSequence = end($parts);
+                $sequence = (int) $lastSequence + 1;
+            } else {
+                $sequence = 1;
+            }
+
+            // Always use 5 digits for sequence number (XXXXX)
+            $journalNumber = $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+
+            // Double check if number already exists (shouldn't happen with proper locking, but just in case)
+            $exists = DB::table('journal_entries')
+                ->where('journal_number', $journalNumber)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($exists) {
+                // If it exists, find the actual last number again
+                $actualLast = DB::table('journal_entries')
                     ->where('journal_number', 'like', $prefix . '%')
                     ->lockForUpdate()
                     ->orderBy('journal_number', 'desc')
                     ->value('journal_number');
 
-                $sequence = $lastJournal ? (int) substr($lastJournal, -4) + 1 : 1;
-                $journalNumber = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-
-                // Double check if number already exists (for extra safety)
-                $exists = DB::table('journal_entries')
-                    ->where('journal_number', $journalNumber)
-                    ->lockForUpdate()
-                    ->exists();
-
-                if ($exists) {
-                    // Find the actual last number again
-                    $actualLast = DB::table('journal_entries')
-                        ->where('journal_number', 'like', $prefix . '%')
-                        ->lockForUpdate()
-                        ->orderBy('journal_number', 'desc')
-                        ->value('journal_number');
-                    $sequence = $actualLast ? (int) substr($actualLast, -4) + 1 : 1;
-                    $journalNumber = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+                if ($actualLast) {
+                    $parts = explode('-', $actualLast);
+                    $lastSequence = end($parts);
+                    $sequence = (int) $lastSequence + 1;
+                } else {
+                    $sequence = 1;
                 }
 
-                return $journalNumber;
-            } catch (\Illuminate\Database\QueryException $e) {
-                // If duplicate key error, retry with new sequence
-                if ($e->getCode() == 23000 && strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                    $retry++;
-                    if ($retry >= $maxRetries) {
-                        // Last resort: add microsecond to make it unique
-                        $date = now()->format('Ymd');
-                        $prefix = 'JRN-' . $date . '-';
-                        $microsecond = substr((string) microtime(true), -6); // Last 6 digits of microtime
-                        return $prefix . str_pad($microsecond, 6, '0', STR_PAD_LEFT);
-                    }
-                    // Longer delay for retry
-                    usleep(rand(5000, 15000));
-                    continue;
-                }
-                throw $e;
-            } catch (\Exception $e) {
-                $retry++;
-                if ($retry >= $maxRetries) {
-                    throw $e;
-                }
-                usleep(rand(5000, 15000));
+                $journalNumber = $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
             }
-        }
 
-        // Last resort: use microsecond
-        $date = now()->format('Ymd');
-        $prefix = 'JRN-' . $date . '-';
-        $microsecond = substr((string) microtime(true), -6);
-        return $prefix . str_pad($microsecond, 6, '0', STR_PAD_LEFT);
+            return $journalNumber;
+        }, 5); // Retry up to 5 times if deadlock occurs
     }
 
     /**

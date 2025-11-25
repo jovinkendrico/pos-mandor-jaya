@@ -129,16 +129,39 @@ class CashInController extends Controller
     public function store(StoreCashInRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            $cashIn = CashIn::create([
-                'cash_in_number' => CashIn::generateCashInNumber(),
-                'cash_in_date' => $request->cash_in_date,
-                'bank_id' => $request->bank_id,
-                'chart_of_account_id' => $request->chart_of_account_id,
-                'amount' => $request->amount,
-                'description' => $request->description,
-                'status' => $request->auto_post ? 'posted' : 'draft',
-                'reference_type' => 'Manual',
-            ]);
+            // Generate cash in number with retry logic to handle race conditions
+            $maxRetries = 5;
+            $cashIn = null;
+
+            for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+                try {
+                    $cashInNumber = CashIn::generateCashInNumber();
+
+                    $cashIn = CashIn::create([
+                        'cash_in_number' => $cashInNumber,
+                        'cash_in_date' => $request->cash_in_date,
+                        'bank_id' => $request->bank_id,
+                        'chart_of_account_id' => $request->chart_of_account_id,
+                        'amount' => $request->amount,
+                        'description' => $request->description,
+                        'status' => $request->auto_post ? 'posted' : 'draft',
+                        'reference_type' => 'Manual',
+                    ]);
+
+                    break; // Success, exit retry loop
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Check if it's a unique constraint violation (SQLSTATE 23000)
+                    if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'cash_in_number') || str_contains($e->getMessage(), 'cash_ins_cash_in_number_unique'))) {
+                        if ($attempt === $maxRetries - 1) {
+                            throw $e; // Re-throw on last attempt
+                        }
+                        // Wait a tiny bit before retrying (microseconds)
+                        usleep(10000 * ($attempt + 1)); // 10ms, 20ms, 30ms, etc.
+                        continue;
+                    }
+                    throw $e; // Re-throw if it's a different error
+                }
+            }
 
             // Auto post to journal if requested
             if ($request->auto_post) {

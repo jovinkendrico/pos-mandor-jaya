@@ -1,4 +1,4 @@
-import { RefundMethod } from '@/constants/enum';
+import { RefundMethod, ReturnType } from '@/constants/enum';
 import { formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
 import { store } from '@/routes/purchase-returns';
 import { IPurchaseDetail } from '@/types';
@@ -7,7 +7,7 @@ import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
-const REFUND_METHOD_OBJECT = Object.values(RefundMethod);
+const RefundMethodValues = Object.values(RefundMethod);
 
 const detailsSchema = Yup.object().shape({
     item_id: Yup.number()
@@ -33,9 +33,24 @@ const purchaseReturnSchema = Yup.object().shape({
     return_date: Yup.date().required('Tanggal retur harus diisi.'),
     return_type: Yup.string().required('Tipe retur harus dipilih.'),
     refund_bank: Yup.number().nullable(),
-    refund_method: Yup.string()
-        .nullable()
-        .oneOf(REFUND_METHOD_OBJECT, 'Metode retur tidak valid.'),
+    refund_method: Yup.mixed<RefundMethod>().when('return_type', {
+        is: ReturnType.STOCK_AND_REFUND,
+
+        then: (schema) =>
+            schema
+                .required(
+                    'Metode retur harus dipilih jika tipe retur adalah Stok & Refund.',
+                )
+                .oneOf(RefundMethodValues, 'Metode retur tidak valid.'),
+
+        otherwise: (schema) =>
+            schema
+                .nullable()
+                .oneOf(
+                    [...RefundMethodValues, null, undefined],
+                    'Metode retur tidak valid.',
+                ),
+    }),
     ppn_percent: Yup.number()
         .min(0, 'PPN tidak boleh negatif.')
         .max(100, 'PPN tidak boleh lebih dari 100.'),
@@ -56,9 +71,9 @@ const usePurchaseReturn = () => {
     } = useForm({
         purchase_id: 0,
         return_date: new Date(),
-        return_type: '',
-        refund_bank_id: 0,
-        refund_method: '',
+        return_type: ReturnType.STOCK_ONLY,
+        refund_bank_id: null as number | null,
+        refund_method: RefundMethod.CASH_REFUND,
         ppn_percent: 0,
         reason: '',
         details: [
@@ -98,6 +113,7 @@ const usePurchaseReturn = () => {
                 });
                 setError(yupErrors);
                 toast.error('Validasi gagal, periksa input Anda.');
+                console.log(yupErrors);
             }
         }
     };

@@ -33,7 +33,7 @@ import { index as cashOutIndex } from '@/routes/cash-outs';
 import { index as journalEntryIndex } from '@/routes/journal-entries';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, ShoppingCart, User2, CreditCard, BookOpen } from 'lucide-react';
+import { Database, LayoutGrid, ShoppingCart, User2, CreditCard, BookOpen, FileText } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -143,6 +143,97 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Buku Besar',
                 href: '/general-ledger',
+            },
+        ],
+    },
+    {
+        title: 'Laporan',
+        href: '/reports',
+        icon: FileText,
+        children: [
+            {
+                title: 'Laporan Penjualan',
+                href: '/reports/sale-report',
+            },
+            {
+                title: 'Laporan Pembelian',
+                href: '/reports/purchase-report',
+            },
+            {
+                title: 'Laporan Piutang Usaha',
+                href: '/reports/receivable-aging',
+            },
+            {
+                title: 'Laporan Hutang Usaha',
+                href: '/reports/payable-aging',
+            },
+            {
+                title: 'Laporan Nilai Persediaan',
+                href: '/reports/inventory-valuation',
+            },
+            {
+                title: 'Laporan Arus Kas',
+                href: '/reports/cash-flow',
+            },
+            {
+                title: 'Laporan Penjualan per Customer',
+                href: '/reports/sale-by-customer',
+            },
+            {
+                title: 'Laporan Penjualan per Item',
+                href: '/reports/sale-by-item',
+            },
+            {
+                title: 'Laporan Pembelian per Supplier',
+                href: '/reports/purchase-by-supplier',
+            },
+            {
+                title: 'Laporan Stok Minimum/Maksimum',
+                href: '/reports/stock-min-max',
+            },
+            {
+                title: 'Laporan Neraca',
+                href: '/reports/balance-sheet',
+            },
+            {
+                title: 'Laporan Retur Penjualan',
+                href: '/reports/sale-return',
+            },
+            {
+                title: 'Laporan Retur Pembelian',
+                href: '/reports/purchase-return',
+            },
+            {
+                title: 'Laporan Pembayaran Penjualan',
+                href: '/reports/sale-payment',
+            },
+            {
+                title: 'Laporan Pembayaran Pembelian',
+                href: '/reports/purchase-payment',
+            },
+            {
+                title: 'Laporan Kas Masuk/Keluar',
+                href: '/reports/cash-in-out',
+            },
+            {
+                title: 'Laporan Barang Paling Laku',
+                href: '/reports/best-seller',
+            },
+            {
+                title: 'Laporan Barang Paling Tidak Laku',
+                href: '/reports/dead-stock',
+            },
+            {
+                title: 'Laporan Perputaran Stok',
+                href: '/reports/stock-turnover',
+            },
+            {
+                title: 'Laporan Analisis Margin per Item',
+                href: '/reports/margin-by-item',
+            },
+            {
+                title: 'Laporan Analisis Margin per Customer',
+                href: '/reports/margin-by-customer',
             },
         ],
     },

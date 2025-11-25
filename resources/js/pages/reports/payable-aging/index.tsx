@@ -1,0 +1,270 @@
+import { Head, router } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import PageTitle from '@/components/page-title';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency, formatDatetoString } from '@/lib/utils';
+import { DatePicker } from '@/components/date-picker';
+import { format } from 'date-fns';
+import { useState } from 'react';
+import { Search } from 'lucide-react';
+
+interface SupplierSummary {
+    supplier_id: number | null;
+    supplier_name: string;
+    count: number;
+    total_remaining: number;
+    age_0_30: number;
+    age_31_60: number;
+    age_61_90: number;
+    age_over_90: number;
+}
+
+interface AgingData {
+    purchase_id: number;
+    purchase_number: string;
+    purchase_date: string;
+    due_date: string;
+    supplier_id: number | null;
+    supplier_name: string;
+    total_amount: number;
+    total_paid: number;
+    remaining_amount: number;
+    days_overdue: number;
+    days_until_due: number;
+    age_0_30: number;
+    age_31_60: number;
+    age_61_90: number;
+    age_over_90: number;
+}
+
+interface PageProps {
+    asOfDate: string;
+    summary: {
+        total_0_30: number;
+        total_31_60: number;
+        total_61_90: number;
+        total_over_90: number;
+        grand_total: number;
+    };
+    supplierSummary: SupplierSummary[];
+    agingData: AgingData[];
+}
+
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Laporan Hutang Usaha', href: '#' },
+];
+
+export default function PayableAgingIndex({
+    asOfDate,
+    summary,
+    supplierSummary,
+    agingData,
+}: PageProps) {
+    const [filters, setFilters] = useState({
+        as_of_date: asOfDate,
+    });
+
+    const handleFilter = () => {
+        router.get('/reports/payable-aging', filters, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Laporan Hutang Usaha (Aging)" />
+            <div className="flex justify-between items-center mb-4">
+                <PageTitle title="Laporan Hutang Usaha (Aging)" />
+            </div>
+
+            <Card className="mb-4">
+                <CardHeader>
+                    <CardTitle>Filter Tanggal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="as_of_date">Per Tanggal</Label>
+                            <DatePicker
+                                value={filters.as_of_date ? new Date(filters.as_of_date) : undefined}
+                                onChange={(date) =>
+                                    setFilters({
+                                        ...filters,
+                                        as_of_date: date ? format(date, 'yyyy-MM-dd') : '',
+                                    })
+                                }
+                            />
+                        </div>
+                        <div className="flex items-end">
+                            <Button onClick={handleFilter} className="w-full">
+                                <Search className="mr-2 h-4 w-4" />
+                                Tampilkan
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Summary Cards */}
+            <div className="grid gap-4 md:grid-cols-5 mb-4">
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">0-30 Hari</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{formatCurrency(summary.total_0_30)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">31-60 Hari</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-yellow-600">{formatCurrency(summary.total_31_60)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">61-90 Hari</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-orange-600">{formatCurrency(summary.total_61_90)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">{'>'} 90 Hari</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-red-600">{formatCurrency(summary.total_over_90)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Total Hutang</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{formatCurrency(summary.grand_total)}</div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Supplier Summary */}
+            {supplierSummary.length > 0 && (
+                <Card className="mb-4">
+                    <CardHeader>
+                        <CardTitle>Ringkasan per Supplier</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Supplier</TableHead>
+                                        <TableHead className="text-right">Jumlah Transaksi</TableHead>
+                                        <TableHead className="text-right">Total Hutang</TableHead>
+                                        <TableHead className="text-right">0-30 Hari</TableHead>
+                                        <TableHead className="text-right">31-60 Hari</TableHead>
+                                        <TableHead className="text-right">61-90 Hari</TableHead>
+                                        <TableHead className="text-right">{'>'} 90 Hari</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {supplierSummary.map((supplier, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{supplier.supplier_name}</TableCell>
+                                            <TableCell className="text-right">{supplier.count}</TableCell>
+                                            <TableCell className="text-right font-semibold">{formatCurrency(supplier.total_remaining)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(supplier.age_0_30)}</TableCell>
+                                            <TableCell className="text-right text-yellow-600">{formatCurrency(supplier.age_31_60)}</TableCell>
+                                            <TableCell className="text-right text-orange-600">{formatCurrency(supplier.age_61_90)}</TableCell>
+                                            <TableCell className="text-right text-red-600">{formatCurrency(supplier.age_over_90)}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Detail Aging */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Detail Hutang Usaha</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                        Per Tanggal: {format(new Date(asOfDate), 'dd MMM yyyy')}
+                    </p>
+                </CardHeader>
+                <CardContent>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>No. Pembelian</TableHead>
+                                    <TableHead>Tanggal</TableHead>
+                                    <TableHead>Jatuh Tempo</TableHead>
+                                    <TableHead>Supplier</TableHead>
+                                    <TableHead className="text-right">Total</TableHead>
+                                    <TableHead className="text-right">Sudah Dibayar</TableHead>
+                                    <TableHead className="text-right">Sisa</TableHead>
+                                    <TableHead className="text-center">Status</TableHead>
+                                    <TableHead className="text-right">0-30</TableHead>
+                                    <TableHead className="text-right">31-60</TableHead>
+                                    <TableHead className="text-right">61-90</TableHead>
+                                    <TableHead className="text-right">{'>'} 90</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {agingData.length > 0 ? (
+                                    agingData.map((item) => (
+                                        <TableRow key={item.purchase_id}>
+                                            <TableCell className="font-mono">{item.purchase_number}</TableCell>
+                                            <TableCell>{formatDatetoString(new Date(item.purchase_date))}</TableCell>
+                                            <TableCell>{formatDatetoString(new Date(item.due_date))}</TableCell>
+                                            <TableCell>{item.supplier_name}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(item.total_amount)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(item.total_paid)}</TableCell>
+                                            <TableCell className="text-right font-semibold">{formatCurrency(item.remaining_amount)}</TableCell>
+                                            <TableCell className="text-center">
+                                                {item.days_overdue > 0 ? (
+                                                    <Badge variant="destructive">{item.days_overdue} hari</Badge>
+                                                ) : (
+                                                    <Badge variant="default">{item.days_until_due} hari</Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">{formatCurrency(item.age_0_30)}</TableCell>
+                                            <TableCell className="text-right text-yellow-600">{formatCurrency(item.age_31_60)}</TableCell>
+                                            <TableCell className="text-right text-orange-600">{formatCurrency(item.age_61_90)}</TableCell>
+                                            <TableCell className="text-right text-red-600">{formatCurrency(item.age_over_90)}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={12} className="text-center text-muted-foreground">
+                                            Tidak ada data hutang
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                <TableRow className="font-semibold bg-muted/50">
+                                    <TableCell colSpan={8}>Total</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(summary.total_0_30)}</TableCell>
+                                    <TableCell className="text-right text-yellow-600">{formatCurrency(summary.total_31_60)}</TableCell>
+                                    <TableCell className="text-right text-orange-600">{formatCurrency(summary.total_61_90)}</TableCell>
+                                    <TableCell className="text-right text-red-600">{formatCurrency(summary.total_over_90)}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </AppLayout>
+    );
+}
+

@@ -111,9 +111,12 @@ class PurchasePaymentController extends Controller
     public function create(): Response
     {
         $banks = Bank::orderBy('name')->get();
+
+        // Only load initial 10 purchases for display, rest will be loaded via search
         $purchases = Purchase::with('supplier')
             ->orderBy('purchase_date', 'desc')
             ->orderBy('id', 'desc')
+            ->limit(10)
             ->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($purchase) {
@@ -136,6 +139,60 @@ class PurchasePaymentController extends Controller
         return Inertia::render('transaction/purchase-payment/create', [
             'purchases' => $purchases,
             'banks' => $banks,
+        ]);
+    }
+
+    /**
+     * Search purchases for async combobox (API endpoint)
+     */
+    public function searchPurchases(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search = $request->get('search', '');
+        $purchaseId = $request->get('id', '');
+        $limit = $request->get('limit', 20);
+
+        $query = Purchase::with('supplier')
+            ->orderBy('purchase_date', 'desc')
+            ->orderBy('id', 'desc');
+
+        // If searching by ID, get that specific purchase
+        if ($purchaseId) {
+            $query->where('id', $purchaseId);
+        } elseif ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('purchase_number', 'like', "%{$search}%")
+                    ->orWhereHas('supplier', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $purchases = $query->limit($limit)->get()
+            ->append(['total_paid', 'remaining_amount'])
+            ->filter(function ($purchase) {
+                // Only show purchases that are not fully paid
+                return (float) $purchase->remaining_amount > 0;
+            })
+            ->map(function ($purchase) {
+                return [
+                    'value' => (string) $purchase->id,
+                    'label' => "{$purchase->purchase_number} - " . ($purchase->supplier->name ?? 'No Supplier') . " (" . number_format((float) $purchase->total_amount, 0, ',', '.') . ")",
+                    'displayLabel' => $purchase->purchase_number,
+                    'purchase' => [
+                        'id' => $purchase->id,
+                        'purchase_number' => $purchase->purchase_number,
+                        'supplier' => $purchase->supplier,
+                        'purchase_date' => $purchase->purchase_date,
+                        'total_amount' => (float) $purchase->total_amount,
+                        'total_paid' => (float) $purchase->total_paid,
+                        'remaining_amount' => (float) $purchase->remaining_amount,
+                    ],
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'data' => $purchases,
         ]);
     }
 
@@ -196,9 +253,21 @@ class PurchasePaymentController extends Controller
         // Get IDs of purchases already in this payment
         $existingPurchaseIds = $purchasePayment->items->pluck('purchase_id')->toArray();
 
+        // Load existing purchases in payment + initial 10 other unpaid purchases
         $purchases = Purchase::with('supplier')
+            ->where(function ($query) use ($existingPurchaseIds) {
+                // Include purchases already in this payment
+                if (!empty($existingPurchaseIds)) {
+                    $query->whereIn('id', $existingPurchaseIds);
+                }
+            })
+            ->orWhere(function ($query) {
+                // Include unpaid purchases (will be filtered after)
+                $query->whereRaw('1 = 1'); // Placeholder, will filter after
+            })
             ->orderBy('purchase_date', 'desc')
             ->orderBy('id', 'desc')
+            ->limit(10 + count($existingPurchaseIds))
             ->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($purchase) use ($existingPurchaseIds) {
@@ -310,17 +379,40 @@ class PurchasePaymentController extends Controller
                 }
 
                 if ($payableAccount) {
-                    $cashOut = CashOut::create([
-                        'cash_out_number' => CashOut::generateCashOutNumber(),
-                        'cash_out_date' => $purchasePayment->payment_date,
-                        'bank_id' => $purchasePayment->bank_id,
-                        'chart_of_account_id' => $payableAccount->id, // Hutang Usaha, bukan biaya
-                        'amount' => $purchasePayment->total_amount,
-                        'description' => "Pembayaran Pembelian #{$purchasePayment->payment_number}",
-                        'status' => 'posted', // Auto post karena sudah confirmed
-                        'reference_type' => 'PurchasePayment',
-                        'reference_id' => $purchasePayment->id,
-                    ]);
+                    // Generate cash out number with retry logic to handle race conditions
+                    $maxRetries = 5;
+                    $cashOut = null;
+
+                    for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+                        try {
+                            $cashOutNumber = CashOut::generateCashOutNumber();
+
+                            $cashOut = CashOut::create([
+                                'cash_out_number' => $cashOutNumber,
+                                'cash_out_date' => $purchasePayment->payment_date,
+                                'bank_id' => $purchasePayment->bank_id,
+                                'chart_of_account_id' => $payableAccount->id, // Hutang Usaha, bukan biaya
+                                'amount' => $purchasePayment->total_amount,
+                                'description' => "Pembayaran Pembelian #{$purchasePayment->payment_number}",
+                                'status' => 'posted', // Auto post karena sudah confirmed
+                                'reference_type' => 'PurchasePayment',
+                                'reference_id' => $purchasePayment->id,
+                            ]);
+
+                            break; // Success, exit retry loop
+                        } catch (\Illuminate\Database\QueryException $e) {
+                            // Check if it's a unique constraint violation (SQLSTATE 23000)
+                            if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'cash_out_number') || str_contains($e->getMessage(), 'cash_outs_cash_out_number_unique'))) {
+                                if ($attempt === $maxRetries - 1) {
+                                    throw $e; // Re-throw on last attempt
+                                }
+                                // Wait a tiny bit before retrying (microseconds)
+                                usleep(10000 * ($attempt + 1)); // 10ms, 20ms, 30ms, etc.
+                                continue;
+                            }
+                            throw $e; // Re-throw if it's a different error
+                        }
+                    }
 
                     // Post to journal (this will also update bank balance)
                     // JournalService akan membuat: Debit Hutang Usaha, Credit Bank

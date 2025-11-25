@@ -49,6 +49,8 @@ export default function PurchasePaymentForm({
     banks,
 }: PurchasePaymentFormProps) {
     const [displayAmounts, setDisplayAmounts] = useState<Record<number, string>>({});
+    // Store selected purchases data for calculations
+    const [selectedPurchases, setSelectedPurchases] = useState<Record<number, Purchase>>({});
 
     const form = useForm({
         payment_date: payment?.payment_date || new Date().toISOString().split('T')[0],
@@ -67,15 +69,22 @@ export default function PurchasePaymentForm({
     useEffect(() => {
         if (payment?.items) {
             const amounts: Record<number, string> = {};
+            const purchasesMap: Record<number, Purchase> = {};
             payment.items.forEach((item) => {
                 amounts[item.purchase_id] = formatCurrency(item.amount);
+                const purchase = purchases.find((p) => p.id === item.purchase_id);
+                if (purchase) {
+                    purchasesMap[item.purchase_id] = purchase;
+                }
             });
             setDisplayAmounts(amounts);
+            setSelectedPurchases(purchasesMap);
         }
-    }, [payment]);
+    }, [payment, purchases]);
 
-    const purchaseOptions: ComboboxOption[] = purchases.map((p) => ({
-        value: p.id.toString(),
+    // Convert purchases to options for Combobox
+    const purchaseComboboxOptions: ComboboxOption[] = purchases.map((p) => ({
+        value: String(p.id),
         label: `${p.purchase_number} - ${p.supplier?.name || 'No Supplier'} (${formatCurrency(p.total_amount)})`,
     }));
 
@@ -110,15 +119,49 @@ export default function PurchasePaymentForm({
         }
     };
 
-    const handlePurchaseChange = (index: number, purchaseId: string) => {
+    const handlePurchaseChange = async (index: number, purchaseId: string) => {
         const newItems = [...form.data.items];
-        const purchase = purchases.find((p) => p.id === Number(purchaseId));
+        const purchaseIdNum = Number(purchaseId);
+
+        // Find purchase in local purchases first
+        let purchase = purchases.find((p) => p.id === purchaseIdNum);
+
+        // If not found, fetch from API
+        if (!purchase) {
+            try {
+                const response = await fetch(`/purchase-payments/search-purchases?id=${purchaseIdNum}`);
+                const data = await response.json();
+                if (data.data && data.data.length > 0) {
+                    const found = data.data[0];
+                    if (found.purchase) {
+                        purchase = {
+                            id: found.purchase.id,
+                            purchase_number: found.purchase.purchase_number,
+                            supplier: found.purchase.supplier,
+                            purchase_date: found.purchase.purchase_date,
+                            total_amount: found.purchase.total_amount,
+                            total_paid: found.purchase.total_paid,
+                            remaining_amount: found.purchase.remaining_amount,
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching purchase:', error);
+            }
+        }
+
         if (purchase) {
+            // Store purchase data
+            setSelectedPurchases((prev) => ({
+                ...prev,
+                [purchase.id]: purchase,
+            }));
+
             // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
             const remaining = purchase.remaining_amount ?? (Number(purchase.total_amount) - (purchase.total_paid || 0));
             newItems[index] = {
                 ...newItems[index],
-                purchase_id: Number(purchaseId),
+                purchase_id: purchaseIdNum,
                 amount: Math.min(newItems[index].amount || 0, remaining),
             };
             form.setData('items', newItems);
@@ -133,7 +176,7 @@ export default function PurchasePaymentForm({
         const rawValue = parseCurrency(value) || 0;
         const newItems = [...form.data.items];
         const purchaseId = newItems[index].purchase_id;
-        const purchase = purchases.find((p) => p.id === purchaseId);
+        const purchase = selectedPurchases[purchaseId] || purchases.find((p) => p.id === purchaseId);
 
         if (purchase) {
             // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
@@ -314,7 +357,7 @@ export default function PurchasePaymentForm({
                                     </TableRow>
                                 ) : (
                                     form.data.items.map((item, index) => {
-                                        const purchase = purchases.find((p) => p.id === item.purchase_id);
+                                        const purchase = selectedPurchases[item.purchase_id] || purchases.find((p) => p.id === item.purchase_id);
                                         // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
                                         const remaining = purchase
                                             ? (purchase.remaining_amount ?? (Number(purchase.total_amount) - (purchase.total_paid || 0)))
@@ -324,12 +367,14 @@ export default function PurchasePaymentForm({
                                             <TableRow key={index}>
                                                 <TableCell>
                                                     <Combobox
-                                                        options={purchaseOptions}
+                                                        options={purchaseComboboxOptions}
                                                         value={item.purchase_id ? item.purchase_id.toString() : ''}
                                                         onValueChange={(value) => handlePurchaseChange(index, value)}
                                                         placeholder="Pilih invoice..."
                                                         searchPlaceholder="Cari invoice..."
                                                         className="w-[200px]"
+                                                        searchUrl="/purchase-payments/search-purchases"
+                                                        searchParam="search"
                                                     />
                                                     <InputError message={form.errors[`items.${index}.purchase_id`]} />
                                                 </TableCell>

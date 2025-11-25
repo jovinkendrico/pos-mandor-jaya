@@ -32,7 +32,34 @@ class UpdatePurchaseRequest extends FormRequest
             'notes' => ['nullable', 'string'],
             'details' => ['required', 'array', 'min:1'],
             'details.*.item_id' => ['required', 'exists:items,id'],
-            'details.*.item_uom_id' => ['required', 'exists:item_uoms,id'],
+            'details.*.item_uom_id' => [
+                'required',
+                'integer',
+                'min:1',
+                'exists:item_uoms,id',
+                function ($attribute, $value, $fail) {
+                    // Get the index from the attribute (e.g., "details.0.item_uom_id" -> 0)
+                    $parts = explode('.', $attribute);
+                    if (count($parts) < 3) {
+                        return; // Invalid attribute format
+                    }
+                    
+                    $index = (int) $parts[1];
+                    $itemId = request()->input("details.{$index}.item_id");
+                    
+                    if ($itemId && $value) {
+                        // Check if item_uom_id belongs to the item_id (including soft deleted)
+                        $exists = \App\Models\ItemUom::withTrashed()
+                            ->where('id', $value)
+                            ->where('item_id', $itemId)
+                            ->exists();
+                        
+                        if (!$exists) {
+                            $fail('UOM yang dipilih tidak valid untuk item ini.');
+                        }
+                    }
+                },
+            ],
             'details.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'details.*.price' => ['required', 'numeric', 'min:0'],
             'details.*.discount1_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],

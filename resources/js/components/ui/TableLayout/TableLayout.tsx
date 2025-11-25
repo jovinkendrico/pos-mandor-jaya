@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
 import {
     Table,
@@ -15,10 +16,18 @@ interface PropTypes<T> {
     text?: string;
     pageFrom?: number;
     renderRow: (row: T, rowIndex: number) => ReactNode;
+    className?: string;
 }
 
 const TableLayout = <T,>(props: PropTypes<T>) => {
-    const { tableColumn, tableRow, text, pageFrom = 0, renderRow } = props;
+    const {
+        tableColumn,
+        tableRow,
+        text,
+        pageFrom = 0,
+        renderRow,
+        className,
+    } = props;
     return (
         <>
             <Table className="content">
@@ -30,7 +39,10 @@ const TableLayout = <T,>(props: PropTypes<T>) => {
                         {tableColumn.map((column, index) => (
                             <TableHead
                                 key={index}
-                                className="flex w-full min-w-[105px] items-center justify-center text-center dark:text-secondary-500"
+                                className={cn(
+                                    'flex w-full min-w-[105px] items-center justify-center text-center dark:text-secondary-500',
+                                    className,
+                                )}
                             >
                                 {column}
                             </TableHead>

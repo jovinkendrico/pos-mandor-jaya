@@ -363,7 +363,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 <Combobox
                                                     options={uomOptions}
                                                     value={
-                                                        detail.item_uom_id
+                                                        detail.item_uom_id &&
+                                                        detail.item_uom_id > 0
                                                             ? detail.item_uom_id.toString()
                                                             : ''
                                                     }

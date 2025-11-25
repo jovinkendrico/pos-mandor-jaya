@@ -23,13 +23,11 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { ReturnType } from '@/constants/enum';
+import { RefundMethod, ReturnType } from '@/constants/enum';
 import usePurchaseReturn from '@/hooks/use-purchase-return';
 import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
 import { cn, formatCurrency, formatNumber } from '@/lib/utils';
-import { index } from '@/routes/purchase-returns';
 import { IBank, IPurchase, IPurchaseDetail } from '@/types';
-import { router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
 interface IPurchaseReturnViewModel extends IPurchaseDetail {
@@ -71,7 +69,6 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
         const a = purchases.find(
             (p) => p.id === dataPurchaseReturn.purchase_id,
         );
-        console.log(a);
         return a;
     }, [dataPurchaseReturn, purchases]);
 
@@ -133,8 +130,6 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
         );
     }, [dataPurchaseReturn.details, dataPurchaseReturn.ppn_percent]);
 
-    console.log(selectedPurchase);
-    console.log(returnItems);
     return (
         <form
             onSubmit={(e) => {
@@ -202,13 +197,11 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                             <Select
                                 value={dataPurchaseReturn.return_type}
                                 onValueChange={(value) => {
-                                    setDataPurchaseReturn('return_type', value);
-                                    if (value === ReturnType.STOCK_ONLY) {
-                                        setDataPurchaseReturn(
-                                            'refund_bank_id',
-                                            0,
-                                        );
-                                    }
+                                    const type =
+                                        value === ReturnType.STOCK_ONLY
+                                            ? ReturnType.STOCK_ONLY
+                                            : ReturnType.STOCK_AND_REFUND;
+                                    setDataPurchaseReturn('return_type', type);
                                 }}
                             >
                                 <SelectTrigger className="combobox">
@@ -240,16 +233,19 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                     <Select
                                         value={dataPurchaseReturn.refund_method}
                                         onValueChange={(value) => {
+                                            const method =
+                                                value ===
+                                                RefundMethod.CASH_REFUND
+                                                    ? RefundMethod.CASH_REFUND
+                                                    : RefundMethod.REDUCE_PAYABLE;
+                                            setDataPurchaseReturn(
+                                                'refund_bank_id',
+                                                null,
+                                            );
                                             setDataPurchaseReturn(
                                                 'refund_method',
-                                                value,
+                                                method,
                                             );
-                                            if (value === 'reduce_payable') {
-                                                setDataPurchaseReturn(
-                                                    'refund_bank_id',
-                                                    0,
-                                                );
-                                            }
                                         }}
                                     >
                                         <SelectTrigger className="combobox">
@@ -283,7 +279,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                         </Label>
                                         <Select
                                             value={
-                                                dataPurchaseReturn.refund_bank_id.toString() ||
+                                                dataPurchaseReturn.refund_bank_id?.toString() ||
                                                 undefined
                                             }
                                             onValueChange={(value) => {
@@ -293,7 +289,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                 );
                                             }}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="combobox">
                                                 <SelectValue placeholder="Pilih bank" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -333,29 +329,34 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                             <Table className="content">
                                 <TableHeader>
                                     <TableRow className="dark:border-b-2 dark:border-white/25">
-                                        <TableHead className="w-[50px]">
+                                        <TableHead className="w-[50px] text-center">
                                             Pilih
                                         </TableHead>
-                                        <TableHead className="w-[100px] text-center">
+                                        <TableHead className="min-w-[100px] text-center">
                                             Kode
                                         </TableHead>
-                                        <TableHead className="text-center">
+                                        <TableHead className="min-w-[100px] text-center">
                                             Nama Item
                                         </TableHead>
-                                        <TableHead>UOM</TableHead>
-                                        <TableHead className="text-center">
+                                        <TableHead className="min-w-[100px] text-center">
+                                            Kondisi Retur
+                                        </TableHead>
+                                        <TableHead className="min-w-[100px] text-center">
+                                            UOM
+                                        </TableHead>
+                                        <TableHead className="min-w-[100px] text-center">
                                             Qty Awal
                                         </TableHead>
-                                        <TableHead className="text-center">
+                                        <TableHead className="min-w-[90px] text-center">
                                             Qty Retur
                                         </TableHead>
-                                        <TableHead className="text-center">
+                                        <TableHead className="min-w-[100px] text-center">
                                             Harga
                                         </TableHead>
-                                        <TableHead className="text-center">
+                                        <TableHead className="min-w-[100px] text-center">
                                             Disc 1
                                         </TableHead>
-                                        <TableHead className="text-center">
+                                        <TableHead className="min-w-[100px] text-center">
                                             Disc 2
                                         </TableHead>
                                     </TableRow>
@@ -386,7 +387,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         : '',
                                                 )}
                                             >
-                                                <TableCell>
+                                                <TableCell className="text-center">
                                                     <Checkbox
                                                         checked={item.selected}
                                                         onCheckedChange={() =>
@@ -398,7 +399,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         disabled={
                                                             isFullyReturned
                                                         }
-                                                        className="cursor-pointer"
+                                                        className="cursor-pointer border-white"
                                                     />
                                                 </TableCell>
                                                 <TableCell className="text-center font-mono">
@@ -406,24 +407,26 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     {detail?.item?.name}
+                                                </TableCell>
+                                                <TableCell className="text-center">
                                                     {isFullyReturned ? (
                                                         <Badge className="badge-green-light">
-                                                            Sudah direfund
+                                                            Sudah diretur
                                                             sepenuhnya
                                                         </Badge>
                                                     ) : (
                                                         <Badge
                                                             variant="secondary"
-                                                            className="badge-blue-light"
+                                                            className="badge-yellow-light"
                                                         >
-                                                            Sudah direfund:{' '}
+                                                            Sudah diretur:{' '}
                                                             {formatNumber(
                                                                 returnedQty,
                                                             )}
                                                         </Badge>
                                                     )}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="text-center">
                                                     <Badge variant="outline">
                                                         {
                                                             detail?.item_uom
@@ -431,7 +434,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         }
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-center">
                                                     <div>
                                                         <div>
                                                             {formatNumber(
@@ -451,15 +454,9 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         )}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-center">
                                                     <Input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0.01"
-                                                        max={
-                                                            item.max_quantity ??
-                                                            0
-                                                        }
+                                                        type="text"
                                                         value={item.quantity}
                                                         onChange={(e) =>
                                                             handleQuantityChange(
@@ -469,21 +466,21 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                                 setQuantityDisplayValues,
                                                             )
                                                         }
-                                                        className="w-24 text-right"
+                                                        className="input-box w-24 text-center"
                                                         disabled={
                                                             !item.selected ||
                                                             isFullyReturned
                                                         }
                                                     />
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-center">
                                                     {formatCurrency(
                                                         formatNumber(
                                                             item.price,
                                                         ),
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-right text-red-600">
+                                                <TableCell className="text-center text-red-600 dark:text-red-500">
                                                     {formatNumber(
                                                         item.discount1_percent ??
                                                             0,
@@ -491,7 +488,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         ? `${item.discount1_percent}%`
                                                         : '-'}
                                                 </TableCell>
-                                                <TableCell className="text-right text-red-600">
+                                                <TableCell className="text-center text-red-600 dark:text-red-500">
                                                     {formatNumber(
                                                         item.discount2_percent ??
                                                             0,
@@ -511,7 +508,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
 
             {/* Totals & Footer */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Alasan Retur</CardTitle>
                     </CardHeader>
@@ -529,18 +526,19 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                 }}
                                 rows={4}
                                 placeholder="Alasan retur (optional)"
+                                className="input-box"
                             />
                         </div>
                         <div className="space-y-2 border-t pt-2">
                             <div className="text-sm text-muted-foreground">
-                                💡 <strong>Info:</strong> Pilih items yang akan
-                                diretur dan atur quantity-nya
+                                💡 <strong>Info:</strong> Pilih barang yang akan
+                                diretur dan atur kuantitasnya
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Total Retur</CardTitle>
                     </CardHeader>
@@ -595,12 +593,12 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                         <div className="flex gap-2 pt-4">
                             <Button
                                 type="button"
-                                variant="outline"
-                                onClick={() => router.visit(index().url)}
+                                variant="secondary"
+                                onClick={handleCancelPurchaseReturn}
                                 disabled={processingPurchaseReturn}
-                                className="flex-1"
+                                className="btn-secondary flex-1"
                             >
-                                Batal
+                                Reset
                             </Button>
                             <Button
                                 type="submit"
@@ -608,7 +606,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                     processingPurchaseReturn ||
                                     !dataPurchaseReturn
                                 }
-                                className="flex-1"
+                                className="btn-primary flex-1"
                             >
                                 {processingPurchaseReturn
                                     ? 'Menyimpan...'

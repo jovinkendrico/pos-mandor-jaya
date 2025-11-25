@@ -2,7 +2,7 @@ import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import PurchaseReturnTable from '@/components/transaction/purchasereturns/purchasereturn-table';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import { Label } from '@/components/ui/label';
 import {
@@ -23,13 +23,15 @@ import {
 } from '@/routes/purchase-returns';
 import {
     BreadcrumbItem,
+    PageProps as InertiaPageProps,
     IPurchaseReturn,
     PaginatedData,
     Supplier,
 } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface PageProps {
     returns: PaginatedData<IPurchaseReturn>;
@@ -73,6 +75,8 @@ const PurchaseReturnIndex = (props: PageProps) => {
         },
     } = props;
 
+    const { flash } = usePage<InertiaPageProps>().props;
+
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
         filters,
@@ -88,6 +92,13 @@ const PurchaseReturnIndex = (props: PageProps) => {
         closeModal: closeDeleteModal,
     } = useDisclosure();
 
+    useEffect(() => {
+        if (flash?.success === 'Retur pembelian berhasil ditambahkan.') {
+            toast.success(flash?.success);
+            flash.success = null;
+        }
+    }, [flash]);
+
     const handleCreate = () => {
         router.visit(create().url);
     };
@@ -96,6 +107,21 @@ const PurchaseReturnIndex = (props: PageProps) => {
         setSelectedPurchaseReturn(purchase_return);
         openDeleteModal();
     };
+
+    const supplierComboboxOptions: ComboboxOption[] = useMemo(() => {
+        const options: ComboboxOption[] = [
+            { value: '', label: 'Semua Supplier' },
+        ];
+
+        suppliers.forEach((supplier) => {
+            options.push({
+                label: supplier.name,
+                value: supplier.id.toString(),
+            });
+        });
+
+        return options;
+    }, [suppliers]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -117,67 +143,52 @@ const PurchaseReturnIndex = (props: PageProps) => {
                     { value: 'total_amount', label: 'Total' },
                     { value: 'status', label: 'Status' },
                 ]}
-                statusOptions={[
-                    { value: 'all', label: 'Semua Status' },
-                    { value: 'pending', label: 'Pending' },
-                    { value: 'confirmed', label: 'Confirmed' },
-                ]}
-            />
-            <Card className="content mt-4 p-4">
-                <div className="flex flex-wrap items-end gap-4">
-                    <div className="w-[180px]">
-                        <Label htmlFor="return_type">Tipe Retur</Label>
-                        <Select
-                            value={allFilters.return_type || 'all'}
-                            onValueChange={(value) =>
-                                handleFilterChange({ return_type: value })
-                            }
-                        >
-                            <SelectTrigger
-                                id="return_type"
-                                className="combobox"
+                additionalFilters={
+                    <>
+                        <div className="w-[180px]">
+                            <Label htmlFor="return_type">Tipe Retur</Label>
+                            <Select
+                                value={allFilters.return_type || 'all'}
+                                onValueChange={(value) =>
+                                    handleFilterChange({ return_type: value })
+                                }
                             >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="stock_only">
-                                    Retur Stok Saja
-                                </SelectItem>
-                                <SelectItem value="stock_and_refund">
-                                    Retur Stok + Refund
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="w-[180px]">
-                        <Label htmlFor="supplier_id">Supplier</Label>
-                        <Select
-                            value={allFilters.supplier_id || undefined}
-                            onValueChange={(value) =>
-                                handleFilterChange({ supplier_id: value || '' })
-                            }
-                        >
-                            <SelectTrigger
-                                id="supplier_id"
-                                className="combobox"
-                            >
-                                <SelectValue placeholder="Semua Supplier" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {suppliers.map((supplier) => (
-                                    <SelectItem
-                                        key={supplier.id}
-                                        value={supplier.id.toString()}
-                                    >
-                                        {supplier.name}
+                                <SelectTrigger
+                                    id="return_type"
+                                    className="combobox"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua</SelectItem>
+                                    <SelectItem value="stock_only">
+                                        Retur Stok Saja
                                     </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </Card>
+                                    <SelectItem value="stock_and_refund">
+                                        Retur Stok + Refund
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="w-[180px]">
+                            <Label htmlFor="supplier_id">Supplier</Label>
+                            <Combobox
+                                options={supplierComboboxOptions}
+                                value={allFilters.supplier_id || ''}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        supplier_id: value || '',
+                                    })
+                                }
+                                placeholder="Semua Supplier"
+                                searchPlaceholder="Cari supplier..."
+                                className="combobox"
+                                maxDisplayItems={10}
+                            />
+                        </div>
+                    </>
+                }
+            />
             <div className="mt-4">
                 <PurchaseReturnTable
                     purchase_returns={returns.data}

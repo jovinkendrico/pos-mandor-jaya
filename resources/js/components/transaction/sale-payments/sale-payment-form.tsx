@@ -49,6 +49,8 @@ export default function SalePaymentForm({
     banks,
 }: SalePaymentFormProps) {
     const [displayAmounts, setDisplayAmounts] = useState<Record<number, string>>({});
+    // Store selected sales data for calculations
+    const [selectedSales, setSelectedSales] = useState<Record<number, Sale>>({});
 
     const form = useForm({
         payment_date: payment?.payment_date || new Date().toISOString().split('T')[0],
@@ -67,15 +69,22 @@ export default function SalePaymentForm({
     useEffect(() => {
         if (payment?.items) {
             const amounts: Record<number, string> = {};
+            const salesMap: Record<number, Sale> = {};
             payment.items.forEach((item) => {
                 amounts[item.sale_id] = formatCurrency(item.amount);
+                const sale = sales.find((s) => s.id === item.sale_id);
+                if (sale) {
+                    salesMap[item.sale_id] = sale;
+                }
             });
             setDisplayAmounts(amounts);
+            setSelectedSales(salesMap);
         }
-    }, [payment]);
+    }, [payment, sales]);
 
-    const saleOptions: ComboboxOption[] = sales.map((s) => ({
-        value: s.id.toString(),
+    // Convert sales to options for Combobox
+    const saleComboboxOptions: ComboboxOption[] = sales.map((s) => ({
+        value: String(s.id),
         label: `${s.sale_number} - ${s.customer?.name || 'No Customer'} (${formatCurrency(s.total_amount)})`,
     }));
 
@@ -110,15 +119,49 @@ export default function SalePaymentForm({
         }
     };
 
-    const handleSaleChange = (index: number, saleId: string) => {
+    const handleSaleChange = async (index: number, saleId: string) => {
         const newItems = [...form.data.items];
-        const sale = sales.find((s) => s.id === Number(saleId));
+        const saleIdNum = Number(saleId);
+
+        // Find sale in local sales first
+        let sale = sales.find((s) => s.id === saleIdNum);
+
+        // If not found, fetch from API
+        if (!sale) {
+            try {
+                const response = await fetch(`/sale-payments/search-sales?id=${saleIdNum}`);
+                const data = await response.json();
+                if (data.data && data.data.length > 0) {
+                    const found = data.data[0];
+                    if (found.sale) {
+                        sale = {
+                            id: found.sale.id,
+                            sale_number: found.sale.sale_number,
+                            customer: found.sale.customer,
+                            sale_date: found.sale.sale_date,
+                            total_amount: found.sale.total_amount,
+                            total_paid: found.sale.total_paid,
+                            remaining_amount: found.sale.remaining_amount,
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching sale:', error);
+            }
+        }
+
         if (sale) {
+            // Store sale data
+            setSelectedSales((prev) => ({
+                ...prev,
+                [sale.id]: sale,
+            }));
+
             // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
             const remaining = sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0));
             newItems[index] = {
                 ...newItems[index],
-                sale_id: Number(saleId),
+                sale_id: saleIdNum,
                 amount: Math.min(newItems[index].amount || 0, remaining),
             };
             form.setData('items', newItems);
@@ -133,7 +176,7 @@ export default function SalePaymentForm({
         const rawValue = parseCurrency(value) || 0;
         const newItems = [...form.data.items];
         const saleId = newItems[index].sale_id;
-        const sale = sales.find((s) => s.id === saleId);
+        const sale = selectedSales[saleId] || sales.find((s) => s.id === saleId);
 
         if (sale) {
             // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
@@ -314,7 +357,7 @@ export default function SalePaymentForm({
                                     </TableRow>
                                 ) : (
                                     form.data.items.map((item, index) => {
-                                        const sale = sales.find((s) => s.id === item.sale_id);
+                                        const sale = selectedSales[item.sale_id] || sales.find((s) => s.id === item.sale_id);
                                         // remaining_amount sudah merupakan total_amount - total_paid, jadi tidak perlu dikurangi lagi
                                         const remaining = sale
                                             ? (sale.remaining_amount ?? (Number(sale.total_amount) - (sale.total_paid || 0)))
@@ -324,12 +367,14 @@ export default function SalePaymentForm({
                                             <TableRow key={index}>
                                                 <TableCell>
                                                     <Combobox
-                                                        options={saleOptions}
+                                                        options={saleComboboxOptions}
                                                         value={item.sale_id ? item.sale_id.toString() : ''}
                                                         onValueChange={(value) => handleSaleChange(index, value)}
                                                         placeholder="Pilih invoice..."
                                                         searchPlaceholder="Cari invoice..."
                                                         className="w-[200px]"
+                                                        searchUrl="/sale-payments/search-sales"
+                                                        searchParam="search"
                                                     />
                                                     <InputError message={form.errors[`items.${index}.sale_id`]} />
                                                 </TableCell>

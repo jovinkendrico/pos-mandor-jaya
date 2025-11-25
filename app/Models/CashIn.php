@@ -46,6 +46,8 @@ class CashIn extends Model
 
     /**
      * Generate unique cash in number
+     * Format: CIYYYYMMDDXXXXX (5 digits for sequence)
+     * Example: CI2025112400001
      */
     public static function generateCashInNumber(): string
     {
@@ -59,8 +61,16 @@ class CashIn extends Model
             ->orderBy('cash_in_number', 'desc')
             ->first();
 
-        $sequence = $lastCashIn ? (int) substr($lastCashIn->cash_in_number, -4) + 1 : 1;
+        // Extract sequence from last 5 digits (handle both old 4-digit and new 5-digit formats)
+        if ($lastCashIn) {
+            $lastNumber = $lastCashIn->cash_in_number;
+            // Get the part after the prefix
+            $sequencePart = substr($lastNumber, strlen($prefix));
+            $sequence = (int) $sequencePart + 1;
+        } else {
+            $sequence = 1;
+        }
 
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
     }
 }

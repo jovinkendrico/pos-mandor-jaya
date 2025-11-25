@@ -7,6 +7,8 @@ export interface FilterState {
     payment_status?: string;
     date_from: string;
     date_to: string;
+    return_type?: string;
+    supplier_id?: string;
     sort_by: string;
     sort_order: string;
 }
@@ -90,6 +92,8 @@ export const useFilterBar = ({
             search: '',
             status: 'all',
             payment_status: 'all',
+            return_type: 'all',
+            supplier_id: '',
             date_from: '',
             date_to: '',
             sort_by: sortOptions[0]?.value || 'purchase_date',
@@ -99,14 +103,16 @@ export const useFilterBar = ({
         onFilterChange(resetFilters);
     }, [onFilterChange, sortOptions]);
 
-    const defaultSortBy = sortOptions[0]?.value || 'purchase_date';
+    const defaultSortBy = sortOptions[0]?.value;
 
     const hasActiveFilters =
-        localFilters.search !== '' ||
-        localFilters.status !== 'all' ||
-        localFilters.payment_status !== 'all' ||
-        localFilters.date_from !== '' ||
-        localFilters.date_to !== '' ||
+        (localFilters.search ?? '') !== '' ||
+        (localFilters.status ?? 'all') !== 'all' ||
+        (localFilters.payment_status ?? 'all') !== 'all' ||
+        (localFilters.return_type ?? 'all') !== 'all' ||
+        (localFilters.supplier_id ?? '') !== '' ||
+        (localFilters.date_from ?? '') !== '' ||
+        (localFilters.date_to ?? '') !== '' ||
         localFilters.sort_by !== defaultSortBy ||
         localFilters.sort_order !== 'desc';
 

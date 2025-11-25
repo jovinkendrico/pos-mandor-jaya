@@ -15,6 +15,7 @@ import {
     useFilterBar,
 } from '@/hooks/use-filterbar';
 import { ArrowUpDown, Search, X } from 'lucide-react';
+import { ReactNode } from 'react';
 import { DatePicker } from '../date-picker';
 import { Card } from '../ui/card';
 import {
@@ -30,6 +31,7 @@ interface FilterBarProps {
     sortOptions?: Option[];
     showPaymentStatus?: boolean;
     showDateRange?: boolean;
+    additionalFilters?: ReactNode;
 }
 
 const FilterBar = (props: FilterBarProps) => {
@@ -40,6 +42,7 @@ const FilterBar = (props: FilterBarProps) => {
         sortOptions = defaultSortOptions,
         showPaymentStatus = true,
         showDateRange = true,
+        additionalFilters,
     } = props;
 
     const {
@@ -200,6 +203,8 @@ const FilterBar = (props: FilterBarProps) => {
                         </Button>
                     </div>
                 </div>
+
+                {additionalFilters && additionalFilters}
 
                 {/* Reset Button */}
                 {hasActiveFilters && (
