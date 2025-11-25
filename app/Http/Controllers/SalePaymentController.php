@@ -81,14 +81,14 @@ class SalePaymentController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $payments = $query->paginate(15)->withQueryString();
+        $payments = $query->paginate(10)->withQueryString();
 
         // Get banks and customers for filter
         $banks = Bank::orderBy('name')->get(['id', 'name']);
         $customers = \App\Models\Customer::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('transaction/sale-payment/index', [
-            'payments' => $payments,
+            'sale_payments' => $payments,
             'banks' => $banks,
             'customers' => $customers,
             'filters' => [
@@ -235,10 +235,10 @@ class SalePaymentController extends Controller
      */
     public function show(SalePayment $salePayment): Response
     {
-        $salePayment->load(['sales.customer', 'bank', 'items.sale']);
+        $salePayment->load(['sales.customer', 'bank', 'items.sale.customer']);
 
         return Inertia::render('transaction/sale-payment/show', [
-            'payment' => $salePayment,
+            'sale_payment' => $salePayment,
         ]);
     }
 
@@ -290,7 +290,7 @@ class SalePaymentController extends Controller
             ->values();
 
         return Inertia::render('transaction/sale-payment/edit', [
-            'payment' => $salePayment,
+            'sale_payment' => $salePayment,
             'banks' => $banks,
             'sales' => $sales,
         ]);

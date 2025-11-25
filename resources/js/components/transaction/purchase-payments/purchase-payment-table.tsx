@@ -14,11 +14,8 @@ interface PurchasePaymentTableProps {
     onDelete: (payment: IPurchasePayment) => void;
 }
 
-const PurchasePaymentTable = ({
-    purchase_payments,
-    pageFrom,
-    onDelete,
-}: PurchasePaymentTableProps) => {
+const PurchasePaymentTable = (props: PurchasePaymentTableProps) => {
+    const { purchase_payments, pageFrom, onDelete } = props;
     const tableColumn = [
         'Kode',
         'Supplier',
@@ -38,13 +35,13 @@ const PurchasePaymentTable = ({
             tableRow={purchase_payments}
             pageFrom={pageFrom}
             text="Tidak ada data Pembayaran Pembelian"
-            renderRow={(row, index) => (
+            renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center font-mono">
                         {row.payment_number}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.purchases?.[index]?.supplier?.name || '-'}
+                        {row.purchases?.[0]?.supplier?.name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {formatDatetoString(new Date(row.payment_date))}

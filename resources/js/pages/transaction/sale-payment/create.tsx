@@ -1,22 +1,14 @@
 import PageTitle from '@/components/page-title';
 import SalePaymentForm from '@/components/transaction/sale-payments/sale-payment-form';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Bank } from '@/types';
-import { Head } from '@inertiajs/react';
-
-interface Sale {
-    id: number;
-    sale_number: string;
-    customer?: { name: string };
-    sale_date: string;
-    total_amount: number;
-    total_paid?: number;
-    remaining_amount?: number;
-}
+import { index } from '@/routes/sale-payments';
+import { BreadcrumbItem, IBank, ISale } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    sales: Sale[];
-    banks: Bank[];
+    sales: ISale[];
+    banks: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -34,13 +26,21 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SalePaymentCreate({ sales, banks }: PageProps) {
+const SalePaymentCreate = (props: PageProps) => {
+    const { sales, banks } = props;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Pembayaran Penjualan" />
-            <PageTitle title="Tambah Pembayaran Penjualan" />
+            <div className="flex flex-row items-center gap-2">
+                <Link href={index().url}>
+                    <ArrowLeft className="h-8 w-8" />
+                </Link>
+                <PageTitle title="Tambah Pembayaran Penjualan" />
+            </div>
             <SalePaymentForm sales={sales} banks={banks} />
         </AppLayout>
     );
-}
+};
 
+export default SalePaymentCreate;
