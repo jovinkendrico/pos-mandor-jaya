@@ -84,7 +84,7 @@ class CashInController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $cashIns = $query->paginate(15)->withQueryString();
+        $cashIns = $query->paginate(10)->withQueryString();
 
         // Get banks for filter
         $banks = \App\Models\Bank::orderBy('name')->get(['id', 'name']);

@@ -79,7 +79,7 @@ class PurchaseReturnController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $returns = $query->paginate(15)->withQueryString();
+        $returns = $query->paginate(10)->withQueryString();
 
         // Get suppliers for filter
         $suppliers = \App\Models\Supplier::orderBy('name')->get(['id', 'name']);
