@@ -14,29 +14,13 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { index } from '@/routes/general-ledger';
-import { ChartOfAccount } from '@/types';
+import { ChartOfAccount, LedgerData } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { ArrowLeft, Search } from 'lucide-react';
 import { useState } from 'react';
 
-interface Transaction {
-    date: string;
-    journal_number: string;
-    description: string;
-    debit: number;
-    credit: number;
-    balance: number;
-}
 
-interface LedgerData {
-    account: ChartOfAccount;
-    opening_balance: number;
-    transactions: Transaction[];
-    debit_total: number;
-    credit_total: number;
-    closing_balance: number;
-}
 
 interface PageProps {
     account: ChartOfAccount;
@@ -233,8 +217,8 @@ export default function GeneralLedgerShow({
                                 </TableRow>
 
                                 {/* Transactions */}
-                                {ledgerData.transactions.length > 0 ? (
-                                    ledgerData.transactions.map(
+                                {(ledgerData.transactions || []).length > 0 ? (
+                                    (ledgerData.transactions || []).map(
                                         (transaction, index) => (
                                             <TableRow
                                                 key={index}

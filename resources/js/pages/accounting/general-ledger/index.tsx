@@ -16,19 +16,13 @@ import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { show } from '@/routes/general-ledger';
-import { ChartOfAccount } from '@/types';
+import { ChartOfAccount, LedgerData } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { Info } from 'lucide-react';
 import { useState } from 'react';
 
-interface LedgerData {
-    account: ChartOfAccount;
-    opening_balance: number;
-    debit_total: number;
-    credit_total: number;
-    closing_balance: number;
-}
+
 
 interface PageProps {
     dateFrom: string;
