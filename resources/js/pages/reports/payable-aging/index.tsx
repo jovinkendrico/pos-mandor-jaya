@@ -10,7 +10,7 @@ import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { DatePicker } from '@/components/date-picker';
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Printer } from 'lucide-react';
 
 interface SupplierSummary {
     supplier_id: number | null;
@@ -101,10 +101,23 @@ export default function PayableAgingIndex({
                                 }
                             />
                         </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
+                        <div className="flex items-end gap-2">
+                            <Button onClick={handleFilter} className="flex-1">
                                 <Search className="mr-2 h-4 w-4" />
                                 Tampilkan
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        as_of_date: filters.as_of_date,
+                                    });
+                                    window.open(`/reports/payable-aging/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
                             </Button>
                         </div>
                     </div>

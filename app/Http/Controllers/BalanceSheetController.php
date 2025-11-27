@@ -9,7 +9,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BalanceSheetController extends Controller
 {
@@ -110,6 +112,120 @@ class BalanceSheetController extends Controller
             'totalLiabilitiesAndEquity' => $totalLiabilitiesAndEquity,
             'netProfit' => $netProfit,
         ]);
+    }
+
+    /**
+     * Print balance sheet report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $asOfDate = $request->get('as_of_date', now()->format('Y-m-d'));
+
+            // Get all asset accounts
+            $assetAccounts = ChartOfAccount::where('type', 'asset')
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->get();
+
+            // Get all liability accounts
+            $liabilityAccounts = ChartOfAccount::where('type', 'liability')
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->get();
+
+            // Get all equity accounts
+            $equityAccounts = ChartOfAccount::where('type', 'equity')
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->get();
+
+            // Calculate asset balances
+            $totalAssets = 0;
+            $assetDetails = [];
+            foreach ($assetAccounts as $account) {
+                $balance = $this->getAccountBalanceAsOf($account->id, $asOfDate);
+                if ($balance != 0) {
+                    $assetDetails[] = [
+                        'code' => $account->code,
+                        'name' => $account->name,
+                        'balance' => $balance,
+                    ];
+                    $totalAssets += $balance;
+                }
+            }
+
+            // Calculate liability balances
+            $totalLiabilities = 0;
+            $liabilityDetails = [];
+            foreach ($liabilityAccounts as $account) {
+                $balance = $this->getAccountBalanceAsOf($account->id, $asOfDate);
+                if ($balance != 0) {
+                    $liabilityDetails[] = [
+                        'code' => $account->code,
+                        'name' => $account->name,
+                        'balance' => $balance,
+                    ];
+                    $totalLiabilities += $balance;
+                }
+            }
+
+            // Calculate equity balances
+            $totalEquity = 0;
+            $equityDetails = [];
+            foreach ($equityAccounts as $account) {
+                $balance = $this->getAccountBalanceAsOf($account->id, $asOfDate);
+                if ($balance != 0) {
+                    $equityDetails[] = [
+                        'code' => $account->code,
+                        'name' => $account->name,
+                        'balance' => $balance,
+                    ];
+                    $totalEquity += $balance;
+                }
+            }
+
+            // Calculate net profit/loss
+            $yearStart = Carbon::parse($asOfDate)->startOfYear()->format('Y-m-d');
+            $netProfit = $this->calculateNetProfit($yearStart, $asOfDate);
+
+            if ($netProfit != 0) {
+                $equityDetails[] = [
+                    'code' => 'L/R',
+                    'name' => 'Laba/Rugi Tahun Berjalan',
+                    'balance' => $netProfit,
+                ];
+                $totalEquity += $netProfit;
+            }
+
+            $totalLiabilitiesAndEquity = $totalLiabilities + $totalEquity;
+
+            $pdf = Pdf::loadView('pdf.reports.balance-sheet', [
+                'title' => 'Laporan Neraca',
+                'asOfDate' => $asOfDate,
+                'assetDetails' => $assetDetails,
+                'liabilityDetails' => $liabilityDetails,
+                'equityDetails' => $equityDetails,
+                'totalAssets' => $totalAssets,
+                'totalLiabilities' => $totalLiabilities,
+                'totalEquity' => $totalEquity,
+                'totalLiabilitiesAndEquity' => $totalLiabilitiesAndEquity,
+                'netProfit' => $netProfit,
+            ])->setPaper('a4', 'portrait');
+
+            $filename = 'laporan-neraca-' . $asOfDate . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Balance Sheet Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     /**

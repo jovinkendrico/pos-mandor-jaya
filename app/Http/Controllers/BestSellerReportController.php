@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BestSellerReportController extends Controller
 {
@@ -40,14 +42,14 @@ class BestSellerReportController extends Controller
                 DB::raw('AVG(sale_details.cost / NULLIF(sale_details.quantity, 0)) as avg_cost')
             )
             ->groupBy('items.id', 'items.code', 'items.name')
-            ->orderBy($sortBy === 'revenue' ? 'total_revenue' : 'total_quantity', 'desc')
+            ->orderByRaw($sortBy === 'revenue' ? 'SUM(sale_details.subtotal) DESC' : 'SUM(sale_details.quantity) DESC')
             ->limit($limit)
             ->get()
             ->map(function ($row, $index) {
-                $profitMargin = $row->total_revenue > 0 
-                    ? ($row->total_profit / $row->total_revenue) * 100 
+                $profitMargin = $row->total_revenue > 0
+                    ? ($row->total_profit / $row->total_revenue) * 100
                     : 0;
-                
+
                 return [
                     'rank' => $index + 1,
                     'item_id' => $row->item_id,
@@ -72,14 +74,14 @@ class BestSellerReportController extends Controller
             'total_profit' => $bestSellers->sum('total_profit'),
         ];
 
-        $summary['profit_margin'] = $summary['total_revenue'] > 0 
-            ? ($summary['total_profit'] / $summary['total_revenue']) * 100 
+        $summary['profit_margin'] = $summary['total_revenue'] > 0
+            ? ($summary['total_profit'] / $summary['total_revenue']) * 100
             : 0;
 
         // Get trend data (daily sales for top 10 items)
         $topItems = $bestSellers->take(10)->pluck('item_id');
         $trendData = [];
-        
+
         if ($topItems->isNotEmpty()) {
             $dailySales = DB::table('sale_details')
                 ->join('sales', 'sale_details.sale_id', '=', 'sales.id')
@@ -125,5 +127,74 @@ class BestSellerReportController extends Controller
             'bestSellers' => $bestSellers,
             'trendData' => $trendData,
         ]);
+    }
+
+    /**
+     * Print best seller report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+            $sortBy = $request->get('sort_by', 'quantity');
+            $limit = $request->get('limit', 50);
+
+            $bestSellers = DB::table('sale_details')
+                ->join('sales', 'sale_details.sale_id', '=', 'sales.id')
+                ->join('items', 'sale_details.item_id', '=', 'items.id')
+                ->where('sales.status', 'confirmed')
+                ->whereBetween('sales.sale_date', [$dateFrom, $dateTo])
+                ->select(
+                    'items.id as item_id',
+                    'items.code as item_code',
+                    'items.name as item_name',
+                    DB::raw('SUM(sale_details.quantity) as total_quantity'),
+                    DB::raw('COUNT(DISTINCT sales.id) as transaction_count'),
+                    DB::raw('SUM(sale_details.subtotal) as total_revenue'),
+                    DB::raw('SUM(sale_details.profit) as total_profit')
+                )
+                ->groupBy('items.id', 'items.code', 'items.name')
+                ->orderByRaw($sortBy === 'revenue' ? 'SUM(sale_details.subtotal) DESC' : 'SUM(sale_details.quantity) DESC')
+                ->limit($limit)
+                ->get()
+                ->map(function ($row, $index) {
+                    return [
+                        'rank' => $index + 1,
+                        'item_code' => $row->item_code,
+                        'item_name' => $row->item_name,
+                        'total_quantity' => (float) $row->total_quantity,
+                        'total_revenue' => (float) $row->total_revenue,
+                        'total_profit' => (float) $row->total_profit,
+                    ];
+                });
+
+            $summary = [
+                'total_items' => $bestSellers->count(),
+                'total_quantity' => $bestSellers->sum('total_quantity'),
+                'total_revenue' => $bestSellers->sum('total_revenue'),
+            ];
+
+            $pdf = Pdf::loadView('pdf.reports.best-seller', [
+                'title' => 'Laporan Barang Paling Laku',
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'summary' => $summary,
+                'bestSellers' => $bestSellers,
+            ])->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-barang-paling-laku-' . $dateFrom . '-to-' . $dateTo . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Best Seller Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

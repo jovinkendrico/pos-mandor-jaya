@@ -31,9 +31,10 @@ import { index as userIndex } from '@/routes/users';
 import { index as cashInIndex } from '@/routes/cash-ins';
 import { index as cashOutIndex } from '@/routes/cash-outs';
 import { index as journalEntryIndex } from '@/routes/journal-entries';
+import { index as paymentReceiptIndex } from '@/routes/payment-receipt';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, ShoppingCart, User2, CreditCard, BookOpen, FileText } from 'lucide-react';
+import { Database, LayoutGrid, ShoppingCart, User2, CreditCard, BookOpen, FileText, Receipt } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -116,6 +117,10 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Pembayaran Penjualan',
                 href: salePaymentIndex(),
+            },
+            {
+                title: 'Tanda Terima Faktur',
+                href: paymentReceiptIndex(),
             },
             {
                 title: 'Kas Masuk',

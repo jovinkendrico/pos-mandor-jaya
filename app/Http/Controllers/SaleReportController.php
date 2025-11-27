@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SaleReportController extends Controller
 {
@@ -27,14 +29,15 @@ class SaleReportController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        // Calculate totals
-        $totalSales = $sales->sum('total_after_discount'); // Revenue without PPN
-        $totalPPN = $sales->sum('ppn_amount');
-        $totalAmount = $sales->sum('total_amount');
-        $totalDiscount = $sales->sum('discount1_amount') + $sales->sum('discount2_amount');
-        $totalCost = $sales->sum('total_cost');
-        $totalProfit = $sales->sum('total_profit');
-        $totalTransactions = $sales->count();
+            // Calculate totals
+            $totalSubtotal = $sales->sum('subtotal'); // Total before discount
+            $totalSales = $sales->sum('total_after_discount'); // Revenue without PPN
+            $totalPPN = $sales->sum('ppn_amount');
+            $totalAmount = $sales->sum('total_amount');
+            $totalDiscount = $sales->sum('discount1_amount') + $sales->sum('discount2_amount');
+            $totalCost = $sales->sum('total_cost');
+            $totalProfit = $sales->sum('total_profit');
+            $totalTransactions = $sales->count();
 
         // Group by date for daily summary
         $dailySummary = $sales->groupBy(function ($sale) {
@@ -75,6 +78,7 @@ class SaleReportController extends Controller
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'summary' => [
+                'total_subtotal' => $totalSubtotal,
                 'total_sales' => $totalSales,
                 'total_ppn' => $totalPPN,
                 'total_amount' => $totalAmount,
@@ -94,6 +98,7 @@ class SaleReportController extends Controller
                     'sale_number' => $sale->sale_number,
                     'sale_date' => $sale->sale_date,
                     'customer_name' => $sale->customer ? $sale->customer->name : 'No Customer',
+                    'subtotal' => (float) $sale->subtotal,
                     'total_after_discount' => (float) $sale->total_after_discount,
                     'discount1_amount' => (float) $sale->discount1_amount,
                     'discount2_amount' => (float) $sale->discount2_amount,
@@ -104,5 +109,67 @@ class SaleReportController extends Controller
                 ];
             }),
         ]);
+    }
+
+    /**
+     * Print sale report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+
+            // Get sales data
+            $sales = Sale::with('customer')
+                ->where('status', 'confirmed')
+                ->whereBetween('sale_date', [$dateFrom, $dateTo])
+                ->orderBy('sale_date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            // Calculate totals
+            $totalSubtotal = $sales->sum('subtotal'); // Total before discount
+            $totalSales = $sales->sum('total_after_discount');
+            $totalPPN = $sales->sum('ppn_amount');
+            $totalAmount = $sales->sum('total_amount');
+            $totalDiscount = $sales->sum('discount1_amount') + $sales->sum('discount2_amount');
+            $totalCost = $sales->sum('total_cost');
+            $totalProfit = $sales->sum('total_profit');
+            $totalTransactions = $sales->count();
+
+            $summary = [
+                'total_subtotal' => $totalSubtotal,
+                'total_sales' => $totalSales,
+                'total_ppn' => $totalPPN,
+                'total_amount' => $totalAmount,
+                'total_discount' => $totalDiscount,
+                'total_cost' => $totalCost,
+                'total_profit' => $totalProfit,
+                'total_transactions' => $totalTransactions,
+                'profit_margin' => $totalSales > 0 ? ($totalProfit / $totalSales) * 100 : 0,
+            ];
+
+            $pdf = Pdf::loadView('pdf.reports.sale-report', [
+                'title' => 'Laporan Penjualan',
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'summary' => $summary,
+                'sales' => $sales,
+            ])->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-penjualan-' . $dateFrom . '-to-' . $dateTo . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Sale Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

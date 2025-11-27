@@ -9,7 +9,7 @@ import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { DatePicker } from '@/components/date-picker';
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Printer } from 'lucide-react';
 
 interface DailySummary {
     date: string;
@@ -34,6 +34,7 @@ interface Purchase {
     purchase_number: string;
     purchase_date: string;
     supplier_name: string;
+    subtotal: number;
     total_after_discount: number;
     discount1_amount: number;
     discount2_amount: number;
@@ -119,10 +120,24 @@ export default function PurchaseReportIndex({
                                 }
                             />
                         </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
+                        <div className="flex items-end gap-2">
+                            <Button onClick={handleFilter} className="flex-1">
                                 <Search className="mr-2 h-4 w-4" />
                                 Tampilkan
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        date_from: filters.date_from,
+                                        date_to: filters.date_to,
+                                    });
+                                    window.open(`/reports/purchase-report/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
                             </Button>
                         </div>
                     </div>
@@ -269,7 +284,7 @@ export default function PurchaseReportIndex({
                                     <TableHead>No. Pembelian</TableHead>
                                     <TableHead>Tanggal</TableHead>
                                     <TableHead>Supplier</TableHead>
-                                    <TableHead className="text-right">Pembelian</TableHead>
+                                    <TableHead className="text-right">Total Sebelum Diskon</TableHead>
                                     <TableHead className="text-right">Diskon</TableHead>
                                     <TableHead className="text-right">PPN</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
@@ -282,7 +297,7 @@ export default function PurchaseReportIndex({
                                             <TableCell className="font-mono">{purchase.purchase_number}</TableCell>
                                             <TableCell>{formatDatetoString(new Date(purchase.purchase_date))}</TableCell>
                                             <TableCell>{purchase.supplier_name}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(purchase.total_after_discount)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(purchase.subtotal)}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(purchase.discount1_amount + purchase.discount2_amount)}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(purchase.ppn_amount)}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(purchase.total_amount)}</TableCell>

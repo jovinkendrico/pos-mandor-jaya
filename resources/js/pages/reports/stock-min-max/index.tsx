@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
-import { Search, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Search, AlertTriangle, TrendingUp, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface StockItem {
@@ -109,10 +109,24 @@ export default function StockMinMaxIndex({
                             />
                             <p className="text-xs text-muted-foreground">Item dengan stok {'>'} threshold ini akan ditampilkan</p>
                         </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
+                        <div className="flex items-end gap-2">
+                            <Button onClick={handleFilter} className="flex-1">
                                 <Search className="mr-2 h-4 w-4" />
                                 Tampilkan
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        min_stock: filters.min_stock.toString(),
+                                        max_stock: filters.max_stock.toString(),
+                                    });
+                                    window.open(`/reports/stock-min-max/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
                             </Button>
                         </div>
                     </div>

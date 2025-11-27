@@ -11,7 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 import { DatePicker } from '@/components/date-picker';
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { Search, Trophy, TrendingUp } from 'lucide-react';
+import { Search, Trophy, TrendingUp, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface PageProps {
@@ -161,10 +161,26 @@ export default function BestSellerReportIndex({
                                 }
                             />
                         </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
+                        <div className="flex items-end gap-2">
+                            <Button onClick={handleFilter} className="flex-1">
                                 <Search className="mr-2 h-4 w-4" />
                                 Tampilkan
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        date_from: filters.date_from,
+                                        date_to: filters.date_to,
+                                        sort_by: filters.sort_by,
+                                        limit: filters.limit.toString(),
+                                    });
+                                    window.open(`/reports/best-seller/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
                             </Button>
                         </div>
                     </div>
