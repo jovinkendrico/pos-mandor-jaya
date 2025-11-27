@@ -77,7 +77,7 @@ export default function ProfitLossIndex({
                 <PageTitle title="Laporan Laba Rugi" />
             </div>
 
-            <Card className="mb-4">
+            <Card className="content mb-4">
                 <CardHeader>
                     <CardTitle>Filter Periode</CardTitle>
                 </CardHeader>
@@ -99,6 +99,7 @@ export default function ProfitLossIndex({
                                             : '',
                                     })
                                 }
+                                className="input-box"
                             />
                         </div>
                         <div className="flex flex-col space-y-2">
@@ -117,6 +118,7 @@ export default function ProfitLossIndex({
                                             : '',
                                     })
                                 }
+                                className="input-box"
                             />
                         </div>
                         <div className="flex items-end">
@@ -132,7 +134,7 @@ export default function ProfitLossIndex({
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Laporan Laba Rugi</CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -147,53 +149,58 @@ export default function ProfitLossIndex({
                             <h3 className="mb-3 text-lg font-semibold">
                                 Pendapatan
                             </h3>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Kode</TableHead>
-                                        <TableHead>Nama Akun</TableHead>
-                                        <TableHead className="text-right">
-                                            Jumlah
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {incomeDetails.length > 0 ? (
-                                        incomeDetails.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>
-                                                    {item.code}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {item.name}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    {formatCurrency(
-                                                        item.amount,
-                                                    )}
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <Table className="content">
+                                    <TableHeader>
+                                        <TableRow className="dark:border-b-2 dark:border-white/25">
+                                            <TableHead>Kode</TableHead>
+                                            <TableHead>Nama Akun</TableHead>
+                                            <TableHead className="text-right">
+                                                Jumlah
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {incomeDetails.length > 0 ? (
+                                            incomeDetails.map((item, index) => (
+                                                <TableRow
+                                                    key={index}
+                                                    className="dark:border-b-2 dark:border-white/25"
+                                                >
+                                                    <TableCell>
+                                                        {item.code}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {item.name}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {formatCurrency(
+                                                            item.amount,
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow className="dark:border-b-2 dark:border-white/25">
+                                                <TableCell
+                                                    colSpan={3}
+                                                    className="text-center text-muted-foreground"
+                                                >
+                                                    Tidak ada data pendapatan
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={3}
-                                                className="text-center text-muted-foreground"
-                                            >
-                                                Tidak ada data pendapatan
+                                        )}
+                                        <TableRow className="font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                            <TableCell colSpan={2}>
+                                                Total Pendapatan
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(totalIncome)}
                                             </TableCell>
                                         </TableRow>
-                                    )}
-                                    <TableRow className="font-semibold">
-                                        <TableCell colSpan={2}>
-                                            Total Pendapatan
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {formatCurrency(totalIncome)}
-                                        </TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </div>
 
                         {/* HPP */}
@@ -202,36 +209,38 @@ export default function ProfitLossIndex({
                                 <h3 className="mb-3 text-lg font-semibold">
                                     Harga Pokok Penjualan (HPP)
                                 </h3>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead colSpan={2}>
-                                                HPP
-                                            </TableHead>
-                                            <TableHead className="text-right">
-                                                Jumlah
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell colSpan={2}>
-                                                Harga Pokok Penjualan
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(totalHPP)}
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className="font-semibold">
-                                            <TableCell colSpan={2}>
-                                                Total HPP
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(totalHPP)}
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
+                                <div className="input-box overflow-x-auto rounded-lg">
+                                    <Table className="content">
+                                        <TableHeader>
+                                            <TableRow className="dark:border-b-2 dark:border-white/25">
+                                                <TableHead colSpan={2}>
+                                                    HPP
+                                                </TableHead>
+                                                <TableHead className="text-right">
+                                                    Jumlah
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            <TableRow className="dark:border-b-2 dark:border-white/25">
+                                                <TableCell colSpan={2}>
+                                                    Harga Pokok Penjualan
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {formatCurrency(totalHPP)}
+                                                </TableCell>
+                                            </TableRow>
+                                            <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                                <TableCell colSpan={2}>
+                                                    Total HPP
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {formatCurrency(totalHPP)}
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </div>
                         )}
 
@@ -252,57 +261,61 @@ export default function ProfitLossIndex({
                             <h3 className="mb-3 text-lg font-semibold">
                                 Biaya Operasional
                             </h3>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Kode</TableHead>
-                                        <TableHead>Nama Akun</TableHead>
-                                        <TableHead className="text-right">
-                                            Jumlah
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {expenseDetails.length > 0 ? (
-                                        expenseDetails.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>
-                                                    {item.code}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {item.name}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    {formatCurrency(
-                                                        item.amount,
-                                                    )}
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <Table className="content">
+                                    <TableHeader>
+                                        <TableRow className="dark:border-b-2 dark:border-white/25">
+                                            <TableHead>Kode</TableHead>
+                                            <TableHead>Nama Akun</TableHead>
+                                            <TableHead className="text-right">
+                                                Jumlah
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {expenseDetails.length > 0 ? (
+                                            expenseDetails.map(
+                                                (item, index) => (
+                                                    <TableRow key={index}>
+                                                        <TableCell>
+                                                            {item.code}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {item.name}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            {formatCurrency(
+                                                                item.amount,
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )
+                                        ) : (
+                                            <TableRow className="dark:border-b-2 dark:border-white/25">
+                                                <TableCell
+                                                    colSpan={3}
+                                                    className="text-center text-muted-foreground"
+                                                >
+                                                    Tidak ada data biaya
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={3}
-                                                className="text-center text-muted-foreground"
-                                            >
-                                                Tidak ada data biaya
+                                        )}
+                                        <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                            <TableCell colSpan={2}>
+                                                Total Biaya
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(totalExpense)}
                                             </TableCell>
                                         </TableRow>
-                                    )}
-                                    <TableRow className="font-semibold">
-                                        <TableCell colSpan={2}>
-                                            Total Biaya
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {formatCurrency(totalExpense)}
-                                        </TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </div>
 
                         {/* Laba Bersih */}
-                        <div className="border-t-2 pt-4">
+                        <div className="border-t-2 pt-4 dark:border-white/25">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xl font-bold">
                                     {netProfit >= 0

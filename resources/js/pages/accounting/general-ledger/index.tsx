@@ -98,7 +98,7 @@ export default function GeneralLedgerIndex({
                                 })
                             }
                         >
-                            <SelectTrigger>
+                            <SelectTrigger className="combobox">
                                 <SelectValue placeholder="Semua Akun" />
                             </SelectTrigger>
                             <SelectContent>
@@ -117,8 +117,7 @@ export default function GeneralLedgerIndex({
                 }
             />
             <div className="mb-4"></div>
-
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Buku Besar</CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -127,51 +126,53 @@ export default function GeneralLedgerIndex({
                     </p>
                 </CardHeader>
                 <CardContent>
-                    <TableLayout
-                        tableColumn={[
-                            'Kode',
-                            'Nama Akun',
-                            'Saldo Awal',
-                            'Debit',
-                            'Kredit',
-                            'Saldo Akhir',
-                            'Aksi',
-                        ]}
-                        tableRow={ledgerData}
-                        renderRow={(item) => (
-                            <>
-                                <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                    {item.account.code}
-                                </TableCell>
-                                <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                    {item.account.name}
-                                </TableCell>
-                                <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                    {formatCurrency(item.opening_balance)}
-                                </TableCell>
-                                <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                    {formatCurrency(item.debit_total)}
-                                </TableCell>
-                                <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                    {formatCurrency(item.credit_total)}
-                                </TableCell>
-                                <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                    {formatCurrency(item.closing_balance)}
-                                </TableCell>
-                                <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                    <Link href={show(item.account.id).url}>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="btn-info"
-                                        >
-                                            <Info />
-                                        </Button>
-                                    </Link>
-                                </TableCell>
-                            </>
-                        )}
-                    />
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <TableLayout
+                            tableColumn={[
+                                'Kode',
+                                'Nama Akun',
+                                'Saldo Awal',
+                                'Debit',
+                                'Kredit',
+                                'Saldo Akhir',
+                                'Aksi',
+                            ]}
+                            tableRow={ledgerData}
+                            renderRow={(item) => (
+                                <>
+                                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
+                                        {item.account.code}
+                                    </TableCell>
+                                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
+                                        {item.account.name}
+                                    </TableCell>
+                                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
+                                        {formatCurrency(item.opening_balance)}
+                                    </TableCell>
+                                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
+                                        {formatCurrency(item.debit_total)}
+                                    </TableCell>
+                                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
+                                        {formatCurrency(item.credit_total)}
+                                    </TableCell>
+                                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
+                                        {formatCurrency(item.closing_balance)}
+                                    </TableCell>
+                                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
+                                        <Link href={show(item.account.id).url}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="btn-info"
+                                            >
+                                                <Info />
+                                            </Button>
+                                        </Link>
+                                    </TableCell>
+                                </>
+                            )}
+                        />
+                    </div>
                 </CardContent>
             </Card>
         </AppLayout>

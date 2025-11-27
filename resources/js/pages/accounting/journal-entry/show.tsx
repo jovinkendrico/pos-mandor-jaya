@@ -75,7 +75,6 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
             (sum, detail) => sum + (formatNumber(detail.credit) || 0),
             0,
         ) || 0;
-    console.log(totalCredit);
     const difference = totalDebit - totalCredit;
 
     return (
@@ -93,7 +92,7 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
             </div>
 
             <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Informasi Jurnal</CardTitle>
                     </CardHeader>
@@ -147,7 +146,7 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Total</CardTitle>
                     </CardHeader>
@@ -186,7 +185,7 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
                 </Card>
             </div>
 
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Detail Jurnal</CardTitle>
                 </CardHeader>
