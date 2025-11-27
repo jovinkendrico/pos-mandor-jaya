@@ -1,7 +1,9 @@
 import BankForm from '@/components/master/banks/bank-form';
 import BankTable from '@/components/master/banks/bank-table';
 import PageTitle from '@/components/page-title';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -10,8 +12,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import FilterBar from '@/components/transaction/filter-bar';
-import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
@@ -91,26 +91,6 @@ const BankIndex = (props: PageProps) => {
         openModal: openDeleteModal,
         closeModal: closeDeleteModal,
     } = useDisclosure();
-
-    const handleSortOrderToggle = () => {
-        const newOrder = allFilters.sort_order === 'asc' ? 'desc' : 'asc';
-        handleFilterChange({ sort_order: newOrder });
-    };
-
-    const handleReset = () => {
-        handleFilterChange({
-            search: '',
-            type: 'all',
-            sort_by: 'name',
-            sort_order: 'asc',
-        });
-    };
-
-    const hasActiveFilters =
-        allFilters.search !== '' ||
-        allFilters.type !== 'all' ||
-        allFilters.sort_by !== 'name' ||
-        allFilters.sort_order !== 'asc';
 
     return (
         <>

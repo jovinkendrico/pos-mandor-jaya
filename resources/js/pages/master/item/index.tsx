@@ -1,7 +1,9 @@
 import ItemForm from '@/components/master/items/item-form';
 import ItemTable from '@/components/master/items/item-table';
 import PageTitle from '@/components/page-title';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Button } from '@/components/ui/button';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -10,8 +12,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import FilterBar from '@/components/transaction/filter-bar';
-import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
@@ -92,26 +92,6 @@ const ItemIndex = (props: PageProps) => {
         openDeleteModal();
     };
 
-    const handleSortOrderToggle = () => {
-        const newOrder = allFilters.sort_order === 'asc' ? 'desc' : 'asc';
-        handleFilterChange({ sort_order: newOrder });
-    };
-
-    const handleReset = () => {
-        handleFilterChange({
-            search: '',
-            stock_filter: 'all',
-            sort_by: 'name',
-            sort_order: 'asc',
-        });
-    };
-
-    const hasActiveFilters =
-        allFilters.search !== '' ||
-        allFilters.stock_filter !== 'all' ||
-        allFilters.sort_by !== 'name' ||
-        allFilters.sort_order !== 'asc';
-
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -150,13 +130,20 @@ const ItemIndex = (props: PageProps) => {
                                 handleFilterChange({ stock_filter: value })
                             }
                         >
-                            <SelectTrigger id="stock_filter" className="combobox">
+                            <SelectTrigger
+                                id="stock_filter"
+                                className="combobox"
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="in_stock">Ada Stok</SelectItem>
-                                <SelectItem value="low">Stok Rendah (≤10)</SelectItem>
+                                <SelectItem value="in_stock">
+                                    Ada Stok
+                                </SelectItem>
+                                <SelectItem value="low">
+                                    Stok Rendah (≤10)
+                                </SelectItem>
                                 <SelectItem value="out">Habis</SelectItem>
                             </SelectContent>
                         </Select>
