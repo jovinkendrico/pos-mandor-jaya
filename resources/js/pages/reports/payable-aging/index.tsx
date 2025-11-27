@@ -365,7 +365,10 @@ export default function PayableAgingIndex({
                                                         {item.days_overdue} hari
                                                     </Badge>
                                                 ) : (
-                                                    <Badge className="badge-gray-light">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="badge-gray-light"
+                                                    >
                                                         Sisa{' '}
                                                         {item.days_until_due}{' '}
                                                         hari

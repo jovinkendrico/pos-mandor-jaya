@@ -115,6 +115,7 @@ const StockFilterInput = ({
             <Label htmlFor={id}>{label}</Label>
             <div className="flex items-center gap-2">
                 <Button
+                    variant="outline"
                     size="icon"
                     onClick={handleDecrement}
                     className="btn-secondary h-9 w-9 shrink-0 cursor-pointer"

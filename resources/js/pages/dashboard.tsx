@@ -949,12 +949,12 @@ export default function Dashboard({
                                                         {item.name}
                                                     </span>
                                                     <Badge
-                                                        variant={
+                                                        className={cn(
                                                             item.stock <= 5
-                                                                ? 'destructive'
-                                                                : 'warning'
-                                                        }
-                                                        className="ml-2 text-xs"
+                                                                ? 'badge-red-light'
+                                                                : 'badge-yellow-light',
+                                                            'ml-2 text-xs',
+                                                        )}
                                                     >
                                                         {item.stock}
                                                     </Badge>
@@ -1185,14 +1185,11 @@ export default function Dashboard({
                                                                         )}
                                                                     </span>
                                                                     {isDueSoon && (
-                                                                        <Badge
-                                                                            variant="warning"
-                                                                            className="text-xs"
-                                                                        >
+                                                                        <Badge className="badge-yellow-light text-center text-xs">
                                                                             {
                                                                                 daysUntilDue
-                                                                            }
-                                                                            d
+                                                                            }{' '}
+                                                                            hari
                                                                         </Badge>
                                                                     )}
                                                                 </div>
@@ -1282,14 +1279,11 @@ export default function Dashboard({
                                                                         )}
                                                                     </span>
                                                                     {isDueSoon && (
-                                                                        <Badge
-                                                                            variant="warning"
-                                                                            className="text-xs"
-                                                                        >
+                                                                        <Badge className="badge-yellow-light text-center text-xs">
                                                                             {
                                                                                 daysUntilDue
-                                                                            }
-                                                                            d
+                                                                            }{' '}
+                                                                            hari
                                                                         </Badge>
                                                                     )}
                                                                 </div>
