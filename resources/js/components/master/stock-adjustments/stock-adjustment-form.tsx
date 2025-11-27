@@ -1,18 +1,19 @@
 import { DatePicker } from '@/components/date-picker';
 import InputError from '@/components/input-error';
+import { AsyncCombobox } from '@/components/ui/async-combobox';
 import { Button } from '@/components/ui/button';
+import { ComboboxOption } from '@/components/ui/combobox';
 import {
     DialogContent,
     DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { AsyncCombobox, AsyncComboboxOption } from '@/components/ui/async-combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import useStockAdjustment from '@/hooks/use-stock-adjustment';
-import { formatCurrency, formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
+import { formatCurrency, formatNumberWithSeparator } from '@/lib/utils';
 import { IItem } from '@/types';
 import { Dialog } from '@radix-ui/react-dialog';
 import { useEffect, useMemo, useState } from 'react';
@@ -32,15 +33,18 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
         errors,
         processing,
         reset,
+
         handleSubmit,
         handleCancel,
+        handleQuantityChange,
+        handleUnitCostChange,
     } = useStockAdjustment(onModalClose);
 
     const [selectedItem, setSelectedItem] = useState<IItem | null>(null);
-    const [quantityDisplay, setQuantityDisplay] = useState('');
-    const [unitCostDisplay, setUnitCostDisplay] = useState('');
+    const [quantityDisplayValue, setQuantityDisplayValue] = useState('');
+    const [unitCostDisplayValue, setUnitCostDisplayValue] = useState('');
 
-    const itemOptions: AsyncComboboxOption[] = useMemo(() => {
+    const itemOptions: ComboboxOption[] = useMemo(() => {
         if (!items || !Array.isArray(items)) {
             return [];
         }
@@ -55,8 +59,8 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
         if (isModalOpen) {
             reset();
             setSelectedItem(null);
-            setQuantityDisplay('');
-            setUnitCostDisplay('');
+            setQuantityDisplayValue('');
+            setUnitCostDisplayValue('');
         }
     }, [isModalOpen, reset]);
 
@@ -66,70 +70,12 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
             setSelectedItem(item || null);
             if (item && !data.unit_cost) {
                 setData('unit_cost', item.modal_price || 0);
-                setUnitCostDisplay(formatCurrency(item.modal_price || 0));
+                setUnitCostDisplayValue(formatCurrency(item.modal_price || 0));
             }
         } else {
             setSelectedItem(null);
         }
     }, [data.item_id, items, data.unit_cost, setData]);
-
-    const handleItemChange = async (value: string) => {
-        setData('item_id', value ? Number(value) : '');
-        
-        if (!value) {
-            setSelectedItem(null);
-            return;
-        }
-        
-        // Try to find item in local items first
-        let item = items.find((i) => i.id === Number(value));
-        
-        // If not found, fetch from API
-        if (!item) {
-            try {
-                const response = await fetch(`/stock-adjustments/items/search?id=${value}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    },
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const foundOption = data.data?.find((opt: AsyncComboboxOption) => opt.value === value);
-                    if (foundOption?.item) {
-                        item = foundOption.item as IItem;
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to fetch item:', error);
-            }
-        }
-        
-        if (item) {
-            setSelectedItem(item);
-            if (!data.unit_cost) {
-                setData('unit_cost', item.modal_price || 0);
-                setUnitCostDisplay(formatCurrency(item.modal_price || 0));
-            }
-        } else {
-            setSelectedItem(null);
-        }
-    };
-
-    const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setQuantityDisplay(value);
-        const parsed = parseStringtoNumber(value);
-        setData('quantity', parsed !== null ? parsed : '');
-    };
-
-    const handleUnitCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setUnitCostDisplay(value);
-        const parsed = parseStringtoNumber(value);
-        setData('unit_cost', parsed !== null ? parsed : '');
-    };
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
@@ -144,14 +90,18 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
                     }}
                 >
                     <div className="space-y-4">
-                        <div>
+                        <div className="flex flex-col">
                             <Label htmlFor="item_id" required>
                                 Barang
                             </Label>
                             <AsyncCombobox
                                 initialOptions={itemOptions}
-                                value={data.item_id ? data.item_id.toString() : ''}
-                                onValueChange={handleItemChange}
+                                value={
+                                    data.item_id ? data.item_id.toString() : ''
+                                }
+                                onValueChange={(value) =>
+                                    setData('item_id', Number(value))
+                                }
                                 placeholder="Pilih barang"
                                 searchUrl="/stock-adjustments/items/search"
                                 searchParam="search"
@@ -160,7 +110,10 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
                             <InputError message={errors.item_id} />
                             {selectedItem && (
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Stok saat ini: {formatNumberWithSeparator(selectedItem.stock || 0)}
+                                    Stok saat ini:{' '}
+                                    {formatNumberWithSeparator(
+                                        selectedItem.stock || 0,
+                                    )}
                                 </p>
                             )}
                         </div>
@@ -173,26 +126,35 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
                                 <Input
                                     id="quantity"
                                     type="text"
-                                    value={quantityDisplay}
-                                    onChange={handleQuantityChange}
+                                    value={quantityDisplayValue}
+                                    onChange={(e) => {
+                                        handleQuantityChange(
+                                            e,
+                                            setQuantityDisplayValue,
+                                        );
+                                    }}
                                     placeholder="Masukkan jumlah (positif untuk tambah, negatif untuk kurangi)"
                                     className="input-box"
                                 />
                                 <InputError message={errors.quantity} />
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    Gunakan tanda minus (-) untuk mengurangi stok
+                                    Gunakan tanda minus (-) untuk mengurangi
+                                    stok
                                 </p>
                             </div>
 
                             <div>
-                                <Label htmlFor="unit_cost">
-                                    Harga Satuan
-                                </Label>
+                                <Label htmlFor="unit_cost">Harga Satuan</Label>
                                 <Input
                                     id="unit_cost"
                                     type="text"
-                                    value={unitCostDisplay}
-                                    onChange={handleUnitCostChange}
+                                    value={unitCostDisplayValue}
+                                    onChange={(e) => {
+                                        handleUnitCostChange(
+                                            e,
+                                            setUnitCostDisplayValue,
+                                        );
+                                    }}
                                     placeholder="Masukkan harga satuan"
                                     className="input-box"
                                 />
@@ -206,7 +168,9 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
                             </Label>
                             <DatePicker
                                 value={data.adjustment_date}
-                                onChange={(date) => setData('adjustment_date', date as Date)}
+                                onChange={(date) =>
+                                    setData('adjustment_date', date as Date)
+                                }
                                 className="combobox max-w-full"
                             />
                             <InputError message={errors.adjustment_date} />
@@ -217,7 +181,9 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
                             <Textarea
                                 id="notes"
                                 value={data.notes}
-                                onChange={(e) => setData('notes', e.target.value)}
+                                onChange={(e) =>
+                                    setData('notes', e.target.value)
+                                }
                                 rows={3}
                                 className="input-box"
                                 placeholder="Masukkan catatan (opsional)"
@@ -250,4 +216,3 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
 };
 
 export default StockAdjustmentForm;
-

@@ -407,7 +407,7 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                                                         disabled={
                                                             isFullyReturned
                                                         }
-                                                        className="cursor-pointer border-white"
+                                                        className="cursor-pointer dark:border-white"
                                                     />
                                                 </TableCell>
                                                 <TableCell className="text-center font-mono">

@@ -4,6 +4,7 @@ import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { PurchaseStatus } from '@/constants/enum';
 import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
+import { show } from '@/routes/purchases';
 import { IPurchase } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Info, Trash } from 'lucide-react';
@@ -85,7 +86,7 @@ const PurchaseTable = (props: PurchaseTableProps) => {
                             </Badge>
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
-                            <Link href={`/purchases/${row.id}`}>
+                            <Link href={show(row.id).url}>
                                 <Button
                                     variant="ghost"
                                     size="icon"

@@ -1,30 +1,20 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, formatDate, formatNumberWithSeparator } from '@/lib/utils';
 import { TableCell } from '@/components/ui/table';
-import { Eye, Trash } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import {
+    formatCurrency,
+    formatDate,
+    formatNumberWithSeparator,
+} from '@/lib/utils';
 import { show } from '@/routes/stock-adjustments';
-
-interface StockAdjustment {
-    id: number;
-    item_id: number;
-    item?: {
-        id: number;
-        name: string;
-        code?: string;
-    };
-    quantity: number;
-    unit_cost: number;
-    movement_date: string;
-    notes?: string;
-    created_at: string;
-}
+import { IStockAdjustment } from '@/types';
+import { Link } from '@inertiajs/react';
+import { Info, Trash } from 'lucide-react';
 
 interface StockAdjustmentTableProps {
-    adjustments: StockAdjustment[];
-    onDelete?: (adjustment: StockAdjustment) => void;
+    adjustments: IStockAdjustment[];
+    onDelete?: (adjustment: IStockAdjustment) => void;
     pageFrom?: number;
 }
 
@@ -65,7 +55,9 @@ const StockAdjustmentTable = (props: StockAdjustmentTableProps) => {
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         <Badge
-                            variant={row.quantity > 0 ? 'default' : 'destructive'}
+                            variant={
+                                row.quantity > 0 ? 'default' : 'destructive'
+                            }
                         >
                             {row.quantity > 0 ? '+' : ''}
                             {formatNumberWithSeparator(row.quantity)}
@@ -85,9 +77,9 @@ const StockAdjustmentTable = (props: StockAdjustmentTableProps) => {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="btn-view"
+                                className="btn-info"
                             >
-                                <Eye />
+                                <Info />
                             </Button>
                         </Link>
                         {onDelete && (
@@ -108,4 +100,3 @@ const StockAdjustmentTable = (props: StockAdjustmentTableProps) => {
 };
 
 export default StockAdjustmentTable;
-

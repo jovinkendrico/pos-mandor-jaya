@@ -1,3 +1,11 @@
+export enum AccountType {
+    ASSET = 'asset',
+    LIABILITY = 'liability',
+    EQUITY = 'equity',
+    INCOME = 'income',
+    EXPENSE = 'expense',
+}
+
 export enum PurchaseStatus {
     PENDING = 'pending',
     CONFIRMED = 'confirmed',
@@ -5,6 +13,16 @@ export enum PurchaseStatus {
 export enum SaleStatus {
     PENDING = 'pending',
     CONFIRMED = 'confirmed',
+}
+
+export enum CashInStatus {
+    DRAFT = 'draft',
+    POSTED = 'posted',
+}
+
+export enum CashOutStatus {
+    DRAFT = 'draft',
+    POSTED = 'posted',
 }
 
 export enum ReturnType {

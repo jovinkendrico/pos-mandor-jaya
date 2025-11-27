@@ -1,4 +1,11 @@
-import { PaymentMethod, PurchaseStatus, SaleStatus } from '@/constants/enum';
+import {
+    AccountType,
+    CashInStatus,
+    CashOutStatus,
+    PaymentMethod,
+    PurchaseStatus,
+    SaleStatus,
+} from '@/constants/enum';
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
@@ -256,6 +263,36 @@ export interface PaginatedData<T> {
     to: number;
     total: number;
 }
+
+export interface StockAdjustment {
+    id: number;
+    item_id: number;
+    item: Item;
+    reference_type: string;
+    reference_id: number;
+    quantity: number;
+    unit_cost: number;
+    remaining_quantity: number;
+    movement_date: Date;
+    adjustment_date: Date;
+    notes: string;
+}
+
+export type IStockAdjustment = Pick<
+    StockAdjustment,
+    | 'id'
+    | 'item_id'
+    | 'reference_type'
+    | 'reference_id'
+    | 'quantity'
+    | 'unit_cost'
+    | 'remaining_quantity'
+    | 'movement_date'
+    | 'adjustment_date'
+    | 'notes'
+> & {
+    item: IItem;
+};
 
 export interface Purchase {
     id: number;
@@ -554,7 +591,7 @@ export interface ChartOfAccount {
     id: number;
     code: string;
     name: string;
-    type: 'asset' | 'liability' | 'equity' | 'income' | 'expense';
+    type: AccountType;
     parent_id?: number;
     parent?: ChartOfAccount;
     description?: string;
@@ -566,15 +603,10 @@ export interface ChartOfAccount {
 
 export type IChartOfAccount = Pick<
     ChartOfAccount,
-    | 'id'
-    | 'code'
-    | 'name'
-    | 'type'
-    | 'parent_id'
-    | 'description'
-    | 'is_active'
-    | 'subtotal'
->;
+    'id' | 'code' | 'name' | 'type' | 'parent_id' | 'description' | 'is_active'
+> & {
+    parent?: IChartOfAccount;
+};
 
 export interface PurchasePayment {
     id: number;
@@ -687,14 +719,14 @@ export type ISalePayment = Pick<
 export interface CashIn {
     id: number;
     cash_in_number: string;
-    cash_in_date: string;
+    cash_in_date: Date;
     bank_id: number;
     bank?: Bank;
     chart_of_account_id: number;
     chart_of_account?: ChartOfAccount;
     amount: number;
     description?: string;
-    status: 'draft' | 'posted';
+    status: CashInStatus;
     reference_type?: string;
     reference_id?: number;
     created_at: string;
@@ -702,23 +734,59 @@ export interface CashIn {
     [key: string]: unknown;
 }
 
+export type ICashIn = Pick<
+    CashIn,
+    | 'id'
+    | 'cash_in_number'
+    | 'cash_in_date'
+    | 'bank_id'
+    | 'chart_of_account_id'
+    | 'amount'
+    | 'description'
+    | 'status'
+    | 'reference_type'
+    | 'reference_id'
+> & {
+    bank?: IBank;
+    auto_post?: boolean;
+    chart_of_account?: IChartOfAccount;
+};
+
 export interface CashOut {
     id: number;
     cash_out_number: string;
-    cash_out_date: string;
+    cash_out_date: Date;
     bank_id: number;
     bank?: Bank;
     chart_of_account_id: number;
     chart_of_account?: ChartOfAccount;
     amount: number;
     description?: string;
-    status: 'draft' | 'posted';
+    status: CashOutStatus;
     reference_type?: string;
     reference_id?: number;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 }
+
+export type ICashOut = Pick<
+    CashOut,
+    | 'id'
+    | 'cash_out_number'
+    | 'cash_out_date'
+    | 'bank_id'
+    | 'chart_of_account_id'
+    | 'amount'
+    | 'description'
+    | 'status'
+    | 'reference_type'
+    | 'reference_id'
+> & {
+    bank?: IBank;
+    auto_post?: boolean;
+    chart_of_account?: IChartOfAccount;
+};
 
 export interface JournalEntryDetail {
     id: number;

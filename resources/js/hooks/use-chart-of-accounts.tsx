@@ -1,14 +1,17 @@
+import { AccountType } from '@/constants/enum';
 import { destroy, store, update } from '@/routes/chart-of-accounts';
 import { IChartOfAccount } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
+const AccountTypeValues = Object.values(AccountType);
+
 const chartOfAccountSchema = Yup.object().shape({
     code: Yup.string().required('Kode akun harus diisi.'),
     name: Yup.string().required('Nama akun harus diisi.'),
-    type: Yup.string()
-        .oneOf(['asset', 'liability', 'equity', 'income', 'expense'], 'Tipe akun tidak valid.')
+    type: Yup.mixed<AccountType>()
+        .oneOf(AccountTypeValues, 'Tipe akun tidak valid.')
         .required('Tipe akun harus diisi.'),
     parent_id: Yup.number().nullable(),
     description: Yup.string().nullable(),
@@ -28,7 +31,12 @@ const useChartOfAccounts = (closeModal: () => void) => {
     } = useForm({
         code: '',
         name: '',
-        type: 'asset' as 'asset' | 'liability' | 'equity' | 'income' | 'expense',
+        type: 'asset' as
+            | 'asset'
+            | 'liability'
+            | 'equity'
+            | 'income'
+            | 'expense',
         parent_id: null as number | null,
         description: '',
         is_active: true,
@@ -97,4 +105,3 @@ const useChartOfAccounts = (closeModal: () => void) => {
 };
 
 export default useChartOfAccounts;
-

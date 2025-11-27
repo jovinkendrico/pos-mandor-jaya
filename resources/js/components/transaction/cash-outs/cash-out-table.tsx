@@ -1,102 +1,94 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { formatCurrency, formatDatetoString } from '@/lib/utils';
-import { CashOut } from '@/types';
-import { Eye } from 'lucide-react';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
+import { ICashOut } from '@/types';
+import { Link } from '@inertiajs/react';
+import { Info, Trash } from 'lucide-react';
 
 interface CashOutTableProps {
-    cashOuts: CashOut[];
-    onView: (cashOut: CashOut) => void;
+    cashOuts: ICashOut[];
+    pageFrom: number;
+    onDelete: (cashOut: ICashOut) => void;
 }
 
-export default function CashOutTable({
-    cashOuts,
-    onView,
-}: CashOutTableProps) {
+const CashOutTable = (props: CashOutTableProps) => {
+    const { cashOuts, pageFrom, onDelete } = props;
+
+    const tableColumn = [
+        'Kode',
+        'Tanggal',
+        'Bank/Kas',
+        'Akun Pengeluaran',
+        'Jumlah',
+        'Keterangan',
+        'Status',
+        'Aksi',
+    ];
+
     return (
-        <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>No. Kas Keluar</TableHead>
-                        <TableHead>Tanggal</TableHead>
-                        <TableHead>Bank/Kas</TableHead>
-                        <TableHead>Akun Pengeluaran</TableHead>
-                        <TableHead className="text-right">Jumlah</TableHead>
-                        <TableHead>Keterangan</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-center">Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {cashOuts.length === 0 ? (
-                        <TableRow>
-                            <TableCell
-                                colSpan={8}
-                                className="text-center text-muted-foreground"
+        <TableLayout
+            tableName="Kas Keluar"
+            tableColumn={tableColumn}
+            tableRow={cashOuts}
+            pageFrom={pageFrom}
+            text="Tidak ada data Kas Keluar"
+            renderRow={(row) => (
+                <>
+                    <TableCell className="flex w-full max-w-[120px] min-w-[105px] items-center justify-center text-center font-mono">
+                        {row.cash_out_number}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {formatDatetoString(new Date(row.cash_out_date))}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.bank?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.chart_of_account?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {formatCurrency(row.amount)}
+                    </TableCell>
+                    <TableCell className="flex w-full max-w-xs items-center justify-center truncate text-center">
+                        {row.description || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        <Badge
+                            className={cn(
+                                row.status === 'posted'
+                                    ? 'badge-green-light'
+                                    : 'badge-yellow-light',
+                            )}
+                        >
+                            {row.status === 'posted' ? 'Posted' : 'Draft'}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <Link href={`/cash-outs/${row.id}`}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="btn-info"
                             >
-                                Tidak ada data kas keluar
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        cashOuts.map((cashOut) => (
-                            <TableRow key={cashOut.id}>
-                                <TableCell className="font-medium">
-                                    {cashOut.cash_out_number}
-                                </TableCell>
-                                <TableCell>
-                                    {formatDatetoString(
-                                        new Date(cashOut.cash_out_date),
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {cashOut.bank?.name || '-'}
-                                </TableCell>
-                                <TableCell>
-                                    {cashOut.chart_of_account?.name || '-'}
-                                </TableCell>
-                                <TableCell className="text-right font-medium">
-                                    {formatCurrency(cashOut.amount)}
-                                </TableCell>
-                                <TableCell className="max-w-xs truncate">
-                                    {cashOut.description || '-'}
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        variant={
-                                            cashOut.status === 'posted'
-                                                ? 'default'
-                                                : 'secondary'
-                                        }
-                                    >
-                                        {cashOut.status === 'posted'
-                                            ? 'Posted'
-                                            : 'Draft'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onView(cashOut)}
-                                    >
-                                        <Eye className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-        </div>
+                                <Info />
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(row)}
+                            className="btn-trash"
+                        >
+                            <Trash />
+                        </Button>
+                    </TableCell>
+                </>
+            )}
+        />
     );
-}
+};
+
+export default CashOutTable;
 

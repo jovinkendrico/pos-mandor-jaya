@@ -3,6 +3,9 @@ import StockAdjustmentTable from '@/components/master/stock-adjustments/stock-ad
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import { Button } from '@/components/ui/button';
+import { Combobox } from '@/components/ui/combobox';
+
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -11,45 +14,33 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
-import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { destroy, index } from '@/routes/stock-adjustments';
-import { BreadcrumbItem, IItem, PaginatedData } from '@/types';
+import {
+    BreadcrumbItem,
+    IItem,
+    IStockAdjustment,
+    PaginatedData,
+} from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import useStockAdjustment from '@/hooks/use-stock-adjustment';
-
-interface StockAdjustment {
-    id: number;
-    item_id: number;
-    item?: {
-        id: number;
-        name: string;
-        code?: string;
-    };
-    quantity: number;
-    unit_cost: number;
-    movement_date: string;
-    notes?: string;
-    created_at: string;
-}
 
 interface PageProps {
-    adjustments: PaginatedData<StockAdjustment>;
+    adjustments: PaginatedData<IStockAdjustment>;
     items?: IItem[];
     filters?: {
-        search?: string;
-        date_from?: string;
-        date_to?: string;
-        item_id?: string;
-        adjustment_type?: string;
-        sort_by?: string;
-        sort_order?: string;
+        search: string;
+        status: string;
+        date_from: string;
+        date_to: string;
+        item_id: string;
+        adjustment_type: string;
+        sort_by: string;
+        sort_order: string;
     };
 }
 
@@ -70,6 +61,7 @@ const StockAdjustmentIndex = (props: PageProps) => {
         items = [],
         filters = {
             search: '',
+            status: 'all',
             date_from: '',
             date_to: '',
             item_id: '',
@@ -84,6 +76,8 @@ const StockAdjustmentIndex = (props: PageProps) => {
         {
             ...filters,
             status: 'all',
+            date_from: '',
+            date_to: '',
         },
     );
 
@@ -98,14 +92,19 @@ const StockAdjustmentIndex = (props: PageProps) => {
         closeModal: closeDeleteModal,
     } = useDisclosure();
 
-    const [selectedAdjustment, setSelectedAdjustment] = useState<StockAdjustment | undefined>(
-        undefined,
-    );
+    const [selectedAdjustment, setSelectedAdjustment] = useState<
+        IStockAdjustment | undefined
+    >(undefined);
 
-    const handleDeleteClick = (adjustment: StockAdjustment) => {
+    const handleDeleteClick = (adjustment: IStockAdjustment) => {
         setSelectedAdjustment(adjustment);
         openDeleteModal();
     };
+
+    const itemOptions = items.map((item) => ({
+        value: item.id.toString(),
+        label: `${item.code} - ${item.name}`,
+    }));
 
     return (
         <>
@@ -127,63 +126,56 @@ const StockAdjustmentIndex = (props: PageProps) => {
                     filters={{ ...allFilters, search: searchTerm }}
                     onFilterChange={handleFilterChange}
                     showPaymentStatus={false}
+                    showStatus={false}
                     sortOptions={[
                         { value: 'movement_date', label: 'Tanggal' },
                         { value: 'quantity', label: 'Kuantitas' },
                         { value: 'unit_cost', label: 'Harga Satuan' },
                     ]}
-                    statusOptions={[
-                        { value: 'all', label: 'Semua Status' },
-                    ]}
-                />
-                <Card className="content mt-4 p-4">
-                    <div className="flex flex-wrap items-end gap-4">
-                        <div className="w-[180px]">
-                            <Label htmlFor="item_id">Barang</Label>
-                            <Select
-                                value={allFilters.item_id || undefined}
-                                onValueChange={(value) =>
-                                    handleFilterChange({ item_id: value || '' })
-                                }
-                            >
-                                <SelectTrigger id="item_id" className="combobox">
-                                    <SelectValue placeholder="Semua Barang" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {items.map((item) => (
-                                        <SelectItem
-                                            key={item.id}
-                                            value={item.id.toString()}
-                                        >
-                                            {item.code} - {item.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="w-[180px]">
-                            <Label htmlFor="adjustment_type">Tipe Penyesuaian</Label>
-                            <Select
-                                value={allFilters.adjustment_type || 'all'}
-                                onValueChange={(value) =>
-                                    handleFilterChange({ adjustment_type: value })
-                                }
-                            >
-                                <SelectTrigger
-                                    id="adjustment_type"
-                                    className="combobox"
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Semua</SelectItem>
-                                    <SelectItem value="increase">Penambahan</SelectItem>
-                                    <SelectItem value="decrease">Pengurangan</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                >
+                    <div className="w-[180px]">
+                        <Label htmlFor="item_id">Barang</Label>
+                        <Combobox
+                            options={itemOptions}
+                            value={allFilters.item_id || ''}
+                            onValueChange={(value) =>
+                                handleFilterChange({ item_id: value })
+                            }
+                            placeholder="Pilih Barang"
+                            searchPlaceholder="Cari barang..."
+                            className="combobox"
+                        />
                     </div>
-                </Card>
+                    <div className="w-[180px]">
+                        <Label htmlFor="adjustment_type">
+                            Tipe Penyesuaian
+                        </Label>
+                        <Select
+                            value={allFilters.adjustment_type || 'all'}
+                            onValueChange={(value) =>
+                                handleFilterChange({
+                                    adjustment_type: value,
+                                })
+                            }
+                        >
+                            <SelectTrigger
+                                id="adjustment_type"
+                                className="combobox"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Semua</SelectItem>
+                                <SelectItem value="increase">
+                                    Penambahan
+                                </SelectItem>
+                                <SelectItem value="decrease">
+                                    Pengurangan
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </FilterBar>
                 <div className="mt-4">
                     <StockAdjustmentTable
                         adjustments={adjustments.data}
@@ -214,4 +206,3 @@ const StockAdjustmentIndex = (props: PageProps) => {
 };
 
 export default StockAdjustmentIndex;
-
