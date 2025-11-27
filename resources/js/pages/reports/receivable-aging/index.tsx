@@ -1,16 +1,22 @@
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import PageTitle from '@/components/page-title';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { DatePicker } from '@/components/date-picker';
+import PageTitle from '@/components/page-title';
+import FilterBar from '@/components/transaction/filter-bar';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import useResourceFilters from '@/hooks/use-resource-filters';
+import AppLayout from '@/layouts/app-layout';
+import { formatCurrency, formatDatetoString } from '@/lib/utils';
+import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { useState } from 'react';
-import { Search } from 'lucide-react';
 
 interface CustomerSummary {
     customer_id: number | null;
@@ -65,126 +71,193 @@ export default function ReceivableAgingIndex({
     customerSummary,
     agingData,
 }: PageProps) {
-    const [filters, setFilters] = useState({
-        as_of_date: asOfDate,
-    });
+    const receivableAgingRoute = () => ({ url: '/reports/receivable-aging' });
 
-    const handleFilter = () => {
-        router.get('/reports/receivable-aging', filters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
+    const { allFilters, handleFilterChange } = useResourceFilters(
+        receivableAgingRoute,
+        {
+            search: '',
+            status: 'all',
+            date_from: '',
+            date_to: '',
+            sort_by: 'date',
+            sort_order: 'desc',
+            as_of_date: asOfDate,
+        },
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Piutang Usaha (Aging)" />
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Laporan Piutang Usaha (Aging)" />
             </div>
 
-            <Card className="mb-4">
-                <CardHeader>
-                    <CardTitle>Filter Tanggal</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="as_of_date">Per Tanggal</Label>
-                            <DatePicker
-                                value={filters.as_of_date ? new Date(filters.as_of_date) : undefined}
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        as_of_date: date ? format(date, 'yyyy-MM-dd') : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
-                                <Search className="mr-2 h-4 w-4" />
-                                Tampilkan
-                            </Button>
-                        </div>
+            <FilterBar
+                filters={allFilters}
+                onFilterChange={handleFilterChange}
+                showDateRange={false}
+                showSearch={false}
+                showStatus={false}
+                showPaymentStatus={false}
+                showSort={false}
+                additionalFilters={
+                    <div className="w-[160px]">
+                        <Label htmlFor="as_of_date">Per Tanggal</Label>
+                        <DatePicker
+                            value={
+                                allFilters.as_of_date
+                                    ? new Date(allFilters.as_of_date)
+                                    : undefined
+                            }
+                            onChange={(date) =>
+                                handleFilterChange({
+                                    as_of_date: date
+                                        ? format(date, 'yyyy-MM-dd')
+                                        : '',
+                                })
+                            }
+                            className="input-box"
+                        />
                     </div>
-                </CardContent>
-            </Card>
+                }
+            />
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-5 mb-4">
-                <Card>
+            <div className="mb-4 grid gap-4 md:grid-cols-5">
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">0-30 Hari</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            0-30 Hari
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.total_0_30)}</div>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(summary.total_0_30)}
+                        </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">31-60 Hari</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            31-60 Hari
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600">{formatCurrency(summary.total_31_60)}</div>
+                        <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-300">
+                            {formatCurrency(summary.total_31_60)}
+                        </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">61-90 Hari</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            61-90 Hari
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">{formatCurrency(summary.total_61_90)}</div>
+                        <div className="text-2xl font-bold text-orange-600 dark:text-amber-500">
+                            {formatCurrency(summary.total_61_90)}
+                        </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">{'>'} 90 Hari</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            {'>'} 90 Hari
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{formatCurrency(summary.total_over_90)}</div>
+                        <div className="text-2xl font-bold text-red-600 dark:text-danger-500">
+                            {formatCurrency(summary.total_over_90)}
+                        </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Piutang</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Piutang
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.grand_total)}</div>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(summary.grand_total)}
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Customer Summary */}
             {customerSummary.length > 0 && (
-                <Card className="mb-4">
+                <Card className="content mb-4">
                     <CardHeader>
                         <CardTitle>Ringkasan per Customer</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Customer</TableHead>
-                                        <TableHead className="text-right">Jumlah Transaksi</TableHead>
-                                        <TableHead className="text-right">Total Piutang</TableHead>
-                                        <TableHead className="text-right">0-30 Hari</TableHead>
-                                        <TableHead className="text-right">31-60 Hari</TableHead>
-                                        <TableHead className="text-right">61-90 Hari</TableHead>
-                                        <TableHead className="text-right">{'>'} 90 Hari</TableHead>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">
+                                            Customer
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Jumlah Transaksi
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Total Piutang
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            0-30 Hari
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            31-60 Hari
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            61-90 Hari
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            {'>'} 90 Hari
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {customerSummary.map((customer, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{customer.customer_name}</TableCell>
-                                            <TableCell className="text-right">{customer.count}</TableCell>
-                                            <TableCell className="text-right font-semibold">{formatCurrency(customer.total_remaining)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(customer.age_0_30)}</TableCell>
-                                            <TableCell className="text-right text-yellow-600">{formatCurrency(customer.age_31_60)}</TableCell>
-                                            <TableCell className="text-right text-orange-600">{formatCurrency(customer.age_61_90)}</TableCell>
-                                            <TableCell className="text-right text-red-600">{formatCurrency(customer.age_over_90)}</TableCell>
+                                        <TableRow
+                                            key={index}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center">
+                                                {customer.customer_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {customer.count}
+                                            </TableCell>
+                                            <TableCell className="text-center font-semibold">
+                                                {formatCurrency(
+                                                    customer.total_remaining,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    customer.age_0_30,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center text-yellow-600 dark:text-yellow-300">
+                                                {formatCurrency(
+                                                    customer.age_31_60,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center text-orange-600 dark:text-amber-500">
+                                                {formatCurrency(
+                                                    customer.age_61_90,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center text-red-600 dark:text-danger-500">
+                                                {formatCurrency(
+                                                    customer.age_over_90,
+                                                )}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -195,7 +268,7 @@ export default function ReceivableAgingIndex({
             )}
 
             {/* Detail Aging */}
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Detail Piutang Usaha</CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -203,61 +276,140 @@ export default function ReceivableAgingIndex({
                     </p>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <Table className="content">
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>No. Penjualan</TableHead>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>Jatuh Tempo</TableHead>
-                                    <TableHead>Customer</TableHead>
-                                    <TableHead className="text-right">Total</TableHead>
-                                    <TableHead className="text-right">Sudah Dibayar</TableHead>
-                                    <TableHead className="text-right">Sisa</TableHead>
-                                    <TableHead className="text-center">Status</TableHead>
-                                    <TableHead className="text-right">0-30</TableHead>
-                                    <TableHead className="text-right">31-60</TableHead>
-                                    <TableHead className="text-right">61-90</TableHead>
-                                    <TableHead className="text-right">{'>'} 90</TableHead>
+                                <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="text-center">
+                                        Kode
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Tanggal
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Jatuh Tempo
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Customer
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Total
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Sudah Dibayar
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Sisa
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        0-30
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        31-60
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        61-90
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        {'>'} 90
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {agingData.length > 0 ? (
                                     agingData.map((item) => (
-                                        <TableRow key={item.sale_id}>
-                                            <TableCell className="font-mono">{item.sale_number}</TableCell>
-                                            <TableCell>{formatDatetoString(new Date(item.sale_date))}</TableCell>
-                                            <TableCell>{formatDatetoString(new Date(item.due_date))}</TableCell>
-                                            <TableCell>{item.customer_name}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.total_amount)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.total_paid)}</TableCell>
-                                            <TableCell className="text-right font-semibold">{formatCurrency(item.remaining_amount)}</TableCell>
+                                        <TableRow
+                                            key={item.sale_id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center font-mono">
+                                                {item.sale_number}
+                                            </TableCell>
                                             <TableCell className="text-center">
-                                                {item.days_overdue > 0 ? (
-                                                    <Badge variant="destructive">{item.days_overdue} hari</Badge>
-                                                ) : (
-                                                    <Badge variant="default">{item.days_until_due} hari</Badge>
+                                                {formatDatetoString(
+                                                    new Date(item.sale_date),
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.age_0_30)}</TableCell>
-                                            <TableCell className="text-right text-yellow-600">{formatCurrency(item.age_31_60)}</TableCell>
-                                            <TableCell className="text-right text-orange-600">{formatCurrency(item.age_61_90)}</TableCell>
-                                            <TableCell className="text-right text-red-600">{formatCurrency(item.age_over_90)}</TableCell>
+                                            <TableCell className="text-center">
+                                                {formatDatetoString(
+                                                    new Date(item.due_date),
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.customer_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    item.total_amount,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    item.total_paid,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center font-semibold">
+                                                {formatCurrency(
+                                                    item.remaining_amount,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.days_overdue > 0 ? (
+                                                    <Badge className="badge-red-light">
+                                                        Telat{' '}
+                                                        {item.days_overdue} hari
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge className="badge-gray-light">
+                                                        Sisa{' '}
+                                                        {item.days_until_due}{' '}
+                                                        hari
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(item.age_0_30)}
+                                            </TableCell>
+                                            <TableCell className="text-right text-yellow-600 dark:text-yellow-300">
+                                                {formatCurrency(item.age_31_60)}
+                                            </TableCell>
+                                            <TableCell className="text-right text-orange-600 dark:text-amber-500">
+                                                {formatCurrency(item.age_61_90)}
+                                            </TableCell>
+                                            <TableCell className="text-right text-red-600 dark:text-danger-500">
+                                                {formatCurrency(
+                                                    item.age_over_90,
+                                                )}
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={12} className="text-center text-muted-foreground">
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableCell
+                                            colSpan={12}
+                                            className="text-center"
+                                        >
                                             Tidak ada data piutang
                                         </TableCell>
                                     </TableRow>
                                 )}
-                                <TableRow className="font-semibold bg-muted/50">
+                                <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
                                     <TableCell colSpan={8}>Total</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_0_30)}</TableCell>
-                                    <TableCell className="text-right text-yellow-600">{formatCurrency(summary.total_31_60)}</TableCell>
-                                    <TableCell className="text-right text-orange-600">{formatCurrency(summary.total_61_90)}</TableCell>
-                                    <TableCell className="text-right text-red-600">{formatCurrency(summary.total_over_90)}</TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(summary.total_0_30)}
+                                    </TableCell>
+                                    <TableCell className="text-right text-yellow-600 dark:text-yellow-300">
+                                        {formatCurrency(summary.total_31_60)}
+                                    </TableCell>
+                                    <TableCell className="text-right text-orange-600 dark:text-amber-500">
+                                        {formatCurrency(summary.total_61_90)}
+                                    </TableCell>
+                                    <TableCell className="text-right text-red-600 dark:text-danger-500">
+                                        {formatCurrency(summary.total_over_90)}
+                                    </TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>
@@ -267,4 +419,3 @@ export default function ReceivableAgingIndex({
         </AppLayout>
     );
 }
-

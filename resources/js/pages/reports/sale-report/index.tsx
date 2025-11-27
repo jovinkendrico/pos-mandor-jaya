@@ -1,8 +1,6 @@
-import { DatePicker } from '@/components/date-picker';
+import FilterBar from '@/components/transaction/filter-bar';
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -11,12 +9,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDatetoString } from '@/lib/utils';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { Search } from 'lucide-react';
-import { useState } from 'react';
 
 interface DailySummary {
     date: string;
@@ -86,17 +83,16 @@ export default function SaleReportIndex({
     customerSummary,
     sales,
 }: PageProps) {
-    const [filters, setFilters] = useState({
+    const saleReportRoute = () => ({ url: '/reports/sale-report' });
+
+    const { allFilters, handleFilterChange } = useResourceFilters(saleReportRoute, {
+        search: '',
+        status: 'all',
         date_from: dateFrom,
         date_to: dateTo,
+        sort_by: 'date',
+        sort_order: 'desc',
     });
-
-    const handleFilter = () => {
-        router.get('/reports/sale-report', filters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -105,62 +101,15 @@ export default function SaleReportIndex({
                 <PageTitle title="Laporan Penjualan" />
             </div>
 
-            <Card className="content mb-4">
-                <CardHeader>
-                    <CardTitle>Filter Periode</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div className="flex flex-col space-y-2">
-                            <Label htmlFor="date_from">Dari Tanggal</Label>
-                            <DatePicker
-                                value={
-                                    filters.date_from
-                                        ? new Date(filters.date_from)
-                                        : undefined
-                                }
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_from: date
-                                            ? format(date, 'yyyy-MM-dd')
-                                            : '',
-                                    })
-                                }
-                                className="input-box"
-                            />
-                        </div>
-                        <div className="flex flex-col space-y-2">
-                            <Label htmlFor="date_to">Sampai Tanggal</Label>
-                            <DatePicker
-                                value={
-                                    filters.date_to
-                                        ? new Date(filters.date_to)
-                                        : undefined
-                                }
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_to: date
-                                            ? format(date, 'yyyy-MM-dd')
-                                            : '',
-                                    })
-                                }
-                                className="input-box"
-                            />
-                        </div>
-                        <div className="flex items-end">
-                            <Button
-                                onClick={handleFilter}
-                                className="btn-primary w-full"
-                            >
-                                <Search className="mr-2 h-4 w-4" />
-                                Tampilkan
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <FilterBar
+                filters={allFilters}
+                onFilterChange={handleFilterChange}
+                showDateRange={true}
+                showSearch={false}
+                showStatus={false}
+                showPaymentStatus={false}
+                showSort={false}
+            />
 
             {/* Summary Cards */}
             <div className="mb-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">

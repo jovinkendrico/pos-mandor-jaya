@@ -31,6 +31,7 @@ interface Filters {
     item_id?: string;
     adjustment_type?: string;
     account_id?: string;
+    as_of_date?: string;
 }
 
 const useResourceFilters = (

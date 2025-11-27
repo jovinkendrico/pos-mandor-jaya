@@ -22,6 +22,7 @@ export interface FilterState {
     item_id?: string;
     adjustment_type?: string;
     reference_type?: string;
+    as_of_date?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
@@ -126,6 +127,7 @@ export const useFilterBar = ({
             item_id: '',
             adjustment_type: 'all',
             reference_type: 'all',
+            as_of_date: '',
             ...defaultFilters,
         };
         setLocalFilters(resetFilters);
@@ -160,7 +162,8 @@ export const useFilterBar = ({
           (localFilters.is_active ?? 'all') !== 'all' ||
           (localFilters.item_id ?? '') !== '' ||
           (localFilters.adjustment_type ?? 'all') !== 'all' ||
-          (localFilters.reference_type ?? 'all') !== 'all';
+          (localFilters.reference_type ?? 'all') !== 'all' ||
+          (localFilters.as_of_date ?? '') !== '';
 
     return {
         localFilters,
