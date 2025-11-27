@@ -71,7 +71,7 @@ export default function SaleByCustomerIndex({
             date_to: dateTo,
             sort_by: 'date',
             sort_order: 'desc',
-        }
+        },
     );
 
     return (
@@ -169,7 +169,9 @@ export default function SaleByCustomerIndex({
                         <Table className="content">
                             <TableHeader>
                                 <TableRow className="dark:border-b-2 dark:border-white/25">
-                                    <TableHead>Customer</TableHead>
+                                    <TableHead className="text-center">
+                                        Customer
+                                    </TableHead>
                                     <TableHead className="text-right">
                                         Transaksi
                                     </TableHead>
@@ -209,53 +211,53 @@ export default function SaleByCustomerIndex({
                                             }
                                             className="dark:border-b-2 dark:border-white/25"
                                         >
-                                            <TableCell className="font-medium">
+                                            <TableCell className="text-center font-medium">
                                                 {customer.customer_name}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="text-center">
                                                 {customer.transaction_count.toLocaleString(
-                                                    'id-ID'
+                                                    'id-ID',
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    customer.total_sales
+                                                    customer.total_sales,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    customer.total_discount
+                                                    customer.total_discount,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    customer.total_ppn
+                                                    customer.total_ppn,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    customer.total_amount
+                                                    customer.total_amount,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    customer.total_cost
+                                                    customer.total_cost,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right font-semibold text-green-600 dark:text-emerald-500">
                                                 {formatCurrency(
-                                                    customer.total_profit
+                                                    customer.total_profit,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {customer.profit_margin.toFixed(
-                                                    2
+                                                    2,
                                                 )}
                                                 %
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    customer.avg_sale_value
+                                                    customer.avg_sale_value,
                                                 )}
                                             </TableCell>
                                         </TableRow>
@@ -271,10 +273,12 @@ export default function SaleByCustomerIndex({
                                     </TableRow>
                                 )}
                                 <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
-                                    <TableCell>Total</TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="text-center">
+                                        Total
+                                    </TableCell>
+                                    <TableCell className="text-center">
                                         {summary.total_transactions.toLocaleString(
-                                            'id-ID'
+                                            'id-ID',
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -310,4 +314,3 @@ export default function SaleByCustomerIndex({
         </AppLayout>
     );
 }
-

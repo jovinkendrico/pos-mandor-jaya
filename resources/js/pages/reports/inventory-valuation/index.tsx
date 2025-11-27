@@ -188,7 +188,12 @@ export default function InventoryValuationIndex({
                                     </TableRow>
                                 )}
                                 <TableRow className="bg-muted/50 font-semibold dark:bg-primary-800/10">
-                                    <TableCell colSpan={2}>Total</TableCell>
+                                    <TableCell
+                                        colSpan={2}
+                                        className="text-center"
+                                    >
+                                        Total
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         {summary.total_quantity.toLocaleString(
                                             'id-ID',

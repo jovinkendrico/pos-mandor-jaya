@@ -397,7 +397,12 @@ export default function ReceivableAgingIndex({
                                     </TableRow>
                                 )}
                                 <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
-                                    <TableCell colSpan={8}>Total</TableCell>
+                                    <TableCell
+                                        colSpan={8}
+                                        className="text-center"
+                                    >
+                                        Total
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         {formatCurrency(summary.total_0_30)}
                                     </TableCell>

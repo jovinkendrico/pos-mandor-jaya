@@ -177,7 +177,9 @@ export default function CashFlowIndex({
                             <Table className="content">
                                 <TableHeader>
                                     <TableRow className="dark:border-b-2 dark:border-white/25">
-                                        <TableHead>Bank/Kas</TableHead>
+                                        <TableHead className="text-center">
+                                            Bank/Kas
+                                        </TableHead>
                                         <TableHead className="text-center">
                                             Tipe
                                         </TableHead>
@@ -204,7 +206,7 @@ export default function CashFlowIndex({
                                             key={bank.bank_id}
                                             className="dark:border-b-2 dark:border-white/25"
                                         >
-                                            <TableCell className="font-medium">
+                                            <TableCell className="text-center font-medium">
                                                 {bank.bank_name}
                                             </TableCell>
                                             <TableCell className="text-center">
@@ -245,7 +247,12 @@ export default function CashFlowIndex({
                                         </TableRow>
                                     ))}
                                     <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
-                                        <TableCell colSpan={2}>Total</TableCell>
+                                        <TableCell
+                                            className="text-center"
+                                            colSpan={2}
+                                        >
+                                            Total
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             {formatCurrency(
                                                 summary.total_opening_balance,

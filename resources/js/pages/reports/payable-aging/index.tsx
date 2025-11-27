@@ -83,7 +83,7 @@ export default function PayableAgingIndex({
             sort_by: 'date',
             sort_order: 'desc',
             as_of_date: asOfDate,
-        }
+        },
     );
 
     return (
@@ -235,27 +235,27 @@ export default function PayableAgingIndex({
                                             </TableCell>
                                             <TableCell className="text-center font-semibold">
                                                 {formatCurrency(
-                                                    supplier.total_remaining
+                                                    supplier.total_remaining,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {formatCurrency(
-                                                    supplier.age_0_30
+                                                    supplier.age_0_30,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center text-yellow-600 dark:text-yellow-300">
                                                 {formatCurrency(
-                                                    supplier.age_31_60
+                                                    supplier.age_31_60,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center text-orange-600 dark:text-amber-500">
                                                 {formatCurrency(
-                                                    supplier.age_61_90
+                                                    supplier.age_61_90,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center text-red-600 dark:text-danger-500">
                                                 {formatCurrency(
-                                                    supplier.age_over_90
+                                                    supplier.age_over_90,
                                                 )}
                                             </TableCell>
                                         </TableRow>
@@ -330,12 +330,14 @@ export default function PayableAgingIndex({
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {formatDatetoString(
-                                                    new Date(item.purchase_date)
+                                                    new Date(
+                                                        item.purchase_date,
+                                                    ),
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {formatDatetoString(
-                                                    new Date(item.due_date)
+                                                    new Date(item.due_date),
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center">
@@ -343,17 +345,17 @@ export default function PayableAgingIndex({
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {formatCurrency(
-                                                    item.total_amount
+                                                    item.total_amount,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {formatCurrency(
-                                                    item.total_paid
+                                                    item.total_paid,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center font-semibold">
                                                 {formatCurrency(
-                                                    item.remaining_amount
+                                                    item.remaining_amount,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center">
@@ -381,7 +383,7 @@ export default function PayableAgingIndex({
                                             </TableCell>
                                             <TableCell className="text-right text-red-600 dark:text-danger-500">
                                                 {formatCurrency(
-                                                    item.age_over_90
+                                                    item.age_over_90,
                                                 )}
                                             </TableCell>
                                         </TableRow>
@@ -397,7 +399,12 @@ export default function PayableAgingIndex({
                                     </TableRow>
                                 )}
                                 <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
-                                    <TableCell colSpan={8}>Total</TableCell>
+                                    <TableCell
+                                        colSpan={8}
+                                        className="text-center"
+                                    >
+                                        Total
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         {formatCurrency(summary.total_0_30)}
                                     </TableCell>
@@ -419,4 +426,3 @@ export default function PayableAgingIndex({
         </AppLayout>
     );
 }
-

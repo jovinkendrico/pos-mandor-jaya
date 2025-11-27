@@ -1,15 +1,19 @@
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import PageTitle from '@/components/page-title';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import useResourceFilters from '@/hooks/use-resource-filters';
+import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
-import { DatePicker } from '@/components/date-picker';
+import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { useState } from 'react';
-import { Search } from 'lucide-react';
 
 interface ItemSale {
     item_id: number;
@@ -51,101 +55,95 @@ export default function SaleByItemIndex({
     summary,
     itemSales,
 }: PageProps) {
-    const [filters, setFilters] = useState({
-        date_from: dateFrom,
-        date_to: dateTo,
-    });
+    const saleByItemRoute = () => ({ url: '/reports/sale-by-item' });
 
-    const handleFilter = () => {
-        router.get('/reports/sale-by-item', filters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
+    const { allFilters, handleFilterChange } = useResourceFilters(
+        saleByItemRoute,
+        {
+            search: '',
+            status: 'all',
+            date_from: dateFrom,
+            date_to: dateTo,
+            sort_by: 'date',
+            sort_order: 'desc',
+        },
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Penjualan per Item" />
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Laporan Penjualan per Item" />
             </div>
 
-            <Card className="mb-4">
-                <CardHeader>
-                    <CardTitle>Filter Periode</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="date_from">Dari Tanggal</Label>
-                            <DatePicker
-                                value={filters.date_from ? new Date(filters.date_from) : undefined}
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_from: date ? format(date, 'yyyy-MM-dd') : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="date_to">Sampai Tanggal</Label>
-                            <DatePicker
-                                value={filters.date_to ? new Date(filters.date_to) : undefined}
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_to: date ? format(date, 'yyyy-MM-dd') : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
-                                <Search className="mr-2 h-4 w-4" />
-                                Tampilkan
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <FilterBar
+                filters={allFilters}
+                onFilterChange={handleFilterChange}
+                showDateRange={true}
+                showSearch={false}
+                showStatus={false}
+                showPaymentStatus={false}
+                showSort={false}
+            />
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-4 mb-4">
-                <Card>
+            <div className="mb-4 grid gap-4 md:grid-cols-4">
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Item</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Item
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.total_items}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Item terjual</p>
+                        <div className="text-2xl font-bold">
+                            {summary.total_items}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Item terjual
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Quantity</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Quantity
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.total_quantity.toLocaleString('id-ID')}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Unit terjual</p>
+                        <div className="text-2xl font-bold">
+                            {summary.total_quantity.toLocaleString('id-ID')}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Unit terjual
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Revenue
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.total_revenue)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Pendapatan</p>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(summary.total_revenue)}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Pendapatan
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Profit
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.total_profit)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <div className="text-2xl font-bold text-green-600 dark:text-emerald-500">
+                            {formatCurrency(summary.total_profit)}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
                             Margin: {summary.profit_margin.toFixed(2)}%
                         </p>
                     </CardContent>
@@ -153,62 +151,140 @@ export default function SaleByItemIndex({
             </div>
 
             {/* Item Sales Table */}
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Detail Penjualan per Item</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} - {format(new Date(dateTo), 'dd MMM yyyy')}
+                        Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} -{' '}
+                        {format(new Date(dateTo), 'dd MMM yyyy')}
                     </p>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <Table className="content">
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>Kode</TableHead>
-                                    <TableHead>Nama Barang</TableHead>
-                                    <TableHead className="text-right">Quantity</TableHead>
-                                    <TableHead className="text-right">Transaksi</TableHead>
-                                    <TableHead className="text-right">Harga Rata-rata</TableHead>
-                                    <TableHead className="text-right">Cost Rata-rata</TableHead>
-                                    <TableHead className="text-right">Total Revenue</TableHead>
-                                    <TableHead className="text-right">Total Cost</TableHead>
-                                    <TableHead className="text-right">Profit</TableHead>
-                                    <TableHead className="text-right">Margin</TableHead>
+                                <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="text-center">
+                                        Kode
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Nama Barang
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Quantity
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Transaksi
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Harga Rata-rata
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Cost Rata-rata
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Total Revenue
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Total Cost
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Profit
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Margin
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {itemSales.length > 0 ? (
                                     itemSales.map((item) => (
-                                        <TableRow key={item.item_id}>
-                                            <TableCell className="font-mono">{item.item_code}</TableCell>
-                                            <TableCell className="font-medium">{item.item_name}</TableCell>
-                                            <TableCell className="text-right">{item.total_quantity.toLocaleString('id-ID')}</TableCell>
-                                            <TableCell className="text-right">{item.transaction_count.toLocaleString('id-ID')}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.avg_price)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.avg_cost)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.total_revenue)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.total_cost)}</TableCell>
-                                            <TableCell className="text-right font-semibold">{formatCurrency(item.total_profit)}</TableCell>
-                                            <TableCell className="text-right">{item.profit_margin.toFixed(2)}%</TableCell>
+                                        <TableRow
+                                            key={item.item_id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center font-mono">
+                                                {item.item_code}
+                                            </TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {item.item_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.total_quantity.toLocaleString(
+                                                    'id-ID',
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.transaction_count.toLocaleString(
+                                                    'id-ID',
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(item.avg_price)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(item.avg_cost)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(
+                                                    item.total_revenue,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(
+                                                    item.total_cost,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right font-semibold text-green-600 dark:text-emerald-500">
+                                                {formatCurrency(
+                                                    item.total_profit,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {item.profit_margin.toFixed(2)}%
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center text-muted-foreground">
+                                        <TableCell
+                                            colSpan={10}
+                                            className="text-center text-muted-foreground"
+                                        >
                                             Tidak ada data penjualan
                                         </TableCell>
                                     </TableRow>
                                 )}
-                                <TableRow className="font-semibold bg-muted/50">
-                                    <TableCell colSpan={2}>Total</TableCell>
-                                    <TableCell className="text-right">{summary.total_quantity.toLocaleString('id-ID')}</TableCell>
-                                    <TableCell className="text-right">{summary.total_transactions.toLocaleString('id-ID')}</TableCell>
+                                <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                    <TableCell
+                                        className="text-center"
+                                        colSpan={2}
+                                    >
+                                        Total
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {summary.total_quantity.toLocaleString(
+                                            'id-ID',
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {summary.total_transactions.toLocaleString(
+                                            'id-ID',
+                                        )}
+                                    </TableCell>
                                     <TableCell colSpan={2}></TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_revenue)}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_cost)}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_profit)}</TableCell>
-                                    <TableCell className="text-right">{summary.profit_margin.toFixed(2)}%</TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(summary.total_revenue)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(summary.total_cost)}
+                                    </TableCell>
+                                    <TableCell className="text-right text-green-600 dark:text-emerald-500">
+                                        {formatCurrency(summary.total_profit)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {summary.profit_margin.toFixed(2)}%
+                                    </TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>
@@ -218,4 +294,3 @@ export default function SaleByItemIndex({
         </AppLayout>
     );
 }
-
