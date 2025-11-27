@@ -381,7 +381,7 @@ export interface Sale {
     discount1_amount?: number;
     discount2_percent?: number;
     discount2_amount?: number;
-    total_after_discount: number;
+    total_after_discount?: number;
     ppn_percent?: number;
     ppn_amount?: number;
     total_amount: number;
@@ -406,6 +406,7 @@ export type ISale = Pick<
     | 'discount2_percent'
     | 'discount1_amount'
     | 'discount2_amount'
+    | 'total_after_discount'
     | 'ppn_percent'
     | 'ppn_amount'
     | 'total_amount'
@@ -847,3 +848,27 @@ export type IJournalEntryDetail = Pick<
 > & {
     chart_of_account?: IChartOfAccount;
 };
+
+export interface LedgerTransaction {
+    date: string;
+    journal_number: string;
+    description: string;
+    debit: number;
+    credit: number;
+    balance: number;
+}
+
+export interface LedgerData {
+    account: ChartOfAccount;
+    opening_balance: number;
+    transactions?: LedgerTransaction[]; // Optional because index.tsx doesn't have it
+    debit_total: number;
+    credit_total: number;
+    closing_balance: number;
+}
+
+export interface ProfitLossItem {
+    code: string;
+    name: string;
+    amount: number;
+}

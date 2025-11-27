@@ -19,13 +19,24 @@ const JournalEntryTable = (props: JournalEntryTableProps) => {
     const formatStatus = (status: string) => {
         const statusMap: Record<
             string,
-            { label: string; variant: 'default' | 'secondary' | 'destructive' }
+            {
+                label: string;
+                className:
+                    | 'badge-yellow-light'
+                    | 'badge-green-light'
+                    | 'badge-red-light';
+            }
         > = {
-            posted: { label: 'Posted', variant: 'default' },
-            draft: { label: 'Draft', variant: 'secondary' },
-            reversed: { label: 'Reversed', variant: 'destructive' },
+            posted: { label: 'Posted', className: 'badge-green-light' },
+            draft: { label: 'Draft', className: 'badge-yellow-light' },
+            reversed: { label: 'Reversed', className: 'badge-red-light' },
         };
-        return statusMap[status] || { label: status, variant: 'secondary' };
+        return (
+            statusMap[status] || {
+                label: status,
+                className: 'badge-yellow-light',
+            }
+        );
     };
 
     const formatReferenceType = (type?: string) => {
@@ -86,7 +97,7 @@ const JournalEntryTable = (props: JournalEntryTableProps) => {
                             {formatCurrency(entry.total_credit || 0)}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            <Badge variant={statusInfo.variant}>
+                            <Badge className={statusInfo.className}>
                                 {statusInfo.label}
                             </Badge>
                         </TableCell>

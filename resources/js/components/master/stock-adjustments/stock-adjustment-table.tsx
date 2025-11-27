@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
 import {
+    cn,
     formatCurrency,
     formatDate,
     formatNumberWithSeparator,
@@ -55,9 +56,12 @@ const StockAdjustmentTable = (props: StockAdjustmentTableProps) => {
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         <Badge
-                            variant={
-                                row.quantity > 0 ? 'default' : 'destructive'
-                            }
+                            variant={row.quantity > 0 ? 'default' : 'outline'}
+                            className={cn(
+                                row.quantity > 0
+                                    ? 'badge-green-light'
+                                    : 'badge-red-light',
+                            )}
                         >
                             {row.quantity > 0 ? '+' : ''}
                             {formatNumberWithSeparator(row.quantity)}

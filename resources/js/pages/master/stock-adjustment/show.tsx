@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import {
+    cn,
     formatCurrency,
     formatDatetoString,
     formatNumberWithSeparator,
@@ -109,6 +110,11 @@ const StockAdjustmentShow = (props: PageProps) => {
                                                     ? 'default'
                                                     : 'destructive'
                                             }
+                                            className={cn(
+                                                adjustment.quantity > 0
+                                                    ? 'badge-green-light'
+                                                    : 'badge-red-light',
+                                            )}
                                         >
                                             {adjustment.quantity > 0 ? '+' : ''}
                                             {formatNumberWithSeparator(

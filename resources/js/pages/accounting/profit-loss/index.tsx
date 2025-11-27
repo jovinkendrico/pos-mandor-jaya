@@ -1,3 +1,4 @@
+import { ProfitLossItem } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
@@ -18,23 +19,13 @@ import { format } from 'date-fns';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 
-interface IncomeDetail {
-    code: string;
-    name: string;
-    amount: number;
-}
 
-interface ExpenseDetail {
-    code: string;
-    name: string;
-    amount: number;
-}
 
 interface PageProps {
     dateFrom: string;
     dateTo: string;
-    incomeDetails: IncomeDetail[];
-    expenseDetails: ExpenseDetail[];
+    incomeDetails: ProfitLossItem[];
+    expenseDetails: ProfitLossItem[];
     totalIncome: number;
     totalHPP: number;
     grossProfit: number;

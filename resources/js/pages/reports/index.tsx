@@ -238,7 +238,7 @@ const reports = [
     },
 ];
 
-export default function ReportsIndex() {
+const ReportsIndex = () => {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan" />
@@ -251,7 +251,7 @@ export default function ReportsIndex() {
                     const Icon = report.icon;
                     return (
                         <Link key={report.id} href={report.href}>
-                            <Card className="h-full cursor-pointer transition-shadow hover:shadow-lg">
+                            <Card className="content h-full cursor-pointer transition-shadow hover:shadow-lg">
                                 <CardHeader>
                                     <div className="flex items-center gap-3">
                                         <div
@@ -280,4 +280,6 @@ export default function ReportsIndex() {
             </div>
         </AppLayout>
     );
-}
+};
+
+export default ReportsIndex;

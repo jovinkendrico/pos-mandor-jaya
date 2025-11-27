@@ -1,15 +1,24 @@
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import PageTitle from '@/components/page-title';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { formatCurrency } from '@/lib/utils';
-import { useState } from 'react';
-import { Search, AlertTriangle, TrendingUp } from 'lucide-react';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import useResourceFilters from '@/hooks/use-resource-filters';
+import AppLayout from '@/layouts/app-layout';
+import { formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
+import { Head } from '@inertiajs/react';
+import { AlertTriangle, Minus, Plus, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface StockItem {
     item_id: number;
@@ -35,12 +44,103 @@ interface PageProps {
     lowStockItems: StockItem[];
     highStockItems: StockItem[];
     zeroStockItems: StockItem[];
+    filters?: {
+        min_stock: string;
+        max_stock: string;
+    };
 }
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Laporan Stok Minimum/Maksimum', href: '#' },
 ];
+
+const StockFilterInput = ({
+    value,
+    onChange,
+    label,
+    id,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+    label: string;
+    id: string;
+}) => {
+    const [localValue, setLocalValue] = useState(value);
+
+    useEffect(() => {
+        const num = parseStringtoNumber(value);
+        setLocalValue(num !== null ? formatNumberWithSeparator(num) : '');
+    }, [value]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawValue = e.target.value;
+        const numericString = rawValue.replace(/[^0-9]/g, '');
+
+        if (numericString === '') {
+            setLocalValue('');
+            return;
+        }
+
+        const num = parseInt(numericString, 10);
+        const formatted = formatNumberWithSeparator(num);
+        setLocalValue(formatted);
+    };
+
+    const handleBlur = () => {
+        const num = parseStringtoNumber(localValue);
+        if (num !== null) {
+            const formatted = formatNumberWithSeparator(num);
+            setLocalValue(formatted);
+            onChange(num.toString());
+        } else {
+            onChange('');
+        }
+    };
+
+    const handleIncrement = () => {
+        const num = parseStringtoNumber(localValue) || 0;
+        const newVal = num + 1;
+        onChange(newVal.toString());
+    };
+
+    const handleDecrement = () => {
+        const num = parseStringtoNumber(localValue) || 0;
+        const newVal = Math.max(0, num - 1);
+        onChange(newVal.toString());
+    };
+
+    return (
+        <div className="space-y-2">
+            <Label htmlFor={id}>{label}</Label>
+            <div className="flex items-center gap-2">
+                <Button
+                    size="icon"
+                    onClick={handleDecrement}
+                    className="btn-secondary h-9 w-9 shrink-0 cursor-pointer"
+                >
+                    <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                    id={id}
+                    value={localValue}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className="input-box text-center"
+                    placeholder="0"
+                />
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleIncrement}
+                    className="btn-secondary h-9 w-9 shrink-0 cursor-pointer"
+                >
+                    <Plus className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    );
+};
 
 export default function StockMinMaxIndex({
     minStockThreshold,
@@ -49,128 +149,147 @@ export default function StockMinMaxIndex({
     lowStockItems,
     highStockItems,
     zeroStockItems,
+    filters = { min_stock: '', max_stock: '' },
 }: PageProps) {
-    const [filters, setFilters] = useState({
-        min_stock: minStockThreshold.toString(),
-        max_stock: maxStockThreshold.toString(),
-    });
+    const { allFilters, handleFilterChange } = useResourceFilters(
+        () => ({ url: '/reports/stock-min-max' }),
+        {
+            search: '',
+            status: 'all',
+            date_from: '',
+            date_to: '',
+            sort_by: 'created_at',
+            sort_order: 'desc',
+            min_stock: filters.min_stock || minStockThreshold.toString(),
+            max_stock: filters.max_stock || maxStockThreshold.toString(),
+        },
+    );
 
-    const handleFilter = () => {
-        router.get('/reports/stock-min-max', filters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+    const defaultFilters = {
+        min_stock: '10',
+        max_stock: '1000',
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Stok Minimum/Maksimum" />
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Laporan Stok Minimum/Maksimum" />
             </div>
 
-            <Card className="mb-4">
-                <CardHeader>
-                    <CardTitle>Filter Threshold</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="min_stock">Stok Minimum</Label>
-                            <Input
-                                id="min_stock"
-                                type="number"
-                                min="0"
-                                value={filters.min_stock}
-                                onChange={(e) =>
-                                    setFilters({
-                                        ...filters,
-                                        min_stock: e.target.value,
-                                    })
-                                }
-                                placeholder="10"
-                            />
-                            <p className="text-xs text-muted-foreground">Item dengan stok ≤ threshold ini akan ditampilkan</p>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="max_stock">Stok Maksimum</Label>
-                            <Input
-                                id="max_stock"
-                                type="number"
-                                min="0"
-                                value={filters.max_stock}
-                                onChange={(e) =>
-                                    setFilters({
-                                        ...filters,
-                                        max_stock: e.target.value,
-                                    })
-                                }
-                                placeholder="1000"
-                            />
-                            <p className="text-xs text-muted-foreground">Item dengan stok {'>'} threshold ini akan ditampilkan</p>
-                        </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
-                                <Search className="mr-2 h-4 w-4" />
-                                Tampilkan
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <FilterBar
+                filters={allFilters}
+                onFilterChange={handleFilterChange}
+                defaultFilters={defaultFilters}
+                showDateRange={false}
+                showSearch={false}
+                showStatus={false}
+                showPaymentStatus={false}
+                showSort={false}
+                additionalFilters={
+                    <>
+                        <StockFilterInput
+                            id="min_stock"
+                            label="Jumlah Stok Mulai Dari"
+                            value={allFilters.min_stock || ''}
+                            onChange={(value) =>
+                                handleFilterChange({ min_stock: value })
+                            }
+                        />
+                        <StockFilterInput
+                            id="max_stock"
+                            label="Jumlah Stok Hingga"
+                            value={allFilters.max_stock || ''}
+                            onChange={(value) =>
+                                handleFilterChange({ max_stock: value })
+                            }
+                        />
+                    </>
+                }
+            />
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-5 mb-4">
-                <Card>
+            <div className="mt-4 mb-4 grid gap-4 md:grid-cols-5">
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Item</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Item
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.total_items}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Semua item</p>
+                        <div className="text-2xl font-bold">
+                            {summary.total_items}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Semua item
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Dengan Stok</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Dengan Stok
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{summary.items_with_stock}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Item tersedia</p>
+                        <div className="text-2xl font-bold text-green-600">
+                            {summary.items_with_stock}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Item tersedia
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Tanpa Stok</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Tanpa Stok
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{summary.zero_stock_count}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Habis</p>
+                        <div className="text-2xl font-bold text-red-600">
+                            {summary.zero_stock_count}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Habis
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Stok Rendah
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">{summary.low_stock_count}</div>
-                        <p className="text-xs text-muted-foreground mt-1">≤ {summary.min_stock_threshold}</p>
+                        <div className="text-2xl font-bold text-orange-600">
+                            {summary.low_stock_count}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            ≤ {summary.min_stock_threshold}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Stok Tinggi</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Stok Tinggi
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-blue-600">{summary.high_stock_count}</div>
-                        <p className="text-xs text-muted-foreground mt-1">{'>'} {summary.max_stock_threshold}</p>
+                        <div className="text-2xl font-bold text-blue-600">
+                            {summary.high_stock_count}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            {'>'} {summary.max_stock_threshold}
+                        </p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Zero Stock Items */}
             {zeroStockItems.length > 0 && (
-                <Card className="mb-4">
+                <Card className="content mb-4">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -178,25 +297,46 @@ export default function StockMinMaxIndex({
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Kode</TableHead>
-                                        <TableHead>Nama Barang</TableHead>
-                                        <TableHead className="text-right">Stok</TableHead>
-                                        <TableHead>Unit</TableHead>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">
+                                            Kode
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Nama Barang
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Stok
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Unit
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {zeroStockItems.map((item) => (
-                                        <TableRow key={item.item_id}>
-                                            <TableCell className="font-mono">{item.item_code}</TableCell>
-                                            <TableCell className="font-medium">{item.item_name}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Badge variant="destructive">{item.stock.toLocaleString('id-ID')}</Badge>
+                                        <TableRow
+                                            key={item.item_id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center font-mono">
+                                                {item.item_code}
                                             </TableCell>
-                                            <TableCell>{item.unit}</TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {item.item_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge className="badge-red-light">
+                                                    {formatNumberWithSeparator(
+                                                        item.stock,
+                                                    )}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.unit}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -208,35 +348,55 @@ export default function StockMinMaxIndex({
 
             {/* Low Stock Items */}
             {lowStockItems.length > 0 && (
-                <Card className="mb-4">
+                <Card className="content mb-4">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-orange-600" />
-                            Item Stok Rendah (≤ {summary.min_stock_threshold}) ({lowStockItems.length})
+                            <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-amber-500" />
+                            Item Stok Rendah (≤ {summary.min_stock_threshold}) (
+                            {lowStockItems.length})
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Kode</TableHead>
-                                        <TableHead>Nama Barang</TableHead>
-                                        <TableHead className="text-right">Stok</TableHead>
-                                        <TableHead>Unit</TableHead>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">
+                                            Kode
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Nama Barang
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Stok
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Unit
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {lowStockItems.map((item) => (
-                                        <TableRow key={item.item_id}>
-                                            <TableCell className="font-mono">{item.item_code}</TableCell>
-                                            <TableCell className="font-medium">{item.item_name}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Badge variant="outline" className="text-orange-600 border-orange-600">
-                                                    {item.stock.toLocaleString('id-ID')}
+                                        <TableRow
+                                            key={item.item_id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center font-mono">
+                                                {item.item_code}
+                                            </TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {item.item_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge className="badge-yellow-light">
+                                                    {formatNumberWithSeparator(
+                                                        item.stock,
+                                                    )}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell>{item.unit}</TableCell>
+                                            <TableCell className="text-center">
+                                                {item.unit}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -248,35 +408,56 @@ export default function StockMinMaxIndex({
 
             {/* High Stock Items */}
             {highStockItems.length > 0 && (
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-blue-600" />
-                            Item Stok Tinggi ({'>'} {summary.max_stock_threshold}) ({highStockItems.length})
+                            <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                            Item Stok Tinggi ({'>'}{' '}
+                            {summary.max_stock_threshold}) (
+                            {highStockItems.length})
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Kode</TableHead>
-                                        <TableHead>Nama Barang</TableHead>
-                                        <TableHead className="text-right">Stok</TableHead>
-                                        <TableHead>Unit</TableHead>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">
+                                            Kode
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Nama Barang
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Stok
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Unit
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {highStockItems.map((item) => (
-                                        <TableRow key={item.item_id}>
-                                            <TableCell className="font-mono">{item.item_code}</TableCell>
-                                            <TableCell className="font-medium">{item.item_name}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Badge variant="outline" className="text-blue-600 border-blue-600">
-                                                    {item.stock.toLocaleString('id-ID')}
+                                        <TableRow
+                                            key={item.item_id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center font-mono">
+                                                {item.item_code}
+                                            </TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {item.item_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge className="badge-blue-light">
+                                                    {formatNumberWithSeparator(
+                                                        item.stock,
+                                                    )}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell>{item.unit}</TableCell>
+                                            <TableCell className="text-center">
+                                                {item.unit}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -286,14 +467,18 @@ export default function StockMinMaxIndex({
                 </Card>
             )}
 
-            {zeroStockItems.length === 0 && lowStockItems.length === 0 && highStockItems.length === 0 && (
-                <Card>
-                    <CardContent className="py-8">
-                        <p className="text-center text-muted-foreground">Tidak ada item yang sesuai dengan kriteria filter</p>
-                    </CardContent>
-                </Card>
-            )}
+            {zeroStockItems.length === 0 &&
+                lowStockItems.length === 0 &&
+                highStockItems.length === 0 && (
+                    <Card className="content">
+                        <CardContent className="py-8">
+                            <p className="text-center text-muted-foreground">
+                                Tidak ada item yang sesuai dengan kriteria
+                                filter
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
         </AppLayout>
     );
 }
-
