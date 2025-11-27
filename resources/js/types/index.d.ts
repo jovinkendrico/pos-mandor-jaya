@@ -818,3 +818,32 @@ export interface JournalEntry {
     updated_at: string;
     [key: string]: unknown;
 }
+
+export type IJournalEntry = Pick<
+    JournalEntry,
+    | 'id'
+    | 'journal_number'
+    | 'journal_date'
+    | 'reference_type'
+    | 'reference_id'
+    | 'description'
+    | 'status'
+    | 'reversed_by'
+> & {
+    reversedBy?: IJournalEntry;
+    details?: IJournalEntryDetail[];
+    total_debit?: number;
+    total_credit?: number;
+};
+
+export type IJournalEntryDetail = Pick<
+    JournalEntryDetail,
+    | 'id'
+    | 'journal_entry_id'
+    | 'chart_of_account_id'
+    | 'debit'
+    | 'credit'
+    | 'description'
+> & {
+    chart_of_account?: IChartOfAccount;
+};
