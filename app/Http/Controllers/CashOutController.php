@@ -84,7 +84,7 @@ class CashOutController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $cashOuts = $query->paginate(15)->withQueryString();
+        $cashOuts = $query->paginate(10)->withQueryString();
 
         // Get banks for filter
         $banks = \App\Models\Bank::orderBy('name')->get(['id', 'name']);

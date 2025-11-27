@@ -79,7 +79,7 @@ class SaleReturnController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $returns = $query->paginate(15)->withQueryString();
+        $returns = $query->paginate(10)->withQueryString();
 
         // Get customers for filter
         $customers = \App\Models\Customer::orderBy('name')->get(['id', 'name']);
