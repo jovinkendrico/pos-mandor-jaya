@@ -320,7 +320,7 @@ const PurchaseShow = (props: PageProps) => {
                                             {detail.item?.name}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
-                                            <Badge variant="outline">
+                                            <Badge className="badge-blue-light">
                                                 {detail.item_uom?.uom.name}
                                             </Badge>
                                         </TableCell>

@@ -266,7 +266,6 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                         <Button
                             type="button"
                             onClick={addInvoice}
-                            variant="outline"
                             size="sm"
                             className="btn-primary"
                         >
