@@ -1,6 +1,6 @@
 import { PaymentMethod, SalePaymentStatus } from '@/constants/enum';
 import { formatCurrency, parseStringtoNumber } from '@/lib/utils';
-import { ISalePayment, ISalePaymentFormItem, ISalePaymentItem } from '@/types';
+import { ISalePayment, ISalePaymentFormItem } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
@@ -64,9 +64,11 @@ const useSalePayments = () => {
 
         try {
             await salePaymentSchema.validate(data, { abortEarly: false });
-            
+
             const method = sale_payment ? 'put' : 'post';
-            const url = sale_payment ? `/sale-payments/${sale_payment.id}` : '/sale-payments';
+            const url = sale_payment
+                ? `/sale-payments/${sale_payment.id}`
+                : '/sale-payments';
 
             submit(method, url, {
                 onSuccess: () => {

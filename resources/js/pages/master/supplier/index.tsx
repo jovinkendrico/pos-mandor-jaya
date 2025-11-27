@@ -1,25 +1,18 @@
 import SupplierForm from '@/components/master/suppliers/supplier-form';
 import SupplierTable from '@/components/master/suppliers/supplier-table';
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import FilterBar from '@/components/transaction/filter-bar';
+import { Button } from '@/components/ui/button';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import { Label } from '@/components/ui/label';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useCity from '@/hooks/use-city';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroySupplier, index } from '@/routes/suppliers';
-import { BreadcrumbItem, ISupplier, PaginatedData, City } from '@/types';
+import { BreadcrumbItem, City, ISupplier, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -95,26 +88,6 @@ const SupplierIndex = (props: PageProps) => {
         setSelectedSupplier(supplier);
         openDeleteModal();
     };
-
-    const handleSortOrderToggle = () => {
-        const newOrder = allFilters.sort_order === 'asc' ? 'desc' : 'asc';
-        handleFilterChange({ sort_order: newOrder });
-    };
-
-    const handleReset = () => {
-        handleFilterChange({
-            search: '',
-            city_id: '',
-            sort_by: 'name',
-            sort_order: 'asc',
-        });
-    };
-
-    const hasActiveFilters =
-        allFilters.search !== '' ||
-        allFilters.city_id !== '' ||
-        allFilters.sort_by !== 'name' ||
-        allFilters.sort_order !== 'asc';
 
     useEffect(() => {
         const fetchCityData = async () => {

@@ -1,16 +1,8 @@
 import UOMForm from '@/components/master/uom/uom-form';
 import UOMTable from '@/components/master/uom/uom-table';
 import PageTitle from '@/components/page-title';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import FilterBar from '@/components/transaction/filter-bar';
+import { Button } from '@/components/ui/button';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
@@ -84,24 +76,6 @@ const UOMPage = (props: UOMProps) => {
         setSelectedUOM(uom);
         openDeleteModal();
     };
-
-    const handleSortOrderToggle = () => {
-        const newOrder = allFilters.sort_order === 'asc' ? 'desc' : 'asc';
-        handleFilterChange({ sort_order: newOrder });
-    };
-
-    const handleReset = () => {
-        handleFilterChange({
-            search: '',
-            sort_by: 'name',
-            sort_order: 'asc',
-        });
-    };
-
-    const hasActiveFilters =
-        allFilters.search !== '' ||
-        allFilters.sort_by !== 'name' ||
-        allFilters.sort_order !== 'asc';
 
     return (
         <>
