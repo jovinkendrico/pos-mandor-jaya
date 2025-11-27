@@ -74,7 +74,7 @@ class StockAdjustmentController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $adjustments = $query->paginate(15)->withQueryString();
+        $adjustments = $query->paginate(10)->withQueryString();
 
         // Get only first 10 items for initial display (will be searched via API)
         $items = Item::with('itemUoms.uom')

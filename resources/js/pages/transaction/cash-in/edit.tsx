@@ -1,13 +1,15 @@
 import PageTitle from '@/components/page-title';
 import CashInForm from '@/components/transaction/cash-ins/cash-in-form';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Bank, ChartOfAccount, CashIn } from '@/types';
-import { Head } from '@inertiajs/react';
+import { index } from '@/routes/cash-ins';
+import { BreadcrumbItem, IBank, ICashIn, IChartOfAccount } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    cashIn: CashIn;
-    banks: Bank[];
-    incomeAccounts: ChartOfAccount[];
+    cashIn: ICashIn;
+    banks: IBank[];
+    incomeAccounts: IChartOfAccount[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -17,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Kas Masuk',
-        href: '/cash-ins',
+        href: index().url,
     },
     {
         title: 'Edit',
@@ -25,21 +27,28 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CashInEdit({
-    cashIn,
-    banks,
-    incomeAccounts,
-}: PageProps) {
+const CashInEdit = ({ cashIn, banks, incomeAccounts }: PageProps) => {
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit Kas Masuk #${cashIn.cash_in_number}`} />
-            <PageTitle title={`Edit Kas Masuk #${cashIn.cash_in_number}`} />
-            <CashInForm
-                cashIn={cashIn}
-                banks={banks}
-                incomeAccounts={incomeAccounts}
-            />
-        </AppLayout>
+        <>
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title={`Edit Kas Masuk ${cashIn.cash_in_number}`} />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle
+                        title={`Edit Kas Masuk ${cashIn.cash_in_number}`}
+                    />
+                </div>
+                <CashInForm
+                    cashIn={cashIn}
+                    banks={banks}
+                    incomeAccounts={incomeAccounts}
+                />
+            </AppLayout>
+        </>
     );
-}
+};
+
+export default CashInEdit;
 

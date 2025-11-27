@@ -269,8 +269,9 @@ class CashInController extends Controller
             return redirect()->route('cash-ins.show', $cashIn)
                 ->with('success', 'Kas masuk berhasil diposting ke jurnal.');
         } catch (\Exception $e) {
+            $errorMessage = 'Gagal memposting: ' . $e->getMessage();
             return redirect()->route('cash-ins.show', $cashIn)
-                ->with('error', 'Gagal memposting: ' . $e->getMessage());
+                ->withErrors(['msg' => $errorMessage]);
         }
     }
 

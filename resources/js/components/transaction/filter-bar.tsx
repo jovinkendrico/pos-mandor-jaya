@@ -29,9 +29,12 @@ interface FilterBarProps {
     onFilterChange: (filters: FilterState) => void;
     statusOptions?: Option[];
     sortOptions?: Option[];
+    defaultSortOrder?: string;
     showPaymentStatus?: boolean;
     showDateRange?: boolean;
+    showStatus?: boolean;
     additionalFilters?: ReactNode;
+    children?: ReactNode;
 }
 
 const FilterBar = (props: FilterBarProps) => {
@@ -40,9 +43,12 @@ const FilterBar = (props: FilterBarProps) => {
         onFilterChange,
         statusOptions = defaultStatusOptions,
         sortOptions = defaultSortOptions,
+        defaultSortOrder = 'desc',
         showPaymentStatus = true,
         showDateRange = true,
+        showStatus = true,
         additionalFilters,
+        children,
     } = props;
 
     const {
@@ -51,7 +57,12 @@ const FilterBar = (props: FilterBarProps) => {
         handleReset,
         handleSortOrderToggle,
         hasActiveFilters,
-    } = useFilterBar({ initialFilters: filters, onFilterChange, sortOptions });
+    } = useFilterBar({
+        initialFilters: filters,
+        onFilterChange,
+        sortOptions,
+        defaultSortOrder,
+    });
 
     return (
         <Card className="content space-y-4 p-4">
@@ -77,29 +88,32 @@ const FilterBar = (props: FilterBarProps) => {
                 </div>
 
                 {/* Status Filter */}
-                <div className="w-[180px]">
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                        value={localFilters.status}
-                        onValueChange={(value) =>
-                            handleFilterChange('status', value)
-                        }
-                    >
-                        <SelectTrigger id="status" className="combobox">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {statusOptions.map((option: Option) => (
-                                <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+                {/* Status Filter */}
+                {showStatus && (
+                    <div className="w-[180px]">
+                        <Label htmlFor="status">Status</Label>
+                        <Select
+                            value={localFilters.status}
+                            onValueChange={(value) =>
+                                handleFilterChange('status', value)
+                            }
+                        >
+                            <SelectTrigger id="status" className="combobox">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {statusOptions.map((option: Option) => (
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
 
                 {/* Payment Status Filter */}
                 {showPaymentStatus && (
@@ -167,6 +181,7 @@ const FilterBar = (props: FilterBarProps) => {
                 {/* Sort */}
 
                 {additionalFilters && additionalFilters}
+                {children}
 
                 <div className="w-[180px]">
                     <Label htmlFor="sort_by">Urutkan</Label>

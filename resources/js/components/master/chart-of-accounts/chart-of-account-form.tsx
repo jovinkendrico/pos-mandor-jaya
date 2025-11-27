@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import {
     Dialog,
     DialogContent,
@@ -10,8 +11,9 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import useChartOfAccounts from '@/hooks/use-chart-of-accounts';
 import { IChartOfAccount } from '@/types';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import InputError from '../../input-error';
+import { Checkbox } from '../../ui/checkbox';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import {
@@ -22,7 +24,6 @@ import {
     SelectValue,
 } from '../../ui/select';
 import { Textarea } from '../../ui/textarea';
-import { Checkbox } from '../../ui/checkbox';
 
 interface ChartOfAccountFormProps {
     chartOfAccount?: IChartOfAccount;
@@ -32,7 +33,12 @@ interface ChartOfAccountFormProps {
 }
 
 const ChartOfAccountForm = (props: ChartOfAccountFormProps) => {
-    const { chartOfAccount, isModalOpen, onModalClose, parentAccounts = [] } = props;
+    const {
+        chartOfAccount,
+        isModalOpen,
+        onModalClose,
+        parentAccounts = [],
+    } = props;
 
     const {
         data,
@@ -43,6 +49,20 @@ const ChartOfAccountForm = (props: ChartOfAccountFormProps) => {
         handleSubmit,
         handleCancel,
     } = useChartOfAccounts(onModalClose);
+
+    const parentComboboxOptions: ComboboxOption[] = useMemo(() => {
+        const noneOption: ComboboxOption = {
+            value: 'none',
+            label: 'Tidak ada',
+        };
+
+        const parentOptions = parentAccounts.map((parent) => ({
+            label: `${parent.code} - ${parent.name}`,
+            value: parent.id.toString(),
+        }));
+
+        return [noneOption, ...parentOptions];
+    }, [parentAccounts]);
 
     useEffect(() => {
         if (chartOfAccount) {
@@ -58,11 +78,6 @@ const ChartOfAccountForm = (props: ChartOfAccountFormProps) => {
             reset();
         }
     }, [chartOfAccount, isModalOpen, reset, setData]);
-
-    // Filter parent accounts by type (optional: can be same type or related)
-    const availableParents = parentAccounts.filter(
-        (acc) => !chartOfAccount || acc.id !== chartOfAccount.id
-    );
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
@@ -172,7 +187,8 @@ const ChartOfAccountForm = (props: ChartOfAccountFormProps) => {
 
                             <div className="w-1/2">
                                 <Label htmlFor="parent_id">Parent Akun</Label>
-                                <Select
+                                <Combobox
+                                    options={parentComboboxOptions}
                                     value={
                                         data.parent_id
                                             ? data.parent_id.toString()
@@ -181,25 +197,16 @@ const ChartOfAccountForm = (props: ChartOfAccountFormProps) => {
                                     onValueChange={(value) =>
                                         setData(
                                             'parent_id',
-                                            value === 'none' ? null : parseInt(value),
+                                            value === 'none'
+                                                ? null
+                                                : Number(value),
                                         )
                                     }
-                                >
-                                    <SelectTrigger className="w-full font-medium dark:!bg-white dark:!text-primary-200">
-                                        <SelectValue placeholder="Pilih Parent (Opsional)" />
-                                    </SelectTrigger>
-                                    <SelectContent className="dark:data-[selected=true]:bg-primary-400/30">
-                                        <SelectItem value="none">Tidak Ada</SelectItem>
-                                        {availableParents.map((parent) => (
-                                            <SelectItem
-                                                key={parent.id}
-                                                value={parent.id.toString()}
-                                            >
-                                                {parent.code} - {parent.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                    placeholder="Pilih Parent (Opsional)"
+                                    searchPlaceholder="Cari Parent..."
+                                    className="combobox"
+                                    maxDisplayItems={10}
+                                />
                                 {errors.parent_id && (
                                     <InputError message={errors.parent_id} />
                                 )}
@@ -207,20 +214,16 @@ const ChartOfAccountForm = (props: ChartOfAccountFormProps) => {
                         </div>
 
                         <div className="flex flex-row gap-4">
-                            <div className="w-full flex items-center gap-2">
+                            <div className="flex w-full items-center gap-2">
                                 <Checkbox
                                     id="is_active"
                                     checked={data.is_active}
                                     onCheckedChange={(checked) =>
                                         setData('is_active', checked === true)
                                     }
+                                    className="cursor-pointer dark:border-white"
                                 />
-                                <Label
-                                    htmlFor="is_active"
-                                    className="cursor-pointer"
-                                >
-                                    Aktif
-                                </Label>
+                                <Label htmlFor="is_active">Aktif</Label>
                             </div>
                         </div>
 
@@ -274,4 +277,3 @@ const ChartOfAccountForm = (props: ChartOfAccountFormProps) => {
 };
 
 export default ChartOfAccountForm;
-

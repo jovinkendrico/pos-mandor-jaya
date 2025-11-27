@@ -2,15 +2,18 @@ import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Modal from '@/components/ui/Modal/Modal';
+import useDisclosure from '@/hooks/use-disclosure';
 import AppLayout from '@/layouts/app-layout';
-import { formatCurrency, formatDatetoString } from '@/lib/utils';
-import { BreadcrumbItem, CashOut } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, RotateCcw } from 'lucide-react';
+import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
+import { edit, index } from '@/routes/cash-outs';
+import { BreadcrumbItem, ICashOut } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, CheckCircle2, Pencil, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
-    cashOut: CashOut;
+    cashOut: ICashOut;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -20,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Kas Keluar',
-        href: '/cash-outs',
+        href: index().url,
     },
     {
         title: 'Detail',
@@ -28,7 +31,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CashOutShow({ cashOut }: PageProps) {
+const CashOutShow = (props: PageProps) => {
+    const { cashOut } = props;
+
+    const {
+        isOpen: isConfirmModalOpen,
+        openModal: openConfirmModal,
+        closeModal: closeConfirmModal,
+    } = useDisclosure();
+
     const handlePost = () => {
         router.post(
             `/cash-outs/${cashOut.id}/post`,
@@ -36,148 +47,186 @@ export default function CashOutShow({ cashOut }: PageProps) {
             {
                 onSuccess: () => {
                     toast.success('Kas keluar berhasil diposting ke jurnal');
+                    closeConfirmModal();
                 },
-                onError: () => {
-                    toast.error('Gagal memposting kas keluar');
+                onError: (errors: Record<string, string>) => {
+                    const message = errors.msg || 'Gagal memposting kas keluar';
+                    toast.error(message);
+                    closeConfirmModal();
                 },
             },
         );
     };
 
     const handleReverse = () => {
-        if (
-            !confirm(
-                'Apakah Anda yakin ingin membatalkan posting kas keluar ini?',
-            )
-        ) {
-            return;
-        }
-
         router.post(
             `/cash-outs/${cashOut.id}/reverse`,
             {},
             {
                 onSuccess: () => {
                     toast.success('Kas keluar berhasil di-reverse');
+                    closeConfirmModal();
                 },
                 onError: () => {
                     toast.error('Gagal reverse kas keluar');
+                    closeConfirmModal();
                 },
             },
         );
     };
 
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Kas Keluar #${cashOut.cash_out_number}`} />
-            <div className="flex justify-between items-center mb-4">
-                <PageTitle title={`Kas Keluar #${cashOut.cash_out_number}`} />
-                <div className="flex space-x-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => router.visit('/cash-outs')}
-                    >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Kembali
-                    </Button>
-                    {cashOut.status === 'draft' && (
-                        <Button
-                            onClick={handlePost}
-                            className="btn-primary"
-                        >
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Post ke Jurnal
-                        </Button>
-                    )}
-                    {cashOut.status === 'posted' && (
-                        <Button
-                            variant="destructive"
-                            onClick={handleReverse}
-                        >
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            Reverse
-                        </Button>
-                    )}
-                </div>
-            </div>
+    const handleEdit = () => {
+        router.visit(edit(cashOut.id!).url);
+    };
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Informasi Kas Keluar</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Nomor
-                            </p>
-                            <p className="font-medium">
-                                {cashOut.cash_out_number}
-                            </p>
+    return (
+        <>
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title={`Kas Keluar ${cashOut.cash_out_number}`} />
+
+                <div className="mb-2 flex items-center justify-between">
+                    <div>
+                        <div className="flex flex-row items-center gap-2">
+                            <Link href={index().url}>
+                                <ArrowLeft className="h-8 w-8" />
+                            </Link>
+                            <PageTitle
+                                title={`Kas Keluar ${cashOut.cash_out_number}`}
+                            />
                         </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Tanggal
-                            </p>
-                            <p className="font-medium">
-                                {formatDatetoString(
-                                    new Date(cashOut.cash_out_date),
-                                )}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Bank/Kas
-                            </p>
-                            <p className="font-medium">
-                                {cashOut.bank?.name || '-'}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Akun Pengeluaran
-                            </p>
-                            <p className="font-medium">
-                                {cashOut.chart_of_account?.code || ''} -{' '}
-                                {cashOut.chart_of_account?.name || '-'}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Jumlah
-                            </p>
-                            <p className="font-medium text-lg">
-                                {formatCurrency(cashOut.amount)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Status
-                            </p>
+                        <div className="mt-2 flex items-center gap-2">
                             <Badge
-                                variant={
+                                className={cn(
                                     cashOut.status === 'posted'
-                                        ? 'default'
-                                        : 'secondary'
-                                }
+                                        ? 'badge-green-light'
+                                        : 'badge-yellow-light',
+                                )}
                             >
-                                {cashOut.status === 'posted' ? 'Posted' : 'Draft'}
+                                {cashOut.status === 'posted'
+                                    ? 'Posted'
+                                    : 'Draft'}
                             </Badge>
                         </div>
-                        {cashOut.description && (
-                            <div>
-                                <p className="text-sm text-muted-foreground">
-                                    Keterangan
-                                </p>
-                                <p className="font-medium">
-                                    {cashOut.description}
-                                </p>
-                            </div>
+                    </div>
+                    <div className="flex gap-2">
+                        {cashOut.status === 'draft' && (
+                            <>
+                                <Button
+                                    onClick={handleEdit}
+                                    variant="secondary"
+                                    className="btn-secondary"
+                                >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit
+                                </Button>
+                                <Button
+                                    onClick={openConfirmModal}
+                                    className="btn-primary"
+                                >
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                                    Post ke Jurnal
+                                </Button>
+                            </>
                         )}
-                    </CardContent>
-                </Card>
-            </div>
-        </AppLayout>
+                        {cashOut.status === 'posted' && (
+                            <Button
+                                onClick={openConfirmModal}
+                                className="btn-danger"
+                            >
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Reverse
+                                </span>
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <Card className="content">
+                        <CardHeader>
+                            <CardTitle>Informasi Kas Keluar</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Nomor:
+                                </span>
+                                <span className="font-medium">
+                                    {cashOut.cash_out_number}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Tanggal:
+                                </span>
+                                <span className="font-medium">
+                                    {formatDatetoString(
+                                        new Date(cashOut.cash_out_date),
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Bank/Kas:
+                                </span>
+                                <span className="font-medium">
+                                    {cashOut.bank?.name || '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Akun Pengeluaran:
+                                </span>
+                                <span className="font-medium">
+                                    {cashOut.chart_of_account?.code || ''} -{' '}
+                                    {cashOut.chart_of_account?.name || '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Jumlah:
+                                </span>
+                                <span className="text-lg font-medium">
+                                    {formatCurrency(cashOut.amount)}
+                                </span>
+                            </div>
+                            {cashOut.description && (
+                                <div className="flex flex-col">
+                                    <span className="text-muted-foreground">
+                                        Keterangan:
+                                    </span>
+                                    <span className="mt-1 font-medium">
+                                        {cashOut.description}
+                                    </span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <Modal
+                    titleDesc={
+                        cashOut.status === 'draft'
+                            ? 'Post Kas Keluar?'
+                            : 'Reverse Kas Keluar?'
+                    }
+                    contentDesc={
+                        cashOut.status === 'draft'
+                            ? 'Data akan diposting ke jurnal dan tidak bisa diedit lagi.'
+                            : 'Jurnal akan dibalik dan data bisa diedit kembali.'
+                    }
+                    submitText={cashOut.status === 'draft' ? 'Post' : 'Reverse'}
+                    isModalOpen={isConfirmModalOpen}
+                    onModalClose={closeConfirmModal}
+                    handleSubmit={
+                        cashOut.status === 'draft' ? handlePost : handleReverse
+                    }
+                />
+            </AppLayout>
+        </>
     );
-}
+};
+
+export default CashOutShow;
 

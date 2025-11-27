@@ -3,7 +3,10 @@ import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import useDebounce from './use-debounce';
 
-export function useSearchSync(baseUrl: string, currentParams: Record<string, string>) {
+export function useSearchSync(
+    baseUrl: string,
+    currentParams: Record<string, string>,
+) {
     const [search, setSearch] = useState(currentParams.search ?? '');
     const debouncedSearch = useDebounce(search, 250);
 
@@ -18,7 +21,7 @@ export function useSearchSync(baseUrl: string, currentParams: Record<string, str
         }
 
         router.get(baseUrl, params, { preserveState: true, replace: true });
-    }, [debouncedSearch, currentParams.search, baseUrl]);
+    }, [debouncedSearch, currentParams.search, baseUrl, currentParams]);
 
     return { search, setSearch };
 }

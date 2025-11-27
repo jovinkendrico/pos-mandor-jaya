@@ -1,12 +1,15 @@
 import PageTitle from '@/components/page-title';
 import CashOutForm from '@/components/transaction/cash-outs/cash-out-form';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Bank, ChartOfAccount } from '@/types';
-import { Head } from '@inertiajs/react';
+import { index } from '@/routes/cash-outs';
+import { BreadcrumbItem, IBank, ICashOut, IChartOfAccount } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    banks: Bank[];
-    expenseAccounts: ChartOfAccount[];
+    banks: IBank[];
+    expenseAccounts: IChartOfAccount[];
+    cashOut?: ICashOut;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -16,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Kas Keluar',
-        href: '/cash-outs',
+        href: index().url,
     },
     {
         title: 'Tambah',
@@ -24,16 +27,28 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CashOutCreate({
-    banks,
-    expenseAccounts,
-}: PageProps) {
+const CashOutCreate = (props: PageProps) => {
+    const { banks, expenseAccounts, cashOut } = props;
+
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tambah Kas Keluar" />
-            <PageTitle title="Tambah Kas Keluar" />
-            <CashOutForm banks={banks} expenseAccounts={expenseAccounts} />
-        </AppLayout>
+        <>
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Tambah Kas Keluar" />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle title="Tambah Kas Keluar" />
+                </div>
+                <CashOutForm
+                    banks={banks}
+                    expenseAccounts={expenseAccounts}
+                    cashOut={cashOut}
+                />
+            </AppLayout>
+        </>
     );
-}
+};
+
+export default CashOutCreate;
 

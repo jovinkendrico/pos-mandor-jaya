@@ -14,6 +14,15 @@ export interface FilterState {
     bank_id?: string;
     payment_method?: string;
     customer_id?: string;
+    parent_id?: string;
+    type?: string;
+    stock_filter?: string;
+    city_id?: string;
+    is_active?: string;
+    item_id?: string;
+    adjustment_type?: string;
+    reference_type?: string;
+    [key: string]: any;
 }
 
 export interface Option {
@@ -25,6 +34,7 @@ interface UseFilterBarProps {
     initialFilters: FilterState;
     onFilterChange: (filters: FilterState) => void;
     sortOptions?: Option[];
+    defaultSortOrder?: string;
 }
 
 interface UseFilterBarReturn {
@@ -55,6 +65,7 @@ export const useFilterBar = ({
     initialFilters,
     onFilterChange,
     sortOptions = defaultSortOptions,
+    defaultSortOrder = 'desc',
 }: UseFilterBarProps): UseFilterBarReturn => {
     const [localFilters, setLocalFilters] =
         useState<FilterState>(initialFilters);
@@ -100,14 +111,22 @@ export const useFilterBar = ({
             date_from: '',
             date_to: '',
             sort_by: sortOptions[0]?.value || 'purchase_date',
-            sort_order: 'desc',
+            sort_order: defaultSortOrder,
             bank_id: '',
             payment_method: 'all',
             customer_id: '',
+            parent_id: '',
+            type: 'all',
+            stock_filter: 'all',
+            city_id: '',
+            is_active: 'all',
+            item_id: '',
+            adjustment_type: 'all',
+            reference_type: 'all',
         };
         setLocalFilters(resetFilters);
         onFilterChange(resetFilters);
-    }, [onFilterChange, sortOptions]);
+    }, [onFilterChange, sortOptions, defaultSortOrder]);
 
     const defaultSortBy = sortOptions[0]?.value;
 
@@ -120,10 +139,18 @@ export const useFilterBar = ({
         (localFilters.date_from ?? '') !== '' ||
         (localFilters.date_to ?? '') !== '' ||
         localFilters.sort_by !== defaultSortBy ||
-        localFilters.sort_order !== 'desc' ||
+        localFilters.sort_order !== defaultSortOrder ||
         (localFilters.bank_id ?? '') !== '' ||
         (localFilters.payment_method ?? 'all') !== 'all' ||
-        (localFilters.customer_id ?? '') !== '';
+        (localFilters.customer_id ?? '') !== '' ||
+        (localFilters.parent_id ?? '') !== '' ||
+        (localFilters.type ?? 'all') !== 'all' ||
+        (localFilters.stock_filter ?? 'all') !== 'all' ||
+        (localFilters.city_id ?? '') !== '' ||
+        (localFilters.is_active ?? 'all') !== 'all' ||
+        (localFilters.item_id ?? '') !== '' ||
+        (localFilters.adjustment_type ?? 'all') !== 'all' ||
+        (localFilters.reference_type ?? 'all') !== 'all';
 
     return {
         localFilters,

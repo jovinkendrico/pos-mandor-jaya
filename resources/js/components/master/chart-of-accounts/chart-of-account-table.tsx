@@ -24,23 +24,12 @@ const getTypeLabel = (type: string) => {
     return labels[type] || type;
 };
 
-const getTypeVariant = (type: string) => {
-    const variants: Record<string, string> = {
-        asset: 'default',
-        liability: 'secondary',
-        equity: 'outline',
-        income: 'default',
-        expense: 'destructive',
-    };
-    return variants[type] || 'default';
-};
-
 const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
         asset: 'badge-blue-light',
         liability: 'badge-yellow-light',
-        equity: 'badge-green-light',
-        income: 'badge-purple-light',
+        equity: 'badge-purple-light',
+        income: 'badge-green-light',
         expense: 'badge-red-light',
     };
     return colors[type] || '';
@@ -80,10 +69,7 @@ const ChartOfAccountTable = (props: ChartOfAccountTableProps) => {
                         )}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        <Badge
-                            variant={getTypeVariant(row.type) as any}
-                            className={cn(getTypeColor(row.type))}
-                        >
+                        <Badge className={cn(getTypeColor(row.type))}>
                             {getTypeLabel(row.type)}
                         </Badge>
                     </TableCell>
@@ -96,7 +82,7 @@ const ChartOfAccountTable = (props: ChartOfAccountTableProps) => {
                             className={cn(
                                 row.is_active
                                     ? 'badge-green-light'
-                                    : 'badge-gray-light',
+                                    : 'badge-red-light',
                             )}
                         >
                             {row.is_active ? 'Aktif' : 'Nonaktif'}
@@ -127,4 +113,3 @@ const ChartOfAccountTable = (props: ChartOfAccountTableProps) => {
 };
 
 export default ChartOfAccountTable;
-
