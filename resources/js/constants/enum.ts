@@ -54,3 +54,16 @@ export enum PaymentMethod {
     OTHER = 'other',
     REFUND = 'refund',
 }
+
+export enum ReferenceType {
+    CASH_IN = 'CashIn',
+    CASH_OUT = 'CashOut',
+    SALE_PAYMENT = 'SalePayment',
+    PURCHASE_PAYMENT = 'PurchasePayment',
+    SALE = 'Sale',
+    PURCHASE = 'Purchase',
+    SALE_RETURN = 'SaleReturn',
+    PURCHASE_RETURN = 'PurchaseReturn',
+    MANUAL = 'Manual',
+    STOCK_ADJUSTMENT = 'StockAdjustment',
+}

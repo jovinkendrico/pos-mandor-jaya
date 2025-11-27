@@ -22,6 +22,7 @@ export interface FilterState {
     item_id?: string;
     adjustment_type?: string;
     reference_type?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -35,6 +36,7 @@ interface UseFilterBarProps {
     onFilterChange: (filters: FilterState) => void;
     sortOptions?: Option[];
     defaultSortOrder?: string;
+    defaultFilters?: Partial<FilterState>;
 }
 
 interface UseFilterBarReturn {
@@ -66,6 +68,7 @@ export const useFilterBar = ({
     onFilterChange,
     sortOptions = defaultSortOptions,
     defaultSortOrder = 'desc',
+    defaultFilters,
 }: UseFilterBarProps): UseFilterBarReturn => {
     const [localFilters, setLocalFilters] =
         useState<FilterState>(initialFilters);
@@ -123,34 +126,41 @@ export const useFilterBar = ({
             item_id: '',
             adjustment_type: 'all',
             reference_type: 'all',
+            ...defaultFilters,
         };
         setLocalFilters(resetFilters);
         onFilterChange(resetFilters);
-    }, [onFilterChange, sortOptions, defaultSortOrder]);
+    }, [onFilterChange, sortOptions, defaultSortOrder, defaultFilters]);
 
     const defaultSortBy = sortOptions[0]?.value;
 
-    const hasActiveFilters =
-        (localFilters.search ?? '') !== '' ||
-        (localFilters.status ?? 'all') !== 'all' ||
-        (localFilters.payment_status ?? 'all') !== 'all' ||
-        (localFilters.return_type ?? 'all') !== 'all' ||
-        (localFilters.supplier_id ?? '') !== '' ||
-        (localFilters.date_from ?? '') !== '' ||
-        (localFilters.date_to ?? '') !== '' ||
-        localFilters.sort_by !== defaultSortBy ||
-        localFilters.sort_order !== defaultSortOrder ||
-        (localFilters.bank_id ?? '') !== '' ||
-        (localFilters.payment_method ?? 'all') !== 'all' ||
-        (localFilters.customer_id ?? '') !== '' ||
-        (localFilters.parent_id ?? '') !== '' ||
-        (localFilters.type ?? 'all') !== 'all' ||
-        (localFilters.stock_filter ?? 'all') !== 'all' ||
-        (localFilters.city_id ?? '') !== '' ||
-        (localFilters.is_active ?? 'all') !== 'all' ||
-        (localFilters.item_id ?? '') !== '' ||
-        (localFilters.adjustment_type ?? 'all') !== 'all' ||
-        (localFilters.reference_type ?? 'all') !== 'all';
+    const hasActiveFilters = defaultFilters
+        ? Object.keys(defaultFilters).some((key) => {
+              const filterKey = key as keyof FilterState;
+              const defaultValue = defaultFilters[filterKey] ?? '';
+              const localValue = localFilters[filterKey] ?? defaultValue;
+              return localValue !== defaultValue;
+          }) || (localFilters.search ?? '') !== (defaultFilters.search ?? '')
+        : (localFilters.search ?? '') !== '' ||
+          (localFilters.status ?? 'all') !== 'all' ||
+          (localFilters.payment_status ?? 'all') !== 'all' ||
+          (localFilters.return_type ?? 'all') !== 'all' ||
+          (localFilters.supplier_id ?? '') !== '' ||
+          (localFilters.date_from ?? '') !== '' ||
+          (localFilters.date_to ?? '') !== '' ||
+          localFilters.sort_by !== defaultSortBy ||
+          localFilters.sort_order !== defaultSortOrder ||
+          (localFilters.bank_id ?? '') !== '' ||
+          (localFilters.payment_method ?? 'all') !== 'all' ||
+          (localFilters.customer_id ?? '') !== '' ||
+          (localFilters.parent_id ?? '') !== '' ||
+          (localFilters.type ?? 'all') !== 'all' ||
+          (localFilters.stock_filter ?? 'all') !== 'all' ||
+          (localFilters.city_id ?? '') !== '' ||
+          (localFilters.is_active ?? 'all') !== 'all' ||
+          (localFilters.item_id ?? '') !== '' ||
+          (localFilters.adjustment_type ?? 'all') !== 'all' ||
+          (localFilters.reference_type ?? 'all') !== 'all';
 
     return {
         localFilters,

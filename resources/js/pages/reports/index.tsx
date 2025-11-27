@@ -1,26 +1,29 @@
-import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import PageTitle from '@/components/page-title';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-    FileText,
-    TrendingUp,
-    TrendingDown,
-    Users,
-    Package,
-    ShoppingCart,
-    CreditCard,
-    DollarSign,
-    BarChart3,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import AppLayout from '@/layouts/app-layout';
+import { Head, Link } from '@inertiajs/react';
+import {
     AlertTriangle,
-    Receipt,
     ArrowLeftRight,
     Building2,
-    Warehouse,
-    Scale,
-    Trophy,
-    Zap,
+    CreditCard,
+    DollarSign,
+    Package,
     Percent,
+    Receipt,
+    Scale,
+    TrendingDown,
+    TrendingUp,
+    Trophy,
+    Users,
+    Warehouse,
+    Zap,
 } from 'lucide-react';
 
 const breadcrumbs = [
@@ -32,7 +35,8 @@ const reports = [
     {
         id: 'sale-report',
         title: 'Laporan Penjualan',
-        description: 'Laporan penjualan harian/bulanan dengan ringkasan per customer',
+        description:
+            'Laporan penjualan harian/bulanan dengan ringkasan per customer',
         href: '/reports/sale-report',
         icon: TrendingUp,
         color: 'text-green-600',
@@ -41,7 +45,8 @@ const reports = [
     {
         id: 'purchase-report',
         title: 'Laporan Pembelian',
-        description: 'Laporan pembelian harian/bulanan dengan ringkasan per supplier',
+        description:
+            'Laporan pembelian harian/bulanan dengan ringkasan per supplier',
         href: '/reports/purchase-report',
         icon: TrendingDown,
         color: 'text-blue-600',
@@ -50,7 +55,8 @@ const reports = [
     {
         id: 'receivable-aging',
         title: 'Laporan Piutang Usaha',
-        description: 'Analisis aging piutang dengan kategori 0-30, 31-60, 61-90, >90 hari',
+        description:
+            'Analisis aging piutang dengan kategori 0-30, 31-60, 61-90, >90 hari',
         href: '/reports/receivable-aging',
         icon: DollarSign,
         color: 'text-purple-600',
@@ -59,7 +65,8 @@ const reports = [
     {
         id: 'payable-aging',
         title: 'Laporan Hutang Usaha',
-        description: 'Analisis aging hutang dengan kategori 0-30, 31-60, 61-90, >90 hari',
+        description:
+            'Analisis aging hutang dengan kategori 0-30, 31-60, 61-90, >90 hari',
         href: '/reports/payable-aging',
         icon: CreditCard,
         color: 'text-orange-600',
@@ -68,7 +75,8 @@ const reports = [
     {
         id: 'inventory-valuation',
         title: 'Laporan Nilai Persediaan',
-        description: 'Nilai persediaan saat ini berdasarkan stok dan harga rata-rata',
+        description:
+            'Nilai persediaan saat ini berdasarkan stok dan harga rata-rata',
         href: '/reports/inventory-valuation',
         icon: Warehouse,
         color: 'text-indigo-600',
@@ -131,7 +139,8 @@ const reports = [
     {
         id: 'sale-return',
         title: 'Laporan Retur Penjualan',
-        description: 'Ringkasan retur penjualan per periode dengan analisis per customer',
+        description:
+            'Ringkasan retur penjualan per periode dengan analisis per customer',
         href: '/reports/sale-return',
         icon: Receipt,
         color: 'text-pink-600',
@@ -140,7 +149,8 @@ const reports = [
     {
         id: 'purchase-return',
         title: 'Laporan Retur Pembelian',
-        description: 'Ringkasan retur pembelian per periode dengan analisis per supplier',
+        description:
+            'Ringkasan retur pembelian per periode dengan analisis per supplier',
         href: '/reports/purchase-return',
         icon: Receipt,
         color: 'text-pink-600',
@@ -149,7 +159,8 @@ const reports = [
     {
         id: 'sale-payment',
         title: 'Laporan Pembayaran Penjualan',
-        description: 'Detail pembayaran penjualan dengan analisis per metode dan bank',
+        description:
+            'Detail pembayaran penjualan dengan analisis per metode dan bank',
         href: '/reports/sale-payment',
         icon: CreditCard,
         color: 'text-emerald-600',
@@ -158,7 +169,8 @@ const reports = [
     {
         id: 'purchase-payment',
         title: 'Laporan Pembayaran Pembelian',
-        description: 'Detail pembayaran pembelian dengan analisis per metode dan bank',
+        description:
+            'Detail pembayaran pembelian dengan analisis per metode dan bank',
         href: '/reports/purchase-payment',
         icon: CreditCard,
         color: 'text-emerald-600',
@@ -167,7 +179,8 @@ const reports = [
     {
         id: 'cash-in-out',
         title: 'Laporan Kas Masuk/Keluar',
-        description: 'Ringkasan kas masuk dan keluar dengan analisis per bank dan akun',
+        description:
+            'Ringkasan kas masuk dan keluar dengan analisis per bank dan akun',
         href: '/reports/cash-in-out',
         icon: ArrowLeftRight,
         color: 'text-teal-600',
@@ -176,7 +189,8 @@ const reports = [
     {
         id: 'best-seller',
         title: 'Laporan Barang Paling Laku',
-        description: 'Ranking item terlaris berdasarkan quantity/revenue dengan tren penjualan',
+        description:
+            'Ranking item terlaris berdasarkan quantity/revenue dengan tren penjualan',
         href: '/reports/best-seller',
         icon: Trophy,
         color: 'text-yellow-600',
@@ -185,7 +199,8 @@ const reports = [
     {
         id: 'dead-stock',
         title: 'Laporan Barang Paling Tidak Laku',
-        description: 'Item yang tidak terjual dalam periode tertentu dengan nilai persediaan menganggur',
+        description:
+            'Item yang tidak terjual dalam periode tertentu dengan nilai persediaan menganggur',
         href: '/reports/dead-stock',
         icon: AlertTriangle,
         color: 'text-red-600',
@@ -194,7 +209,8 @@ const reports = [
     {
         id: 'stock-turnover',
         title: 'Laporan Perputaran Stok',
-        description: 'Analisis perputaran stok per item untuk identifikasi item cepat/lambat bergerak',
+        description:
+            'Analisis perputaran stok per item untuk identifikasi item cepat/lambat bergerak',
         href: '/reports/stock-turnover',
         icon: Zap,
         color: 'text-blue-600',
@@ -203,7 +219,8 @@ const reports = [
     {
         id: 'margin-by-item',
         title: 'Laporan Analisis Margin per Item',
-        description: 'Margin/profit per item dengan rekomendasi pricing untuk item paling/terkurang profitable',
+        description:
+            'Margin/profit per item dengan rekomendasi pricing untuk item paling/terkurang profitable',
         href: '/reports/margin-by-item',
         icon: Percent,
         color: 'text-purple-600',
@@ -212,7 +229,8 @@ const reports = [
     {
         id: 'margin-by-customer',
         title: 'Laporan Analisis Margin per Customer',
-        description: 'Margin/profit per customer untuk strategi pricing per customer paling/terkurang profitable',
+        description:
+            'Margin/profit per customer untuk strategi pricing per customer paling/terkurang profitable',
         href: '/reports/margin-by-customer',
         icon: Percent,
         color: 'text-indigo-600',
@@ -224,7 +242,7 @@ export default function ReportsIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan" />
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6 flex items-center justify-between">
                 <PageTitle title="Laporan" />
             </div>
 
@@ -233,19 +251,27 @@ export default function ReportsIndex() {
                     const Icon = report.icon;
                     return (
                         <Link key={report.id} href={report.href}>
-                            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                            <Card className="h-full cursor-pointer transition-shadow hover:shadow-lg">
                                 <CardHeader>
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-3 rounded-lg ${report.bgColor}`}>
-                                            <Icon className={`h-6 w-6 ${report.color}`} />
+                                        <div
+                                            className={`rounded-lg p-3 ${report.bgColor}`}
+                                        >
+                                            <Icon
+                                                className={`h-6 w-6 ${report.color}`}
+                                            />
                                         </div>
                                         <div className="flex-1">
-                                            <CardTitle className="text-lg">{report.title}</CardTitle>
+                                            <CardTitle className="text-lg">
+                                                {report.title}
+                                            </CardTitle>
                                         </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <CardDescription className="text-sm">{report.description}</CardDescription>
+                                    <CardDescription className="text-sm">
+                                        {report.description}
+                                    </CardDescription>
                                 </CardContent>
                             </Card>
                         </Link>
@@ -255,4 +281,3 @@ export default function ReportsIndex() {
         </AppLayout>
     );
 }
-

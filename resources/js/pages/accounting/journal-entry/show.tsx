@@ -1,19 +1,14 @@
 import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { ReferenceType } from '@/constants/enum';
 import AppLayout from '@/layouts/app-layout';
-import { formatCurrency, formatDatetoString } from '@/lib/utils';
+import { formatCurrency, formatDatetoString, formatNumber } from '@/lib/utils';
+import { index } from '@/routes/journal-entries';
 import { BreadcrumbItem, JournalEntry } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
@@ -35,9 +30,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function JournalEntryShow({ journalEntry }: PageProps) {
+const JournalEntryShow = ({ journalEntry }: PageProps) => {
     const formatStatus = (status: string) => {
-        const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
+        const statusMap: Record<
+            string,
+            { label: string; variant: 'default' | 'secondary' | 'destructive' }
+        > = {
             posted: { label: 'Posted', variant: 'default' },
             draft: { label: 'Draft', variant: 'secondary' },
             reversed: { label: 'Reversed', variant: 'destructive' },
@@ -48,37 +46,53 @@ export default function JournalEntryShow({ journalEntry }: PageProps) {
     const formatReferenceType = (type?: string) => {
         if (!type) return '-';
         const typeMap: Record<string, string> = {
-            CashIn: 'Kas Masuk',
-            CashOut: 'Kas Keluar',
-            SalePayment: 'Pembayaran Penjualan',
-            PurchasePayment: 'Pembayaran Pembelian',
-            Sale: 'Penjualan',
-            Purchase: 'Pembelian',
-            SaleReturn: 'Retur Penjualan',
-            PurchaseReturn: 'Retur Pembelian',
-            Manual: 'Manual',
+            [ReferenceType.CASH_IN]: 'Kas Masuk',
+            [ReferenceType.CASH_OUT]: 'Kas Keluar',
+            [ReferenceType.SALE_PAYMENT]: 'Pembayaran Penjualan',
+            [ReferenceType.PURCHASE_PAYMENT]: 'Pembayaran Pembelian',
+            [ReferenceType.SALE]: 'Penjualan',
+            [ReferenceType.PURCHASE]: 'Pembelian',
+            [ReferenceType.SALE_RETURN]: 'Retur Penjualan',
+            [ReferenceType.PURCHASE_RETURN]: 'Retur Pembelian',
+            [ReferenceType.MANUAL]: 'Manual',
+            [ReferenceType.STOCK_ADJUSTMENT]: 'Penyesuaian Stok',
         };
         return typeMap[type] || type;
     };
 
     const statusInfo = formatStatus(journalEntry.status);
 
+    const tableColumn = ['Akun', 'Keterangan', 'Debit', 'Kredit'];
+
+    console.log(journalEntry.details);
+    const totalDebit =
+        journalEntry.details?.reduce(
+            (sum, detail) => sum + formatNumber(detail.debit) || 0,
+            0,
+        ) || 0;
+    const totalCredit =
+        journalEntry.details?.reduce(
+            (sum, detail) => sum + (formatNumber(detail.credit) || 0),
+            0,
+        ) || 0;
+    const difference = totalDebit - totalCredit;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Jurnal #${journalEntry.journal_number}`} />
-            <div className="flex justify-between items-center mb-4">
-                <PageTitle title={`Jurnal #${journalEntry.journal_number}`} />
-                <Button
-                    variant="outline"
-                    onClick={() => router.visit('/journal-entries')}
-                >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Kembali
-                </Button>
+            <div className="mb-4 flex items-center justify-between">
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle
+                        title={`Jurnal #${journalEntry.journal_number}`}
+                    />
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <Card>
+            <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Informasi Jurnal</CardTitle>
                     </CardHeader>
@@ -106,7 +120,9 @@ export default function JournalEntryShow({ journalEntry }: PageProps) {
                                 Referensi
                             </p>
                             <p className="font-medium">
-                                {formatReferenceType(journalEntry.reference_type)}
+                                {formatReferenceType(
+                                    journalEntry.reference_type,
+                                )}
                             </p>
                         </div>
                         <div>
@@ -130,7 +146,7 @@ export default function JournalEntryShow({ journalEntry }: PageProps) {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="content">
                     <CardHeader>
                         <CardTitle>Total</CardTitle>
                     </CardHeader>
@@ -139,16 +155,16 @@ export default function JournalEntryShow({ journalEntry }: PageProps) {
                             <p className="text-sm text-muted-foreground">
                                 Total Debit
                             </p>
-                            <p className="font-medium text-lg">
-                                {formatCurrency(journalEntry.total_debit || 0)}
+                            <p className="text-lg font-medium">
+                                {formatCurrency(totalDebit)}
                             </p>
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">
                                 Total Kredit
                             </p>
-                            <p className="font-medium text-lg">
-                                {formatCurrency(journalEntry.total_credit || 0)}
+                            <p className="text-lg font-medium">
+                                {formatCurrency(totalCredit)}
                             </p>
                         </div>
                         <div>
@@ -156,79 +172,56 @@ export default function JournalEntryShow({ journalEntry }: PageProps) {
                                 Selisih
                             </p>
                             <p
-                                className={`font-medium text-lg ${
-                                    Math.abs(
-                                        (journalEntry.total_debit || 0) -
-                                            (journalEntry.total_credit || 0),
-                                    ) < 0.01
+                                className={`text-lg font-medium ${
+                                    Math.abs(difference) < 0.01
                                         ? 'text-green-600'
                                         : 'text-red-600'
                                 }`}
                             >
-                                {formatCurrency(
-                                    (journalEntry.total_debit || 0) -
-                                        (journalEntry.total_credit || 0),
-                                )}
+                                {formatCurrency(difference)}
                             </p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Detail Jurnal</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Akun</TableHead>
-                                    <TableHead>Keterangan</TableHead>
-                                    <TableHead className="text-right">Debit</TableHead>
-                                    <TableHead className="text-right">Kredit</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {journalEntry.details && journalEntry.details.length > 0 ? (
-                                    journalEntry.details.map((detail) => (
-                                        <TableRow key={detail.id}>
-                                            <TableCell>
-                                                {detail.chart_of_account?.code || ''} -{' '}
-                                                {detail.chart_of_account?.name || '-'}
-                                            </TableCell>
-                                            <TableCell>
-                                                {detail.description || '-'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {detail.debit > 0
-                                                    ? formatCurrency(detail.debit)
-                                                    : '-'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {detail.credit > 0
-                                                    ? formatCurrency(detail.credit)
-                                                    : '-'}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={4}
-                                            className="text-center text-muted-foreground"
-                                        >
-                                            Tidak ada detail jurnal
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <TableLayout
+                            tableColumn={tableColumn}
+                            tableRow={journalEntry.details || []}
+                            pageFrom={1}
+                            renderRow={(detail) => (
+                                <>
+                                    <TableCell className="flex w-full items-center justify-center text-center">
+                                        {detail.chart_of_account?.code || ''} -{' '}
+                                        {detail.chart_of_account?.name || '-'}
+                                    </TableCell>
+                                    <TableCell className="flex w-full items-center justify-center text-center">
+                                        {detail.description || '-'}
+                                    </TableCell>
+                                    <TableCell className="flex w-full items-center justify-center text-center">
+                                        {detail.debit > 0
+                                            ? formatCurrency(detail.debit)
+                                            : '-'}
+                                    </TableCell>
+                                    <TableCell className="flex w-full items-center justify-center text-center">
+                                        {detail.credit > 0
+                                            ? formatCurrency(detail.credit)
+                                            : '-'}
+                                    </TableCell>
+                                </>
+                            )}
+                        />
                     </div>
                 </CardContent>
             </Card>
         </AppLayout>
     );
-}
+};
 
+export default JournalEntryShow;
