@@ -50,27 +50,27 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const ChartOfAccountIndex = (props: PageProps) => {
+    const defaultFilters = {
+        search: '',
+        type: 'all',
+        is_active: 'all',
+        parent_id: 'all',
+        sort_by: 'code',
+        sort_order: 'asc',
+        status: 'all',
+        date_from: '',
+        date_to: '',
+    };
+
     const {
         chartOfAccounts,
         allAccounts = [],
-        filters = {
-            search: '',
-            type: 'all',
-            is_active: 'all',
-            parent_id: 'all',
-            sort_by: 'code',
-            sort_order: 'asc',
-        },
+        filters = defaultFilters,
     } = props;
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
-        {
-            ...filters,
-            status: 'all',
-            date_from: '',
-            date_to: '',
-        },
+        filters,
     );
 
     const [selectedChartOfAccount, setSelectedChartOfAccount] = useState<
@@ -118,6 +118,7 @@ const ChartOfAccountIndex = (props: PageProps) => {
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}
                     onFilterChange={handleFilterChange}
+                    defaultFilters={defaultFilters}
                     defaultSortOrder="asc"
                     showPaymentStatus={false}
                     showDateRange={false}
