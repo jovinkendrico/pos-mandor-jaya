@@ -363,7 +363,10 @@ export default function ReceivableAgingIndex({
                                                         {item.days_overdue} hari
                                                     </Badge>
                                                 ) : (
-                                                    <Badge className="badge-gray-light">
+                                                    <Badge
+                                                        className="badge-gray-light"
+                                                        variant="outline"
+                                                    >
                                                         Sisa{' '}
                                                         {item.days_until_due}{' '}
                                                         hari

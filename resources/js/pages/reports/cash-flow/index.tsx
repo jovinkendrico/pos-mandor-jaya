@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
 
@@ -212,9 +212,16 @@ export default function CashFlowIndex({
                                             <TableCell className="text-center">
                                                 <Badge
                                                     variant="outline"
-                                                    className="capitalize"
+                                                    className={cn(
+                                                        bank.bank_type ===
+                                                            'bank'
+                                                            ? 'badge-green-light'
+                                                            : 'badge-yellow-light',
+                                                    )}
                                                 >
-                                                    {bank.bank_type}
+                                                    {bank.bank_type === 'bank'
+                                                        ? 'Bank'
+                                                        : 'Cash'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
