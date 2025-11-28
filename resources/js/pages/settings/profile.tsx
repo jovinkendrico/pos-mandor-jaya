@@ -56,7 +56,7 @@ export default function Profile({
 
                                     <Input
                                         id="name"
-                                        className="mt-1 block w-full"
+                                        className="input-box mt-1 block w-full"
                                         defaultValue={auth.user.name}
                                         name="name"
                                         required
@@ -76,7 +76,7 @@ export default function Profile({
                                     <Input
                                         id="email"
                                         type="email"
-                                        className="mt-1 block w-full"
+                                        className="input-box mt-1 block w-full"
                                         defaultValue={auth.user.email}
                                         name="email"
                                         required
@@ -121,6 +121,7 @@ export default function Profile({
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
+                                        className="btn-primary"
                                     >
                                         Save
                                     </Button>

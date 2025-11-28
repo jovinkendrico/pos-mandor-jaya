@@ -11,7 +11,7 @@ interface CreateRolePageProps {
 }
 
 const CreateRole = (props: CreateRolePageProps) => {
-    const { permissions, groupedPermissions } = props;
+    const { groupedPermissions } = props;
 
     const form = useForm<RoleFormData>({
         name: '',

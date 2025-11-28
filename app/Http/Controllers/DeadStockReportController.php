@@ -21,7 +21,7 @@ class DeadStockReportController extends Controller
     {
         $dateFrom = $request->get('date_from', now()->subMonths(3)->format('Y-m-d')); // Default 3 months
         $dateTo = $request->get('date_to', now()->format('Y-m-d'));
-        $minDays = $request->get('min_days', 90); // Minimum days without sales
+        $minDays = $request->get('min_days', 60); // Minimum days without sales
 
         // Get all items with stock
         $items = Item::with('itemUoms.uom')
@@ -144,7 +144,7 @@ class DeadStockReportController extends Controller
         try {
             $dateFrom = $request->get('date_from', now()->subMonths(3)->format('Y-m-d'));
             $dateTo = $request->get('date_to', now()->format('Y-m-d'));
-            $minDays = $request->get('min_days', 90);
+            $minDays = $request->get('min_days', 60);
 
             $items = Item::with('itemUoms.uom')
                 ->where('stock', '>', 0)
