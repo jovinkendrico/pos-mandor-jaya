@@ -49,7 +49,6 @@ export default function BalanceSheetIndex({
     totalLiabilities,
     totalEquity,
     totalLiabilitiesAndEquity,
-    netProfit,
 }: PageProps) {
     const balanceSheetRoute = () => ({ url: '/reports/balance-sheet' });
 

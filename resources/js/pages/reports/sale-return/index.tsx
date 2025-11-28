@@ -1,8 +1,7 @@
-import { DatePicker } from '@/components/date-picker';
 import PageTitle from '@/components/page-title';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -11,12 +10,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { Search, Printer } from 'lucide-react';
-import { useState } from 'react';
+import { Printer } from 'lucide-react';
 
 interface PageProps {
     dateFrom: string;
@@ -72,17 +71,19 @@ export default function SaleReturnReportIndex({
     byCustomer,
     saleReturns,
 }: PageProps) {
-    const [filters, setFilters] = useState({
-        date_from: dateFrom,
-        date_to: dateTo,
-    });
+    const saleReturnRoute = () => ({ url: '/reports/sale-return' });
 
-    const handleFilter = () => {
-        router.get('/reports/sale-return', filters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
+    const { allFilters, handleFilterChange } = useResourceFilters(
+        saleReturnRoute,
+        {
+            search: '',
+            status: 'all',
+            date_from: dateFrom,
+            date_to: dateTo,
+            sort_by: 'created_at',
+            sort_order: 'desc',
+        },
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -91,75 +92,38 @@ export default function SaleReturnReportIndex({
                 <PageTitle title="Laporan Retur Penjualan" />
             </div>
 
-            <Card className="mb-4">
-                <CardHeader>
-                    <CardTitle>Filter Periode</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div className="space-y-2">
-                            <Label htmlFor="date_from">Dari Tanggal</Label>
-                            <DatePicker
-                                value={
-                                    filters.date_from
-                                        ? new Date(filters.date_from)
-                                        : undefined
-                                }
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_from: date
-                                            ? format(date, 'yyyy-MM-dd')
-                                            : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="date_to">Sampai Tanggal</Label>
-                            <DatePicker
-                                value={
-                                    filters.date_to
-                                        ? new Date(filters.date_to)
-                                        : undefined
-                                }
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_to: date
-                                            ? format(date, 'yyyy-MM-dd')
-                                            : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="flex items-end gap-2">
-                            <Button onClick={handleFilter} className="flex-1">
-                                <Search className="mr-2 h-4 w-4" />
-                                Tampilkan
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    const params = new URLSearchParams({
-                                        date_from: filters.date_from,
-                                        date_to: filters.date_to,
-                                    });
-                                    window.open(`/reports/sale-return/print?${params.toString()}`, '_blank');
-                                }}
-                                variant="outline"
-                                className="flex-1"
-                            >
-                                <Printer className="mr-2 h-4 w-4" />
-                                Cetak PDF
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <FilterBar
+                filters={allFilters}
+                onFilterChange={handleFilterChange}
+                showDateRange={true}
+                showSearch={false}
+                showStatus={false}
+                showPaymentStatus={false}
+                showSort={false}
+            />
+            <div className="flex w-full justify-end">
+                <Button
+                    onClick={() => {
+                        const params = new URLSearchParams({
+                            date_from: allFilters.date_from,
+                            date_to: allFilters.date_to,
+                        });
+                        window.open(
+                            `/reports/sale-return/print?${params.toString()}`,
+                            '_blank',
+                        );
+                    }}
+                    variant="outline"
+                    className="btn-primary"
+                >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </Button>
+            </div>
 
             {/* Summary Cards */}
             <div className="mb-4 grid gap-4 md:grid-cols-4">
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
                             Total Retur
@@ -174,7 +138,7 @@ export default function SaleReturnReportIndex({
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
                             Total Subtotal
@@ -189,7 +153,7 @@ export default function SaleReturnReportIndex({
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
                             Total Diskon
@@ -207,7 +171,7 @@ export default function SaleReturnReportIndex({
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">
                             Total Retur
@@ -226,20 +190,22 @@ export default function SaleReturnReportIndex({
 
             {/* By Return Type */}
             {Object.keys(byReturnType).length > 0 && (
-                <Card className="mb-4">
+                <Card className="content mb-4">
                     <CardHeader>
                         <CardTitle>Ringkasan per Tipe Retur</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Tipe Retur</TableHead>
-                                        <TableHead className="text-right">
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">
+                                            Tipe Retur
+                                        </TableHead>
+                                        <TableHead className="text-center">
                                             Jumlah
                                         </TableHead>
-                                        <TableHead className="text-right">
+                                        <TableHead className="text-center">
                                             Total
                                         </TableHead>
                                     </TableRow>
@@ -247,16 +213,19 @@ export default function SaleReturnReportIndex({
                                 <TableBody>
                                     {Object.entries(byReturnType).map(
                                         ([type, data]) => (
-                                            <TableRow key={type}>
-                                                <TableCell>
+                                            <TableRow
+                                                key={type}
+                                                className="dark:border-b-2 dark:border-white/25"
+                                            >
+                                                <TableCell className="text-center">
                                                     {type === 'stock_only'
                                                         ? 'Retur Stok'
                                                         : 'Retur + Refund'}
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-center">
                                                     {data.count}
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-center">
                                                     {formatCurrency(
                                                         data.total_amount,
                                                     )}
@@ -273,20 +242,22 @@ export default function SaleReturnReportIndex({
 
             {/* By Customer */}
             {byCustomer.length > 0 && (
-                <Card className="mb-4">
+                <Card className="content mb-4">
                     <CardHeader>
                         <CardTitle>Ringkasan per Customer</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Customer</TableHead>
-                                        <TableHead className="text-right">
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">
+                                            Customer
+                                        </TableHead>
+                                        <TableHead className="text-center">
                                             Jumlah
                                         </TableHead>
-                                        <TableHead className="text-right">
+                                        <TableHead className="text-center">
                                             Total
                                         </TableHead>
                                     </TableRow>
@@ -298,14 +269,15 @@ export default function SaleReturnReportIndex({
                                                 customer.customer_id ||
                                                 'no-customer'
                                             }
+                                            className="dark:border-b-2 dark:border-white/25"
                                         >
-                                            <TableCell>
+                                            <TableCell className="text-center">
                                                 {customer.customer_name}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="text-center">
                                                 {customer.count}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="text-center">
                                                 {formatCurrency(
                                                     customer.total_amount,
                                                 )}
@@ -320,7 +292,7 @@ export default function SaleReturnReportIndex({
             )}
 
             {/* Detail Table */}
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Detail Retur Penjualan</CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -329,16 +301,28 @@ export default function SaleReturnReportIndex({
                     </p>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <Table className="content">
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>No. Retur</TableHead>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>No. Penjualan</TableHead>
-                                    <TableHead>Customer</TableHead>
-                                    <TableHead>Tipe</TableHead>
-                                    <TableHead>Metode Refund</TableHead>
+                                <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="text-center">
+                                        No. Retur
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Tanggal
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        No. Penjualan
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Customer
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Tipe
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Metode Refund
+                                    </TableHead>
                                     <TableHead className="text-right">
                                         Subtotal
                                     </TableHead>
@@ -356,11 +340,14 @@ export default function SaleReturnReportIndex({
                             <TableBody>
                                 {saleReturns.length > 0 ? (
                                     saleReturns.map((returnItem) => (
-                                        <TableRow key={returnItem.id}>
-                                            <TableCell className="font-mono">
+                                        <TableRow
+                                            key={returnItem.id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center font-mono">
                                                 {returnItem.return_number}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="text-center">
                                                 {format(
                                                     new Date(
                                                         returnItem.return_date,
@@ -368,19 +355,19 @@ export default function SaleReturnReportIndex({
                                                     'dd MMM yyyy',
                                                 )}
                                             </TableCell>
-                                            <TableCell className="font-mono">
+                                            <TableCell className="text-center font-mono">
                                                 {returnItem.sale_number}
                                             </TableCell>
                                             <TableCell>
                                                 {returnItem.customer_name}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="text-center">
                                                 {returnItem.return_type ===
                                                 'stock_only'
                                                     ? 'Retur Stok'
                                                     : 'Retur + Refund'}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="text-center">
                                                 {returnItem.refund_method ===
                                                 'reduce_receivable'
                                                     ? 'Kurangi Piutang'
@@ -410,7 +397,7 @@ export default function SaleReturnReportIndex({
                                         </TableRow>
                                     ))
                                 ) : (
-                                    <TableRow>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
                                         <TableCell
                                             colSpan={10}
                                             className="text-center text-muted-foreground"
@@ -419,8 +406,13 @@ export default function SaleReturnReportIndex({
                                         </TableCell>
                                     </TableRow>
                                 )}
-                                <TableRow className="bg-muted/50 font-semibold">
-                                    <TableCell colSpan={6}>Total</TableCell>
+                                <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                    <TableCell
+                                        className="text-center"
+                                        colSpan={6}
+                                    >
+                                        Total
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         {formatCurrency(summary.total_subtotal)}
                                     </TableCell>
