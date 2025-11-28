@@ -15,7 +15,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { Head, router } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { Search } from 'lucide-react';
+import { Search, Printer } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
@@ -133,10 +133,24 @@ export default function SaleReturnReportIndex({
                                 }
                             />
                         </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
+                        <div className="flex items-end gap-2">
+                            <Button onClick={handleFilter} className="flex-1">
                                 <Search className="mr-2 h-4 w-4" />
                                 Tampilkan
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        date_from: filters.date_from,
+                                        date_to: filters.date_to,
+                                    });
+                                    window.open(`/reports/sale-return/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
                             </Button>
                         </div>
                     </div>

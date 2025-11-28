@@ -45,6 +45,7 @@ use App\Http\Controllers\DeadStockReportController;
 use App\Http\Controllers\StockTurnoverReportController;
 use App\Http\Controllers\MarginByItemReportController;
 use App\Http\Controllers\MarginByCustomerReportController;
+use App\Http\Controllers\PaymentReceiptController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -121,6 +122,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/stock-turnover', [StockTurnoverReportController::class, 'index'])->name('reports.stock-turnover');
     Route::get('reports/margin-by-item', [MarginByItemReportController::class, 'index'])->name('reports.margin-by-item');
     Route::get('reports/margin-by-customer', [MarginByCustomerReportController::class, 'index'])->name('reports.margin-by-customer');
+
+    // Print routes for all reports
+    Route::get('reports/sale-report/print', [SaleReportController::class, 'print'])->name('reports.sale-report.print');
+    Route::get('reports/purchase-report/print', [PurchaseReportController::class, 'print'])->name('reports.purchase-report.print');
+    Route::get('reports/inventory-valuation/print', [InventoryValuationController::class, 'print'])->name('reports.inventory-valuation.print');
+    Route::get('reports/sale-by-customer/print', [SaleByCustomerReportController::class, 'print'])->name('reports.sale-by-customer.print');
+    Route::get('reports/sale-by-item/print', [SaleByItemReportController::class, 'print'])->name('reports.sale-by-item.print');
+    Route::get('reports/purchase-by-supplier/print', [PurchaseBySupplierReportController::class, 'print'])->name('reports.purchase-by-supplier.print');
+    Route::get('reports/stock-min-max/print', [StockMinMaxReportController::class, 'print'])->name('reports.stock-min-max.print');
+    Route::get('reports/balance-sheet/print', [BalanceSheetController::class, 'print'])->name('reports.balance-sheet.print');
+    Route::get('reports/sale-return/print', [SaleReturnReportController::class, 'print'])->name('reports.sale-return.print');
+    Route::get('reports/purchase-return/print', [PurchaseReturnReportController::class, 'print'])->name('reports.purchase-return.print');
+    Route::get('reports/sale-payment/print', [SalePaymentReportController::class, 'print'])->name('reports.sale-payment.print');
+    Route::get('reports/purchase-payment/print', [PurchasePaymentReportController::class, 'print'])->name('reports.purchase-payment.print');
+    Route::get('reports/cash-in-out/print', [CashInOutReportController::class, 'print'])->name('reports.cash-in-out.print');
+    Route::get('reports/best-seller/print', [BestSellerReportController::class, 'print'])->name('reports.best-seller.print');
+    Route::get('reports/dead-stock/print', [DeadStockReportController::class, 'print'])->name('reports.dead-stock.print');
+    Route::get('reports/stock-turnover/print', [StockTurnoverReportController::class, 'print'])->name('reports.stock-turnover.print');
+    Route::get('reports/margin-by-item/print', [MarginByItemReportController::class, 'print'])->name('reports.margin-by-item.print');
+    Route::get('reports/margin-by-customer/print', [MarginByCustomerReportController::class, 'print'])->name('reports.margin-by-customer.print');
+    Route::get('reports/receivable-aging/print', [ReceivableAgingController::class, 'print'])->name('reports.receivable-aging.print');
+    Route::get('reports/payable-aging/print', [PayableAgingController::class, 'print'])->name('reports.payable-aging.print');
+    Route::get('reports/cash-flow/print', [CashFlowController::class, 'print'])->name('reports.cash-flow.print');
+
+    // Payment Receipt
+    Route::get('payment-receipt', [PaymentReceiptController::class, 'index'])->name('payment-receipt.index');
+    Route::get('payment-receipt/print', [PaymentReceiptController::class, 'print'])->name('payment-receipt.print');
 
     // Bank Cash Movement
     Route::get('banks/{bank}/cash-movement', [BankController::class, 'cashMovement'])->name('banks.cash-movement');

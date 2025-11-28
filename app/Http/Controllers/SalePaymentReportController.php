@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SalePaymentReportController extends Controller
 {
@@ -94,5 +96,48 @@ class SalePaymentReportController extends Controller
                 ];
             }),
         ]);
+    }
+
+    /**
+     * Print sale payment report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+
+            $salePayments = SalePayment::with(['bank', 'items.sale.customer'])
+                ->where('status', 'confirmed')
+                ->whereBetween('payment_date', [$dateFrom, $dateTo])
+                ->orderBy('payment_date', 'desc')
+                ->get();
+
+            $summary = [
+                'total_payments' => $salePayments->count(),
+                'total_amount' => $salePayments->sum('total_amount'),
+            ];
+
+            $pdf = Pdf::loadView('pdf.reports.sale-payment', [
+                'title' => 'Laporan Pembayaran Penjualan',
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'summary' => $summary,
+                'salePayments' => $salePayments,
+            ])->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-pembayaran-penjualan-' . $dateFrom . '-to-' . $dateTo . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Sale Payment Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

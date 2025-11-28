@@ -17,6 +17,8 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
+import { useState } from 'react';
+import { Search, Printer } from 'lucide-react';
 
 interface CustomerSummary {
     customer_id: number | null;
@@ -119,6 +121,19 @@ export default function ReceivableAgingIndex({
                             }
                             className="input-box"
                         />
+                                                        <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        as_of_date: filters.as_of_date,
+                                    });
+                                    window.open(`/reports/receivable-aging/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
+                            </Button>
                     </div>
                 }
             />

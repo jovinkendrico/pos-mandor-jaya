@@ -1,5 +1,9 @@
 import PageTitle from '@/components/page-title';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/utils';
+import { Printer } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -46,6 +50,15 @@ export default function InventoryValuationIndex({
             <Head title="Laporan Nilai Persediaan" />
             <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Laporan Nilai Persediaan" />
+                <Button
+                    onClick={() => {
+                        window.open('/reports/inventory-valuation/print', '_blank');
+                    }}
+                    variant="outline"
+                >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </Button>
             </div>
 
             {/* Summary Cards */}

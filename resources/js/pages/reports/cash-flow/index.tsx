@@ -15,6 +15,8 @@ import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
+import { useState } from 'react';
+import { Search, Printer } from 'lucide-react';
 
 interface BankCashFlow {
     bank_id: number;
@@ -91,6 +93,20 @@ export default function CashFlowIndex({
                 showPaymentStatus={false}
                 showSort={false}
             />
+                                    <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        date_from: filters.date_from,
+                                        date_to: filters.date_to,
+                                    });
+                                    window.open(`/reports/cash-flow/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
+                            </Button>
 
             {/* Summary Cards */}
             <div className="mb-4 grid gap-4 md:grid-cols-5">

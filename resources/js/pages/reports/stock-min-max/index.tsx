@@ -4,6 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { formatCurrency } from '@/lib/utils';
+import { useState } from 'react';
+import { Search, AlertTriangle, TrendingUp, Printer } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
     Table,
@@ -208,6 +212,20 @@ export default function StockMinMaxIndex({
                     </>
                 }
             />
+                                    <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        min_stock: filters.min_stock.toString(),
+                                        max_stock: filters.max_stock.toString(),
+                                    });
+                                    window.open(`/reports/stock-min-max/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
+                            </Button>
 
             {/* Summary Cards */}
             <div className="mt-4 mb-4 grid gap-4 md:grid-cols-5">

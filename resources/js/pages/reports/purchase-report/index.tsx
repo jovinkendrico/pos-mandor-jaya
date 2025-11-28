@@ -14,6 +14,8 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
+import { useState } from 'react';
+import { Search, Printer } from 'lucide-react';
 
 interface DailySummary {
     date: string;
@@ -38,6 +40,7 @@ interface Purchase {
     purchase_number: string;
     purchase_date: string;
     supplier_name: string;
+    subtotal: number;
     total_after_discount: number;
     discount1_amount: number;
     discount2_amount: number;
@@ -104,6 +107,20 @@ export default function PurchaseReportIndex({
                 showPaymentStatus={false}
                 showSort={false}
             />
+                                    <Button
+                                onClick={() => {
+                                    const params = new URLSearchParams({
+                                        date_from: filters.date_from,
+                                        date_to: filters.date_to,
+                                    });
+                                    window.open(`/reports/purchase-report/print?${params.toString()}`, '_blank');
+                                }}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <Printer className="mr-2 h-4 w-4" />
+                                Cetak PDF
+                            </Button>
 
             {/* Summary Cards */}
             <div className="mb-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
