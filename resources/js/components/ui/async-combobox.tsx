@@ -19,6 +19,7 @@ export interface AsyncComboboxOption {
     value: string;
     label: string;
     displayLabel?: string; // Short label for button display
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -83,7 +84,7 @@ export function AsyncCombobox({
                 } else {
                     setOptions([]);
                 }
-            } catch (error) {
+            } catch {
                 setOptions([]);
             } finally {
                 setLoading(false);
