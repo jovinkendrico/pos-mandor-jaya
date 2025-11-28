@@ -704,7 +704,7 @@ export default function Dashboard({
                                                             )}{' '}
                                                             hari
                                                         </Badge>
-                                                        <p className="text-xs font-medium">
+                                                        <p className="text-right text-xs font-medium">
                                                             {formatCurrency(
                                                                 sale.remaining_amount,
                                                             )}
