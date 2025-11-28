@@ -3,9 +3,9 @@ import {
     formatNumberWithSeparator,
     parseStringtoNumber,
 } from '@/lib/utils';
-import { destroy, store, update } from '@/routes/items';
+import { store, update } from '@/routes/items';
 import { IItem, IItemUOM } from '@/types';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
@@ -149,18 +149,6 @@ const useItem = (closeModal: () => void = () => {}) => {
                 }
             }
         }
-    };
-
-    const handleDelete = (item: IItem) => {
-        if (!item.id) return;
-        router.delete(destroy(item.id).url, {
-            onSuccess: () => {
-                toast.success('Item berhasil dihapus');
-            },
-            onError: () => {
-                toast.error('Gagal menghapus item');
-            },
-        });
     };
 
     const handleCancel = () => {
@@ -339,7 +327,6 @@ const useItem = (closeModal: () => void = () => {}) => {
 
         handleSubmit,
         handleCancel,
-        handleDelete,
         handleChangeUOM,
         handleStockChange,
         handlePriceChange,

@@ -1,6 +1,6 @@
-import { destroy, store, update } from '@/routes/suppliers';
+import { store, update } from '@/routes/suppliers';
 import { ISupplier } from '@/types';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
@@ -76,14 +76,6 @@ const useSupplier = (closeModal: () => void) => {
         }
     };
 
-    const handleDelete = (supplier: ISupplier) => {
-        router.delete(destroy(supplier.id).url, {
-            onSuccess: () => {
-                toast.success('Supplier berhasil dihapus');
-            },
-        });
-    };
-
     const handleCancel = () => {
         reset();
         closeModal();
@@ -97,7 +89,6 @@ const useSupplier = (closeModal: () => void) => {
 
         handleSubmit,
         handleCancel,
-        handleDelete,
     };
 };
 

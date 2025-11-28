@@ -30,6 +30,10 @@ interface Filters {
     stock_filter?: string;
     item_id?: string;
     adjustment_type?: string;
+    account_id?: string;
+    as_of_date?: string;
+    min_stock?: string;
+    max_stock?: string;
 }
 
 const useResourceFilters = (

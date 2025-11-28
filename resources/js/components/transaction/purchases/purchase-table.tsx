@@ -2,7 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { PurchaseStatus } from '@/constants/enum';
 import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
+import { show } from '@/routes/purchases';
 import { IPurchase } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Info, Trash } from 'lucide-react';
@@ -13,7 +15,7 @@ interface PurchaseTableProps {
     onDelete: (purchase: IPurchase) => void;
 }
 
-export default function PurchaseTable(props: PurchaseTableProps) {
+const PurchaseTable = (props: PurchaseTableProps) => {
     const { purchases, pageFrom, onDelete } = props;
 
     const tableColumn = [
@@ -66,28 +68,32 @@ export default function PurchaseTable(props: PurchaseTableProps) {
                             {formatCurrency(row.remaining_amount || 0)}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            <Badge variant={isPaid ? 'success' : 'warning'}>
+                            <Badge
+                                variant={isPaid ? 'success' : 'warning'}
+                                className={cn(
+                                    isPaid
+                                        ? 'badge-blue-light'
+                                        : 'badge-red-light',
+                                )}
+                            >
                                 {isPaid ? 'Lunas' : 'Belum Lunas'}
                             </Badge>
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             <Badge
-                                variant={
-                                    row.status === 'confirmed'
-                                        ? 'default'
-                                        : 'secondary'
-                                }
                                 className={cn(
-                                    row.status === 'pending'
+                                    row.status === PurchaseStatus.PENDING
                                         ? 'badge-yellow-light'
                                         : 'badge-green-light',
                                 )}
                             >
-                                {row.status === 'pending' ? 'Pending' : 'Confirmed'}
+                                {row.status === PurchaseStatus.CONFIRMED
+                                    ? 'Confirmed'
+                                    : 'Pending'}
                             </Badge>
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
-                            <Link href={`/purchases/${row.id}`}>
+                            <Link href={show(row.id).url}>
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -110,4 +116,6 @@ export default function PurchaseTable(props: PurchaseTableProps) {
             }}
         />
     );
-}
+};
+
+export default PurchaseTable;

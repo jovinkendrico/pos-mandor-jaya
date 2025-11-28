@@ -1,119 +1,102 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { formatCurrency, formatDatetoString } from '@/lib/utils';
-import { SalePayment } from '@/types';
-import { Eye } from 'lucide-react';
+import { TableCell } from '@/components/ui/table';
+import TableLayout from '@/components/ui/TableLayout/TableLayout';
+import { SalePaymentStatus } from '@/constants/enum';
+import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
+import { ISalePayment } from '@/types';
+import { Link } from '@inertiajs/react';
+import { Info, Trash } from 'lucide-react';
 
 interface SalePaymentTableProps {
-    payments: SalePayment[];
-    onView: (payment: SalePayment) => void;
+    payments: ISalePayment[];
+    pageFrom?: number;
+    onDelete: (payment: ISalePayment) => void;
 }
 
-export default function SalePaymentTable({
+const SalePaymentTable = ({
     payments,
-    onView,
-}: SalePaymentTableProps) {
-    const formatPaymentMethod = (method: string) => {
-        const methods: Record<string, string> = {
-            cash: 'Tunai',
-            transfer: 'Transfer',
-            giro: 'Giro',
-            cek: 'Cek',
-            other: 'Lainnya',
-        };
-        return methods[method] || method;
-    };
+    pageFrom,
+    onDelete,
+}: SalePaymentTableProps) => {
+    const tableColumn = [
+        'Kode',
+        'Customer',
+        'Tanggal Pembayaran',
+        'Jumlah Invoice',
+        'Total',
+        'Metode',
+        'Bank',
+        'Status',
+        'Aksi',
+    ];
 
     return (
-        <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>No. Pembayaran</TableHead>
-                        <TableHead>Tanggal</TableHead>
-                        <TableHead>Jumlah Invoice</TableHead>
-                        <TableHead className="text-right">
-                            Total Pembayaran
-                        </TableHead>
-                        <TableHead>Metode</TableHead>
-                        <TableHead>Bank</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-center">Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {payments.length === 0 ? (
-                        <TableRow>
-                            <TableCell
-                                colSpan={8}
-                                className="text-center text-muted-foreground"
+        <TableLayout
+            tableName="Pembayaran Penjualan"
+            tableColumn={tableColumn}
+            tableRow={payments}
+            pageFrom={pageFrom}
+            text="Tidak ada data Pembayaran Penjualan"
+            renderRow={(row) => (
+                <>
+                    <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center font-mono">
+                        {row.payment_number}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.sales?.[0]?.customer?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {formatDatetoString(new Date(row.payment_date))}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.items?.length || row.sales?.length || 0} invoice
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {formatCurrency(row.total_amount)}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.payment_method}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.bank?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        <Badge
+                            className={cn(
+                                row.status === SalePaymentStatus.PENDING
+                                    ? 'badge-yellow-light'
+                                    : 'badge-green-light',
+                            )}
+                        >
+                            {row.status === SalePaymentStatus.CONFIRMED
+                                ? 'Confirmed'
+                                : 'Pending'}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <Link href={`/sale-payments/${row.id}`}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="btn-info"
                             >
-                                Tidak ada data pembayaran penjualan
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        payments.map((payment) => (
-                            <TableRow key={payment.id}>
-                                <TableCell className="font-medium">
-                                    {payment.payment_number}
-                                </TableCell>
-                                <TableCell>
-                                    {formatDatetoString(
-                                        new Date(payment.payment_date),
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {payment.items?.length ||
-                                        payment.sales?.length ||
-                                        0}{' '}
-                                    invoice
-                                </TableCell>
-                                <TableCell className="text-right font-medium">
-                                    {formatCurrency(payment.total_amount)}
-                                </TableCell>
-                                <TableCell>
-                                    {formatPaymentMethod(
-                                        payment.payment_method,
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {payment.bank?.name || '-'}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Badge
-                                        variant={
-                                            payment.status === 'confirmed'
-                                                ? 'default'
-                                                : 'secondary'
-                                        }
-                                    >
-                                        {payment.status === 'confirmed'
-                                            ? 'Confirmed'
-                                            : 'Pending'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        onClick={() => onView(payment)}
-                                    >
-                                        <Eye className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-        </div>
+                                <Info />
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(row)}
+                            className="btn-trash"
+                        >
+                            <Trash />
+                        </Button>
+                    </TableCell>
+                </>
+            )}
+        />
     );
-}
+};
+
+export default SalePaymentTable;

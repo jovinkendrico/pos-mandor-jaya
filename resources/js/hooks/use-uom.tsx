@@ -1,4 +1,4 @@
-import { destroy, store, update } from '@/routes/uoms';
+import { store, update } from '@/routes/uoms';
 import { IUOM } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -63,14 +63,6 @@ const useUOM = (closeModal: () => void, isNested: boolean = false) => {
         }
     };
 
-    const handleDelete = (uom: IUOM) => {
-        router.delete(destroy(uom.id).url, {
-            onSuccess: () => {
-                toast.success(`UOM: ${uom.name} berhasil dihapus`);
-            },
-        });
-    };
-
     const handleCancel = () => {
         reset();
         closeModal();
@@ -85,7 +77,6 @@ const useUOM = (closeModal: () => void, isNested: boolean = false) => {
 
         handleSubmit,
         handleCancel,
-        handleDelete,
     };
 };
 

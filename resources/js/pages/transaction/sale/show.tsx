@@ -290,13 +290,13 @@ const SaleShow = (props: PageProps) => {
                             </div>
                             {sale.status === 'confirmed' && (
                                 <>
-                                    <div className="flex justify-between border-t pt-2 text-red-600 dark:text-red-500">
+                                    <div className="flex justify-between border-t pt-2 text-red-600 dark:text-danger-500">
                                         <span>Total Cost (FIFO):</span>
                                         <span className="font-medium">
                                             {formatCurrency(sale.total_cost)}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-green-500">
+                                    <div className="flex justify-between text-lg font-bold text-green-600 dark:text-emerald-500">
                                         <span>PROFIT:</span>
                                         <span>
                                             {formatCurrency(sale.total_profit)}
@@ -329,7 +329,7 @@ const SaleShow = (props: PageProps) => {
                                                 {detail.item?.name}
                                             </TableCell>
                                             <TableCell className="flex w-full items-center justify-center text-center">
-                                                <Badge variant="outline">
+                                                <Badge className="badge-blue-light">
                                                     {detail.item_uom?.uom.name}
                                                 </Badge>
                                             </TableCell>
@@ -341,7 +341,7 @@ const SaleShow = (props: PageProps) => {
                                             <TableCell className="flex w-full items-center justify-center text-center">
                                                 {formatCurrency(detail.price)}
                                             </TableCell>
-                                            <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-red-500">
+                                            <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-500">
                                                 {formatNumber(
                                                     detail.discount1_percent ??
                                                         0,
@@ -349,7 +349,7 @@ const SaleShow = (props: PageProps) => {
                                                     ? `${detail.discount1_percent}%`
                                                     : '-'}
                                             </TableCell>
-                                            <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-red-500">
+                                            <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-500">
                                                 {formatNumber(
                                                     detail.discount2_percent ??
                                                         0,
@@ -364,12 +364,12 @@ const SaleShow = (props: PageProps) => {
                                             </TableCell>
                                             {sale.status === 'confirmed' && (
                                                 <>
-                                                    <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-red-500">
+                                                    <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-500">
                                                         {formatCurrency(
                                                             detail.cost,
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-green-500">
+                                                    <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-emerald-500">
                                                         {formatCurrency(
                                                             detail.profit,
                                                         )}

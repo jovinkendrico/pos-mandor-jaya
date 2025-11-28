@@ -81,14 +81,14 @@ class PurchasePaymentController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $payments = $query->paginate(15)->withQueryString();
+        $payments = $query->paginate(10)->withQueryString();
 
         // Get banks and suppliers for filter
         $banks = Bank::orderBy('name')->get(['id', 'name']);
         $suppliers = \App\Models\Supplier::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('transaction/purchase-payment/index', [
-            'payments' => $payments,
+            'purchase_payments' => $payments,
             'banks' => $banks,
             'suppliers' => $suppliers,
             'filters' => [
@@ -235,10 +235,10 @@ class PurchasePaymentController extends Controller
      */
     public function show(PurchasePayment $purchasePayment): Response
     {
-        $purchasePayment->load(['purchases.supplier', 'bank', 'items.purchase']);
+        $purchasePayment->load(['purchases.supplier', 'bank', 'items.purchase.supplier']);
 
         return Inertia::render('transaction/purchase-payment/show', [
-            'payment' => $purchasePayment,
+            'purchase_payment' => $purchasePayment,
         ]);
     }
 
@@ -290,7 +290,7 @@ class PurchasePaymentController extends Controller
             ->values();
 
         return Inertia::render('transaction/purchase-payment/edit', [
-            'payment' => $purchasePayment,
+            'purchase_payment' => $purchasePayment,
             'banks' => $banks,
             'purchases' => $purchases,
         ]);
@@ -329,7 +329,7 @@ class PurchasePaymentController extends Controller
             ]);
         }
 
-        return redirect()->route('purchase-payments.show', $purchasePayment)
+        return redirect()->route('purchase-payments.index', $purchasePayment)
             ->with('success', 'Pembayaran pembelian berhasil diperbarui.');
     }
 

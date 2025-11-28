@@ -1,12 +1,15 @@
 import PageTitle from '@/components/page-title';
 import CashInForm from '@/components/transaction/cash-ins/cash-in-form';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Bank, ChartOfAccount } from '@/types';
-import { Head } from '@inertiajs/react';
+import { index } from '@/routes/cash-ins';
+import { BreadcrumbItem, IBank, ICashIn, IChartOfAccount } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    banks: Bank[];
-    incomeAccounts: ChartOfAccount[];
+    banks: IBank[];
+    incomeAccounts: IChartOfAccount[];
+    cashIn?: ICashIn;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -16,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Kas Masuk',
-        href: '/cash-ins',
+        href: index().url,
     },
     {
         title: 'Tambah',
@@ -24,13 +27,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CashInCreate({ banks, incomeAccounts }: PageProps) {
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tambah Kas Masuk" />
-            <PageTitle title="Tambah Kas Masuk" />
-            <CashInForm banks={banks} incomeAccounts={incomeAccounts} />
-        </AppLayout>
-    );
-}
+const CashInCreate = (props: PageProps) => {
+    const { banks, incomeAccounts, cashIn } = props;
 
+    return (
+        <>
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Tambah Kas Masuk" />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle title="Tambah Kas Masuk" />
+                </div>
+                <CashInForm
+                    banks={banks}
+                    incomeAccounts={incomeAccounts}
+                    cashIn={cashIn}
+                />
+            </AppLayout>
+        </>
+    );
+};
+
+export default CashInCreate;

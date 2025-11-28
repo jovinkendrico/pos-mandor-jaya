@@ -1,3 +1,11 @@
+import {
+    AccountType,
+    CashInStatus,
+    CashOutStatus,
+    PaymentMethod,
+    PurchaseStatus,
+    SaleStatus,
+} from '@/constants/enum';
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
@@ -107,8 +115,10 @@ export interface Customer {
 
 export type ICustomer = Pick<
     Customer,
-    'id' | 'name' | 'address' | 'city_id' | 'city' | 'phone_number' | 'contact'
->;
+    'id' | 'name' | 'address' | 'city_id' | 'phone_number' | 'contact'
+> & {
+    city?: ICity;
+};
 
 export interface Supplier {
     id: number;
@@ -125,8 +135,10 @@ export interface Supplier {
 
 export type ISupplier = Pick<
     Supplier,
-    'id' | 'name' | 'address' | 'city_id' | 'city' | 'phone_number' | 'contact'
->;
+    'id' | 'name' | 'address' | 'city_id' | 'phone_number' | 'contact'
+> & {
+    city?: ICity;
+};
 
 export interface Bank {
     id: number;
@@ -171,7 +183,7 @@ export interface ItemUom {
 
 export type IItemUOM = Pick<
     ItemUom,
-    'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
+    'id' | 'uom_id' | 'uom' | 'conversion_value' | 'price' | 'is_base'
 >;
 
 export interface ItemStockMovement {
@@ -227,8 +239,8 @@ export interface PageProps {
     auth: Auth;
     [key: string]: unknown;
     flash: {
-        success?: string;
-        error?: string;
+        success?: string | null;
+        error?: string | null;
     };
 }
 
@@ -252,19 +264,35 @@ export interface PaginatedData<T> {
     total: number;
 }
 
-export enum PurchaseStatus {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
-}
-export enum SaleStatus {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
+export interface StockAdjustment {
+    id: number;
+    item_id: number;
+    item: Item;
+    reference_type: string;
+    reference_id: number;
+    quantity: number;
+    unit_cost: number;
+    remaining_quantity: number;
+    movement_date: Date;
+    adjustment_date: Date;
+    notes: string;
 }
 
-export enum ReturnType {
-    STOCK_ONLY = 'stock_only',
-    STOCK_AND_REFUND = 'stock_and_refund',
-}
+export type IStockAdjustment = Pick<
+    StockAdjustment,
+    | 'id'
+    | 'item_id'
+    | 'reference_type'
+    | 'reference_id'
+    | 'quantity'
+    | 'unit_cost'
+    | 'remaining_quantity'
+    | 'movement_date'
+    | 'adjustment_date'
+    | 'notes'
+> & {
+    item: IItem;
+};
 
 export interface Purchase {
     id: number;
@@ -353,7 +381,7 @@ export interface Sale {
     discount1_amount?: number;
     discount2_percent?: number;
     discount2_amount?: number;
-    total_after_discount: number;
+    total_after_discount?: number;
     ppn_percent?: number;
     ppn_amount?: number;
     total_amount: number;
@@ -363,7 +391,7 @@ export interface Sale {
     total_profit: number;
     status?: SaleStatus;
     notes: string;
-    details: PurchaseDetail[];
+    details: SaleDetail[];
 }
 
 export type ISale = Pick<
@@ -378,6 +406,7 @@ export type ISale = Pick<
     | 'discount2_percent'
     | 'discount1_amount'
     | 'discount2_amount'
+    | 'total_after_discount'
     | 'ppn_percent'
     | 'ppn_amount'
     | 'total_amount'
@@ -408,6 +437,7 @@ export interface SaleDetail {
     subtotal?: number;
     cost?: number;
     profit?: number;
+    profit_adjustment?: number;
 }
 
 export type ISaleDetail = Pick<
@@ -424,17 +454,19 @@ export type ISaleDetail = Pick<
     | 'subtotal'
     | 'cost'
     | 'profit'
+    | 'profit_adjustment'
 >;
 
 export interface PurchaseReturn {
     id: number;
     purchase_id: number;
     purchase: Purchase;
+    purchase_payment_items: PurchasePaymentItem[];
     return_number: string;
     return_date: Date;
     return_type: ReturnType;
     refund_bank_id?: number;
-    refund_method?: number;
+    refund_method?: RefundMethod;
     total_amount: number;
     status: PurchaseStatus;
     ppn_percent?: number;
@@ -472,11 +504,95 @@ export type IPurchaseReturn = Pick<
     details: IPurchaseDetail[];
 };
 
+export interface SaleReturn {
+    id: number;
+    sale_id: number;
+    sale: Sale;
+    return_number: string;
+    return_date: Date;
+    return_type: ReturnType;
+    refund_bank_id?: number;
+    refund_method?: RefundMethod;
+    total_amount: number;
+    total_profit_adjustment: number;
+    total_cost: number;
+    status: SaleStatus;
+    ppn_percent?: number;
+    ppn_amount?: number;
+    subtotal: number;
+    discount1_percent?: number;
+    discount2_percent?: number;
+    discount1_amount?: number;
+    discount2_amount?: number;
+    reason?: string;
+    details: SaleReturnDetail[];
+}
+
+export type ISaleReturn = Pick<
+    SaleReturn,
+    | 'id'
+    | 'sale_id'
+    | 'return_number'
+    | 'return_date'
+    | 'return_type'
+    | 'refund_bank_id'
+    | 'refund_method'
+    | 'total_amount'
+    | 'total_profit_adjustment'
+    | 'total_cost'
+    | 'status'
+    | 'ppn_percent'
+    | 'ppn_amount'
+    | 'subtotal'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'discount1_amount'
+    | 'discount2_amount'
+    | 'reason'
+> & {
+    sale: ISale;
+    details: ISaleDetail[];
+};
+
+export interface SaleReturnDetail {
+    id?: number;
+    sale_return_id: number;
+    item_id: number;
+    item?: IItem;
+    item_uom_id: number;
+    item_uom?: IItemUOM;
+    quantity: number;
+    price: number;
+    discount1_percent?: number;
+    discount1_amount?: number;
+    discount2_percent?: number;
+    discount2_amount?: number;
+    subtotal?: number;
+    cost?: number;
+    profit_adjustment?: number;
+}
+
+export type ISaleReturnDetail = Pick<
+    SaleReturnDetail,
+    | 'id'
+    | 'item_id'
+    | 'item_uom_id'
+    | 'item_uom'
+    | 'item'
+    | 'quantity'
+    | 'price'
+    | 'discount1_percent'
+    | 'discount2_percent'
+    | 'subtotal'
+    | 'cost'
+    | 'profit_adjustment'
+>;
+
 export interface ChartOfAccount {
     id: number;
     code: string;
     name: string;
-    type: 'asset' | 'liability' | 'equity' | 'income' | 'expense';
+    type: AccountType;
     parent_id?: number;
     parent?: ChartOfAccount;
     description?: string;
@@ -488,20 +604,15 @@ export interface ChartOfAccount {
 
 export type IChartOfAccount = Pick<
     ChartOfAccount,
-    | 'id'
-    | 'code'
-    | 'name'
-    | 'type'
-    | 'parent_id'
-    | 'description'
-    | 'is_active'
-    | 'subtotal'
->;
+    'id' | 'code' | 'name' | 'type' | 'parent_id' | 'description' | 'is_active'
+> & {
+    parent?: IChartOfAccount;
+};
 
 export interface PurchasePayment {
     id: number;
     payment_number: string;
-    payment_date: string;
+    payment_date: Date;
     total_amount: number;
     bank_id?: number;
     bank?: Bank;
@@ -509,7 +620,8 @@ export interface PurchasePayment {
     reference_number?: string;
     notes?: string;
     status: 'pending' | 'confirmed';
-    purchases?: IPurchase[];
+    purchases?: Purchase[];
+    purchase_payment_items?: IPurchasePaymentItem[];
     items?: PurchasePaymentItem[];
     created_at: string;
     updated_at: string;
@@ -517,7 +629,7 @@ export interface PurchasePayment {
 }
 
 export interface PurchasePaymentItem {
-    id: number;
+    id?: number;
     purchase_payment_id: number;
     purchase_id: number;
     purchase?: IPurchase;
@@ -527,25 +639,35 @@ export interface PurchasePaymentItem {
     [key: string]: unknown;
 }
 
+export type IPurchasePaymentItem = Pick<
+    PurchasePaymentItem,
+    'id' | 'purchase_id' | 'purchase' | 'amount'
+>;
+
+export type IPurchasePaymentFormItem = Omit<IPurchasePaymentItem, 'purchase'>;
+
 export type IPurchasePayment = Pick<
     PurchasePayment,
     | 'id'
     | 'payment_number'
     | 'payment_date'
+    | 'purchase_id'
     | 'total_amount'
     | 'bank_id'
-    | 'payment_method'
     | 'reference_number'
     | 'notes'
     | 'status'
 > & {
-    items?: Array<Pick<PurchasePaymentItem, 'purchase_id' | 'amount'>>;
+    purchases?: IPurchase[];
+    bank?: IBank;
+    items: IPurchasePaymentItem[];
+    payment_method: PaymentMethod;
 };
 
 export interface SalePayment {
     id: number;
     payment_number: string;
-    payment_date: string;
+    payment_date: Date;
     total_amount: number;
     bank_id?: number;
     bank?: Bank;
@@ -553,7 +675,7 @@ export interface SalePayment {
     reference_number?: string;
     notes?: string;
     status: 'pending' | 'confirmed';
-    sales?: any[]; // Sale interface array
+    sales?: Sale[];
     items?: SalePaymentItem[];
     created_at: string;
     updated_at: string;
@@ -561,15 +683,22 @@ export interface SalePayment {
 }
 
 export interface SalePaymentItem {
-    id: number;
+    id?: number;
     sale_payment_id: number;
     sale_id: number;
-    sale?: any; // Sale interface
+    sale?: Sale;
     amount: number;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 }
+
+export type ISalePaymentItem = Pick<
+    SalePaymentItem,
+    'id' | 'sale_id' | 'sale' | 'amount'
+>;
+
+export type ISalePaymentFormItem = Omit<ISalePaymentItem, 'sale'>;
 
 export type ISalePayment = Pick<
     SalePayment,
@@ -578,25 +707,27 @@ export type ISalePayment = Pick<
     | 'payment_date'
     | 'total_amount'
     | 'bank_id'
-    | 'payment_method'
     | 'reference_number'
     | 'notes'
     | 'status'
 > & {
-    items?: Array<Pick<SalePaymentItem, 'sale_id' | 'amount'>>;
+    sales?: ISale[];
+    bank?: IBank;
+    items: ISalePaymentItem[];
+    payment_method: PaymentMethod;
 };
 
 export interface CashIn {
     id: number;
     cash_in_number: string;
-    cash_in_date: string;
+    cash_in_date: Date;
     bank_id: number;
     bank?: Bank;
     chart_of_account_id: number;
     chart_of_account?: ChartOfAccount;
     amount: number;
     description?: string;
-    status: 'draft' | 'posted';
+    status: CashInStatus;
     reference_type?: string;
     reference_id?: number;
     created_at: string;
@@ -604,23 +735,59 @@ export interface CashIn {
     [key: string]: unknown;
 }
 
+export type ICashIn = Pick<
+    CashIn,
+    | 'id'
+    | 'cash_in_number'
+    | 'cash_in_date'
+    | 'bank_id'
+    | 'chart_of_account_id'
+    | 'amount'
+    | 'description'
+    | 'status'
+    | 'reference_type'
+    | 'reference_id'
+> & {
+    bank?: IBank;
+    auto_post?: boolean;
+    chart_of_account?: IChartOfAccount;
+};
+
 export interface CashOut {
     id: number;
     cash_out_number: string;
-    cash_out_date: string;
+    cash_out_date: Date;
     bank_id: number;
     bank?: Bank;
     chart_of_account_id: number;
     chart_of_account?: ChartOfAccount;
     amount: number;
     description?: string;
-    status: 'draft' | 'posted';
+    status: CashOutStatus;
     reference_type?: string;
     reference_id?: number;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 }
+
+export type ICashOut = Pick<
+    CashOut,
+    | 'id'
+    | 'cash_out_number'
+    | 'cash_out_date'
+    | 'bank_id'
+    | 'chart_of_account_id'
+    | 'amount'
+    | 'description'
+    | 'status'
+    | 'reference_type'
+    | 'reference_id'
+> & {
+    bank?: IBank;
+    auto_post?: boolean;
+    chart_of_account?: IChartOfAccount;
+};
 
 export interface JournalEntryDetail {
     id: number;
@@ -651,4 +818,57 @@ export interface JournalEntry {
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
+}
+
+export type IJournalEntry = Pick<
+    JournalEntry,
+    | 'id'
+    | 'journal_number'
+    | 'journal_date'
+    | 'reference_type'
+    | 'reference_id'
+    | 'description'
+    | 'status'
+    | 'reversed_by'
+> & {
+    reversedBy?: IJournalEntry;
+    details?: IJournalEntryDetail[];
+    total_debit?: number;
+    total_credit?: number;
+};
+
+export type IJournalEntryDetail = Pick<
+    JournalEntryDetail,
+    | 'id'
+    | 'journal_entry_id'
+    | 'chart_of_account_id'
+    | 'debit'
+    | 'credit'
+    | 'description'
+> & {
+    chart_of_account?: IChartOfAccount;
+};
+
+export interface LedgerTransaction {
+    date: string;
+    journal_number: string;
+    description: string;
+    debit: number;
+    credit: number;
+    balance: number;
+}
+
+export interface LedgerData {
+    account: ChartOfAccount;
+    opening_balance: number;
+    transactions?: LedgerTransaction[]; // Optional because index.tsx doesn't have it
+    debit_total: number;
+    credit_total: number;
+    closing_balance: number;
+}
+
+export interface ProfitLossItem {
+    code: string;
+    name: string;
+    amount: number;
 }

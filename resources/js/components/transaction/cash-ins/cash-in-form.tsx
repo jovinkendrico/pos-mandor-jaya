@@ -1,86 +1,47 @@
+import { DatePicker } from '@/components/date-picker';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DatePicker } from '@/components/date-picker';
+import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { formatCurrency, parseCurrency } from '@/lib/utils';
-import { router, useForm } from '@inertiajs/react';
-import { Bank, CashIn, ChartOfAccount } from '@/types';
+import useCashIn from '@/hooks/use-cash-in';
+import { formatCurrency } from '@/lib/utils';
+import { IBank, ICashIn, IChartOfAccount } from '@/types';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 interface CashInFormProps {
-    cashIn?: CashIn;
-    banks: Bank[];
-    incomeAccounts: ChartOfAccount[];
+    cashIn?: ICashIn;
+    banks: IBank[];
+    incomeAccounts: IChartOfAccount[];
 }
 
-export default function CashInForm({
-    cashIn,
-    banks,
-    incomeAccounts,
-}: CashInFormProps) {
+const CashInForm = (props: CashInFormProps) => {
+    const { cashIn, banks, incomeAccounts } = props;
+
+    const [isReady, setIsReady] = useState(false);
     const [displayAmount, setDisplayAmount] = useState('');
 
-    const form = useForm({
-        cash_in_date: cashIn?.cash_in_date
-            ? new Date(cashIn.cash_in_date).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0],
-        bank_id: cashIn?.bank_id ? cashIn.bank_id.toString() : '',
-        chart_of_account_id: cashIn?.chart_of_account_id
-            ? cashIn.chart_of_account_id.toString()
-            : '',
-        amount: cashIn?.amount || 0,
-        description: cashIn?.description || '',
-        auto_post: false,
-    });
+    const {
+        data: dataCashIn,
+        setData: setDataCashIn,
+        errors: errorsCashIn,
+        processing: processingCashIn,
+        reset: resetCashIn,
+
+        handleSubmit: handleSubmitCashIn,
+        handleCancel: handleCancelCashIn,
+        handlePriceChange,
+    } = useCashIn();
 
     useEffect(() => {
         if (cashIn?.amount) {
             setDisplayAmount(formatCurrency(cashIn.amount));
         }
     }, [cashIn]);
-
-    const handleAmountChange = (value: string) => {
-        setDisplayAmount(value);
-        const parsed = parseCurrency(value);
-        if (parsed !== null) {
-            form.setData('amount', parsed);
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (cashIn) {
-            form.put(`/cash-ins/${cashIn.id}`, {
-                onSuccess: () => {
-                    toast.success('Kas masuk berhasil diperbarui');
-                },
-                onError: () => {
-                    toast.error('Gagal memperbarui kas masuk');
-                },
-            });
-        } else {
-            form.post('/cash-ins', {
-                onSuccess: () => {
-                    toast.success('Kas masuk berhasil ditambahkan');
-                },
-                onError: () => {
-                    toast.error('Gagal menyimpan kas masuk');
-                },
-            });
-        }
-    };
 
     const bankOptions = banks.map((bank) => ({
         value: bank.id.toString(),
@@ -92,100 +53,109 @@ export default function CashInForm({
         label: `${account.code} - ${account.name}`,
     }));
 
+    useEffect(() => {
+        if (cashIn) {
+            setDataCashIn('cash_in_date', cashIn.cash_in_date);
+            setDataCashIn('bank_id', cashIn.bank_id);
+            setDataCashIn('chart_of_account_id', cashIn.chart_of_account_id);
+            setDataCashIn('amount', cashIn.amount);
+            setDataCashIn('description', cashIn.description ?? '');
+            setDataCashIn('auto_post', cashIn.auto_post ?? false);
+            setIsReady(true);
+        } else {
+            resetCashIn();
+            setIsReady(true);
+        }
+    }, [cashIn, resetCashIn, setDataCashIn]);
+
+    if (!isReady) {
+        return <Skeleton className="h-full w-full" />;
+    }
     return (
-        <form onSubmit={handleSubmit}>
-            <Card>
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmitCashIn(cashIn);
+            }}
+            className="space-y-6"
+        >
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Informasi Kas Masuk</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="cash_in_date">Tanggal *</Label>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="flex flex-col space-y-2">
+                            <Label htmlFor="cash_in_date">
+                                Tanggal <span className="text-red-500">*</span>
+                            </Label>
                             <DatePicker
-                                value={
-                                    form.data.cash_in_date
-                                        ? new Date(form.data.cash_in_date)
-                                        : new Date()
-                                }
+                                value={dataCashIn.cash_in_date}
                                 onChange={(date) =>
-                                    form.setData(
+                                    setDataCashIn(
                                         'cash_in_date',
-                                        date
-                                            ? date.toISOString().split('T')[0]
-                                            : new Date().toISOString().split('T')[0],
+                                        date ? date : new Date(),
                                     )
                                 }
+                                className="input-box"
                             />
-                            <InputError
-                                message={form.errors.cash_in_date}
-                            />
+                            <InputError message={errorsCashIn.cash_in_date} />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="bank_id">Bank/Kas *</Label>
-                            <Select
-                                value={form.data.bank_id || undefined}
+                            <Label htmlFor="bank_id">
+                                Bank/Kas <span className="text-red-500">*</span>
+                            </Label>
+                            <Combobox
+                                options={bankOptions}
+                                value={dataCashIn.bank_id.toString()}
                                 onValueChange={(value) =>
-                                    form.setData('bank_id', value)
+                                    setDataCashIn('bank_id', Number(value))
                                 }
-                            >
-                                <SelectTrigger id="bank_id">
-                                    <SelectValue placeholder="Pilih Bank/Kas" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {bankOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={form.errors.bank_id} />
+                                placeholder="Pilih Bank/Kas"
+                                searchPlaceholder="Cari Bank/Kas..."
+                                className="combobox"
+                            />
+                            <InputError message={errorsCashIn.bank_id} />
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="chart_of_account_id">
                                 Akun Pendapatan *
                             </Label>
-                            <Select
-                                value={form.data.chart_of_account_id || undefined}
+                            <Combobox
+                                options={accountOptions}
+                                value={dataCashIn.chart_of_account_id.toString()}
                                 onValueChange={(value) =>
-                                    form.setData('chart_of_account_id', value)
+                                    setDataCashIn(
+                                        'chart_of_account_id',
+                                        Number(value),
+                                    )
                                 }
-                            >
-                                <SelectTrigger id="chart_of_account_id">
-                                    <SelectValue placeholder="Pilih Akun Pendapatan" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {accountOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                placeholder="Pilih Akun Pendapatan"
+                                searchPlaceholder="Cari Akun..."
+                                className="combobox"
+                            />
                             <InputError
-                                message={form.errors.chart_of_account_id}
+                                message={errorsCashIn.chart_of_account_id}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="amount">Jumlah *</Label>
+                            <Label htmlFor="amount">
+                                Jumlah <span className="text-red-600">*</span>
+                            </Label>
                             <Input
                                 id="amount"
                                 type="text"
                                 value={displayAmount}
-                                onChange={(e) => handleAmountChange(e.target.value)}
+                                onChange={(e) => {
+                                    handlePriceChange(e, setDisplayAmount);
+                                }}
                                 placeholder="0"
+                                className="input-box text-right"
                             />
-                            <InputError message={form.errors.amount} />
+                            <InputError message={errorsCashIn.amount} />
                         </div>
                     </div>
 
@@ -193,48 +163,48 @@ export default function CashInForm({
                         <Label htmlFor="description">Keterangan</Label>
                         <Textarea
                             id="description"
-                            value={form.data.description}
+                            value={dataCashIn.description}
                             onChange={(e) =>
-                                form.setData('description', e.target.value)
+                                setDataCashIn('description', e.target.value)
                             }
                             placeholder="Masukkan keterangan kas masuk"
                             rows={3}
+                            className="input-box"
                         />
-                        <InputError message={form.errors.description} />
+                        <InputError message={errorsCashIn.description} />
                     </div>
 
                     {!cashIn && (
                         <div className="flex items-center space-x-2">
                             <Checkbox
                                 id="auto_post"
-                                checked={form.data.auto_post}
+                                checked={dataCashIn.auto_post}
                                 onCheckedChange={(checked) =>
-                                    form.setData('auto_post', checked === true)
+                                    setDataCashIn('auto_post', checked === true)
                                 }
+                                className="cursor-pointer dark:border-white"
                             />
-                            <Label
-                                htmlFor="auto_post"
-                                className="text-sm font-normal cursor-pointer"
-                            >
+                            <Label htmlFor="auto_post">
                                 Posting otomatis ke jurnal
                             </Label>
                         </div>
                     )}
 
-                    <div className="flex justify-end space-x-2">
+                    <div className="flex justify-end space-x-2 pt-4">
                         <Button
                             type="button"
-                            variant="outline"
-                            onClick={() => router.visit('/cash-ins')}
+                            variant="secondary"
+                            onClick={handleCancelCashIn}
+                            className="btn-secondary"
                         >
-                            Batal
+                            Reset
                         </Button>
                         <Button
                             type="submit"
-                            disabled={form.processing}
+                            disabled={processingCashIn}
                             className="btn-primary"
                         >
-                            {form.processing
+                            {processingCashIn
                                 ? 'Menyimpan...'
                                 : cashIn
                                   ? 'Perbarui'
@@ -245,5 +215,6 @@ export default function CashInForm({
             </Card>
         </form>
     );
-}
+};
 
+export default CashInForm;

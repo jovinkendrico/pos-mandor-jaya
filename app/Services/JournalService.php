@@ -19,40 +19,40 @@ class JournalService
             $cashIn->loadMissing(['bank', 'chartOfAccount']);
 
             if (!$cashIn->bank || !$cashIn->chartOfAccount) {
-                throw new \Exception('Bank atau Chart of Account tidak ditemukan');
+                return back()->with('error', 'Bank atau Chart of Account tidak ditemukan');
             }
 
             // Get bank's chart of account
             $bankAccount = $cashIn->bank->chart_of_account_id;
             if (!$bankAccount) {
-                throw new \Exception('Bank tidak memiliki Chart of Account yang terkait');
+                return back()->with('error', 'Bank tidak memiliki Chart of Account yang terkait');
             }
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => $cashIn->cash_in_date,
+                'journal_date'   => $cashIn->cash_in_date,
                 'reference_type' => 'CashIn',
-                'reference_id' => $cashIn->id,
-                'description' => "Kas Masuk #{$cashIn->cash_in_number}: {$cashIn->description}",
-                'status' => 'posted',
+                'reference_id'   => $cashIn->id,
+                'description'    => "Kas Masuk #{$cashIn->cash_in_number}: {$cashIn->description}",
+                'status'         => 'posted',
             ]);
 
             // Debit: Bank/Cash Account
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $bankAccount,
-                'debit' => $cashIn->amount,
-                'credit' => 0,
-                'description' => "Kas Masuk #{$cashIn->cash_in_number}",
+                'debit'               => $cashIn->amount,
+                'credit'              => 0,
+                'description'         => "Kas Masuk #{$cashIn->cash_in_number}",
             ]);
 
             // Credit: Income Account
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $cashIn->chart_of_account_id,
-                'debit' => 0,
-                'credit' => $cashIn->amount,
-                'description' => "Kas Masuk #{$cashIn->cash_in_number}",
+                'debit'               => 0,
+                'credit'              => $cashIn->amount,
+                'description'         => "Kas Masuk #{$cashIn->cash_in_number}",
             ]);
 
             // Create cash movement and update bank balance
@@ -91,35 +91,35 @@ class JournalService
                 // Try to get from bank relationship
                 $bankAccount = $cashOut->bank->chartOfAccount?->id;
                 if (!$bankAccount) {
-                    throw new \Exception('Bank tidak memiliki Chart of Account yang terkait');
+                    return back()->with('error', 'Bank tidak memiliki Chart of Account yang terkait');
                 }
             }
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => $cashOut->cash_out_date,
+                'journal_date'   => $cashOut->cash_out_date,
                 'reference_type' => 'CashOut',
-                'reference_id' => $cashOut->id,
-                'description' => "Kas Keluar #{$cashOut->cash_out_number}: {$cashOut->description}",
-                'status' => 'posted',
+                'reference_id'   => $cashOut->id,
+                'description'    => "Kas Keluar #{$cashOut->cash_out_number}: {$cashOut->description}",
+                'status'         => 'posted',
             ]);
 
             // Debit: Chart of Account (bisa Hutang Usaha untuk pembayaran pembelian, atau Expense untuk lainnya)
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $cashOut->chart_of_account_id,
-                'debit' => $cashOut->amount,
-                'credit' => 0,
-                'description' => "Kas Keluar #{$cashOut->cash_out_number}",
+                'debit'               => $cashOut->amount,
+                'credit'              => 0,
+                'description'         => "Kas Keluar #{$cashOut->cash_out_number}",
             ]);
 
             // Credit: Bank/Cash Account
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $bankAccount,
-                'debit' => 0,
-                'credit' => $cashOut->amount,
-                'description' => "Kas Keluar #{$cashOut->cash_out_number}",
+                'debit'               => 0,
+                'credit'              => $cashOut->amount,
+                'description'         => "Kas Keluar #{$cashOut->cash_out_number}",
             ]);
 
             // Create cash movement and update bank balance
@@ -156,22 +156,22 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => now(),
+                'journal_date'   => now(),
                 'reference_type' => 'CashIn',
-                'reference_id' => $cashIn->id,
-                'description' => "Pembalikan Kas Masuk #{$cashIn->cash_in_number}",
-                'status' => 'reversed',
-                'reversed_by' => $journalEntry->id,
+                'reference_id'   => $cashIn->id,
+                'description'    => "Pembalikan Kas Masuk #{$cashIn->cash_in_number}",
+                'status'         => 'reversed',
+                'reversed_by'    => $journalEntry->id,
             ]);
 
             // Reverse all details
             foreach ($journalEntry->details as $detail) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $reversalEntry->id,
+                    'journal_entry_id'    => $reversalEntry->id,
                     'chart_of_account_id' => $detail->chart_of_account_id,
-                    'debit' => $detail->credit, // Swap debit and credit
-                    'credit' => $detail->debit,
-                    'description' => "Pembalikan: {$detail->description}",
+                    'debit'               => $detail->credit, // Swap debit and credit
+                    'credit'              => $detail->debit,
+                    'description'         => "Pembalikan: {$detail->description}",
                 ]);
             }
 
@@ -210,22 +210,22 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => now(),
+                'journal_date'   => now(),
                 'reference_type' => 'CashOut',
-                'reference_id' => $cashOut->id,
-                'description' => "Pembalikan Kas Keluar #{$cashOut->cash_out_number}",
-                'status' => 'reversed',
-                'reversed_by' => $journalEntry->id,
+                'reference_id'   => $cashOut->id,
+                'description'    => "Pembalikan Kas Keluar #{$cashOut->cash_out_number}",
+                'status'         => 'reversed',
+                'reversed_by'    => $journalEntry->id,
             ]);
 
             // Reverse all details
             foreach ($journalEntry->details as $detail) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $reversalEntry->id,
+                    'journal_entry_id'    => $reversalEntry->id,
                     'chart_of_account_id' => $detail->chart_of_account_id,
-                    'debit' => $detail->credit, // Swap debit and credit
-                    'credit' => $detail->debit,
-                    'description' => "Pembalikan: {$detail->description}",
+                    'debit'               => $detail->credit, // Swap debit and credit
+                    'credit'              => $detail->debit,
+                    'description'         => "Pembalikan: {$detail->description}",
                 ]);
             }
 
@@ -287,61 +287,61 @@ class JournalService
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => $sale->sale_date,
+                'journal_date'   => $sale->sale_date,
                 'reference_type' => 'Sale',
-                'reference_id' => $sale->id,
-                'description' => "Penjualan #{$sale->sale_number}",
-                'status' => 'posted',
+                'reference_id'   => $sale->id,
+                'description'    => "Penjualan #{$sale->sale_number}",
+                'status'         => 'posted',
             ]);
 
             // Debit: Piutang Usaha (total amount termasuk PPN)
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $receivableAccount->id,
-                'debit' => $sale->total_amount,
-                'credit' => 0,
-                'description' => "Piutang dari Penjualan #{$sale->sale_number}",
+                'debit'               => $sale->total_amount,
+                'credit'              => 0,
+                'description'         => "Piutang dari Penjualan #{$sale->sale_number}",
             ]);
 
             // Credit: Pendapatan Penjualan (hanya total setelah diskon, tanpa PPN)
             $incomeAmount = (float) $sale->total_after_discount;
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $incomeAccount->id,
-                'debit' => 0,
-                'credit' => $incomeAmount,
-                'description' => "Pendapatan dari Penjualan #{$sale->sale_number}",
+                'debit'               => 0,
+                'credit'              => $incomeAmount,
+                'description'         => "Pendapatan dari Penjualan #{$sale->sale_number}",
             ]);
 
             // Credit: Pajak Keluaran (jika ada PPN)
             $ppnAmount = (float) ($sale->ppn_amount ?? 0);
             if ($ppnAmount > 0 && $taxAccount) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $taxAccount->id,
-                    'debit' => 0,
-                    'credit' => $ppnAmount,
-                    'description' => "PPN Keluaran dari Penjualan #{$sale->sale_number}",
+                    'debit'               => 0,
+                    'credit'              => $ppnAmount,
+                    'description'         => "PPN Keluaran dari Penjualan #{$sale->sale_number}",
                 ]);
             }
 
             // Debit: HPP
             if ($sale->total_cost > 0) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $hppAccount->id,
-                    'debit' => $sale->total_cost,
-                    'credit' => 0,
-                    'description' => "HPP Penjualan #{$sale->sale_number}",
+                    'debit'               => $sale->total_cost,
+                    'credit'              => 0,
+                    'description'         => "HPP Penjualan #{$sale->sale_number}",
                 ]);
 
                 // Credit: Persediaan
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $inventoryAccount->id,
-                    'debit' => 0,
-                    'credit' => $sale->total_cost,
-                    'description' => "Pengurangan Persediaan dari Penjualan #{$sale->sale_number}",
+                    'debit'               => 0,
+                    'credit'              => $sale->total_cost,
+                    'description'         => "Pengurangan Persediaan dari Penjualan #{$sale->sale_number}",
                 ]);
             }
         });
@@ -365,22 +365,22 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => now(),
+                'journal_date'   => now(),
                 'reference_type' => 'Sale',
-                'reference_id' => $sale->id,
-                'description' => "Pembalikan Penjualan #{$sale->sale_number}",
-                'status' => 'reversed',
-                'reversed_by' => $journalEntry->id,
+                'reference_id'   => $sale->id,
+                'description'    => "Pembalikan Penjualan #{$sale->sale_number}",
+                'status'         => 'reversed',
+                'reversed_by'    => $journalEntry->id,
             ]);
 
             // Reverse all details
             foreach ($journalEntry->details as $detail) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $reversalEntry->id,
+                    'journal_entry_id'    => $reversalEntry->id,
                     'chart_of_account_id' => $detail->chart_of_account_id,
-                    'debit' => $detail->credit, // Swap debit and credit
-                    'credit' => $detail->debit,
-                    'description' => "Pembalikan: {$detail->description}",
+                    'debit'               => $detail->credit, // Swap debit and credit
+                    'credit'              => $detail->debit,
+                    'description'         => "Pembalikan: {$detail->description}",
                 ]);
             }
 
@@ -426,42 +426,42 @@ class JournalService
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => $purchase->purchase_date,
+                'journal_date'   => $purchase->purchase_date,
                 'reference_type' => 'Purchase',
-                'reference_id' => $purchase->id,
-                'description' => "Pembelian #{$purchase->purchase_number}",
-                'status' => 'posted',
+                'reference_id'   => $purchase->id,
+                'description'    => "Pembelian #{$purchase->purchase_number}",
+                'status'         => 'posted',
             ]);
 
             // Debit: Persediaan (hanya total setelah diskon, tanpa PPN)
             $inventoryAmount = (float) $purchase->total_after_discount;
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $inventoryAccount->id,
-                'debit' => $inventoryAmount,
-                'credit' => 0,
-                'description' => "Penambahan Persediaan dari Pembelian #{$purchase->purchase_number}",
+                'debit'               => $inventoryAmount,
+                'credit'              => 0,
+                'description'         => "Penambahan Persediaan dari Pembelian #{$purchase->purchase_number}",
             ]);
 
             // Debit: Pajak Masukan (jika ada PPN)
             $ppnAmount = (float) ($purchase->ppn_amount ?? 0);
             if ($ppnAmount > 0 && $taxAccount) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $taxAccount->id,
-                    'debit' => $ppnAmount,
-                    'credit' => 0,
-                    'description' => "PPN Masukan dari Pembelian #{$purchase->purchase_number}",
+                    'debit'               => $ppnAmount,
+                    'credit'              => 0,
+                    'description'         => "PPN Masukan dari Pembelian #{$purchase->purchase_number}",
                 ]);
             }
 
             // Credit: Hutang Usaha (total amount termasuk PPN)
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $payableAccount->id,
-                'debit' => 0,
-                'credit' => $purchase->total_amount,
-                'description' => "Hutang dari Pembelian #{$purchase->purchase_number}",
+                'debit'               => 0,
+                'credit'              => $purchase->total_amount,
+                'description'         => "Hutang dari Pembelian #{$purchase->purchase_number}",
             ]);
         });
     }
@@ -484,22 +484,22 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => now(),
+                'journal_date'   => now(),
                 'reference_type' => 'Purchase',
-                'reference_id' => $purchase->id,
-                'description' => "Pembalikan Pembelian #{$purchase->purchase_number}",
-                'status' => 'reversed',
-                'reversed_by' => $journalEntry->id,
+                'reference_id'   => $purchase->id,
+                'description'    => "Pembalikan Pembelian #{$purchase->purchase_number}",
+                'status'         => 'reversed',
+                'reversed_by'    => $journalEntry->id,
             ]);
 
             // Reverse all details
             foreach ($journalEntry->details as $detail) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $reversalEntry->id,
+                    'journal_entry_id'    => $reversalEntry->id,
                     'chart_of_account_id' => $detail->chart_of_account_id,
-                    'debit' => $detail->credit, // Swap debit and credit
-                    'credit' => $detail->debit,
-                    'description' => "Pembalikan: {$detail->description}",
+                    'debit'               => $detail->credit, // Swap debit and credit
+                    'credit'              => $detail->debit,
+                    'description'         => "Pembalikan: {$detail->description}",
                 ]);
             }
 
@@ -517,10 +517,10 @@ class JournalService
     {
         DB::transaction(function () use ($bank, $oldBalance) {
             if (!$bank->chart_of_account_id) {
-                throw new \Exception('Bank tidak memiliki Chart of Account yang terkait');
+                return back()->with('error', 'Bank tidak memiliki Chart of Account yang terkait');
             }
 
-            $newBalance = (float) $bank->balance;
+            $newBalance        = (float) $bank->balance;
             $balanceDifference = $newBalance - $oldBalance;
 
             // Jika tidak ada perubahan saldo, skip
@@ -547,11 +547,11 @@ class JournalService
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => now(),
+                'journal_date'   => now(),
                 'reference_type' => 'Bank',
-                'reference_id' => $bank->id,
-                'description' => "Saldo Awal " . ($bank->type === 'cash' ? 'Kas' : 'Bank') . ": {$bank->name}",
-                'status' => 'posted',
+                'reference_id'   => $bank->id,
+                'description'    => "Saldo Awal " . ($bank->type === 'cash' ? 'Kas' : 'Bank') . ": {$bank->name}",
+                'status'         => 'posted',
             ]);
 
             // Create cash movement for opening balance adjustment
@@ -580,36 +580,36 @@ class JournalService
             if ($balanceDifference > 0) {
                 // Saldo bertambah: Debit Bank, Credit Modal
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $bank->chart_of_account_id,
-                    'debit' => $balanceDifference,
-                    'credit' => 0,
-                    'description' => "Saldo Awal {$bank->name}",
+                    'debit'               => $balanceDifference,
+                    'credit'              => 0,
+                    'description'         => "Saldo Awal {$bank->name}",
                 ]);
 
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $equityAccount->id,
-                    'debit' => 0,
-                    'credit' => $balanceDifference,
-                    'description' => "Saldo Awal {$bank->name}",
+                    'debit'               => 0,
+                    'credit'              => $balanceDifference,
+                    'description'         => "Saldo Awal {$bank->name}",
                 ]);
             } else {
                 // Saldo berkurang: Debit Modal, Credit Bank
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $equityAccount->id,
-                    'debit' => abs($balanceDifference),
-                    'credit' => 0,
-                    'description' => "Penyesuaian Saldo {$bank->name}",
+                    'debit'               => abs($balanceDifference),
+                    'credit'              => 0,
+                    'description'         => "Penyesuaian Saldo {$bank->name}",
                 ]);
 
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $bank->chart_of_account_id,
-                    'debit' => 0,
-                    'credit' => abs($balanceDifference),
-                    'description' => "Penyesuaian Saldo {$bank->name}",
+                    'debit'               => 0,
+                    'credit'              => abs($balanceDifference),
+                    'description'         => "Penyesuaian Saldo {$bank->name}",
                 ]);
             }
         });
@@ -657,29 +657,29 @@ class JournalService
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => now(),
+                'journal_date'   => now(),
                 'reference_type' => 'Item',
-                'reference_id' => $item->id,
-                'description' => "Stok Awal Barang: {$item->name} ({$item->code})",
-                'status' => 'posted',
+                'reference_id'   => $item->id,
+                'description'    => "Stok Awal Barang: {$item->name} ({$item->code})",
+                'status'         => 'posted',
             ]);
 
             // Debit: Persediaan
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $inventoryAccount->id,
-                'debit' => $totalCost,
-                'credit' => 0,
-                'description' => "Stok Awal {$item->name}",
+                'debit'               => $totalCost,
+                'credit'              => 0,
+                'description'         => "Stok Awal {$item->name}",
             ]);
 
             // Credit: Modal
             JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id'    => $journalEntry->id,
                 'chart_of_account_id' => $equityAccount->id,
-                'debit' => 0,
-                'credit' => $totalCost,
-                'description' => "Stok Awal {$item->name}",
+                'debit'               => 0,
+                'credit'              => $totalCost,
+                'description'         => "Stok Awal {$item->name}",
             ]);
         });
     }
@@ -698,8 +698,8 @@ class JournalService
                 throw new \Exception('Item tidak ditemukan untuk stock adjustment');
             }
 
-            $quantity = (float) $stockMovement->quantity;
-            $unitCost = (float) $stockMovement->unit_cost;
+            $quantity    = (float) $stockMovement->quantity;
+            $unitCost    = (float) $stockMovement->unit_cost;
             $totalAmount = abs($quantity) * $unitCost;
 
             if ($totalAmount <= 0) {
@@ -745,46 +745,46 @@ class JournalService
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => $stockMovement->movement_date,
+                'journal_date'   => $stockMovement->movement_date,
                 'reference_type' => 'StockAdjustment',
-                'reference_id' => $stockMovement->id,
-                'description' => "Penyesuaian Stok: {$stockMovement->item->name} ({$stockMovement->item->code}) - {$stockMovement->notes}",
-                'status' => 'posted',
+                'reference_id'   => $stockMovement->id,
+                'description'    => "Penyesuaian Stok: {$stockMovement->item->name} ({$stockMovement->item->code}) - {$stockMovement->notes}",
+                'status'         => 'posted',
             ]);
 
             if ($quantity > 0) {
                 // Increase stock: Debit Persediaan, Credit Modal
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $inventoryAccount->id,
-                    'debit' => $totalAmount,
-                    'credit' => 0,
-                    'description' => "Penambahan Persediaan: {$stockMovement->item->name}",
+                    'debit'               => $totalAmount,
+                    'credit'              => 0,
+                    'description'         => "Penambahan Persediaan: {$stockMovement->item->name}",
                 ]);
 
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $equityAccount->id,
-                    'debit' => 0,
-                    'credit' => $totalAmount,
-                    'description' => "Penyesuaian Stok: {$stockMovement->item->name}",
+                    'debit'               => 0,
+                    'credit'              => $totalAmount,
+                    'description'         => "Penyesuaian Stok: {$stockMovement->item->name}",
                 ]);
             } else {
                 // Decrease stock: Debit HPP/Penyesuaian, Credit Persediaan
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $adjustmentAccount->id,
-                    'debit' => $totalAmount,
-                    'credit' => 0,
-                    'description' => "Pengurangan Persediaan: {$stockMovement->item->name}",
+                    'debit'               => $totalAmount,
+                    'credit'              => 0,
+                    'description'         => "Pengurangan Persediaan: {$stockMovement->item->name}",
                 ]);
 
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $journalEntry->id,
+                    'journal_entry_id'    => $journalEntry->id,
                     'chart_of_account_id' => $inventoryAccount->id,
-                    'debit' => 0,
-                    'credit' => $totalAmount,
-                    'description' => "Penyesuaian Stok: {$stockMovement->item->name}",
+                    'debit'               => 0,
+                    'credit'              => $totalAmount,
+                    'description'         => "Penyesuaian Stok: {$stockMovement->item->name}",
                 ]);
             }
         });
@@ -808,22 +808,22 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => now(),
+                'journal_date'   => now(),
                 'reference_type' => 'StockAdjustment',
-                'reference_id' => $stockMovement->id,
-                'description' => "Pembalikan Penyesuaian Stok: " . ($stockMovement->item->name ?? ''),
-                'status' => 'reversed',
-                'reversed_by' => $journalEntry->id,
+                'reference_id'   => $stockMovement->id,
+                'description'    => "Pembalikan Penyesuaian Stok: " . ($stockMovement->item->name ?? ''),
+                'status'         => 'reversed',
+                'reversed_by'    => $journalEntry->id,
             ]);
 
             // Reverse all details
             foreach ($journalEntry->details as $detail) {
                 JournalEntryDetail::create([
-                    'journal_entry_id' => $reversalEntry->id,
+                    'journal_entry_id'    => $reversalEntry->id,
                     'chart_of_account_id' => $detail->chart_of_account_id,
-                    'debit' => $detail->credit,
-                    'credit' => $detail->debit,
-                    'description' => "Pembalikan: {$detail->description}",
+                    'debit'               => $detail->credit,
+                    'credit'              => $detail->debit,
+                    'description'         => "Pembalikan: {$detail->description}",
                 ]);
             }
 

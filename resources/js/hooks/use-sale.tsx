@@ -3,9 +3,9 @@ import {
     formatNumberWithSeparator,
     parseStringtoNumber,
 } from '@/lib/utils';
-import { destroy, store, update } from '@/routes/sales';
+import { store, update } from '@/routes/sales';
 import { ISale, ISaleDetail } from '@/types';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
@@ -109,20 +109,6 @@ const useSale = () => {
                 toast.error('Validasi gagal, periksa input Anda.');
             }
         }
-    };
-
-    const handleDelete = (sale: ISale) => {
-        if (!sale.id) return;
-        router.delete(destroy(sale.id).url, {
-            onSuccess: () => {
-                toast.success(
-                    `Penjualan: ${sale.sale_number} berhasil dihapus`,
-                );
-            },
-            onError: () => {
-                toast.error('Gagal menghapus pembelian');
-            },
-        });
     };
 
     const handleCancel = () => {
@@ -264,7 +250,6 @@ const useSale = () => {
         removeItem,
 
         handleSubmit,
-        handleDelete,
         handleCancel,
         handleChangeItem,
         handleQuantityChange,

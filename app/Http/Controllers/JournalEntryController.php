@@ -46,7 +46,7 @@ class JournalEntryController extends Controller
             $query->where('reference_type', $request->reference_type);
         }
 
-        $journalEntries = $query->paginate(15)->withQueryString();
+        $journalEntries = $query->paginate(10)->withQueryString();
 
         // Append totals
         $journalEntries->getCollection()->transform(function ($entry) {

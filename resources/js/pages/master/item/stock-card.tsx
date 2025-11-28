@@ -1,5 +1,7 @@
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
@@ -9,15 +11,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import TablePagination from '@/components/ui/TablePagination/table-pagination';
-import useResourceFilters from '@/hooks/use-resource-filters';
-import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/items';
-import { BreadcrumbItem, IItem, PaginatedData } from '@/types';
-import { formatDate, formatNumberWithSeparator } from '@/lib/utils';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -26,7 +19,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import TablePagination from '@/components/ui/TablePagination/table-pagination';
+import useResourceFilters from '@/hooks/use-resource-filters';
+import AppLayout from '@/layouts/app-layout';
+import { formatDate, formatNumberWithSeparator } from '@/lib/utils';
+import { index } from '@/routes/items';
+import { BreadcrumbItem, IItem, PaginatedData } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface StockCardTransaction {
     id: number;
@@ -147,7 +147,8 @@ const StockCardPage = (props: PageProps) => {
                         <div>
                             <PageTitle title={`Kartu Stok - ${item.name}`} />
                             <p className="text-sm text-muted-foreground">
-                                {item.code} - Stok: {formatNumberWithSeparator(item.stock)}
+                                {item.code} - Stok:{' '}
+                                {formatNumberWithSeparator(item.stock)}
                             </p>
                         </div>
                     </div>
@@ -156,17 +157,31 @@ const StockCardPage = (props: PageProps) => {
                 <Card className="content mt-4 p-4">
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <p className="text-sm text-muted-foreground">Stok Awal</p>
-                            <p className="text-lg font-semibold">{formatNumberWithSeparator(openingStock)}</p>
+                            <p className="text-sm text-muted-foreground">
+                                Stok Awal
+                            </p>
+                            <p className="text-lg font-semibold">
+                                {formatNumberWithSeparator(openingStock)}
+                            </p>
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">Stok Akhir</p>
-                            <p className="text-lg font-semibold">{formatNumberWithSeparator(closingStock)}</p>
+                            <p className="text-sm text-muted-foreground">
+                                Stok Akhir
+                            </p>
+                            <p className="text-lg font-semibold">
+                                {formatNumberWithSeparator(closingStock)}
+                            </p>
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">Selisih</p>
-                            <p className={`text-lg font-semibold ${closingStock - openingStock >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatNumberWithSeparator(closingStock - openingStock)}
+                            <p className="text-sm text-muted-foreground">
+                                Selisih
+                            </p>
+                            <p
+                                className={`text-lg font-semibold ${closingStock - openingStock >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                            >
+                                {formatNumberWithSeparator(
+                                    closingStock - openingStock,
+                                )}
                             </p>
                         </div>
                     </div>
@@ -183,19 +198,29 @@ const StockCardPage = (props: PageProps) => {
                 <Card className="content mt-4 p-4">
                     <div className="flex flex-wrap items-end gap-4">
                         <div className="w-[180px]">
-                            <Label htmlFor="reference_type">Tipe Transaksi</Label>
+                            <Label htmlFor="reference_type">
+                                Tipe Transaksi
+                            </Label>
                             <Select
                                 value={allFilters.reference_type || 'all'}
                                 onValueChange={(value) =>
-                                    handleFilterChange({ reference_type: value })
+                                    handleFilterChange({
+                                        reference_type: value,
+                                    })
                                 }
                             >
-                                <SelectTrigger id="reference_type" className="combobox">
+                                <SelectTrigger
+                                    id="reference_type"
+                                    className="combobox"
+                                >
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {referenceTypes.map((type) => (
-                                        <SelectItem key={type.value} value={type.value}>
+                                        <SelectItem
+                                            key={type.value}
+                                            value={type.value}
+                                        >
                                             {type.label}
                                         </SelectItem>
                                     ))}
@@ -210,47 +235,83 @@ const StockCardPage = (props: PageProps) => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="text-center">Tanggal</TableHead>
-                                    <TableHead className="text-center">Tipe</TableHead>
-                                    <TableHead className="text-center">Keterangan</TableHead>
-                                    <TableHead className="text-center">Masuk</TableHead>
-                                    <TableHead className="text-center">Keluar</TableHead>
-                                    <TableHead className="text-center">Saldo</TableHead>
+                                    <TableHead className="text-center">
+                                        Tanggal
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Tipe
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Keterangan
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Masuk
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Keluar
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Saldo
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {transactions.data.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                        <TableCell
+                                            colSpan={6}
+                                            className="py-8 text-center text-muted-foreground"
+                                        >
                                             Tidak ada data pergerakan stok
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     <>
-                                        {transactions.data.map((transaction) => (
-                                            <TableRow key={transaction.id}>
-                                                <TableCell className="text-center">
-                                                    {formatDate(transaction.date)}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant={getReferenceTypeBadgeVariant(transaction.reference_type)}>
-                                                        {getReferenceTypeLabel(transaction.reference_type)}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {transaction.notes || '-'}
-                                                </TableCell>
-                                                <TableCell className="text-center text-green-600">
-                                                    {transaction.in > 0 ? formatNumberWithSeparator(transaction.in) : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-center text-red-600">
-                                                    {transaction.out > 0 ? formatNumberWithSeparator(transaction.out) : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-center font-semibold">
-                                                    {formatNumberWithSeparator(transaction.balance)}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {transactions.data.map(
+                                            (transaction) => (
+                                                <TableRow key={transaction.id}>
+                                                    <TableCell className="text-center">
+                                                        {formatDate(
+                                                            transaction.date,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <Badge
+                                                            variant={getReferenceTypeBadgeVariant(
+                                                                transaction.reference_type,
+                                                            )}
+                                                        >
+                                                            {getReferenceTypeLabel(
+                                                                transaction.reference_type,
+                                                            )}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.notes ||
+                                                            '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center text-green-600">
+                                                        {transaction.in > 0
+                                                            ? formatNumberWithSeparator(
+                                                                  transaction.in,
+                                                              )
+                                                            : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center text-red-600">
+                                                        {transaction.out > 0
+                                                            ? formatNumberWithSeparator(
+                                                                  transaction.out,
+                                                              )
+                                                            : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center font-semibold">
+                                                        {formatNumberWithSeparator(
+                                                            transaction.balance,
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ),
+                                        )}
                                     </>
                                 )}
                             </TableBody>
@@ -267,4 +328,3 @@ const StockCardPage = (props: PageProps) => {
 };
 
 export default StockCardPage;
-

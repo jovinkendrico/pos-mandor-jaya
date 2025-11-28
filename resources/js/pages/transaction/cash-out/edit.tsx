@@ -1,13 +1,15 @@
 import PageTitle from '@/components/page-title';
 import CashOutForm from '@/components/transaction/cash-outs/cash-out-form';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Bank, ChartOfAccount, CashOut } from '@/types';
-import { Head } from '@inertiajs/react';
+import { index } from '@/routes/cash-outs';
+import { BreadcrumbItem, IBank, ICashOut, IChartOfAccount } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
-    cashOut: CashOut;
-    banks: Bank[];
-    expenseAccounts: ChartOfAccount[];
+    cashOut: ICashOut;
+    banks: IBank[];
+    expenseAccounts: IChartOfAccount[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -17,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Kas Keluar',
-        href: '/cash-outs',
+        href: index().url,
     },
     {
         title: 'Edit',
@@ -25,21 +27,28 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CashOutEdit({
-    cashOut,
-    banks,
-    expenseAccounts,
-}: PageProps) {
+const CashOutEdit = ({ cashOut, banks, expenseAccounts }: PageProps) => {
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit Kas Keluar #${cashOut.cash_out_number}`} />
-            <PageTitle title={`Edit Kas Keluar #${cashOut.cash_out_number}`} />
-            <CashOutForm
-                cashOut={cashOut}
-                banks={banks}
-                expenseAccounts={expenseAccounts}
-            />
-        </AppLayout>
+        <>
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title={`Edit Kas Keluar ${cashOut.cash_out_number}`} />
+                <div className="flex flex-row items-center gap-2">
+                    <Link href={index().url}>
+                        <ArrowLeft className="h-8 w-8" />
+                    </Link>
+                    <PageTitle
+                        title={`Edit Kas Keluar ${cashOut.cash_out_number}`}
+                    />
+                </div>
+                <CashOutForm
+                    cashOut={cashOut}
+                    banks={banks}
+                    expenseAccounts={expenseAccounts}
+                />
+            </AppLayout>
+        </>
     );
-}
+};
+
+export default CashOutEdit;
 

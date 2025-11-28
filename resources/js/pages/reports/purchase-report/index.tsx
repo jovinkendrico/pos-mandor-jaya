@@ -1,12 +1,18 @@
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import PageTitle from '@/components/page-title';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import useResourceFilters from '@/hooks/use-resource-filters';
+import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDatetoString } from '@/lib/utils';
-import { DatePicker } from '@/components/date-picker';
+import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { Search, Printer } from 'lucide-react';
@@ -71,61 +77,37 @@ export default function PurchaseReportIndex({
     supplierSummary,
     purchases,
 }: PageProps) {
-    const [filters, setFilters] = useState({
-        date_from: dateFrom,
-        date_to: dateTo,
-    });
+    const purchaseReportRoute = () => ({ url: '/reports/purchase-report' });
 
-    const handleFilter = () => {
-        router.get('/reports/purchase-report', filters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
+    const { allFilters, handleFilterChange } = useResourceFilters(
+        purchaseReportRoute,
+        {
+            search: '',
+            status: 'all',
+            date_from: dateFrom,
+            date_to: dateTo,
+            sort_by: 'date',
+            sort_order: 'desc',
+        }
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Pembelian" />
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Laporan Pembelian" />
             </div>
 
-            <Card className="mb-4">
-                <CardHeader>
-                    <CardTitle>Filter Periode</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="date_from">Dari Tanggal</Label>
-                            <DatePicker
-                                value={filters.date_from ? new Date(filters.date_from) : undefined}
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_from: date ? format(date, 'yyyy-MM-dd') : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="date_to">Sampai Tanggal</Label>
-                            <DatePicker
-                                value={filters.date_to ? new Date(filters.date_to) : undefined}
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_to: date ? format(date, 'yyyy-MM-dd') : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="flex items-end gap-2">
-                            <Button onClick={handleFilter} className="flex-1">
-                                <Search className="mr-2 h-4 w-4" />
-                                Tampilkan
-                            </Button>
-                            <Button
+            <FilterBar
+                filters={allFilters}
+                onFilterChange={handleFilterChange}
+                showDateRange={true}
+                showSearch={false}
+                showStatus={false}
+                showPaymentStatus={false}
+                showSort={false}
+            />
+                                    <Button
                                 onClick={() => {
                                     const params = new URLSearchParams({
                                         date_from: filters.date_from,
@@ -139,98 +121,170 @@ export default function PurchaseReportIndex({
                                 <Printer className="mr-2 h-4 w-4" />
                                 Cetak PDF
                             </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
-                <Card>
+            <div className="mb-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Pembelian</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Pembelian
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.total_purchases)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Tanpa PPN</p>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(summary.total_purchases)}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Tanpa PPN
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Transaksi</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Transaksi
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.total_transactions}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Rata-rata: {formatCurrency(summary.avg_purchase_value)}</p>
+                        <div className="text-2xl font-bold">
+                            {summary.total_transactions}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Rata-rata:{' '}
+                            {formatCurrency(summary.avg_purchase_value)}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Diskon</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Diskon
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.total_discount)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">PPN: {formatCurrency(summary.total_ppn)}</p>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(summary.total_discount)}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            PPN: {formatCurrency(summary.total_ppn)}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Amount
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.total_amount)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Setelah PPN</p>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(summary.total_amount)}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Setelah PPN
+                        </p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Daily Summary */}
-            <Card className="mb-4">
+            <Card className="content mb-4">
                 <CardHeader>
                     <CardTitle>Ringkasan Harian</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} - {format(new Date(dateTo), 'dd MMM yyyy')}
+                        Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} -{' '}
+                        {format(new Date(dateTo), 'dd MMM yyyy')}
                     </p>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <Table className="content">
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead className="text-right">Jumlah Transaksi</TableHead>
-                                    <TableHead className="text-right">Total Pembelian</TableHead>
-                                    <TableHead className="text-right">Diskon</TableHead>
-                                    <TableHead className="text-right">PPN</TableHead>
-                                    <TableHead className="text-right">Total Amount</TableHead>
+                                <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="text-center">
+                                        Tanggal
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Jumlah Transaksi
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Total Pembelian
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Diskon
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        PPN
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Total Amount
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {dailySummary.length > 0 ? (
                                     dailySummary.map((day, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{day.date_formatted}</TableCell>
-                                            <TableCell className="text-right">{day.count}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(day.total_purchases)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(day.total_discount)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(day.total_ppn)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(day.total_amount)}</TableCell>
+                                        <TableRow
+                                            key={index}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center">
+                                                {day.date_formatted}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {day.count}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(
+                                                    day.total_purchases,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(
+                                                    day.total_discount,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(day.total_ppn)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatCurrency(
+                                                    day.total_amount,
+                                                )}
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableCell
+                                            colSpan={6}
+                                            className="text-center text-muted-foreground"
+                                        >
                                             Tidak ada data
                                         </TableCell>
                                     </TableRow>
                                 )}
-                                <TableRow className="font-semibold bg-muted/50">
-                                    <TableCell>Total</TableCell>
-                                    <TableCell className="text-right">{summary.total_transactions}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_purchases)}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_discount)}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_ppn)}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(summary.total_amount)}</TableCell>
+                                <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                    <TableCell className="text-center">
+                                        Total
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {summary.total_transactions}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(
+                                            summary.total_purchases,
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(summary.total_discount)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(summary.total_ppn)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(summary.total_amount)}
+                                    </TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>
@@ -240,28 +294,51 @@ export default function PurchaseReportIndex({
 
             {/* Supplier Summary */}
             {supplierSummary.length > 0 && (
-                <Card className="mb-4">
+                <Card className="content mb-4">
                     <CardHeader>
                         <CardTitle>Ringkasan per Supplier</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Supplier</TableHead>
-                                        <TableHead className="text-right">Jumlah Transaksi</TableHead>
-                                        <TableHead className="text-right">Total Pembelian</TableHead>
-                                        <TableHead className="text-right">Total Amount</TableHead>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">
+                                            Supplier
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Jumlah Transaksi
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Total Pembelian
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Total Amount
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {supplierSummary.map((supplier, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{supplier.supplier_name}</TableCell>
-                                            <TableCell className="text-right">{supplier.count}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(supplier.total_purchases)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(supplier.total_amount)}</TableCell>
+                                        <TableRow
+                                            key={index}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center">
+                                                {supplier.supplier_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {supplier.count}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    supplier.total_purchases,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    supplier.total_amount,
+                                                )}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -272,40 +349,87 @@ export default function PurchaseReportIndex({
             )}
 
             {/* Detail Purchases */}
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle>Detail Transaksi Pembelian</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <Table className="content">
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>No. Pembelian</TableHead>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>Supplier</TableHead>
-                                    <TableHead className="text-right">Total Sebelum Diskon</TableHead>
-                                    <TableHead className="text-right">Diskon</TableHead>
-                                    <TableHead className="text-right">PPN</TableHead>
-                                    <TableHead className="text-right">Total</TableHead>
+                                <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="text-center">
+                                        No. Pembelian
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Tanggal
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Supplier
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Pembelian
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Diskon
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        PPN
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Total
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {purchases.length > 0 ? (
                                     purchases.map((purchase) => (
-                                        <TableRow key={purchase.id}>
-                                            <TableCell className="font-mono">{purchase.purchase_number}</TableCell>
-                                            <TableCell>{formatDatetoString(new Date(purchase.purchase_date))}</TableCell>
-                                            <TableCell>{purchase.supplier_name}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(purchase.subtotal)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(purchase.discount1_amount + purchase.discount2_amount)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(purchase.ppn_amount)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(purchase.total_amount)}</TableCell>
+                                        <TableRow
+                                            key={purchase.id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center font-mono">
+                                                {purchase.purchase_number}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatDatetoString(
+                                                    new Date(
+                                                        purchase.purchase_date,
+                                                    ),
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {purchase.supplier_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    purchase.total_after_discount,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    purchase.discount1_amount +
+                                                        purchase.discount2_amount,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    purchase.ppn_amount,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    purchase.total_amount,
+                                                )}
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableCell
+                                            colSpan={7}
+                                            className="text-center text-muted-foreground"
+                                        >
                                             Tidak ada data
                                         </TableCell>
                                     </TableRow>
@@ -318,4 +442,3 @@ export default function PurchaseReportIndex({
         </AppLayout>
     );
 }
-

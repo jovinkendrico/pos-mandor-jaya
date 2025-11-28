@@ -1,7 +1,9 @@
 import PageTitle from '@/components/page-title';
-import FilterBar from '@/components/transaction/filter-bar';
 import CashOutTable from '@/components/transaction/cash-outs/cash-out-table';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Button } from '@/components/ui/button';
+import { Combobox } from '@/components/ui/combobox';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -10,18 +12,26 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
+import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/cash-outs';
-import { BreadcrumbItem, Bank, CashOut, PaginatedData } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { create, destroy as destroyCashOut, index } from '@/routes/cash-outs';
+import {
+    BreadcrumbItem,
+    IBank,
+    ICashOut,
+    PageProps as InertiaPageProps,
+    PaginatedData,
+} from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface PageProps {
-    cashOuts: PaginatedData<CashOut>;
-    banks?: Bank[];
+    cashOuts: PaginatedData<ICashOut>;
+    banks?: IBank[];
     filters?: {
         search: string;
         date_from: string;
@@ -45,32 +55,61 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CashOutIndex({
-    cashOuts,
-    banks = [],
-    filters = {
-        search: '',
-        date_from: '',
-        date_to: '',
-        status: 'all',
-        bank_id: '',
-        reference_type: 'all',
-        sort_by: 'cash_out_date',
-        sort_order: 'desc',
-    },
-}: PageProps) {
+const CashOutIndex = (props: PageProps) => {
+    const {
+        cashOuts,
+        banks = [],
+        filters = {
+            search: '',
+            date_from: '',
+            date_to: '',
+            status: 'all',
+            bank_id: '',
+            reference_type: 'all',
+            sort_by: 'cash_out_date',
+            sort_order: 'desc',
+        },
+    } = props;
+    const { flash } = usePage<InertiaPageProps>().props;
+
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
         filters,
     );
 
+    const [selectedCashOut, setSelectedCashOut] = useState<
+        ICashOut | undefined
+    >(undefined);
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
+
+    useEffect(() => {
+        if (
+            flash?.success === 'Kas keluar berhasil ditambahkan.' ||
+            flash?.success === 'Kas keluar berhasil diperbarui.'
+        ) {
+            toast.success(flash.success);
+            flash.success = null;
+        }
+    }, [flash]);
+
     const handleCreate = () => {
-        router.visit('/cash-outs/create');
+        router.visit(create().url);
     };
 
-    const handleView = (cashOut: CashOut) => {
-        router.visit(`/cash-outs/${cashOut.id}`);
+    const handleDelete = (cashOut: ICashOut) => {
+        setSelectedCashOut(cashOut);
+        openDeleteModal();
     };
+
+    const bankOptions = banks.map((bank) => ({
+        value: bank.id.toString(),
+        label: bank.name,
+    }));
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -97,64 +136,75 @@ export default function CashOutIndex({
                     { value: 'draft', label: 'Draft' },
                     { value: 'posted', label: 'Posted' },
                 ]}
-            />
-            <Card className="content mt-4 p-4">
-                <div className="flex flex-wrap items-end gap-4">
-                    <div className="w-[180px]">
-                        <Label htmlFor="bank_id">Bank/Kas</Label>
-                        <Select
-                            value={allFilters.bank_id || undefined}
-                            onValueChange={(value) =>
-                                handleFilterChange({ bank_id: value || '' })
-                            }
-                        >
-                            <SelectTrigger id="bank_id" className="combobox">
-                                <SelectValue placeholder="Semua Bank" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {banks.map((bank) => (
-                                    <SelectItem
-                                        key={bank.id}
-                                        value={bank.id.toString()}
-                                    >
-                                        {bank.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="w-[180px]">
-                        <Label htmlFor="reference_type">Tipe Referensi</Label>
-                        <Select
-                            value={allFilters.reference_type || 'all'}
-                            onValueChange={(value) =>
-                                handleFilterChange({ reference_type: value })
-                            }
-                        >
-                            <SelectTrigger
-                                id="reference_type"
+                additionalFilters={
+                    <>
+                        <div className="w-[180px]">
+                            <Label htmlFor="bank_id">Bank/Kas</Label>
+                            <Combobox
+                                options={bankOptions}
+                                value={allFilters.bank_id || ''}
+                                onValueChange={(value) =>
+                                    handleFilterChange({ bank_id: value })
+                                }
+                                placeholder="Semua Bank"
+                                searchPlaceholder="Cari Bank..."
                                 className="combobox"
+                            />
+                        </div>
+                        <div className="w-[180px]">
+                            <Label htmlFor="reference_type">
+                                Tipe Referensi
+                            </Label>
+                            <Select
+                                value={allFilters.reference_type || 'all'}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        reference_type: value,
+                                    })
+                                }
                             >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="manual">Manual</SelectItem>
-                                <SelectItem value="PurchasePayment">
-                                    Pembayaran Pembelian
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </Card>
+                                <SelectTrigger
+                                    id="reference_type"
+                                    className="combobox"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua</SelectItem>
+                                    <SelectItem value="manual">
+                                        Manual
+                                    </SelectItem>
+                                    <SelectItem value="PurchasePayment">
+                                        Pembayaran Pembelian
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </>
+                }
+            />
             <div className="mt-4">
-                <CashOutTable cashOuts={cashOuts.data} onView={handleView} />
+                <CashOutTable
+                    cashOuts={cashOuts.data}
+                    pageFrom={cashOuts.from}
+                    onDelete={handleDelete}
+                />
             </div>
             {cashOuts.data.length !== 0 && (
                 <TablePagination data={cashOuts} />
             )}
+            <DeleteModalLayout
+                dataName={selectedCashOut?.cash_out_number}
+                dataId={selectedCashOut?.id}
+                dataType="Kas Keluar"
+                isModalOpen={isDeleteModalOpen}
+                onModalClose={closeDeleteModal}
+                setSelected={setSelectedCashOut}
+                getDeleteUrl={(id) => destroyCashOut(id).url}
+            />
         </AppLayout>
     );
-}
+};
+
+export default CashOutIndex;
 

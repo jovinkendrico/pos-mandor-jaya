@@ -2,6 +2,8 @@ import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import PurchasePaymentTable from '@/components/transaction/purchase-payments/purchase-payment-table';
 import { Button } from '@/components/ui/button';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
+import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -10,19 +12,31 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
+import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/purchase-payments';
-import { BreadcrumbItem, Bank, Supplier, PurchasePayment, PaginatedData } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import {
+    destroy as destroyPurchasePayment,
+    index,
+} from '@/routes/purchase-payments';
+import {
+    BreadcrumbItem,
+    IBank,
+    PageProps as InertiaPageProps,
+    IPurchasePayment,
+    ISupplier,
+    PaginatedData,
+} from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface PageProps {
-    payments: PaginatedData<PurchasePayment>;
-    banks?: Bank[];
-    suppliers?: Supplier[];
+    purchase_payments: PaginatedData<IPurchasePayment>;
+    banks?: IBank[];
+    suppliers?: ISupplier[];
     filters?: {
         search: string;
         date_from: string;
@@ -47,34 +61,86 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function PurchasePaymentIndex({
-    payments,
-    banks = [],
-    suppliers = [],
-    filters = {
-        search: '',
-        date_from: '',
-        date_to: '',
-        status: 'all',
-        bank_id: '',
-        payment_method: 'all',
-        supplier_id: '',
-        sort_by: 'payment_date',
-        sort_order: 'desc',
-    },
-}: PageProps) {
+const PurchasePaymentIndex = (props: PageProps) => {
+    const {
+        purchase_payments,
+        banks = [],
+        suppliers = [],
+        filters = {
+            search: '',
+            date_from: '',
+            date_to: '',
+            status: 'all',
+            bank_id: '',
+            payment_method: 'all',
+            supplier_id: '',
+            sort_by: 'payment_date',
+            sort_order: 'desc',
+        },
+    } = props;
+    const { flash } = usePage<InertiaPageProps>().props;
+
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
         filters,
     );
 
+    const [selectedPurchasePayment, setSelectedPurchasePayment] = useState<
+        IPurchasePayment | undefined
+    >(undefined);
+
+    const {
+        isOpen: isDeleteModalOpen,
+        openModal: openDeleteModal,
+        closeModal: closeDeleteModal,
+    } = useDisclosure();
+
+    useEffect(() => {
+        if (
+            flash?.success === 'Pembayaran pembelian berhasil ditambahkan.' ||
+            flash?.success === 'Pembayaran pembelian berhasil diperbarui.'
+        ) {
+            toast.success(flash.success);
+            flash.success = null;
+        }
+    }, [flash]);
+
     const handleCreate = () => {
         router.visit('/purchase-payments/create');
     };
 
-    const handleView = (payment: PurchasePayment) => {
-        router.visit(`/purchase-payments/${payment.id}`);
+    const handleDelete = (purchase_payment: IPurchasePayment) => {
+        setSelectedPurchasePayment(purchase_payment);
+        openDeleteModal();
     };
+
+    const bankComboboxOptions: ComboboxOption[] = useMemo(() => {
+        const options: ComboboxOption[] = [{ value: '', label: 'Semua Bank' }];
+
+        banks.forEach((bank) => {
+            options.push({
+                label: bank.name,
+                value: bank.id.toString(),
+            });
+        });
+
+        return options;
+    }, [banks]);
+
+    const supplierCombobox: ComboboxOption[] = useMemo(() => {
+        const options: ComboboxOption[] = [
+            { value: '', label: 'Semua Supplier' },
+        ];
+
+        suppliers.forEach((supplier) => {
+            options.push({
+                label: supplier.name,
+                value: supplier.id.toString(),
+            });
+        });
+
+        return options;
+    }, [suppliers]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -101,89 +167,99 @@ export default function PurchasePaymentIndex({
                     { value: 'pending', label: 'Pending' },
                     { value: 'confirmed', label: 'Confirmed' },
                 ]}
-            />
-            <Card className="content mt-4 p-4">
-                <div className="flex flex-wrap items-end gap-4">
-                    <div className="w-[180px]">
-                        <Label htmlFor="bank_id">Bank/Kas</Label>
-                        <Select
-                            value={allFilters.bank_id || undefined}
-                            onValueChange={(value) =>
-                                handleFilterChange({ bank_id: value || '' })
-                            }
-                        >
-                            <SelectTrigger id="bank_id" className="combobox">
-                                <SelectValue placeholder="Semua Bank" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {banks.map((bank) => (
-                                    <SelectItem
-                                        key={bank.id}
-                                        value={bank.id.toString()}
-                                    >
-                                        {bank.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="w-[180px]">
-                        <Label htmlFor="payment_method">Metode Pembayaran</Label>
-                        <Select
-                            value={allFilters.payment_method || 'all'}
-                            onValueChange={(value) =>
-                                handleFilterChange({ payment_method: value })
-                            }
-                        >
-                            <SelectTrigger
-                                id="payment_method"
+                additionalFilters={
+                    <>
+                        <div className="w-[180px]">
+                            <Label htmlFor="bank_id">Bank/Kas</Label>
+                            <Combobox
+                                options={bankComboboxOptions}
+                                value={allFilters.bank_id || ''}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        bank_id: value || '',
+                                    })
+                                }
+                                placeholder="Semua Supplier"
+                                searchPlaceholder="Cari supplier..."
                                 className="combobox"
+                                maxDisplayItems={10}
+                            />
+                        </div>
+                        <div className="w-[180px]">
+                            <Label htmlFor="payment_method">
+                                Metode Pembayaran
+                            </Label>
+                            <Select
+                                value={allFilters.payment_method || 'all'}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        payment_method: value,
+                                    })
+                                }
                             >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="cash">Tunai</SelectItem>
-                                <SelectItem value="transfer">Transfer</SelectItem>
-                                <SelectItem value="giro">Giro</SelectItem>
-                                <SelectItem value="cek">Cek</SelectItem>
-                                <SelectItem value="other">Lainnya</SelectItem>
-                                <SelectItem value="refund">Refund</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="w-[180px]">
-                        <Label htmlFor="supplier_id">Supplier</Label>
-                        <Select
-                            value={allFilters.supplier_id || undefined}
-                            onValueChange={(value) =>
-                                handleFilterChange({ supplier_id: value || '' })
-                            }
-                        >
-                            <SelectTrigger id="supplier_id" className="combobox">
-                                <SelectValue placeholder="Semua Supplier" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {suppliers.map((supplier) => (
-                                    <SelectItem
-                                        key={supplier.id}
-                                        value={supplier.id.toString()}
-                                    >
-                                        {supplier.name}
+                                <SelectTrigger
+                                    id="payment_method"
+                                    className="combobox"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua</SelectItem>
+                                    <SelectItem value="cash">Tunai</SelectItem>
+                                    <SelectItem value="transfer">
+                                        Transfer
                                     </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </Card>
+                                    <SelectItem value="giro">Giro</SelectItem>
+                                    <SelectItem value="cek">Cek</SelectItem>
+                                    <SelectItem value="other">
+                                        Lainnya
+                                    </SelectItem>
+                                    <SelectItem value="refund">
+                                        Refund
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="w-[180px]">
+                            <Label htmlFor="supplier_id">Supplier</Label>
+                            <Combobox
+                                options={supplierCombobox}
+                                value={allFilters.supplier_id || ''}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        supplier_id: value || '',
+                                    })
+                                }
+                                placeholder="Semua Supplier"
+                                searchPlaceholder="Cari supplier..."
+                                className="combobox"
+                                maxDisplayItems={10}
+                            />
+                        </div>
+                    </>
+                }
+            />
             <div className="mt-4">
-                <PurchasePaymentTable payments={payments.data} onView={handleView} />
+                <PurchasePaymentTable
+                    purchase_payments={purchase_payments.data}
+                    pageFrom={purchase_payments.from}
+                    onDelete={handleDelete}
+                />
             </div>
-            {payments.data.length !== 0 && (
-                <TablePagination data={payments} />
+            {purchase_payments.data.length !== 0 && (
+                <TablePagination data={purchase_payments} />
             )}
+            <DeleteModalLayout
+                dataName={selectedPurchasePayment?.payment_number}
+                dataId={selectedPurchasePayment?.id}
+                dataType="Pembayaran Pembelian"
+                isModalOpen={isDeleteModalOpen}
+                onModalClose={closeDeleteModal}
+                setSelected={setSelectedPurchasePayment}
+                getDeleteUrl={(id) => destroyPurchasePayment(id).url}
+            />
         </AppLayout>
     );
-}
+};
 
+export default PurchasePaymentIndex;

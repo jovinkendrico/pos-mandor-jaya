@@ -84,7 +84,7 @@ class CashInController extends Controller
         }
         $query->orderBy('id', 'desc');
 
-        $cashIns = $query->paginate(15)->withQueryString();
+        $cashIns = $query->paginate(10)->withQueryString();
 
         // Get banks for filter
         $banks = \App\Models\Bank::orderBy('name')->get(['id', 'name']);
@@ -269,8 +269,9 @@ class CashInController extends Controller
             return redirect()->route('cash-ins.show', $cashIn)
                 ->with('success', 'Kas masuk berhasil diposting ke jurnal.');
         } catch (\Exception $e) {
+            $errorMessage = 'Gagal memposting: ' . $e->getMessage();
             return redirect()->route('cash-ins.show', $cashIn)
-                ->with('error', 'Gagal memposting: ' . $e->getMessage());
+                ->withErrors(['msg' => $errorMessage]);
         }
     }
 

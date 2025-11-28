@@ -54,7 +54,8 @@ export default function TwoFactorChallenge() {
 
             <div className="space-y-6">
                 <Form
-                    {...store.form()}
+                    method="post"
+                    action={store.url()}
                     className="space-y-4"
                     resetOnError
                     resetOnSuccess={!showRecoveryInput}
@@ -81,7 +82,7 @@ export default function TwoFactorChallenge() {
                                             name="code"
                                             maxLength={OTP_MAX_LENGTH}
                                             value={code}
-                                            onChange={(value) => setCode(value)}
+                                            onChange={(value: string) => setCode(value)}
                                             disabled={processing}
                                             pattern={REGEXP_ONLY_DIGITS}
                                         >

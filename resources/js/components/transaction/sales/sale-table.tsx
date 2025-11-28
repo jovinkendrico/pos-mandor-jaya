@@ -59,7 +59,7 @@ const SaleTable = (props: SaleTableProps) => {
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {formatCurrency(Number(row.total_amount))}
                         </TableCell>
-                        <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-green-500">
+                        <TableCell className="flex w-full items-center justify-center text-center text-green-600 dark:text-emerald-500">
                             {row.status === 'confirmed'
                                 ? formatCurrency(Number(row.total_profit))
                                 : '-'}

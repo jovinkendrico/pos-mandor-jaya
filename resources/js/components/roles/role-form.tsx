@@ -12,13 +12,8 @@ import { index } from '@/routes/roles';
 import { Permission, PermissionGroup } from '@/types';
 import { router } from '@inertiajs/react';
 
-interface RoleFormData {
-    name: string;
-    guard_name: string;
-    permissions_ids: number[];
-}
-
 interface RoleFormProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     form: any; // Using any to accommodate both create and edit form types
     groupedPermissions: PermissionGroup;
     togglePermission: (permissionId: number) => void;
@@ -38,8 +33,6 @@ export default function RoleForm({
     onSubmit,
     processing,
     submitButtonText,
-    title,
-    description,
 }: RoleFormProps) {
     return (
         <form onSubmit={onSubmit} className="space-y-6">
