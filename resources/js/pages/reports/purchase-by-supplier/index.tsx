@@ -1,5 +1,6 @@
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -14,8 +15,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { useState } from 'react';
-import { Search, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 
 interface SupplierPurchase {
     supplier_id: number | null;
@@ -67,7 +67,7 @@ export default function PurchaseBySupplierIndex({
             date_to: dateTo,
             sort_by: 'date',
             sort_order: 'desc',
-        }
+        },
     );
 
     return (
@@ -86,20 +86,25 @@ export default function PurchaseBySupplierIndex({
                 showPaymentStatus={false}
                 showSort={false}
             />
-                                    <Button
-                                onClick={() => {
-                                    const params = new URLSearchParams({
-                                        date_from: filters.date_from,
-                                        date_to: filters.date_to,
-                                    });
-                                    window.open(`/reports/purchase-by-supplier/print?${params.toString()}`, '_blank');
-                                }}
-                                variant="outline"
-                                className="flex-1"
-                            >
-                                <Printer className="mr-2 h-4 w-4" />
-                                Cetak PDF
-                            </Button>
+            <div className="flex w-full justify-end">
+                <Button
+                    onClick={() => {
+                        const params = new URLSearchParams({
+                            date_from: allFilters.date_from,
+                            date_to: allFilters.date_to,
+                        });
+                        window.open(
+                            `/reports/purchase-by-supplier/print?${params.toString()}`,
+                            '_blank',
+                        );
+                    }}
+                    variant="outline"
+                    className="btn-primary"
+                >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </Button>
+            </div>
 
             {/* Summary Cards */}
             <div className="mb-4 grid gap-4 md:grid-cols-4">
@@ -215,32 +220,32 @@ export default function PurchaseBySupplierIndex({
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {supplier.transaction_count.toLocaleString(
-                                                    'id-ID'
+                                                    'id-ID',
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    supplier.total_subtotal
+                                                    supplier.total_subtotal,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    supplier.total_discount
+                                                    supplier.total_discount,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    supplier.total_ppn
+                                                    supplier.total_ppn,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right font-semibold">
                                                 {formatCurrency(
-                                                    supplier.total_purchases
+                                                    supplier.total_purchases,
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(
-                                                    supplier.avg_purchase_value
+                                                    supplier.avg_purchase_value,
                                                 )}
                                             </TableCell>
                                         </TableRow>
@@ -259,7 +264,7 @@ export default function PurchaseBySupplierIndex({
                                     <TableCell>Total</TableCell>
                                     <TableCell className="text-right">
                                         {summary.total_transactions.toLocaleString(
-                                            'id-ID'
+                                            'id-ID',
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -273,12 +278,12 @@ export default function PurchaseBySupplierIndex({
                                     </TableCell>
                                     <TableCell className="text-right">
                                         {formatCurrency(
-                                            summary.total_purchases
+                                            summary.total_purchases,
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         {formatCurrency(
-                                            summary.avg_purchase_value
+                                            summary.avg_purchase_value,
                                         )}
                                     </TableCell>
                                 </TableRow>
@@ -290,4 +295,3 @@ export default function PurchaseBySupplierIndex({
         </AppLayout>
     );
 }
-

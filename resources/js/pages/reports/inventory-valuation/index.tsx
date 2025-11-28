@@ -1,9 +1,6 @@
 import PageTitle from '@/components/page-title';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/utils';
-import { Printer } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
     TableBody,
@@ -15,6 +12,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
+import { Printer } from 'lucide-react';
 
 interface ValuationData {
     item_id: number;
@@ -52,9 +50,13 @@ export default function InventoryValuationIndex({
                 <PageTitle title="Laporan Nilai Persediaan" />
                 <Button
                     onClick={() => {
-                        window.open('/reports/inventory-valuation/print', '_blank');
+                        window.open(
+                            '/reports/inventory-valuation/print',
+                            '_blank',
+                        );
                     }}
                     variant="outline"
+                    className="btn-primary"
                 >
                     <Printer className="mr-2 h-4 w-4" />
                     Cetak PDF
