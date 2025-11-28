@@ -1,5 +1,6 @@
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -14,8 +15,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { useState } from 'react';
-import { Search, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 
 interface DailySummary {
     date: string;
@@ -88,7 +88,7 @@ export default function PurchaseReportIndex({
             date_to: dateTo,
             sort_by: 'date',
             sort_order: 'desc',
-        }
+        },
     );
 
     return (
@@ -107,20 +107,25 @@ export default function PurchaseReportIndex({
                 showPaymentStatus={false}
                 showSort={false}
             />
-                                    <Button
-                                onClick={() => {
-                                    const params = new URLSearchParams({
-                                        date_from: filters.date_from,
-                                        date_to: filters.date_to,
-                                    });
-                                    window.open(`/reports/purchase-report/print?${params.toString()}`, '_blank');
-                                }}
-                                variant="outline"
-                                className="flex-1"
-                            >
-                                <Printer className="mr-2 h-4 w-4" />
-                                Cetak PDF
-                            </Button>
+            <div className="flex w-full justify-end">
+                <Button
+                    onClick={() => {
+                        const params = new URLSearchParams({
+                            date_from: allFilters.date_from,
+                            date_to: allFilters.date_to,
+                        });
+                        window.open(
+                            `/reports/purchase-report/print?${params.toString()}`,
+                            '_blank',
+                        );
+                    }}
+                    variant="outline"
+                    className="btn-primary"
+                >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </Button>
+            </div>
 
             {/* Summary Cards */}
             <div className="mb-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">

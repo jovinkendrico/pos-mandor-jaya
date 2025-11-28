@@ -32,6 +32,7 @@ interface FilterBarProps {
     defaultSortOrder?: string;
     showPaymentStatus?: boolean;
     showDateRange?: boolean;
+    showAsOfDate?: boolean;
     showStatus?: boolean;
     showSearch?: boolean;
     showSort?: boolean;
@@ -49,6 +50,7 @@ const FilterBar = (props: FilterBarProps) => {
         defaultSortOrder = 'desc',
         showPaymentStatus = true,
         showDateRange = true,
+        showAsOfDate = false,
         showStatus = true,
         showSearch = true,
         showSort = true,
@@ -185,6 +187,24 @@ const FilterBar = (props: FilterBarProps) => {
                             />
                         </div>
                     </>
+                )}
+
+                {/* As Of Date */}
+                {showAsOfDate && (
+                    <div className="w-[160px]">
+                        <Label htmlFor="as_of_date">Per Tanggal</Label>
+                        <DatePicker
+                            value={
+                                localFilters.as_of_date
+                                    ? new Date(localFilters.as_of_date)
+                                    : undefined
+                            }
+                            onChange={(value) => {
+                                handleFilterChange('as_of_date', value);
+                            }}
+                            className="input-box"
+                        />
+                    </div>
                 )}
 
                 {/* Sort */}
