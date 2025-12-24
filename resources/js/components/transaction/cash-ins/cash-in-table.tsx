@@ -24,6 +24,8 @@ const CashInTable = (props: CashInTableProps) => {
         'Jumlah',
         'Keterangan',
         'Status',
+        'Created By',
+        'Updated By',
         'Aksi',
     ];
 
@@ -64,6 +66,12 @@ const CashInTable = (props: CashInTableProps) => {
                         >
                             {row.status === 'posted' ? 'Posted' : 'Draft'}
                         </Badge>
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.creator?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.updater?.name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Link href={`/cash-ins/${row.id}`}>

@@ -24,7 +24,6 @@ class ReceivableAgingController extends Controller
         // Get all confirmed sales with remaining amount
         $sales = Sale::with('customer')
             ->where('status', 'confirmed')
-            ->whereNotNull('due_date')
             ->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($sale) {
@@ -39,7 +38,11 @@ class ReceivableAgingController extends Controller
         $grandTotal = 0;
 
         foreach ($sales as $sale) {
-            $dueDate = Carbon::parse($sale->due_date)->startOfDay();
+            // Handle null due_date - use sale_date as fallback
+            $dueDate = $sale->due_date 
+                ? Carbon::parse($sale->due_date)->startOfDay()
+                : Carbon::parse($sale->sale_date)->startOfDay();
+            
             $asOfDateStart = $asOfDateCarbon->copy()->startOfDay();
             
             // Calculate days difference: positive if asOfDate is after dueDate (overdue)
@@ -139,7 +142,6 @@ class ReceivableAgingController extends Controller
 
             $sales = Sale::with('customer')
                 ->where('status', 'confirmed')
-                ->whereNotNull('due_date')
                 ->get()
                 ->append(['total_paid', 'remaining_amount'])
                 ->filter(function ($sale) {
@@ -154,7 +156,11 @@ class ReceivableAgingController extends Controller
             $grandTotal = 0;
 
             foreach ($sales as $sale) {
-                $dueDate = Carbon::parse($sale->due_date)->startOfDay();
+                // Handle null due_date - use sale_date as fallback
+                $dueDate = $sale->due_date 
+                    ? Carbon::parse($sale->due_date)->startOfDay()
+                    : Carbon::parse($sale->sale_date)->startOfDay();
+                
                 $asOfDateStart = $asOfDateCarbon->copy()->startOfDay();
                 $daysDifference = $asOfDateStart->diffInDays($dueDate, false);
                 $isOverdue = $daysDifference > 0;

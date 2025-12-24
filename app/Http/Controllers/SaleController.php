@@ -31,7 +31,7 @@ class SaleController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Sale::with(['customer', 'details.item', 'details.itemUom']);
+        $query = Sale::with(['customer', 'details.item', 'details.itemUom', 'creator', 'updater']);
 
         // Search
         if ($request->filled('search')) {
@@ -207,6 +207,8 @@ class SaleController extends Controller
                         'total_profit'         => 0, // Will be calculated on confirm
                         'status'               => 'pending',
                         'notes'                => $request->notes,
+                        'created_by'           => auth()->id(),
+                        'updated_by'           => auth()->id(),
                     ]);
 
                     break; // Success, exit retry loop
@@ -243,7 +245,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): Response
     {
-        $sale->load(['customer', 'details.item', 'details.itemUom.uom']);
+        $sale->load(['customer', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
         return Inertia::render('transaction/sale/show', [
             'sale' => $sale,
@@ -353,6 +355,7 @@ class SaleController extends Controller
                 'ppn_amount'           => $ppnAmount,
                 'total_amount'         => $totalAmount,
                 'notes'                => $request->notes,
+                'updated_by'           => auth()->id(),
             ]);
 
             // Delete old details and recreate

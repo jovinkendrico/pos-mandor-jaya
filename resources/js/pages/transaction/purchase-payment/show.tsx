@@ -185,6 +185,22 @@ const PurchasePaymentShow = ({ purchase_payment }: PageProps) => {
                                 {formatCurrency(purchase_payment.total_amount)}
                             </span>
                         </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                                Created By:
+                            </span>
+                            <span className="font-medium">
+                                {purchase_payment.creator?.name || '-'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                                Updated By:
+                            </span>
+                            <span className="font-medium">
+                                {purchase_payment.updater?.name || '-'}
+                            </span>
+                        </div>
                     </CardContent>
                 </Card>
 

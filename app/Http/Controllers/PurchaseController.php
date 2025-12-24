@@ -30,7 +30,7 @@ class PurchaseController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Purchase::with(['supplier', 'details.item', 'details.itemUom']);
+        $query = Purchase::with(['supplier', 'details.item', 'details.itemUom', 'creator', 'updater']);
 
         // Search
         if ($request->filled('search')) {
@@ -201,6 +201,8 @@ class PurchaseController extends Controller
                         'total_amount'         => $totalAmount,
                         'status'               => 'pending',
                         'notes'                => $request->notes,
+                        'created_by'           => auth()->id(),
+                        'updated_by'           => auth()->id(),
                     ]);
 
                     break; // Success, exit retry loop
@@ -237,7 +239,7 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase): Response
     {
-        $purchase->load(['supplier', 'details.item', 'details.itemUom.uom']);
+        $purchase->load(['supplier', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
         return Inertia::render('transaction/purchase/show', [
             'purchase' => $purchase,
@@ -346,6 +348,7 @@ class PurchaseController extends Controller
                 'ppn_amount'           => $ppnAmount,
                 'total_amount'         => $totalAmount,
                 'notes'                => $request->notes,
+                'updated_by'           => auth()->id(),
             ]);
 
             // Delete old details and recreate

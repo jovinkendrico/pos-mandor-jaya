@@ -46,6 +46,9 @@ use App\Http\Controllers\StockTurnoverReportController;
 use App\Http\Controllers\MarginByItemReportController;
 use App\Http\Controllers\MarginByCustomerReportController;
 use App\Http\Controllers\PaymentReceiptController;
+use App\Http\Controllers\ImportItemController;
+use App\Http\Controllers\ImportCustomerController;
+use App\Http\Controllers\ImportSupplierController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -155,6 +158,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Item Stock Card
     Route::get('items/{item}/stock-card', [ItemController::class, 'stockCard'])->name('items.stock-card');
+
+    // Import routes
+    Route::get('items/import', [ImportItemController::class, 'create'])->name('items.import');
+    Route::post('items/import', [ImportItemController::class, 'store'])->name('items.import.store');
+    Route::get('items/import/template', [ImportItemController::class, 'downloadTemplate'])->name('items.import.template');
+    Route::get('customers/import', [ImportCustomerController::class, 'create'])->name('customers.import');
+    Route::post('customers/import', [ImportCustomerController::class, 'store'])->name('customers.import.store');
+    Route::get('customers/import/template', [ImportCustomerController::class, 'downloadTemplate'])->name('customers.import.template');
+    Route::get('suppliers/import', [ImportSupplierController::class, 'create'])->name('suppliers.import');
+    Route::post('suppliers/import', [ImportSupplierController::class, 'store'])->name('suppliers.import.store');
+    Route::get('suppliers/import/template', [ImportSupplierController::class, 'downloadTemplate'])->name('suppliers.import.template');
 
     Route::resources([
         'users'             => UserController::class,

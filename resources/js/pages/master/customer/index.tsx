@@ -11,10 +11,10 @@ import useCity from '@/hooks/use-city';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { destroy as destroyCustomer, index } from '@/routes/customers';
+import customerRoutes, { destroy as destroyCustomer, index } from '@/routes/customers';
 import { BreadcrumbItem, City, ICustomer, PaginatedData } from '@/types';
-import { Head } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { Plus, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface PageProps {
@@ -103,16 +103,28 @@ const CustomerIndex = (props: PageProps) => {
                 <Head title="Customer" />
                 <div className="flex justify-between">
                     <PageTitle title="Customer" />
-                    <Button
-                        onClick={() => {
-                            setSelectedCustomer(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Customer
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => {
+                                router.visit(customerRoutes.import().url);
+                            }}
+                            variant="outline"
+                            className="btn-secondary"
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Import
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setSelectedCustomer(undefined);
+                                openEditModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah Customer
+                        </Button>
+                    </div>
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}

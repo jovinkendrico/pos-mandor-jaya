@@ -24,7 +24,6 @@ class PayableAgingController extends Controller
         // Get all confirmed purchases with remaining amount
         $purchases = Purchase::with('supplier')
             ->where('status', 'confirmed')
-            ->whereNotNull('due_date')
             ->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($purchase) {
@@ -39,7 +38,11 @@ class PayableAgingController extends Controller
         $grandTotal = 0;
 
         foreach ($purchases as $purchase) {
-            $dueDate = Carbon::parse($purchase->due_date)->startOfDay();
+            // Handle null due_date - use purchase_date as fallback
+            $dueDate = $purchase->due_date 
+                ? Carbon::parse($purchase->due_date)->startOfDay()
+                : Carbon::parse($purchase->purchase_date)->startOfDay();
+            
             $asOfDateStart = $asOfDateCarbon->copy()->startOfDay();
             
             // Calculate days difference: positive if asOfDate is after dueDate (overdue)
@@ -139,7 +142,6 @@ class PayableAgingController extends Controller
 
             $purchases = Purchase::with('supplier')
                 ->where('status', 'confirmed')
-                ->whereNotNull('due_date')
                 ->get()
                 ->append(['total_paid', 'remaining_amount'])
                 ->filter(function ($purchase) {
@@ -154,7 +156,11 @@ class PayableAgingController extends Controller
             $grandTotal = 0;
 
             foreach ($purchases as $purchase) {
-                $dueDate = Carbon::parse($purchase->due_date)->startOfDay();
+                // Handle null due_date - use purchase_date as fallback
+                $dueDate = $purchase->due_date 
+                    ? Carbon::parse($purchase->due_date)->startOfDay()
+                    : Carbon::parse($purchase->purchase_date)->startOfDay();
+                
                 $asOfDateStart = $asOfDateCarbon->copy()->startOfDay();
                 $daysDifference = $asOfDateStart->diffInDays($dueDate, false);
                 $isOverdue = $daysDifference > 0;

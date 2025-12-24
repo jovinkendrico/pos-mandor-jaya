@@ -23,7 +23,7 @@ class CashOutController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = CashOut::with(['bank', 'chartOfAccount'])
+        $query = CashOut::with(['bank', 'chartOfAccount', 'creator', 'updater'])
             ->orderBy('cash_out_date', 'desc')
             ->orderBy('id', 'desc');
 
@@ -146,6 +146,8 @@ class CashOutController extends Controller
                         'description' => $request->description,
                         'status' => $request->auto_post ? 'posted' : 'draft',
                         'reference_type' => 'Manual',
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
                     ]);
 
                     break; // Success, exit retry loop
@@ -178,7 +180,7 @@ class CashOutController extends Controller
      */
     public function show(CashOut $cashOut): Response
     {
-        $cashOut->loadMissing(['bank', 'chartOfAccount']);
+        $cashOut->loadMissing(['bank', 'chartOfAccount', 'creator', 'updater']);
 
         return Inertia::render('transaction/cash-out/show', [
             'cashOut' => $cashOut,
@@ -225,6 +227,7 @@ class CashOutController extends Controller
                 'chart_of_account_id' => $request->chart_of_account_id,
                 'amount' => $request->amount,
                 'description' => $request->description,
+                'updated_by' => auth()->id(),
             );
             $cashOut->update($updateData);
 

@@ -11,10 +11,10 @@ import useCity from '@/hooks/use-city';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { destroy as destroySupplier, index } from '@/routes/suppliers';
+import supplierRoutes, { destroy as destroySupplier, index } from '@/routes/suppliers';
 import { BreadcrumbItem, City, ISupplier, PaginatedData } from '@/types';
-import { Head } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { Plus, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface PageProps {
@@ -103,16 +103,28 @@ const SupplierIndex = (props: PageProps) => {
                 <Head title="Supplier" />
                 <div className="flex justify-between">
                     <PageTitle title="Supplier" />
-                    <Button
-                        onClick={() => {
-                            setSelectedSupplier(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Supplier
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => {
+                                router.visit(supplierRoutes.import().url);
+                            }}
+                            variant="outline"
+                            className="btn-secondary"
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Import
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setSelectedSupplier(undefined);
+                                openEditModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah Supplier
+                        </Button>
+                    </div>
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}

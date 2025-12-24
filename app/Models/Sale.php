@@ -31,6 +31,8 @@ class Sale extends Model
         'total_profit',
         'status',
         'notes',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -70,6 +72,16 @@ class Sale extends Model
         return $this->belongsToMany(SalePayment::class, 'sale_payment_items')
             ->withPivot('amount')
             ->withTimestamps();
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**

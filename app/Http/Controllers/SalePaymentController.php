@@ -21,7 +21,7 @@ class SalePaymentController extends Controller
      */
     public function index(\Illuminate\Http\Request $request): Response
     {
-        $query = SalePayment::with(['sales.customer', 'bank', 'items.sale']);
+        $query = SalePayment::with(['sales.customer', 'bank', 'items.sale', 'creator', 'updater']);
 
         // Search
         if ($request->has('search') && $request->search) {
@@ -215,6 +215,8 @@ class SalePaymentController extends Controller
                 'reference_number' => $request->reference_number,
                 'notes' => $request->notes,
                 'status' => $request->status ?? 'pending',
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
             ]);
 
             // Create payment items
@@ -235,7 +237,7 @@ class SalePaymentController extends Controller
      */
     public function show(SalePayment $salePayment): Response
     {
-        $salePayment->load(['sales.customer', 'bank', 'items.sale.customer']);
+        $salePayment->load(['sales.customer', 'bank', 'items.sale.customer', 'creator', 'updater']);
 
         return Inertia::render('transaction/sale-payment/show', [
             'sale_payment' => $salePayment,
@@ -318,6 +320,7 @@ class SalePaymentController extends Controller
             'payment_method' => $request->payment_method,
             'reference_number' => $request->reference_number,
             'notes' => $request->notes,
+            'updated_by' => auth()->id(),
         ]);
 
         // Delete old items and create new ones
@@ -361,7 +364,10 @@ class SalePaymentController extends Controller
         }
 
         DB::transaction(function () use ($salePayment) {
-            $salePayment->update(['status' => 'confirmed']);
+            $salePayment->update([
+                'status' => 'confirmed',
+                'updated_by' => auth()->id(),
+            ]);
 
             // Create cash in record if bank is selected
             // This will post: Debit Bank, Credit Piutang Usaha
@@ -397,6 +403,8 @@ class SalePaymentController extends Controller
                                 'status' => 'posted', // Auto post karena sudah confirmed
                                 'reference_type' => 'SalePayment',
                                 'reference_id' => $salePayment->id,
+                                'created_by' => auth()->id(),
+                                'updated_by' => auth()->id(),
                             ]);
 
                             break; // Success, exit retry loop
@@ -473,7 +481,10 @@ class SalePaymentController extends Controller
                 }
             }
 
-            $salePayment->update(['status' => 'pending']);
+            $salePayment->update([
+                'status' => 'pending',
+                'updated_by' => auth()->id(),
+            ]);
         });
 
         return redirect()->route('sale-payments.show', $salePayment)
