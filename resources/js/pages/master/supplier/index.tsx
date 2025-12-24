@@ -12,12 +12,12 @@ import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import supplierRoutes, { destroy as destroySupplier, index } from '@/routes/suppliers';
-import { BreadcrumbItem, City, ISupplier, PaginatedData } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { BreadcrumbItem, City, ISupplier, PageProps as GlobalPageProps, PaginatedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-interface PageProps {
+interface SupplierPageProps {
     suppliers: PaginatedData<ISupplier>;
     cities?: City[];
     filters?: {
@@ -39,7 +39,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const SupplierIndex = (props: PageProps) => {
+const SupplierIndex = (props: SupplierPageProps) => {
     const {
         suppliers,
         cities = [],
@@ -50,6 +50,11 @@ const SupplierIndex = (props: PageProps) => {
             sort_order: 'asc',
         },
     } = props;
+
+    const { auth } = usePage<GlobalPageProps>().props;
+    const canCreate = auth.permissions.includes('master.create');
+    const canEdit = auth.permissions.includes('master.edit');
+    const canDelete = auth.permissions.includes('master.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
@@ -114,16 +119,18 @@ const SupplierIndex = (props: PageProps) => {
                             <Upload className="mr-2 h-4 w-4" />
                             Import
                         </Button>
-                        <Button
-                            onClick={() => {
-                                setSelectedSupplier(undefined);
-                                openEditModal();
-                            }}
-                            className="btn-primary"
-                        >
-                            <Plus />
-                            Tambah Supplier
-                        </Button>
+                        {canCreate && (
+                            <Button
+                                onClick={() => {
+                                    setSelectedSupplier(undefined);
+                                    openEditModal();
+                                }}
+                                className="btn-primary"
+                            >
+                                <Plus />
+                                Tambah Supplier
+                            </Button>
+                        )}
                     </div>
                 </div>
                 <FilterBar
@@ -159,8 +166,8 @@ const SupplierIndex = (props: PageProps) => {
                 <div className="mt-4">
                     <SupplierTable
                         suppliers={suppliers.data}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
+                        onEdit={canEdit ? handleEdit : undefined}
+                        onDelete={canDelete ? handleDelete : undefined}
                         pageFrom={suppliers.from}
                     />
                 </div>

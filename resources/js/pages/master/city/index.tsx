@@ -9,12 +9,12 @@ import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { destroy as destroyCity, index } from '@/routes/cities';
-import { BreadcrumbItem, ICity, PaginatedData } from '@/types';
-import { Head } from '@inertiajs/react';
+import { BreadcrumbItem, ICity, PageProps as GlobalPageProps, PaginatedData } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
-interface PageProps {
+interface CityPageProps {
     cities: PaginatedData<ICity>;
     filters?: {
         search: string;
@@ -34,7 +34,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const CityIndex = (props: PageProps) => {
+const CityIndex = (props: CityPageProps) => {
     const {
         cities,
         filters = {
@@ -43,6 +43,11 @@ const CityIndex = (props: PageProps) => {
             sort_order: 'asc',
         },
     } = props;
+
+    const { auth } = usePage<GlobalPageProps>().props;
+    const canCreate = auth.permissions.includes('master.create');
+    const canEdit = auth.permissions.includes('master.edit');
+    const canDelete = auth.permissions.includes('master.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
@@ -85,16 +90,18 @@ const CityIndex = (props: PageProps) => {
                 <Head title="Kota" />
                 <div className="flex justify-between">
                     <PageTitle title="Kota" />
-                    <Button
-                        onClick={() => {
-                            setSelectedCity(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Kota
-                    </Button>
+                    {canCreate && (
+                        <Button
+                            onClick={() => {
+                                setSelectedCity(undefined);
+                                openEditModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah Kota
+                        </Button>
+                    )}
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}
@@ -108,8 +115,8 @@ const CityIndex = (props: PageProps) => {
                 <div className="mt-4">
                     <CityTable
                         cities={cities.data}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
+                        onEdit={canEdit ? handleEdit : undefined}
+                        onDelete={canDelete ? handleDelete : undefined}
                         pageFrom={cities.from}
                     />
                 </div>

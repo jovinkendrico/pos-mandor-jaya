@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
     {
         DB::transaction(function () {
             $this->seedUsers();
+            $this->call(RoleSeeder::class);
             $this->seedUoms();
             $this->seedCities();
             $this->seedCustomers();
