@@ -15,7 +15,6 @@ const SupplierTable = (props: SupplierTableProps) => {
     const { suppliers, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = [
-        'Kode',
         'Nama Supplier',
         'Alamat',
         'Kota',
@@ -32,9 +31,6 @@ const SupplierTable = (props: SupplierTableProps) => {
             pageFrom={pageFrom}
             renderRow={(row) => (
                 <>
-                    <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.id}
-                    </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.name}
                     </TableCell>
