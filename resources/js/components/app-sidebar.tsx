@@ -71,6 +71,7 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Kode Perkiraan',
                 href: chartOfAccountIndex(),
+                roles: ['Super Admin'],
             },
             {
                 title: 'Barang',
@@ -144,6 +145,7 @@ const mainNavItems: NavItem[] = [
         title: 'Akuntansi',
         href: '#',
         icon: BookOpen,
+        roles: ['Super Admin'],
         children: [
             {
                 title: 'Jurnal',
@@ -163,6 +165,7 @@ const mainNavItems: NavItem[] = [
         title: 'Laporan',
         href: '/reports',
         icon: FileText,
+        roles: ['Super Admin'],
         children: [
             {
                 title: 'Laporan Penjualan',
@@ -254,6 +257,7 @@ const mainNavItems: NavItem[] = [
         title: 'User Settings',
         href: '#',
         icon: User2,
+        roles: ['Super Admin'],
         children: [
             {
                 title: 'Users',
