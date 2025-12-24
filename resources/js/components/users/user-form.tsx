@@ -1,4 +1,3 @@
-import { store, update } from '@/actions/App/Http/Controllers/UserController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,7 +43,7 @@ export default function UserForm({
             const userRoleIds =
                 user.roles && Array.isArray(user.roles)
                     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      user.roles.map((role: any) => role.id)
+                    user.roles.map((role: any) => role.id)
                     : [];
 
             form.setData({
@@ -57,12 +56,12 @@ export default function UserForm({
         } else {
             form.reset();
         }
-    }, [user, isModalOpen, form]);
+    }, [user, isModalOpen]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        form.submit(user ? update(user.id) : store(), {
+        const options = {
             onSuccess: () => {
                 form.reset();
                 toast.success(
@@ -75,7 +74,13 @@ export default function UserForm({
             onError: () => {
                 toast.error('Terjadi kesalahan, periksa input Anda.');
             },
-        });
+        };
+
+        if (user) {
+            form.put(`/users/${user.id}`, options);
+        } else {
+            form.post('/users', options);
+        }
     };
 
     const toggleRole = (roleId: number) => {
@@ -238,8 +243,8 @@ export default function UserForm({
                             {form.processing
                                 ? 'Saving...'
                                 : user
-                                  ? 'Update User'
-                                  : 'Tambah User'}
+                                    ? 'Update User'
+                                    : 'Tambah User'}
                         </Button>
                     </DialogFooter>
                 </form>

@@ -1,4 +1,3 @@
-import { destroy } from '@/routes/users';
 import { User } from '@/types';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -15,7 +14,7 @@ export default function UserDeleteConfirmation({ user, isModalOpen, onOpenChange
     if (!user) return null;
 
     const handleDelete = () => {
-        router.delete(destroy(user.id), {
+        router.delete(`/users/${user.id}`, {
             onSuccess: () => {
                 onOpenChange(false);
                 toast.success('User berhasil dihapus');
