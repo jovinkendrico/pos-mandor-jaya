@@ -16,7 +16,7 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Courier New", Courier, monospace;
             font-size: 14px;
             padding-top: 32px;
             padding-left: 32px;
