@@ -29,7 +29,7 @@ class UpdateItemRequest extends FormRequest
             'description'             => ['nullable', 'string'],
             'uoms'                    => ['required', 'array', 'min:1'],
             'uoms.*.uom_id'           => ['required', 'exists:uoms,id'],
-            'uoms.*.conversion_value' => ['required', 'integer', 'min:1'],
+            'uoms.*.conversion_value' => ['required', 'min:1'],
             'uoms.*.price'            => ['required', 'numeric', 'min:0'],
             'uoms.*.is_base'          => ['boolean'],
         ];
@@ -38,7 +38,7 @@ class UpdateItemRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $uoms = $this->input('uoms', []);
+            $uoms      = $this->input('uoms', []);
             $baseCount = collect($uoms)->where('is_base', true)->count();
 
             if ($baseCount !== 1) {
