@@ -71,11 +71,12 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 12px;
+            border: 1px solid #000;
         }
 
         table th,
         table td {
-            border: 1px solid #000;
+            border: none; 
             padding: 2px;
             text-align: left;
         }
@@ -188,10 +189,10 @@
                 <div class="info-value">{{ $sale->customer->name ?? '-' }}</div>
             </div>
             <div class="info-row">
-                <div class="info-value">{{ $sale->customer->address ?? '-' }}</div>
+                <div class="info-value">{{ $sale->customer->city->name ?? '-' }}</div>
             </div>
             <div class="info-row">
-                <div class="info-value">{{ $sale->customer->address ?? '-' }}</div>
+                <div class="info-value">{{ $sale->customer->phone_number ?? '-' }}</div>
             </div>
         </div>
     </div>
