@@ -71,7 +71,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 10px;
+            font-size: 12px;
         }
 
         table th,
