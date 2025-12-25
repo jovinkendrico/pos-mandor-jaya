@@ -17,7 +17,7 @@
 
         body {
             font-family: "Courier New", Courier, monospace;
-            font-size: 14px;
+            font-size: 16px;
             padding-top: 32px;
             padding-left: 32px;
             padding-right: 32px;
@@ -164,10 +164,6 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>INVOICE PENJUALAN</h1>
-    </div>
-
     <div class="header-wrapper">
         <div class="info-section">
             <div class="info-row">
