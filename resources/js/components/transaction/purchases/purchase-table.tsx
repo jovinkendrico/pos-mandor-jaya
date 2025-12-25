@@ -28,6 +28,8 @@ const PurchaseTable = (props: PurchaseTableProps) => {
         'Sisa',
         'Status Pembayaran',
         'Status',
+        'Created By',
+        'Updated By',
         'Aksi',
     ];
 
@@ -91,6 +93,12 @@ const PurchaseTable = (props: PurchaseTableProps) => {
                                     ? 'Confirmed'
                                     : 'Pending'}
                             </Badge>
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {row.creator?.name || '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {row.updater?.name || '-'}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                             <Link href={show(row.id).url}>

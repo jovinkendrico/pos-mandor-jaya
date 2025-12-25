@@ -25,6 +25,8 @@ const PurchasePaymentTable = (props: PurchasePaymentTableProps) => {
         'Metode',
         'Bank',
         'Status',
+        'Created By',
+        'Updated By',
         'Aksi',
     ];
 
@@ -71,6 +73,12 @@ const PurchasePaymentTable = (props: PurchasePaymentTableProps) => {
                                 ? 'Confirmed'
                                 : 'Pending'}
                         </Badge>
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.creator?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.updater?.name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Link href={`/purchase-payments/${row.id}`}>

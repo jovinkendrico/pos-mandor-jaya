@@ -2,6 +2,7 @@ import { DatePicker } from '@/components/date-picker';
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
@@ -17,6 +18,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDatetoString } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
+import { Printer } from 'lucide-react';
 
 interface CustomerSummary {
     customer_id: number | null;
@@ -122,6 +124,24 @@ export default function ReceivableAgingIndex({
                     </div>
                 }
             />
+            <div className="flex w-full justify-end">
+                <Button
+                    onClick={() => {
+                        const params = new URLSearchParams({
+                            as_of_date: allFilters.as_of_date as string,
+                        });
+                        window.open(
+                            `/reports/receivable-aging/print?${params.toString()}`,
+                            '_blank',
+                        );
+                    }}
+                    variant="outline"
+                    className="btn-primary"
+                >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </Button>
+            </div>
 
             {/* Summary Cards */}
             <div className="mb-4 grid gap-4 md:grid-cols-5">

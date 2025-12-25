@@ -29,6 +29,8 @@ class Purchase extends Model
         'total_amount',
         'status',
         'notes',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -66,6 +68,16 @@ class Purchase extends Model
         return $this->belongsToMany(PurchasePayment::class, 'purchase_payment_items')
             ->withPivot('amount')
             ->withTimestamps();
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**

@@ -52,7 +52,10 @@ class StockService
                 $detail->item->increment('stock', $baseQuantity);
             }
 
-            $purchase->update(['status' => 'confirmed']);
+            $purchase->update([
+                'status' => 'confirmed',
+                'updated_by' => auth()->id(),
+            ]);
 
             // Post to journal
             try {
@@ -87,7 +90,10 @@ class StockService
                 $movement->delete();
             }
 
-            $purchase->update(['status' => 'pending']);
+            $purchase->update([
+                'status' => 'pending',
+                'updated_by' => auth()->id(),
+            ]);
 
             // Reverse journal entry
             try {
@@ -169,6 +175,7 @@ class StockService
                 'status'       => 'confirmed',
                 'total_cost'   => $totalCost,
                 'total_profit' => $revenue - $totalCost, // Revenue (after discount, without PPN) - Cost
+                'updated_by'   => auth()->id(),
             ]);
 
             // Post to journal
@@ -229,6 +236,7 @@ class StockService
                 'status'       => 'pending',
                 'total_cost'   => 0,
                 'total_profit' => 0,
+                'updated_by'   => auth()->id(),
             ]);
 
             // Reverse journal entry
@@ -459,6 +467,8 @@ class StockService
                         'reference_number' => $purchaseReturn->return_number,
                         'notes' => "Cash Refund untuk Retur Pembelian #{$purchaseReturn->return_number}",
                         'status' => 'confirmed',
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
                     ]);
 
                     // Link payment to purchase
@@ -493,6 +503,8 @@ class StockService
                         'reference_number' => $purchaseReturn->return_number,
                         'notes' => "Potong Hutang untuk Retur Pembelian #{$purchaseReturn->return_number}",
                         'status' => 'confirmed',
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
                     ]);
 
                     // Link payment to purchase
@@ -730,6 +742,8 @@ class StockService
                         'reference_number' => $saleReturn->return_number,
                         'notes' => "Cash Refund untuk Retur Penjualan #{$saleReturn->return_number}",
                         'status' => 'confirmed',
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
                     ]);
 
                     // Link payment to sale
@@ -764,6 +778,8 @@ class StockService
                         'reference_number' => $saleReturn->return_number,
                         'notes' => "Potong Piutang untuk Retur Penjualan #{$saleReturn->return_number}",
                         'status' => 'confirmed',
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
                     ]);
 
                     // Link payment to sale

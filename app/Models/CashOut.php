@@ -22,6 +22,8 @@ class CashOut extends Model
         'status',
         'reference_type',
         'reference_id',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -42,6 +44,16 @@ class CashOut extends Model
     public function reference(): MorphTo
     {
         return $this->morphTo('reference');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**

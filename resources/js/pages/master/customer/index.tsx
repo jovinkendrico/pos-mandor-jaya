@@ -11,13 +11,13 @@ import useCity from '@/hooks/use-city';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { destroy as destroyCustomer, index } from '@/routes/customers';
-import { BreadcrumbItem, City, ICustomer, PaginatedData } from '@/types';
-import { Head } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import customerRoutes, { destroy as destroyCustomer, index } from '@/routes/customers';
+import { BreadcrumbItem, City, ICustomer, PageProps as GlobalPageProps, PaginatedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Plus, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-interface PageProps {
+interface CustomerPageProps {
     customers: PaginatedData<ICustomer>;
     cities?: City[];
     filters?: {
@@ -39,7 +39,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const CustomerIndex = (props: PageProps) => {
+const CustomerIndex = (props: CustomerPageProps) => {
     const {
         customers,
         cities = [],
@@ -50,6 +50,11 @@ const CustomerIndex = (props: PageProps) => {
             sort_order: 'asc',
         },
     } = props;
+
+    const { auth } = usePage<GlobalPageProps>().props;
+    const canCreate = auth.permissions.includes('master.create');
+    const canEdit = auth.permissions.includes('master.edit');
+    const canDelete = auth.permissions.includes('master.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
@@ -103,16 +108,30 @@ const CustomerIndex = (props: PageProps) => {
                 <Head title="Customer" />
                 <div className="flex justify-between">
                     <PageTitle title="Customer" />
-                    <Button
-                        onClick={() => {
-                            setSelectedCustomer(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Customer
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => {
+                                router.visit(customerRoutes.import().url);
+                            }}
+                            variant="outline"
+                            className="btn-secondary"
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Import
+                        </Button>
+                        {canCreate && (
+                            <Button
+                                onClick={() => {
+                                    setSelectedCustomer(undefined);
+                                    openEditModal();
+                                }}
+                                className="btn-primary"
+                            >
+                                <Plus />
+                                Tambah Customer
+                            </Button>
+                        )}
+                    </div>
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}
@@ -147,8 +166,8 @@ const CustomerIndex = (props: PageProps) => {
                 <div className="mt-4">
                     <CustomerTable
                         customers={customers.data}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
+                        onEdit={canEdit ? handleEdit : undefined}
+                        onDelete={canDelete ? handleDelete : undefined}
                         pageFrom={customers.from}
                     />
                 </div>

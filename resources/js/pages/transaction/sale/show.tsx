@@ -234,6 +234,22 @@ const SaleShow = (props: PageProps) => {
                                     </span>
                                 </div>
                             )}
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Created By:
+                                </span>
+                                <span className="font-medium">
+                                    {sale.creator?.name || '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Updated By:
+                                </span>
+                                <span className="font-medium">
+                                    {sale.updater?.name || '-'}
+                                </span>
+                            </div>
                         </CardContent>
                     </Card>
 

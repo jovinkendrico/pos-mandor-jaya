@@ -60,7 +60,9 @@ export function Combobox({
 }: ComboboxProps) {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
-    const [searchResults, setSearchResults] = React.useState<ComboboxOption[]>([]);
+    const [searchResults, setSearchResults] = React.useState<ComboboxOption[]>(
+        [],
+    );
     const [loading, setLoading] = React.useState(false);
 
     // Backend search effect
@@ -76,9 +78,12 @@ export function Combobox({
                 const url = `${searchUrl}?${searchParam}=${encodeURIComponent(searchValue)}`;
                 const response = await fetch(url, {
                     headers: {
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-CSRF-TOKEN':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '',
                     },
                 });
 
@@ -86,11 +91,16 @@ export function Combobox({
                     const data = await response.json();
                     const fetchedOptions = data.data || [];
                     // Map backend response to ComboboxOption format
-                    setSearchResults(fetchedOptions.map((opt: any) => ({
-                        value: opt.value || String(opt.id),
-                        label: opt.label || `${opt.purchase_number || opt.sale_number || opt.code || ''} - ${opt.supplier?.name || opt.customer?.name || opt.name || ''}`,
-                        ...opt,
-                    })));
+                    setSearchResults(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        fetchedOptions.map((opt: any) => ({
+                            value: opt.value || String(opt.id),
+                            label:
+                                opt.label ||
+                                `${opt.purchase_number || opt.sale_number || opt.code || ''} - ${opt.supplier?.name || opt.customer?.name || opt.name || ''}`,
+                            ...opt,
+                        })),
+                    );
                 } else {
                     setSearchResults([]);
                 }
@@ -207,7 +217,9 @@ export function Combobox({
                                     <CommandItem
                                         key={option.value}
                                         value={option.label}
-                                        onSelect={() => handleSelect(option.value)}
+                                        onSelect={() =>
+                                            handleSelect(option.value)
+                                        }
                                     >
                                         {option.label}
                                         <Check

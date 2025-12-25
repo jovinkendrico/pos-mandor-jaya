@@ -13,8 +13,7 @@ interface EditRolePageProps {
 }
 
 const EditRole = (props: EditRolePageProps) => {
-    const { role, permissions, groupedPermissions, selected_permission_ids } =
-        props;
+    const { role, groupedPermissions, selected_permission_ids } = props;
 
     const form = useForm<RoleFormData>({
         name: role.name,

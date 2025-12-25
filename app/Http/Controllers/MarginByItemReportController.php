@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MarginByItemReportController extends Controller
 {
@@ -102,5 +104,75 @@ class MarginByItemReportController extends Controller
             'leastProfitable' => $leastProfitable,
             'negativeMargin' => $negativeMargin,
         ]);
+    }
+
+    /**
+     * Print margin by item report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+
+            $marginData = DB::table('sale_details')
+                ->join('sales', 'sale_details.sale_id', '=', 'sales.id')
+                ->join('items', 'sale_details.item_id', '=', 'items.id')
+                ->where('sales.status', 'confirmed')
+                ->whereBetween('sales.sale_date', [$dateFrom, $dateTo])
+                ->select(
+                    'items.code as item_code',
+                    'items.name as item_name',
+                    DB::raw('SUM(sale_details.subtotal) as total_revenue'),
+                    DB::raw('SUM(sale_details.cost) as total_cost'),
+                    DB::raw('SUM(sale_details.profit) as total_profit')
+                )
+                ->groupBy('items.id', 'items.code', 'items.name')
+                ->havingRaw('SUM(sale_details.subtotal) > 0')
+                ->get()
+                ->map(function ($row) {
+                    $profitMargin = $row->total_revenue > 0
+                        ? ($row->total_profit / $row->total_revenue) * 100
+                        : 0;
+
+                    return [
+                        'item_code' => $row->item_code,
+                        'item_name' => $row->item_name,
+                        'total_revenue' => (float) $row->total_revenue,
+                        'total_cost' => (float) $row->total_cost,
+                        'total_profit' => (float) $row->total_profit,
+                        'profit_margin' => (float) $profitMargin,
+                    ];
+                })
+                ->sortByDesc('total_profit')
+                ->values();
+
+            $summary = [
+                'total_items' => $marginData->count(),
+                'total_revenue' => $marginData->sum('total_revenue'),
+                'total_profit' => $marginData->sum('total_profit'),
+            ];
+
+            $pdf = Pdf::loadView('pdf.reports.margin-by-item', [
+                'title' => 'Laporan Analisis Margin per Item',
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'summary' => $summary,
+                'marginData' => $marginData,
+            ])->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-margin-per-item-' . $dateFrom . '-to-' . $dateTo . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Margin By Item Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

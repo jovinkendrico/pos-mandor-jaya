@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { create } from '@/routes/roles';
 import { Role } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,7 +15,6 @@ interface RolesPageProps {
 }
 
 const RolesIndex = ({ roles }: RolesPageProps) => {
-    const { props } = usePage();
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [isDeletingModalOpen, setIsDeleteModalOpen] = useState(false);
 

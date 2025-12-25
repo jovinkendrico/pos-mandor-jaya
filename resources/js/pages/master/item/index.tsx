@@ -17,13 +17,13 @@ import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { destroy as destroyItem, index } from '@/routes/items';
-import { BreadcrumbItem, IItem, IUOM, PaginatedData } from '@/types';
-import { Head } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import itemRoutes, { destroy as destroyItem, index } from '@/routes/items';
+import { BreadcrumbItem, IItem, IUOM, PageProps as GlobalPageProps, PaginatedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Plus, Upload } from 'lucide-react';
 import { useState } from 'react';
 
-interface PageProps {
+interface ItemPageProps {
     items: PaginatedData<IItem>;
     uoms: IUOM[];
     filters?: {
@@ -45,7 +45,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const ItemIndex = (props: PageProps) => {
+const ItemIndex = (props: ItemPageProps) => {
     const {
         items,
         uoms,
@@ -56,6 +56,11 @@ const ItemIndex = (props: PageProps) => {
             sort_order: 'asc',
         },
     } = props;
+
+    const { auth } = usePage<GlobalPageProps>().props;
+    const canCreate = auth.permissions.includes('master.create');
+    const canEdit = auth.permissions.includes('master.edit');
+    const canDelete = auth.permissions.includes('master.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
@@ -98,16 +103,30 @@ const ItemIndex = (props: PageProps) => {
                 <Head title="Barang" />
                 <div className="flex justify-between">
                     <PageTitle title="Barang" />
-                    <Button
-                        onClick={() => {
-                            setSelectedItem(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Barang
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => {
+                                router.visit(itemRoutes.import().url);
+                            }}
+                            variant="outline"
+                            className="btn-secondary"
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Import
+                        </Button>
+                        {canCreate && (
+                            <Button
+                                onClick={() => {
+                                    setSelectedItem(undefined);
+                                    openEditModal();
+                                }}
+                                className="btn-primary"
+                            >
+                                <Plus />
+                                Tambah Barang
+                            </Button>
+                        )}
+                    </div>
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}
@@ -152,8 +171,8 @@ const ItemIndex = (props: PageProps) => {
                 <div className="mt-4">
                     <ItemTable
                         items={items.data}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
+                        onEdit={canEdit ? handleEdit : undefined}
+                        onDelete={canDelete ? handleDelete : undefined}
                         pageFrom={items.from}
                     />
                 </div>

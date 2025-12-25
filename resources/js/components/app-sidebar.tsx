@@ -12,28 +12,37 @@ import {
 import { usePermission } from '@/hooks/use-permission';
 import { dashboard } from '@/routes';
 import { index as bankIndex } from '@/routes/banks';
+import { index as cashInIndex } from '@/routes/cash-ins';
+import { index as cashOutIndex } from '@/routes/cash-outs';
 import { index as chartOfAccountIndex } from '@/routes/chart-of-accounts';
 import { index as cityIndex } from '@/routes/cities';
 import { index as customerIndex } from '@/routes/customers';
 import { index as itemIndex } from '@/routes/items';
+import { index as journalEntryIndex } from '@/routes/journal-entries';
+import { index as paymentReceiptIndex } from '@/routes/payment-receipt';
 import { index as permissionIndex } from '@/routes/permissions';
+import { index as purchasePaymentIndex } from '@/routes/purchase-payments';
 import { index as purchaseReturnIndex } from '@/routes/purchase-returns';
 import { index as purchaseIndex } from '@/routes/purchases';
-import { index as purchasePaymentIndex } from '@/routes/purchase-payments';
 import { index as roleIndex } from '@/routes/roles';
+import { index as salePaymentIndex } from '@/routes/sale-payments';
 import { index as saleReturnIndex } from '@/routes/sale-returns';
 import { index as saleIndex } from '@/routes/sales';
-import { index as salePaymentIndex } from '@/routes/sale-payments';
+import { index as stockAdjustmentIndex } from '@/routes/stock-adjustments';
 import { index as supplierIndex } from '@/routes/suppliers';
 import { index as uomIndex } from '@/routes/uoms';
-import { index as stockAdjustmentIndex } from '@/routes/stock-adjustments';
 import { index as userIndex } from '@/routes/users';
-import { index as cashInIndex } from '@/routes/cash-ins';
-import { index as cashOutIndex } from '@/routes/cash-outs';
-import { index as journalEntryIndex } from '@/routes/journal-entries';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Database, LayoutGrid, ShoppingCart, User2, CreditCard, BookOpen, FileText } from 'lucide-react';
+import {
+    BookOpen,
+    CreditCard,
+    Database,
+    FileText,
+    LayoutGrid,
+    ShoppingCart,
+    User2,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -62,6 +71,7 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Kode Perkiraan',
                 href: chartOfAccountIndex(),
+                roles: ['Super Admin'],
             },
             {
                 title: 'Barang',
@@ -118,6 +128,10 @@ const mainNavItems: NavItem[] = [
                 href: salePaymentIndex(),
             },
             {
+                title: 'Tanda Terima Faktur',
+                href: paymentReceiptIndex(),
+            },
+            {
                 title: 'Kas Masuk',
                 href: cashInIndex(),
             },
@@ -131,6 +145,7 @@ const mainNavItems: NavItem[] = [
         title: 'Akuntansi',
         href: '#',
         icon: BookOpen,
+        roles: ['Super Admin'],
         children: [
             {
                 title: 'Jurnal',
@@ -150,6 +165,7 @@ const mainNavItems: NavItem[] = [
         title: 'Laporan',
         href: '/reports',
         icon: FileText,
+        roles: ['Super Admin'],
         children: [
             {
                 title: 'Laporan Penjualan',
@@ -241,6 +257,7 @@ const mainNavItems: NavItem[] = [
         title: 'User Settings',
         href: '#',
         icon: User2,
+        roles: ['Super Admin'],
         children: [
             {
                 title: 'Users',

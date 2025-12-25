@@ -26,6 +26,8 @@ const SaleTable = (props: SaleTableProps) => {
         'Sisa',
         'Status Pembayaran',
         'Status',
+        'Created By',
+        'Updated By',
         'Aksi',
     ];
 
@@ -99,6 +101,12 @@ const SaleTable = (props: SaleTableProps) => {
                                     ? 'Confirmed'
                                     : 'Pending'}
                             </Badge>
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {row.creator?.name || '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {row.updater?.name || '-'}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                             <Link href={`/sales/${row.id}`}>

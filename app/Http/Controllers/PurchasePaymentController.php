@@ -21,7 +21,7 @@ class PurchasePaymentController extends Controller
      */
     public function index(\Illuminate\Http\Request $request): Response
     {
-        $query = PurchasePayment::with(['purchases.supplier', 'bank', 'items.purchase']);
+        $query = PurchasePayment::with(['purchases.supplier', 'bank', 'items.purchase', 'creator', 'updater']);
 
         // Search
         if ($request->has('search') && $request->search) {
@@ -215,6 +215,8 @@ class PurchasePaymentController extends Controller
                 'reference_number' => $request->reference_number,
                 'notes' => $request->notes,
                 'status' => $request->status ?? 'pending',
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
             ]);
 
             // Create payment items
@@ -235,7 +237,7 @@ class PurchasePaymentController extends Controller
      */
     public function show(PurchasePayment $purchasePayment): Response
     {
-        $purchasePayment->load(['purchases.supplier', 'bank', 'items.purchase.supplier']);
+        $purchasePayment->load(['purchases.supplier', 'bank', 'items.purchase.supplier', 'creator', 'updater']);
 
         return Inertia::render('transaction/purchase-payment/show', [
             'purchase_payment' => $purchasePayment,
@@ -318,6 +320,7 @@ class PurchasePaymentController extends Controller
             'payment_method' => $request->payment_method,
             'reference_number' => $request->reference_number,
             'notes' => $request->notes,
+            'updated_by' => auth()->id(),
         ]);
 
         // Delete old items and create new ones
@@ -361,7 +364,10 @@ class PurchasePaymentController extends Controller
         }
 
         DB::transaction(function () use ($purchasePayment) {
-            $purchasePayment->update(['status' => 'confirmed']);
+            $purchasePayment->update([
+                'status' => 'confirmed',
+                'updated_by' => auth()->id(),
+            ]);
 
             // Create cash out record if bank is selected
             // This will post: Debit Hutang Usaha, Credit Bank
@@ -397,6 +403,8 @@ class PurchasePaymentController extends Controller
                                 'status' => 'posted', // Auto post karena sudah confirmed
                                 'reference_type' => 'PurchasePayment',
                                 'reference_id' => $purchasePayment->id,
+                                'created_by' => auth()->id(),
+                                'updated_by' => auth()->id(),
                             ]);
 
                             break; // Success, exit retry loop
@@ -473,7 +481,10 @@ class PurchasePaymentController extends Controller
                 }
             }
 
-            $purchasePayment->update(['status' => 'pending']);
+            $purchasePayment->update([
+                'status' => 'pending',
+                'updated_by' => auth()->id(),
+            ]);
         });
 
         return redirect()->route('purchase-payments.show', $purchasePayment)

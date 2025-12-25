@@ -18,8 +18,11 @@ export function useTwoFactorAuth() {
 
             setQrCodeSvg(qrResponse.data.svg);
             setManualSetupKey(secretResponse.data.secretKey);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            setErrors([error.response?.data?.message || 'Failed to fetch setup data.']);
+            setErrors([
+                error.response?.data?.message || 'Failed to fetch setup data.',
+            ]);
         }
     };
 
@@ -27,8 +30,12 @@ export function useTwoFactorAuth() {
         try {
             const response = await axios.get('/user/two-factor-recovery-codes');
             setRecoveryCodesList(response.data);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            setErrors([error.response?.data?.message || 'Failed to fetch recovery codes.']);
+            setErrors([
+                error.response?.data?.message ||
+                    'Failed to fetch recovery codes.',
+            ]);
         }
     };
 

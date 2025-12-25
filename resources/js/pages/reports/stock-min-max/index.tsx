@@ -17,7 +17,7 @@ import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
-import { AlertTriangle, Minus, Plus, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Minus, Plus, Printer, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface StockItem {
@@ -208,6 +208,25 @@ export default function StockMinMaxIndex({
                     </>
                 }
             />
+            <div className="flex w-full justify-end">
+                <Button
+                    onClick={() => {
+                        const params = new URLSearchParams({
+                            min_stock: filters.min_stock.toString(),
+                            max_stock: filters.max_stock.toString(),
+                        });
+                        window.open(
+                            `/reports/stock-min-max/print?${params.toString()}`,
+                            '_blank',
+                        );
+                    }}
+                    variant="outline"
+                    className="btn-primary"
+                >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </Button>
+            </div>
 
             {/* Summary Cards */}
             <div className="mt-4 mb-4 grid gap-4 md:grid-cols-5">

@@ -24,6 +24,8 @@ const CashOutTable = (props: CashOutTableProps) => {
         'Jumlah',
         'Keterangan',
         'Status',
+        'Created By',
+        'Updated By',
         'Aksi',
     ];
 
@@ -64,6 +66,12 @@ const CashOutTable = (props: CashOutTableProps) => {
                         >
                             {row.status === 'posted' ? 'Posted' : 'Draft'}
                         </Badge>
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.creator?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.updater?.name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
                         <Link href={`/cash-outs/${row.id}`}>

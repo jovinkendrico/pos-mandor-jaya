@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CashInOutReportController extends Controller
 {
@@ -124,5 +126,56 @@ class CashInOutReportController extends Controller
                 ];
             }),
         ]);
+    }
+
+    /**
+     * Print cash in/out report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+
+            $cashIns = CashIn::with(['bank', 'chartOfAccount'])
+                ->where('status', 'posted')
+                ->whereBetween('cash_in_date', [$dateFrom, $dateTo])
+                ->orderBy('cash_in_date', 'desc')
+                ->get();
+
+            $cashOuts = CashOut::with(['bank', 'chartOfAccount'])
+                ->where('status', 'posted')
+                ->whereBetween('cash_out_date', [$dateFrom, $dateTo])
+                ->orderBy('cash_out_date', 'desc')
+                ->get();
+
+            $summary = [
+                'total_cash_in_amount' => $cashIns->sum('amount'),
+                'total_cash_out_amount' => $cashOuts->sum('amount'),
+                'net_cash_flow' => $cashIns->sum('amount') - $cashOuts->sum('amount'),
+            ];
+
+            $pdf = Pdf::loadView('pdf.reports.cash-in-out', [
+                'title' => 'Laporan Kas Masuk/Keluar',
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'summary' => $summary,
+                'cashIns' => $cashIns,
+                'cashOuts' => $cashOuts,
+            ])->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-kas-masuk-keluar-' . $dateFrom . '-to-' . $dateTo . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Cash In/Out Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

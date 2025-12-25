@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SaleReturnReportController extends Controller
 {
@@ -88,5 +90,48 @@ class SaleReturnReportController extends Controller
                 ];
             }),
         ]);
+    }
+
+    /**
+     * Print sale return report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+
+            $saleReturns = SaleReturn::with(['sale.customer', 'details.item'])
+                ->where('status', 'confirmed')
+                ->whereBetween('return_date', [$dateFrom, $dateTo])
+                ->orderBy('return_date', 'desc')
+                ->get();
+
+            $summary = [
+                'total_returns' => $saleReturns->count(),
+                'total_amount' => $saleReturns->sum('total_amount'),
+            ];
+
+            $pdf = Pdf::loadView('pdf.reports.sale-return', [
+                'title' => 'Laporan Retur Penjualan',
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'summary' => $summary,
+                'saleReturns' => $saleReturns,
+            ])->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-retur-penjualan-' . $dateFrom . '-to-' . $dateTo . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Sale Return Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

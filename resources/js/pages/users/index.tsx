@@ -4,7 +4,6 @@ import UserDeleteConfirmation from '@/components/users/user-delete-confirmation'
 import UserForm from '@/components/users/user-form';
 import UserTable from '@/components/users/user-table';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/users';
 import { BreadcrumbItem, Role, User } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -18,7 +17,7 @@ interface PageProps {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Users',
-        href: index().url,
+        href: '/users',
     },
 ];
 

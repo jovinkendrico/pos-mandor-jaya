@@ -1,18 +1,24 @@
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import PageTitle from '@/components/page-title';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { formatCurrency } from '@/lib/utils';
-import { DatePicker } from '@/components/date-picker';
-import { format } from 'date-fns';
-import { useState } from 'react';
-import { Search, Trophy, TrendingUp } from 'lucide-react';
+import FilterBar from '@/components/transaction/filter-bar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import useResourceFilters from '@/hooks/use-resource-filters';
+import AppLayout from '@/layouts/app-layout';
+import { formatCurrency, formatNumberWithSeparator } from '@/lib/utils';
+import { Head } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { Printer, Trophy } from 'lucide-react';
 
 interface PageProps {
     dateFrom: string;
@@ -65,148 +71,163 @@ export default function BestSellerReportIndex({
     limit,
     summary,
     bestSellers,
-    trendData,
 }: PageProps) {
-    const [filters, setFilters] = useState({
-        date_from: dateFrom,
-        date_to: dateTo,
-        sort_by: sortBy,
-        limit: limit.toString(),
-    });
+    const bestSellerRoute = () => ({ url: '/reports/best-seller' });
 
-    const handleFilter = () => {
-        router.get('/reports/best-seller', filters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
+    const { allFilters, handleFilterChange } = useResourceFilters(
+        bestSellerRoute,
+        {
+            search: '',
+            status: 'all',
+            date_from: dateFrom,
+            date_to: dateTo,
+            sort_by: sortBy,
+            sort_order: 'desc',
+            limit: limit.toString(),
+        },
+    );
 
     const getRankBadge = (rank: number) => {
-        if (rank === 1) return <Badge className="bg-yellow-500 text-white">🥇 1</Badge>;
-        if (rank === 2) return <Badge className="bg-gray-400 text-white">🥈 2</Badge>;
-        if (rank === 3) return <Badge className="bg-orange-600 text-white">🥉 3</Badge>;
+        if (rank === 1)
+            return (
+                <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">
+                    🥇 1
+                </Badge>
+            );
+        if (rank === 2)
+            return (
+                <Badge className="bg-gray-400 text-white hover:bg-gray-500">
+                    🥈 2
+                </Badge>
+            );
+        if (rank === 3)
+            return (
+                <Badge className="bg-orange-600 text-white hover:bg-orange-700">
+                    🥉 3
+                </Badge>
+            );
         return <Badge variant="outline">{rank}</Badge>;
     };
+
+    const sortOptions = [
+        { value: 'quantity', label: 'Quantity' },
+        { value: 'revenue', label: 'Revenue' },
+    ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Barang Paling Laku" />
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Laporan Barang Paling Laku (Best Seller)" />
             </div>
 
-            <Card className="mb-4">
-                <CardHeader>
-                    <CardTitle>Filter</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="date_from">Dari Tanggal</Label>
-                            <DatePicker
-                                value={filters.date_from ? new Date(filters.date_from) : undefined}
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_from: date ? format(date, 'yyyy-MM-dd') : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="date_to">Sampai Tanggal</Label>
-                            <DatePicker
-                                value={filters.date_to ? new Date(filters.date_to) : undefined}
-                                onChange={(date) =>
-                                    setFilters({
-                                        ...filters,
-                                        date_to: date ? format(date, 'yyyy-MM-dd') : '',
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="sort_by">Urutkan Berdasarkan</Label>
-                            <Select
-                                value={filters.sort_by}
-                                onValueChange={(value) =>
-                                    setFilters({
-                                        ...filters,
-                                        sort_by: value,
-                                    })
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="quantity">Quantity</SelectItem>
-                                    <SelectItem value="revenue">Revenue</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="limit">Jumlah Item</Label>
-                            <Input
-                                id="limit"
-                                type="number"
-                                min="10"
-                                max="200"
-                                value={filters.limit}
-                                onChange={(e) =>
-                                    setFilters({
-                                        ...filters,
-                                        limit: e.target.value,
-                                    })
-                                }
-                            />
-                        </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
-                                <Search className="mr-2 h-4 w-4" />
-                                Tampilkan
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <FilterBar
+                filters={allFilters}
+                onFilterChange={handleFilterChange}
+                showDateRange={true}
+                showSearch={false}
+                showStatus={false}
+                showPaymentStatus={false}
+                showSort={true}
+                sortOptions={sortOptions}
+            >
+                <div className="w-[120px]">
+                    <Label htmlFor="limit">Jumlah Item</Label>
+                    <Input
+                        id="limit"
+                        type="text"
+                        value={formatNumberWithSeparator(
+                            parseInt(allFilters.limit ?? '0'),
+                        )}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleFilterChange({ limit: value });
+                        }}
+                        className="input-box text-center"
+                    />
+                </div>
+            </FilterBar>
+
+            <div className="flex w-full justify-end">
+                <Button
+                    onClick={() => {
+                        const params = new URLSearchParams({
+                            date_from: allFilters.date_from,
+                            date_to: allFilters.date_to,
+                            sort_by: allFilters.sort_by,
+                            limit: (allFilters.limit ?? '10').toString(),
+                        });
+                        window.open(
+                            `/reports/best-seller/print?${params.toString()}`,
+                            '_blank',
+                        );
+                    }}
+                    variant="outline"
+                    className="btn-primary"
+                >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Cetak PDF
+                </Button>
+            </div>
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-4 mb-4">
-                <Card>
+            <div className="mb-4 grid gap-4 md:grid-cols-4">
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Item</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Item
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.total_items}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Item terlaris</p>
+                        <div className="text-2xl font-bold">
+                            {summary.total_items}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Item terlaris
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Quantity</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Quantity
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.total_quantity.toLocaleString('id-ID')}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Unit terjual</p>
+                        <div className="text-2xl font-bold">
+                            {summary.total_quantity.toLocaleString('id-ID')}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Unit terjual
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Revenue
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(summary.total_revenue)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Pendapatan</p>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(summary.total_revenue)}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Pendapatan
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="content">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Profit
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{formatCurrency(summary.total_profit)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <div className="text-2xl font-bold text-green-600 dark:text-emerald-500">
+                            {formatCurrency(summary.total_profit)}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
                             Margin: {summary.profit_margin.toFixed(2)}%
                         </p>
                     </CardContent>
@@ -214,51 +235,132 @@ export default function BestSellerReportIndex({
             </div>
 
             {/* Best Sellers Table */}
-            <Card>
+            <Card className="content">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Trophy className="h-5 w-5 text-yellow-500" />
                         Ranking Barang Paling Laku
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} - {format(new Date(dateTo), 'dd MMM yyyy')}
-                        {' | '}Diurutkan berdasarkan: {sortBy === 'quantity' ? 'Quantity' : 'Revenue'}
+                        Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} -{' '}
+                        {format(new Date(dateTo), 'dd MMM yyyy')}
+                        {' | '}Diurutkan berdasarkan:{' '}
+                        {allFilters.sort_by === 'quantity'
+                            ? 'Quantity'
+                            : 'Revenue'}
                     </p>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
+                    <div className="input-box overflow-x-auto rounded-lg">
+                        <Table className="content">
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead style={{ width: '5%' }}>Rank</TableHead>
-                                    <TableHead style={{ width: '12%' }}>Kode</TableHead>
-                                    <TableHead style={{ width: '25%' }}>Nama Barang</TableHead>
-                                    <TableHead className="text-right" style={{ width: '10%' }}>Quantity</TableHead>
-                                    <TableHead className="text-right" style={{ width: '8%' }}>Transaksi</TableHead>
-                                    <TableHead className="text-right" style={{ width: '12%' }}>Revenue</TableHead>
-                                    <TableHead className="text-right" style={{ width: '12%' }}>Cost</TableHead>
-                                    <TableHead className="text-right" style={{ width: '12%' }}>Profit</TableHead>
-                                    <TableHead className="text-right" style={{ width: '8%' }}>Margin</TableHead>
+                                <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '5%' }}
+                                    >
+                                        Rank
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '12%' }}
+                                    >
+                                        Kode
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '25%' }}
+                                    >
+                                        Nama Barang
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '10%' }}
+                                    >
+                                        Quantity
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '8%' }}
+                                    >
+                                        Transaksi
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '12%' }}
+                                    >
+                                        Revenue
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '12%' }}
+                                    >
+                                        Cost
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '12%' }}
+                                    >
+                                        Profit
+                                    </TableHead>
+                                    <TableHead
+                                        className="text-center"
+                                        style={{ width: '8%' }}
+                                    >
+                                        Margin
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {bestSellers.length > 0 ? (
                                     bestSellers.map((item) => (
-                                        <TableRow key={item.item_id}>
-                                            <TableCell>{getRankBadge(item.rank)}</TableCell>
-                                            <TableCell className="font-mono">{item.item_code}</TableCell>
-                                            <TableCell className="font-medium">{item.item_name}</TableCell>
-                                            <TableCell className="text-right">{item.total_quantity.toLocaleString('id-ID')}</TableCell>
-                                            <TableCell className="text-right">{item.transaction_count}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.total_revenue)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.total_cost)}</TableCell>
-                                            <TableCell className="text-right font-semibold text-green-600">{formatCurrency(item.total_profit)}</TableCell>
-                                            <TableCell className="text-right">{item.profit_margin.toFixed(2)}%</TableCell>
+                                        <TableRow
+                                            key={item.item_id}
+                                            className="dark:border-b-2 dark:border-white/25"
+                                        >
+                                            <TableCell className="text-center">
+                                                {getRankBadge(item.rank)}
+                                            </TableCell>
+                                            <TableCell className="text-center font-mono">
+                                                {item.item_code}
+                                            </TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {item.item_name}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.total_quantity.toLocaleString(
+                                                    'id-ID',
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.transaction_count}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    item.total_revenue,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {formatCurrency(
+                                                    item.total_cost,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center font-semibold text-green-600 dark:text-emerald-500">
+                                                {formatCurrency(
+                                                    item.total_profit,
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.profit_margin.toFixed(2)}%
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={9} className="text-center text-muted-foreground">
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableCell
+                                            colSpan={9}
+                                            className="text-center text-muted-foreground"
+                                        >
                                             Tidak ada data
                                         </TableCell>
                                     </TableRow>
@@ -271,4 +373,3 @@ export default function BestSellerReportIndex({
         </AppLayout>
     );
 }
-

@@ -26,7 +26,8 @@ import {
     formatNumber,
     formatNumberWithSeparator,
 } from '@/lib/utils';
-import { IItem, IPurchase, IPurchaseDetail, ISupplier } from '@/types';
+import { IItem, IPurchase, IPurchaseDetail, ISupplier, PageProps } from '@/types';
+import { usePage } from '@inertiajs/react';
 import { Plus, Trash } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -40,6 +41,8 @@ interface PurchaseFormProps {
 const PurchaseForm = (props: PurchaseFormProps) => {
     const { purchase, items, supplierOptions } = props;
     const { getCityData } = useCity();
+    const { auth } = usePage<PageProps>().props;
+    const canEditPrice = auth.permissions.includes('price.edit');
 
     const [isReady, setIsReady] = useState(false);
     const [cityOptions, setCityOptions] = useState<ComboboxOption[]>([]);
@@ -354,7 +357,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].item_id`
+                                                        `details[${index}].item_id`
                                                         ]
                                                     }
                                                 />
@@ -364,7 +367,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                     options={uomOptions}
                                                     value={
                                                         detail.item_uom_id &&
-                                                        detail.item_uom_id > 0
+                                                            detail.item_uom_id > 0
                                                             ? detail.item_uom_id.toString()
                                                             : ''
                                                     }
@@ -391,7 +394,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].item_uom_id`
+                                                        `details[${index}].item_uom_id`
                                                         ]
                                                     }
                                                 />
@@ -401,7 +404,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                     type="text"
                                                     value={
                                                         quantityDisplayValues[
-                                                            index
+                                                        index
                                                         ] ?? '0'
                                                     }
                                                     onChange={(e) => {
@@ -422,7 +425,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].quantity`
+                                                        `details[${index}].quantity`
                                                         ]
                                                     }
                                                 />
@@ -432,7 +435,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                     type="text"
                                                     value={
                                                         priceDisplayValues[
-                                                            index
+                                                        index
                                                         ] ?? '0'
                                                     }
                                                     onChange={(e) => {
@@ -444,6 +447,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                         );
                                                     }}
                                                     className="input-box text-right"
+                                                    disabled={!canEditPrice}
                                                 />
                                                 <InputError
                                                     message={
@@ -453,7 +457,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].price`
+                                                        `details[${index}].price`
                                                         ]
                                                     }
                                                 />
@@ -477,6 +481,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                         );
                                                     }}
                                                     className="input-box text-right"
+                                                    disabled={!canEditPrice}
                                                 />
                                                 <InputError
                                                     message={
@@ -486,7 +491,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].discount1_percent`
+                                                        `details[${index}].discount1_percent`
                                                         ]
                                                     }
                                                 />
@@ -510,6 +515,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                         );
                                                     }}
                                                     className="input-box text-right"
+                                                    disabled={!canEditPrice}
                                                 />
                                                 <InputError
                                                     message={
@@ -519,7 +525,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].discount2_percent`
+                                                        `details[${index}].discount2_percent`
                                                         ]
                                                     }
                                                 />
@@ -575,6 +581,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                     setDataPurchase('ppn_percent', value);
                                 }}
                                 className="input-box text-right"
+                                disabled={!canEditPrice}
                             />
                         </div>
                         <div className="space-y-2">
@@ -666,8 +673,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                 {processingPurchase
                                     ? 'Menyimpan...'
                                     : purchase
-                                      ? 'Update'
-                                      : 'Simpan'}
+                                        ? 'Update'
+                                        : 'Simpan'}
                             </Button>
                         </div>
                     </CardContent>

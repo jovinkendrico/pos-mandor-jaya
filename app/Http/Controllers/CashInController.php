@@ -23,7 +23,7 @@ class CashInController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = CashIn::with(['bank', 'chartOfAccount'])
+        $query = CashIn::with(['bank', 'chartOfAccount', 'creator', 'updater'])
             ->orderBy('cash_in_date', 'desc')
             ->orderBy('id', 'desc');
 
@@ -146,6 +146,8 @@ class CashInController extends Controller
                         'description' => $request->description,
                         'status' => $request->auto_post ? 'posted' : 'draft',
                         'reference_type' => 'Manual',
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
                     ]);
 
                     break; // Success, exit retry loop
@@ -178,7 +180,7 @@ class CashInController extends Controller
      */
     public function show(CashIn $cashIn): Response
     {
-        $cashIn->loadMissing(['bank', 'chartOfAccount']);
+        $cashIn->loadMissing(['bank', 'chartOfAccount', 'creator', 'updater']);
 
         return Inertia::render('transaction/cash-in/show', [
             'cashIn' => $cashIn,
@@ -225,6 +227,7 @@ class CashInController extends Controller
                 'chart_of_account_id' => $request->chart_of_account_id,
                 'amount' => $request->amount,
                 'description' => $request->description,
+                'updated_by' => auth()->id(),
             );
             $cashIn->update($updateData);
 

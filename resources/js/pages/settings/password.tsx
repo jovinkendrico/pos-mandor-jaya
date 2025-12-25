@@ -70,7 +70,7 @@ export default function Password() {
                                         ref={currentPasswordInput}
                                         name="current_password"
                                         type="password"
-                                        className="mt-1 block w-full"
+                                        className="input-box mt-1 block w-full"
                                         autoComplete="current-password"
                                         placeholder="Current password"
                                     />
@@ -90,7 +90,7 @@ export default function Password() {
                                         ref={passwordInput}
                                         name="password"
                                         type="password"
-                                        className="mt-1 block w-full"
+                                        className="input-box mt-1 block w-full"
                                         autoComplete="new-password"
                                         placeholder="New password"
                                     />
@@ -107,7 +107,7 @@ export default function Password() {
                                         id="password_confirmation"
                                         name="password_confirmation"
                                         type="password"
-                                        className="mt-1 block w-full"
+                                        className="input-box mt-1 block w-full"
                                         autoComplete="new-password"
                                         placeholder="Confirm password"
                                     />
@@ -121,6 +121,7 @@ export default function Password() {
                                     <Button
                                         disabled={processing}
                                         data-test="update-password-button"
+                                        className="btn-primary"
                                     >
                                         Save password
                                     </Button>

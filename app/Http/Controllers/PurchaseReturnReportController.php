@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PurchaseReturnReportController extends Controller
 {
@@ -84,5 +86,48 @@ class PurchaseReturnReportController extends Controller
                 ];
             }),
         ]);
+    }
+
+    /**
+     * Print purchase return report as PDF
+     */
+    public function print(Request $request)
+    {
+        try {
+            $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+
+            $purchaseReturns = PurchaseReturn::with(['purchase.supplier', 'details.item'])
+                ->where('status', 'confirmed')
+                ->whereBetween('return_date', [$dateFrom, $dateTo])
+                ->orderBy('return_date', 'desc')
+                ->get();
+
+            $summary = [
+                'total_returns' => $purchaseReturns->count(),
+                'total_amount' => $purchaseReturns->sum('total_amount'),
+            ];
+
+            $pdf = Pdf::loadView('pdf.reports.purchase-return', [
+                'title' => 'Laporan Retur Pembelian',
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'summary' => $summary,
+                'purchaseReturns' => $purchaseReturns,
+            ])->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-retur-pembelian-' . $dateFrom . '-to-' . $dateTo . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Print Purchase Return Report - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

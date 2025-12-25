@@ -21,6 +21,8 @@ class SalePayment extends Model
         'reference_number',
         'notes',
         'status',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -52,6 +54,16 @@ class SalePayment extends Model
     public function bank(): BelongsTo
     {
         return $this->belongsTo(Bank::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**

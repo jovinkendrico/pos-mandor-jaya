@@ -34,6 +34,8 @@ interface Filters {
     as_of_date?: string;
     min_stock?: string;
     max_stock?: string;
+    limit?: string;
+    min_days?: string;
 }
 
 const useResourceFilters = (

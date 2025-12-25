@@ -201,6 +201,22 @@ const CashOutShow = (props: PageProps) => {
                                     </span>
                                 </div>
                             )}
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Created By:
+                                </span>
+                                <span className="font-medium">
+                                    {cashOut.creator?.name || '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Updated By:
+                                </span>
+                                <span className="font-medium">
+                                    {cashOut.updater?.name || '-'}
+                                </span>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

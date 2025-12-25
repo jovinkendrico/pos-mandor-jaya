@@ -6,8 +6,8 @@ import { TableCell } from '../../ui/table';
 
 interface CustomerTableProps {
     customers: ICustomer[];
-    onEdit: (customer: ICustomer) => void;
-    onDelete: (customer: ICustomer) => void;
+    onEdit?: (customer: ICustomer) => void;
+    onDelete?: (customer: ICustomer) => void;
     pageFrom?: number;
 }
 
@@ -15,7 +15,6 @@ const CustomerTable = (props: CustomerTableProps) => {
     const { customers, onEdit, onDelete, pageFrom } = props;
 
     const tableColumn = [
-        'Kode',
         'Nama Customer',
         'Alamat',
         'Kota',
@@ -33,9 +32,6 @@ const CustomerTable = (props: CustomerTableProps) => {
             renderRow={(row) => (
                 <>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        {row.id}
-                    </TableCell>
-                    <TableCell className="flex w-full items-center justify-center text-center">
                         {row.name}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
@@ -51,22 +47,26 @@ const CustomerTable = (props: CustomerTableProps) => {
                         {row.contact || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onEdit(row)}
-                            className="btn-edit"
-                        >
-                            <Edit />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDelete(row)}
-                            className="btn-trash"
-                        >
-                            <Trash />
-                        </Button>
+                        {onEdit && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onEdit(row)}
+                                className="btn-edit"
+                            >
+                                <Edit />
+                            </Button>
+                        )}
+                        {onDelete && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDelete(row)}
+                                className="btn-trash"
+                            >
+                                <Trash />
+                            </Button>
+                        )}
                     </TableCell>
                 </>
             )}

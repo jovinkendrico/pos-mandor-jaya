@@ -74,6 +74,14 @@ class JournalEntryController extends Controller
     {
         $journalEntry->loadMissing(['details.chartOfAccount', 'reversedBy']);
 
+        // Calculate totals from details
+        $totalDebit = $journalEntry->details->sum('debit');
+        $totalCredit = $journalEntry->details->sum('credit');
+
+        // Append totals to the journal entry
+        $journalEntry->setAttribute('total_debit', $totalDebit);
+        $journalEntry->setAttribute('total_credit', $totalCredit);
+
         return Inertia::render('accounting/journal-entry/show', [
             'journalEntry' => $journalEntry,
         ]);
