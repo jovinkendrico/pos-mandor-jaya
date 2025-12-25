@@ -7,7 +7,6 @@
     <style>
         @page {
             size: 21cm 14.85cm;
-            margin: 0.5cm;
         }
 
         * {
@@ -18,7 +17,7 @@
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-size: 14px;
             padding-top: 32px;
             padding-left: 32px;
             padding-right: 32px;
@@ -37,7 +36,7 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
-
+        
         .header-wrapper {
             display: block;
         }

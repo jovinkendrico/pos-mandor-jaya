@@ -7,7 +7,6 @@
     <style>
         @page {
             size: 21cm 14.85cm;
-            margin: 0.5cm;
         }
 
         * {
@@ -18,7 +17,7 @@
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-size: 14px;
             padding-top: 32px;
             padding-left: 32px;
             padding-right: 32px;
@@ -206,8 +205,8 @@
                 <th style="width: 20%;">Quantity</th>
                 <th style="width: 30%;">Nama Barang</th>
                 <th style="width: 15%">Harga @</th>
-                <th style="width: 10%;">Diskon 1 %</th>
-                <th style="width: 10%;">Diskon 2 %</th>
+                {{-- <th style="width: 10%;">Diskon 1 %</th>
+                <th style="width: 10%;">Diskon 2 %</th> --}}
                 <th style="width: 20%;">Jumlah</th>
             </tr>
         </thead>
@@ -219,7 +218,7 @@
                     <td class="text-center">{{ number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
                     <td>{{ $detail->item->name ?? '-' }}</td>
                     <td class="text-right">{{ number_format($detail->price, 0, ',', '.') }}</td>
-                    <td class="text-right">
+                    {{-- <td class="text-right">
                         @if($detail->discount1_percent > 0)
                             {{ number_format($detail->discount1_percent, 2, ',', '.') }}%
                         @else
@@ -232,7 +231,7 @@
                         @else
                             -
                         @endif
-                    </td>
+                    </td> --}}
                     <td class="text-right">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
