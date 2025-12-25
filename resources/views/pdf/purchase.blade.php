@@ -19,14 +19,17 @@
         body {
             font-family: Arial, sans-serif;
             font-size: 11px;
-            padding: 10px;
+            padding-top: 32px;
+            padding-left: 32px;
+            padding-right: 32px;
+            padding-bottom: 8px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 32px;
             border-bottom: 2px solid #000;
-            padding-bottom: 8px;
+            padding-bottom: 2px;
         }
 
         .header h1 {
@@ -34,23 +37,35 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
+        
+        .header-wrapper {
+            display: block;
+        }
 
         .info-section {
+            display: inline-block;
+            width: 350px;
             margin-bottom: 12px;
         }
 
         .info-row {
-            display: flex;
+            display: block;
             margin-bottom: 5px;
         }
 
         .info-label {
+            display: inline-block;
             width: 120px;
             font-weight: bold;
         }
 
         .info-value {
-            flex: 1;
+            display: inline-block;
+            font-weight: normal;
+        }
+
+        .total {
+            font-weight: bold;
         }
 
         table {
@@ -149,54 +164,51 @@
 </head>
 <body>
     <div class="header">
-        <h1>PURCHASE ORDER</h1>
+        <h1>INVOICE PEMBELIAN</h1>
     </div>
 
-    <div class="info-section">
-        <div class="info-row">
-            <div class="info-label">Tanggal:</div>
-            <div class="info-value">{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d-m-Y') }}</div>
+    <div class="header-wrapper">
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">No. Faktur</span>
+                <span class="info-value">: {{ $purchase->purchase_number }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Tanggal</span>
+                <span class="info-value">: {{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d-m-Y') }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Jatuh Tempo</span>
+                <span class="info-value">: {{ \Carbon\Carbon::parse($purchase->due_date)->format('d-m-Y') }}</span>
+            </div>
+            
         </div>
-        <div class="info-row">
-            <div class="info-label">No. PO:</div>
-            <div class="info-value">{{ $purchase->purchase_number }}</div>
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">Kepada Yth.</span>
+            </div>
+            <div class="info-row">
+                <div class="info-value">{{ $purchase->supplier->name ?? '-' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-value">{{ $purchase->supplier->address ?? '-' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-value">{{ $purchase->supplier->address ?? '-' }}</div>
+            </div>
         </div>
-        <div class="info-row">
-            <div class="info-label">Supplier:</div>
-            <div class="info-value">{{ $purchase->supplier->name ?? '-' }}</div>
-        </div>
-        @if($purchase->supplier && $purchase->supplier->address)
-        <div class="info-row">
-            <div class="info-label">Alamat:</div>
-            <div class="info-value">{{ $purchase->supplier->address }}</div>
-        </div>
-        @endif
-        @if($purchase->due_date)
-        <div class="info-row">
-            <div class="info-label">Jatuh Tempo:</div>
-            <div class="info-value">{{ \Carbon\Carbon::parse($purchase->due_date)->format('d-m-Y') }}</div>
-        </div>
-        @endif
-        @if($purchase->notes)
-        <div class="info-row">
-            <div class="info-label">Catatan:</div>
-            <div class="info-value">{{ $purchase->notes }}</div>
-        </div>
-        @endif
     </div>
 
     <table>
         <thead>
             <tr>
                 <th style="width: 5%;">No.</th>
-                <th style="width: 15%;">Kode</th>
+                <th style="width: 20%;">Quantity</th>
                 <th style="width: 30%;">Nama Barang</th>
-                <th style="width: 8%;" class="text-center">Qty</th>
-                <th style="width: 10%;">Satuan</th>
-                <th style="width: 12%;" class="text-right">@ Harga</th>
-                <th style="width: 10%;" class="text-right">Diskon 1</th>
-                <th style="width: 10%;" class="text-right">Diskon 2</th>
-                <th style="width: 10%;" class="text-right">Subtotal</th>
+                <th style="width: 15%">Harga @</th>
+                <th style="width: 10%;">Diskon 1 %</th>
+                <th style="width: 10%;">Diskon 2 %</th>
+                <th style="width: 20%;">Jumlah</th>
             </tr>
         </thead>
         <tbody>
@@ -204,10 +216,8 @@
                 @foreach($purchase->details as $index => $detail)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $detail->item->code ?? '-' }}</td>
+                    <td class="text-center">{{ number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
                     <td>{{ $detail->item->name ?? '-' }}</td>
-                    <td class="text-center">{{ number_format($detail->quantity, 2, ',', '.') }}</td>
-                    <td>{{ $detail->itemUom->uom->name ?? '-' }}</td>
                     <td class="text-right">{{ number_format($detail->price, 0, ',', '.') }}</td>
                     <td class="text-right">
                         @if($detail->discount1_percent > 0)
@@ -226,6 +236,16 @@
                     <td class="text-right">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
+                <tr>
+                    <td colspan="5" class="text-left">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
+                        {{ Terbilang::make($purchase->total_amount) }} Rupiah
+                    </i>
+                    </td>
+                    <td style="border-right: none;">
+                        Total: 
+                    </td>
+                    <td style="border-left: none;" class="text-right total">Rp. {{ number_format($purchase->total_amount, 0, ',', '.') }}</td>
+                </tr>
             @else
             <tr>
                 <td colspan="9" class="text-center">No items found</td>
@@ -235,62 +255,27 @@
     </table>
 
     <div class="footer">
-        <div class="summary-section">
-            <table class="summary-table">
-                <tr>
-                    <td>Subtotal:</td>
-                    <td>{{ number_format($purchase->subtotal, 0, ',', '.') }}</td>
-                </tr>
-                @if($purchase->discount1_amount > 0)
-                <tr>
-                    <td>Diskon 1 ({{ number_format($purchase->discount1_percent, 2, ',', '.') }}%):</td>
-                    <td>{{ number_format($purchase->discount1_amount, 0, ',', '.') }}</td>
-                </tr>
-                @endif
-                @if($purchase->discount2_amount > 0)
-                <tr>
-                    <td>Diskon 2 ({{ number_format($purchase->discount2_percent, 2, ',', '.') }}%):</td>
-                    <td>{{ number_format($purchase->discount2_amount, 0, ',', '.') }}</td>
-                </tr>
-                @endif
-                <tr>
-                    <td>Total Setelah Diskon:</td>
-                    <td>{{ number_format($purchase->total_after_discount, 0, ',', '.') }}</td>
-                </tr>
-                @if($purchase->ppn_amount > 0)
-                <tr>
-                    <td>PPN ({{ number_format($purchase->ppn_percent, 2, ',', '.') }}%):</td>
-                    <td>{{ number_format($purchase->ppn_amount, 0, ',', '.') }}</td>
-                </tr>
-                @endif
-                <tr style="border-top: 2px solid #000; font-weight: bold;">
-                    <td>Total:</td>
-                    <td>{{ number_format($purchase->total_amount, 0, ',', '.') }}</td>
-                </tr>
-            </table>
-        </div>
-
         <div class="signature-section">
             <table class="signature-table">
                 <tr>
                     <td>
                         <div class="signature-box">
                             <div class="signature-line">
-                                <div>Dibuat Oleh</div>
+                                <div>Tanda Terima</div>
                             </div>
                         </div>
                     </td>
                     <td>
                         <div class="signature-box">
                             <div class="signature-line">
-                                <div>Disetujui Oleh</div>
+                                <div>Dikeluarkan</div>
                             </div>
                         </div>
                     </td>
                     <td>
                         <div class="signature-box">
                             <div class="signature-line">
-                                <div>Supplier</div>
+                                <div>Diperiksa</div>
                             </div>
                         </div>
                     </td>

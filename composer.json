@@ -17,6 +17,7 @@
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
         "phpoffice/phpspreadsheet": "^5.3",
+        "riskihajar/terbilang": "^2.0",
         "spatie/laravel-permission": "^6.21"
     },
     "require-dev": {
