@@ -77,6 +77,7 @@
             border: none; 
             padding: 2px;
             text-align: left;
+            font-weight: normal;
         }
 
         table th {
