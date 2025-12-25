@@ -14,9 +14,9 @@ const stockAdjustmentSchema = Yup.object().shape({
     item_id: Yup.number()
         .required('Barang harus dipilih.')
         .min(1, 'Barang harus dipilih.'),
-    quantity: Yup.number()
-        .required('Jumlah barang harus diisi.')
-        .min(1, 'Jumlah barang minimal 1.'),
+    // quantity: Yup.number()
+    //     .required('Jumlah barang harus diisi.')
+    //     .min(1, 'Jumlah barang minimal 1.'),
     unit_cost: Yup.number().nullable(),
     adjustment_date: Yup.date().required('Tanggal harus diisi.'),
     notes: Yup.string().max(255, 'Maksimal 255 karakter.').nullable(),
@@ -85,16 +85,41 @@ const useStockAdjustment = (closeModal: () => void = () => {}) => {
     ) => {
         const input = e.target.value;
 
+        // Allow clear
         if (input === '') {
             setData('quantity', 0);
-            setQuantityDisplayValue('0');
+            setQuantityDisplayValue('');
             return;
         }
 
-        const rawValue = parseStringtoNumber(input);
+        // Allow typing minus sign
+        if (input === '-') {
+            setQuantityDisplayValue('-');
+            return;
+        }
 
-        setData('quantity', rawValue ?? 0);
-        setQuantityDisplayValue(formatNumberWithSeparator(rawValue ?? 0));
+        // Allow typing "0" or "-0" initially without parsing immediately if it's just that
+        // But for consistency we might want normal parsing, but we must respect the string if it's incomplete
+        // actually standard behavior:
+        // "-5" -> parse to -5.
+        // "-" -> wait.
+
+        // Remove non-numeric chars except minus at start
+        const sanitized = input.replace(/[^0-9-]/g, '');
+        // Ensure minus is only at start
+        const validFormat = /^-?\d*$/.test(sanitized);
+
+        if (!validFormat) return;
+
+        setQuantityDisplayValue(sanitized);
+
+        // Only update data if it's a valid number
+        if (sanitized !== '-' && sanitized !== '') {
+             const rawValue = parseInt(sanitized, 10);
+              if (!isNaN(rawValue)) {
+                   setData('quantity', rawValue);
+              }
+        }
     };
 
     const handleUnitCostChange = (

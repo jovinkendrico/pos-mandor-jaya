@@ -205,13 +205,9 @@ export function AsyncCombobox({
                                             isSelected &&
                                                 'bg-accent text-accent-foreground',
                                         )}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleSelect(option.value);
-                                        }}
                                         onMouseDown={(e) => {
                                             e.preventDefault();
+                                            e.stopPropagation();
                                             handleSelect(option.value);
                                         }}
                                     >
