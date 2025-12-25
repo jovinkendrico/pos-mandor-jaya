@@ -34,7 +34,7 @@
         .header h1 {
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .header-wrapper {
@@ -70,7 +70,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         table th,
@@ -99,12 +99,12 @@
         }
 
         .footer {
-            margin-top: 10px;
+            margin-top: 3px;
             padding-top: 10px;
         }
 
         .summary-section {
-            margin-top: 10px;
+            margin-top: 3px;
             width: 100%;
         }
 
