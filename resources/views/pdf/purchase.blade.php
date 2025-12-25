@@ -7,7 +7,6 @@
     <style>
         @page {
             size: 21cm 14.85cm;
-            margin: 0.5cm;
         }
 
         * {
@@ -17,8 +16,8 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 14px;
             padding-top: 32px;
             padding-left: 32px;
             padding-right: 32px;
@@ -35,7 +34,7 @@
         .header h1 {
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .header-wrapper {
@@ -71,20 +70,22 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 10px;
+            font-size: 14px;
+            border: 1px dashed #000;
         }
 
         table th,
         table td {
-            border: 1px solid #000;
-            padding: 5px;
+            border: none; 
+            padding: 2px;
+            font-weight: bold;
             text-align: left;
         }
 
         table th {
             background-color: #f0f0f0;
             font-weight: bold;
+            border-bottom:1px solid #000;
             text-align: center;
         }
 
@@ -101,13 +102,12 @@
         }
 
         .footer {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #000;
+            margin-top: 1px;
+            padding-top: 10px;
         }
 
         .summary-section {
-            margin-top: 10px;
+            margin-top: 3px;
             width: 100%;
         }
 
@@ -129,7 +129,7 @@
         }
 
         .signature-section {
-            margin-top: 30px;
+            margin-top: 10px;
             width: 100%;
         }
 
@@ -138,6 +138,7 @@
             border-collapse: collapse;
             margin-left: auto;
             max-width: 600px;
+            border: none;
         }
 
         .signature-table td {
@@ -158,7 +159,7 @@
             margin-top: 50px;
             padding-top: 5px;
             width: 100%;
-            font-size: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -191,10 +192,10 @@
                 <div class="info-value">{{ $purchase->supplier->name ?? '-' }}</div>
             </div>
             <div class="info-row">
-                <div class="info-value">{{ $purchase->supplier->address ?? '-' }}</div>
+                <div class="info-value">{{ $purchase->supplier->city->name ?? '-' }}</div>
             </div>
             <div class="info-row">
-                <div class="info-value">{{ $purchase->supplier->address ?? '-' }}</div>
+                <div class="info-value">{{ $purchase->supplier->phone_number ?? '-' }}</div>
             </div>
         </div>
     </div>
@@ -203,11 +204,11 @@
         <thead>
             <tr>
                 <th style="width: 5%;">No.</th>
-                <th style="width: 20%;">Quantity</th>
-                <th style="width: 30%;">Nama Barang</th>
-                <th style="width: 15%">Harga @</th>
-                <th style="width: 10%;">Diskon 1 %</th>
-                <th style="width: 10%;">Diskon 2 %</th>
+                <th style="width: 10%;">Quantity</th>
+                <th style="width: 40%; border-right: 1px dashed #000;">Nama Barang</th>
+                <th style="width: 15%; border-right: 1px dashed #000;">Harga @</th>
+                {{-- <th style="width: 10%;">Diskon 1 %</th>
+                <th style="width: 10%;">Diskon 2 %</th> --}}
                 <th style="width: 20%;">Jumlah</th>
             </tr>
         </thead>
@@ -216,10 +217,10 @@
                 @foreach($purchase->details as $index => $detail)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="text-center">{{ number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
-                    <td>{{ $detail->item->name ?? '-' }}</td>
-                    <td class="text-right">{{ number_format($detail->price, 0, ',', '.') }}</td>
-                    <td class="text-right">
+                    <td class="text-center">{{ fmod($detail->quantity, 1) == 0 ? number_format($detail->quantity, 0, ',', '.') : number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
+                    <td style="border-right: 1px solid #000;">{{ $detail->item->name ?? '-' }}</td>
+                    <td class="text-right" style="border-right: 1px dashed #000;">{{ number_format($detail->price, 0, ',', '.') }}</td>
+                    {{-- <td class="text-right">
                         @if($detail->discount1_percent > 0)
                             {{ number_format($detail->discount1_percent, 2, ',', '.') }}%
                         @else
@@ -232,12 +233,12 @@
                         @else
                             -
                         @endif
-                    </td>
+                    </td> --}}
                     <td class="text-right">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
                 <tr>
-                    <td colspan="5" class="text-left">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
+                    <td colspan="3" class="text-left" style="border-top: 1px dashed #000;">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
                         {{ Terbilang::make($purchase->total_amount) }} Rupiah
                     </i>
                     </td>

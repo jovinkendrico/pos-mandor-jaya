@@ -22,11 +22,11 @@ class StoreStockAdjustmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'item_id' => 'required|exists:items,id',
-            'quantity' => 'required|numeric',
-            'unit_cost' => 'nullable|numeric|min:0',
+            'item_id'         => 'required|exists:items,id',
+            // 'quantity' => 'required|numeric',
+            'unit_cost'       => 'nullable|numeric|min:0',
             'adjustment_date' => 'required|date',
-            'notes' => 'nullable|string|max:500',
+            'notes'           => 'nullable|string|max:500',
         ];
     }
 }
