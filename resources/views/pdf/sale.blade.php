@@ -70,7 +70,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 12px;
         }
 
         table th,
@@ -200,8 +200,8 @@
         <thead>
             <tr>
                 <th style="width: 5%;">No.</th>
-                <th style="width: 20%;">Quantity</th>
-                <th style="width: 30%;">Nama Barang</th>
+                <th style="width: 10%;">Quantity</th>
+                <th style="width: 40%;">Nama Barang</th>
                 <th style="width: 15%">Harga @</th>
                 {{-- <th style="width: 10%;">Diskon 1 %</th>
                 <th style="width: 10%;">Diskon 2 %</th> --}}
