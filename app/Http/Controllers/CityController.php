@@ -37,7 +37,7 @@ class CityController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'name');
+        $sortBy    = $request->get('sort_by', 'name');
         $sortOrder = $request->get('sort_order', 'asc');
 
         $allowedSortFields = ['name'];
@@ -51,10 +51,10 @@ class CityController extends Controller
         $cities = $query->paginate(10)->withQueryString();
 
         return Inertia::render('master/city/index', [
-            'cities' => $cities,
+            'cities'  => $cities,
             'filters' => [
-                'search' => $request->get('search', ''),
-                'sort_by' => $sortBy,
+                'search'     => $request->get('search', ''),
+                'sort_by'    => $sortBy,
                 'sort_order' => $sortOrder,
             ],
         ]);
@@ -86,7 +86,7 @@ class CityController extends Controller
     public function search(Request $request): JsonResponse
     {
         $search = $request->get('search', '');
-        $limit  = $request->get('limit', 10);
+        $limit  = $request->get('limit');
 
         $cities = City::query()
             ->when($search, function ($query, $search) {

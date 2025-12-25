@@ -40,7 +40,7 @@ class CustomerController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'name');
+        $sortBy    = $request->get('sort_by', 'name');
         $sortOrder = $request->get('sort_order', 'asc');
 
         $allowedSortFields = ['name', 'phone_number'];
@@ -58,16 +58,15 @@ class CustomerController extends Controller
 
         $customers = $query->paginate(10)->withQueryString();
 
-        // Get all cities for filter
         $cities = City::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('master/customer/index', [
             'customers' => $customers,
-            'cities' => $cities,
-            'filters' => [
-                'search' => $request->get('search', ''),
-                'city_id' => $request->get('city_id', ''),
-                'sort_by' => $sortBy,
+            'cities'    => $cities,
+            'filters'   => [
+                'search'     => $request->get('search', ''),
+                'city_id'    => $request->get('city_id', ''),
+                'sort_by'    => $sortBy,
                 'sort_order' => $sortOrder,
             ],
         ]);
