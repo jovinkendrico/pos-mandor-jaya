@@ -171,7 +171,7 @@ export type IBank = Pick<
 >;
 
 export interface ItemUom {
-    id: number;
+    id?: number;
     item_id: number;
     uom: IUOM;
     uom_id: number;
