@@ -214,7 +214,7 @@
                 @foreach($purchase->details as $index => $detail)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="text-center">{{ number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
+                    <td class="text-center">{{ fmod($detail->quantity, 1) == 0 ? number_format($detail->quantity, 0, ',', '.') : number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
                     <td>{{ $detail->item->name ?? '-' }}</td>
                     <td class="text-right">{{ number_format($detail->price, 0, ',', '.') }}</td>
                     {{-- <td class="text-right">
