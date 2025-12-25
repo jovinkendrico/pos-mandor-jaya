@@ -155,7 +155,7 @@
             margin-top: 50px;
             padding-top: 5px;
             width: 100%;
-            font-size: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
