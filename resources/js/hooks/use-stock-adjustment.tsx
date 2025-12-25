@@ -14,9 +14,9 @@ const stockAdjustmentSchema = Yup.object().shape({
     item_id: Yup.number()
         .required('Barang harus dipilih.')
         .min(1, 'Barang harus dipilih.'),
-    quantity: Yup.number()
-        .required('Jumlah barang harus diisi.')
-        .min(1, 'Jumlah barang minimal 1.'),
+    // quantity: Yup.number()
+    //     .required('Jumlah barang harus diisi.')
+    //     .min(1, 'Jumlah barang minimal 1.'),
     unit_cost: Yup.number().nullable(),
     adjustment_date: Yup.date().required('Tanggal harus diisi.'),
     notes: Yup.string().max(255, 'Maksimal 255 karakter.').nullable(),
