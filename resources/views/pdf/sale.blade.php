@@ -33,7 +33,6 @@
 
         .header h1 {
             font-size: 16px;
-            font-weight: bold;
             margin-bottom: 3px;
         }
         
@@ -55,7 +54,6 @@
         .info-label {
             display: inline-block;
             width: 120px;
-            font-weight: bold;
         }
 
         .info-value {
@@ -64,7 +62,7 @@
         }
 
         .total {
-            font-weight: bold;
+            font-weight: normal;
         }
 
         table {
@@ -78,13 +76,11 @@
         table td {
             border: none; 
             padding: 2px;
-            font-weight: bold;
             text-align: left;
         }
 
         table th {
             background-color: #f0f0f0;
-            font-weight: bold;
             border-bottom:1px dashed #000;
             text-align: center;
         }
@@ -125,7 +121,6 @@
 
         .summary-table td:first-child {
             text-align: left;
-            font-weight: bold;
         }
 
         .signature-section {
@@ -234,7 +229,7 @@
                 </tr>
                 @endforeach
                 <tr>
-                    <td colspan="3" class="text-left" style="border-top: 1px dashed #000;">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
+                    <td colspan="3" class="text-left" style="border-top: 1px dashed #000;">Terbilang : <i style="text-transform: capitalize;">
                         {{ Terbilang::make($sale->total_amount) }} Rupiah
                     </i>
                     </td>
