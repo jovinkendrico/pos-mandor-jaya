@@ -71,7 +71,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
-            border: 1px solid #000;
+            border: 1px dashed #000;
         }
 
         table th,
@@ -85,7 +85,7 @@
         table th {
             background-color: #f0f0f0;
             font-weight: bold;
-            border:1px solid #000;
+            border-bottom:1px solid #000;
             text-align: center;
         }
 
@@ -205,8 +205,8 @@
             <tr>
                 <th style="width: 5%;">No.</th>
                 <th style="width: 10%;">Quantity</th>
-                <th style="width: 40%; border-right: 1px solid #000;">Nama Barang</th>
-                <th style="width: 15%">Harga @</th>
+                <th style="width: 40%; border-right: 1px dashed #000;">Nama Barang</th>
+                <th style="width: 15%;border-right: 1px dashed #000;">Harga @</th>
                 {{-- <th style="width: 10%;">Diskon 1 %</th>
                 <th style="width: 10%;">Diskon 2 %</th> --}}
                 <th style="width: 20%;">Jumlah</th>
@@ -218,8 +218,8 @@
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="text-center">{{ fmod($detail->quantity, 1) == 0 ? number_format($detail->quantity, 0, ',', '.') : number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
-                    <td style="border-right: 1px solid #000;">{{ $detail->item->name ?? '-' }}</td>
-                    <td class="text-right">{{ number_format($detail->price, 0, ',', '.') }}</td>
+                    <td style="border-right: 1px dashed #000;">{{ $detail->item->name ?? '-' }}</td>
+                    <td class="text-right" style="border-right: 1px dashed #000;">{{ number_format($detail->price, 0, ',', '.') }}</td>
                     {{-- <td class="text-right">
                         @if($detail->discount1_percent > 0)
                             {{ number_format($detail->discount1_percent, 2, ',', '.') }}%
@@ -234,18 +234,18 @@
                             -
                         @endif
                     </td> --}}
-                    <td class="text-right">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                    <td class="text-right" style="border-top: 1px dashed #000;">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
                 <tr>
-                    <td colspan="3" class="text-left">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
+                    <td colspan="3" class="text-left" style="border-top: 1px dashed #000;">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
                         {{ Terbilang::make($sale->total_amount) }} Rupiah
                     </i>
                     </td>
-                    <td style="border-right: none;">
+                    <td style="border-top: 1px dashed #000;">
                         Total: 
                     </td>
-                    <td style="border-left: none;" class="text-right total">Rp. {{ number_format($sale->total_amount, 0, ',', '.') }}</td>
+                    <td style="border-left: none;" class="text-right total" style="border-top: 1px dashed #000;">Rp. {{ number_format($sale->total_amount, 0, ',', '.') }}</td>
                 </tr>
             @else
             <tr>
