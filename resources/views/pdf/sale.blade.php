@@ -127,7 +127,7 @@
         }
 
         .signature-section {
-            margin-top: 30px;
+            margin-top: 10px;
             width: 100%;
         }
 
@@ -136,6 +136,7 @@
             border-collapse: collapse;
             margin-left: auto;
             max-width: 600px;
+            border: none;
         }
 
         .signature-table td {
