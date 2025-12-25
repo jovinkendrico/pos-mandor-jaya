@@ -80,9 +80,15 @@ export function formatNumber(input: number): number {
 
 export function formatNumberWithSeparator(input: number): string {
     if (typeof input === 'string') {
-        return Number(input).toLocaleString('id-ID');
+        return Number(input).toLocaleString('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 4,
+        });
     }
-    return input.toLocaleString('id-ID');
+    return input.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 4,
+    });
 }
 
 export function formatDate(dateString: Date) {
