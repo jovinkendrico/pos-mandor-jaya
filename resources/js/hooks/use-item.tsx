@@ -1,6 +1,6 @@
 import {
     formatCurrency,
-    formatNumberWithSeparator,
+    parseStringtoDecimal,
     parseStringtoNumber,
 } from '@/lib/utils';
 import { store, update } from '@/routes/items';
@@ -12,9 +12,7 @@ import * as Yup from 'yup';
 
 const uomSchema = Yup.object().shape({
     uom_id: Yup.number().required('UOM harus dipilih.'),
-    conversion_value: Yup.number()
-        .required('Nilai konversi harus diisi.')
-        .min(1, 'Nilai konversi minimal 1.'),
+    conversion_value: Yup.number().required('Nilai konversi harus diisi.'),
     price: Yup.number().required('Harga barang harus diisi.'),
     is_base: Yup.boolean().required('UOM utama harus dipilih.'),
     uom: Yup.object().shape({
@@ -244,10 +242,16 @@ const useItem = (closeModal: () => void = () => {}) => {
             return;
         }
 
-        const rawValue = parseStringtoNumber(input);
+        const rawValue = parseStringtoDecimal(input);
+        let sanitizedInput = input.replace(/[^0-9,]/g, '');
+
+        const parts = sanitizedInput.split(',');
+        if (parts.length > 2) {
+            sanitizedInput = parts[0] + ',' + parts.slice(1).join('');
+        }
 
         setData('stock', rawValue ?? 0);
-        setStockDisplayValue(formatNumberWithSeparator(rawValue ?? 0));
+        setStockDisplayValue(sanitizedInput);
     };
 
     const handlePriceChange = (
@@ -293,26 +297,18 @@ const useItem = (closeModal: () => void = () => {}) => {
     ) => {
         const input = e.target.value;
 
-        if (input === '') {
-            handleChangeUOM(index, 'conversion_value', 0);
-            setConversionDisplayValues([
-                ...conversionDisplayValues.slice(0, index),
-                '0',
-                ...conversionDisplayValues.slice(index + 1),
-            ]);
-            return;
+        let sanitizedInput = input.replace(/[^0-9,]/g, '');
+        const parts = sanitizedInput.split(',');
+        if (parts.length > 2) {
+            sanitizedInput = parts[0] + ',' + parts.slice(1).join('');
         }
 
-        const rawValue = parseStringtoNumber(input);
+        const newDisplayValues = [...conversionDisplayValues];
+        newDisplayValues[index] = sanitizedInput || '0';
+        setConversionDisplayValues(newDisplayValues);
 
-        const validRawValue = isNaN(rawValue ?? 0) ? 0 : rawValue;
-
-        handleChangeUOM(index, 'conversion_value', validRawValue);
-        setConversionDisplayValues([
-            ...conversionDisplayValues.slice(0, index),
-            formatNumberWithSeparator(validRawValue ?? 0),
-            ...conversionDisplayValues.slice(index + 1),
-        ]);
+        const numericValue = parseStringtoDecimal(sanitizedInput);
+        handleChangeUOM(index, 'conversion_value', numericValue ?? 0);
     };
 
     return {

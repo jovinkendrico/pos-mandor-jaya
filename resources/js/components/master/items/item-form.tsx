@@ -99,6 +99,19 @@ const ItemForm = (props: ItemFormProps) => {
         }
     }, [isModalOpen, item, setDataItem, resetItem]);
 
+    const handleBlur = () => {
+        setStockDisplayValue(formatNumberWithSeparator(dataItem.stock));
+    };
+
+    const handleConversionBlur = (index: number) => {
+        const formatted = formatNumberWithSeparator(
+            dataItem.uoms[index].conversion_value,
+        );
+        const newDisplayValues = [...conversionDisplayValues];
+        newDisplayValues[index] = formatted;
+        setConversionDisplayValues(newDisplayValues);
+    };
+
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
             <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
@@ -142,6 +155,7 @@ const ItemForm = (props: ItemFormProps) => {
                                 onChange={(e) =>
                                     handleStockChange(e, setStockDisplayValue)
                                 }
+                                onBlur={handleBlur}
                                 placeholder="Cth: 100"
                                 disabled={processingItem}
                                 className="input-box"
@@ -337,6 +351,11 @@ const ItemForm = (props: ItemFormProps) => {
                                                             setConversionDisplayValues,
                                                         );
                                                     }}
+                                                    onBlur={() =>
+                                                        handleConversionBlur(
+                                                            index,
+                                                        )
+                                                    }
                                                     className="input-box"
                                                     disabled={
                                                         processingItem ||

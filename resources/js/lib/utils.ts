@@ -15,6 +15,24 @@ export function parseStringtoNumber(input: string): number | null {
     return parseInt(rawString, 10);
 }
 
+export function parseStringtoDecimal(input: string): number | null {
+    let sanitized = input.replace(/[^0-9,]/g, '');
+
+    const parts = sanitized.split(',');
+    if (parts.length > 2) {
+        sanitized = parts[0] + ',' + parts.slice(1).join('');
+    }
+
+    if (!sanitized || sanitized === ',') {
+        return null;
+    }
+
+    const normalized = sanitized.replace(',', '.');
+    const result = parseFloat(normalized);
+
+    return isNaN(result) ? null : result;
+}
+
 export function parseCurrency(input: string): number | null {
     if (!input || typeof input !== 'string') {
         return null;
