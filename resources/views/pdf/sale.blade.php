@@ -234,7 +234,7 @@
                             -
                         @endif
                     </td> --}}
-                    <td class="text-right" style="border-top: 1px dashed #000;">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                    <td class="text-right" style="border-right: 1px dashed #000;">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
                 <tr>
@@ -245,7 +245,7 @@
                     <td style="border-top: 1px dashed #000;">
                         Total: 
                     </td>
-                    <td style="border-left: none;" class="text-right total" style="border-top: 1px dashed #000;">Rp. {{ number_format($sale->total_amount, 0, ',', '.') }}</td>
+                    <td style="border-left: none; border-top: 1px dashed #000;" class="text-right total">Rp. {{ number_format($sale->total_amount, 0, ',', '.') }}</td>
                 </tr>
             @else
             <tr>
