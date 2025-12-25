@@ -70,7 +70,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 14px;
             border: 1px solid #000;
         }
 
@@ -78,6 +78,7 @@
         table td {
             border: none; 
             padding: 2px;
+            font-weight: bold;
             text-align: left;
         }
 
