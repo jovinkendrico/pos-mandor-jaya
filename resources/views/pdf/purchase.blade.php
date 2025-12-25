@@ -100,7 +100,7 @@
         }
 
         .footer {
-            margin-top: 3px;
+            margin-top: 1px;
             padding-top: 10px;
         }
 
