@@ -204,7 +204,7 @@
             <tr>
                 <th style="width: 5%;">No.</th>
                 <th style="width: 10%;">Quantity</th>
-                <th style="width: 40%;">Nama Barang</th>
+                <th style="width: 40%; border-right: 1px solid #000;">Nama Barang</th>
                 <th style="width: 15%">Harga @</th>
                 {{-- <th style="width: 10%;">Diskon 1 %</th>
                 <th style="width: 10%;">Diskon 2 %</th> --}}
@@ -217,7 +217,7 @@
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="text-center">{{ fmod($detail->quantity, 1) == 0 ? number_format($detail->quantity, 0, ',', '.') : number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
-                    <td>{{ $detail->item->name ?? '-' }}</td>
+                    <td style="border-right: 1px solid #000;">{{ $detail->item->name ?? '-' }}</td>
                     <td class="text-right">{{ number_format($detail->price, 0, ',', '.') }}</td>
                     {{-- <td class="text-right">
                         @if($detail->discount1_percent > 0)
