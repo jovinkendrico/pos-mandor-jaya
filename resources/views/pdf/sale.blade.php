@@ -77,7 +77,7 @@
         table th,
         table td {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 2px;
             text-align: left;
         }
 
@@ -236,7 +236,7 @@
                 </tr>
                 @endforeach
                 <tr>
-                    <td colspan="5" class="text-left">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
+                    <td colspan="3" class="text-left">Terbilang : <i style="text-transform: capitalize; font-weight: bold;">
                         {{ Terbilang::make($sale->total_amount) }} Rupiah
                     </i>
                     </td>
