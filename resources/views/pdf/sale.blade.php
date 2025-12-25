@@ -70,7 +70,6 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 4px;
             font-size: 12px;
         }
 
@@ -100,9 +99,8 @@
         }
 
         .footer {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #000;
+            margin-top: 10px;
+            padding-top: 10px;
         }
 
         .summary-section {
