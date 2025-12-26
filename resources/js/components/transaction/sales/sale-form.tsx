@@ -96,7 +96,7 @@ const SaleForm = (props: SaleFormProps) => {
 
         return item.item_uoms.map((itemUom) => ({
             label: itemUom.uom.name,
-            value: itemUom.id.toString(),
+            value: (itemUom.id ?? 0).toString(),
         }));
     };
 
@@ -345,7 +345,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].item_id`
+                                                        `details[${index}].item_id`
                                                         ]
                                                     }
                                                 />
@@ -358,13 +358,53 @@ const SaleForm = (props: SaleFormProps) => {
                                                             ? detail.item_uom_id.toString()
                                                             : ''
                                                     }
-                                                    onValueChange={(value) =>
+                                                    onValueChange={(value) => {
+                                                        const itemUomId = Number(value);
                                                         handleChangeItem(
                                                             index,
                                                             'item_uom_id',
-                                                            Number(value),
-                                                        )
-                                                    }
+                                                            itemUomId,
+                                                        );
+
+                                                        // Auto-populate price from Item Master
+                                                        const item = items.find(
+                                                            (i) =>
+                                                                i.id ===
+                                                                detail.item_id,
+                                                        );
+                                                        const itemUom =
+                                                            item?.item_uoms?.find(
+                                                                (u) =>
+                                                                    u.id ===
+                                                                    itemUomId,
+                                                            );
+
+                                                        if (itemUom) {
+                                                            const price = Number(
+                                                                itemUom.price ??
+                                                                0,
+                                                            );
+                                                            handleChangeItem(
+                                                                index,
+                                                                'price',
+                                                                price,
+                                                            );
+
+                                                            // Update display value
+                                                            const updatedDisplayValues =
+                                                                [
+                                                                    ...priceDisplayValues,
+                                                                ];
+                                                            updatedDisplayValues[
+                                                                index
+                                                            ] = formatCurrency(
+                                                                price,
+                                                            );
+                                                            setPriceDisplayValues(
+                                                                updatedDisplayValues,
+                                                            );
+                                                        }
+                                                    }}
                                                     disabled={
                                                         !detail.item_id ||
                                                         uomOptions.length === 0
@@ -381,7 +421,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].item_uom_id`
+                                                        `details[${index}].item_uom_id`
                                                         ]
                                                     }
                                                 />
@@ -391,7 +431,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                     type="text"
                                                     value={
                                                         quantityDisplayValues[
-                                                            index
+                                                        index
                                                         ] ?? '0'
                                                     }
                                                     onChange={(e) => {
@@ -412,7 +452,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].quantity`
+                                                        `details[${index}].quantity`
                                                         ]
                                                     }
                                                 />
@@ -422,7 +462,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                     type="text"
                                                     value={
                                                         priceDisplayValues[
-                                                            index
+                                                        index
                                                         ] ?? '0'
                                                     }
                                                     onChange={(e) => {
@@ -443,7 +483,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].price`
+                                                        `details[${index}].price`
                                                         ]
                                                     }
                                                 />
@@ -476,7 +516,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].discount1_percent`
+                                                        `details[${index}].discount1_percent`
                                                         ]
                                                     }
                                                 />
@@ -509,7 +549,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `details[${index}].discount2_percent`
+                                                        `details[${index}].discount2_percent`
                                                         ]
                                                     }
                                                 />
@@ -656,8 +696,8 @@ const SaleForm = (props: SaleFormProps) => {
                                 {processingSale
                                     ? 'Menyimpan...'
                                     : sale
-                                      ? 'Update'
-                                      : 'Simpan'}
+                                        ? 'Update'
+                                        : 'Simpan'}
                             </Button>
                         </div>
                     </CardContent>
