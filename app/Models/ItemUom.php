@@ -19,7 +19,7 @@ class ItemUom extends Model
     ];
 
     protected $casts = [
-        'conversion_value' => 'integer',
+        'conversion_value' => 'decimal:2',
         'price'            => 'decimal:2',
         'is_base'          => 'boolean',
     ];

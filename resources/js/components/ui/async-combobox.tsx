@@ -56,6 +56,9 @@ export function AsyncCombobox({
     const [searchValue, setSearchValue] = React.useState('');
     const [options, setOptions] = React.useState<AsyncComboboxOption[]>([]);
     const [loading, setLoading] = React.useState(false);
+    const [cachedSelectedOption, setCachedSelectedOption] = React.useState<
+        AsyncComboboxOption | undefined
+    >(undefined);
 
     React.useEffect(() => {
         if (!searchValue.trim()) {
@@ -114,13 +117,20 @@ export function AsyncCombobox({
     // Find selected option from all possible sources (initialOptions, options, or both)
     const selectedOption = React.useMemo(() => {
         if (!value) return undefined;
-        // Check in initialOptions first
+
+        // 1. Check cached option (if it matches value)
+        if (cachedSelectedOption && cachedSelectedOption.value === value) {
+            return cachedSelectedOption;
+        }
+
+        // 2. Check in initialOptions first
         let found = initialOptions.find((opt) => opt.value === value);
         if (found) return found;
-        // Then check in search results
+
+        // 3. Then check in search results
         found = options.find((opt) => opt.value === value);
         return found;
-    }, [value, initialOptions, options]);
+    }, [value, initialOptions, options, cachedSelectedOption]);
 
     const handleSelect = React.useCallback(
         (selectedValue: string) => {
@@ -136,8 +146,10 @@ export function AsyncCombobox({
                 const newValue = option.value === value ? '' : option.value;
                 onValueChange?.(newValue);
                 if (newValue) {
+                    setCachedSelectedOption(option);
                     onSelect?.(option);
                 } else {
+                    setCachedSelectedOption(undefined);
                     onSelect?.(null);
                 }
                 setOpen(false);
