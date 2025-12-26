@@ -113,18 +113,20 @@ class Purchase extends Model
      */
     public static function generatePurchaseNumber($purchaseDate = null): string
     {
-        $date = $purchaseDate ? date('Ymd', strtotime($purchaseDate)) : now()->format('Ymd');
-
-        // Use lockForUpdate to prevent race conditions in concurrent requests
-        // Include soft deleted records to continue sequence even if purchase was deleted
+        // Find the last purchase that starts with 'MB'
         $lastPurchase = static::withTrashed()
-            ->whereDate('purchase_date', $purchaseDate ? date('Y-m-d', strtotime($purchaseDate)) : today())
-            ->lockForUpdate()
-            ->orderBy('id', 'desc')
+            ->where('purchase_number', 'LIKE', 'MB%')
+            ->orderByRaw('CAST(SUBSTRING(purchase_number, 3) AS UNSIGNED) DESC')
             ->first();
 
-        $sequence = $lastPurchase ? (int) substr($lastPurchase->purchase_number, -4) + 1 : 1;
+        if ($lastPurchase) {
+            // Get the numeric part after 'MB'
+            $lastNumber = (int) substr($lastPurchase->purchase_number, 2);
+            $sequence = $lastNumber + 1;
+        } else {
+            $sequence = 1;
+        }
 
-        return 'PO' . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return 'MB' . $sequence;
     }
 }

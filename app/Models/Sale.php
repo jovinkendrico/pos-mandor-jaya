@@ -117,18 +117,20 @@ class Sale extends Model
      */
     public static function generateSaleNumber($saleDate = null): string
     {
-        $date = $saleDate ? date('Ymd', strtotime($saleDate)) : now()->format('Ymd');
-
-        // Use lockForUpdate to prevent race conditions in concurrent requests
-        // Include soft deleted records to continue sequence even if sale was deleted
+        // Find the last sale that starts with 'MJ'
         $lastSale = static::withTrashed()
-            ->whereDate('sale_date', $saleDate ? date('Y-m-d', strtotime($saleDate)) : today())
-            ->lockForUpdate()
-            ->orderBy('id', 'desc')
+            ->where('sale_number', 'LIKE', 'MJ%')
+            ->orderByRaw('CAST(SUBSTRING(sale_number, 3) AS UNSIGNED) DESC')
             ->first();
 
-        $sequence = $lastSale ? (int) substr($lastSale->sale_number, -4) + 1 : 1;
+        if ($lastSale) {
+            // Get the numeric part after 'MJ'
+            $lastNumber = (int) substr($lastSale->sale_number, 2);
+            $sequence = $lastNumber + 1;
+        } else {
+            $sequence = 1;
+        }
 
-        return 'SO' . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return 'MJ' . $sequence;
     }
 }

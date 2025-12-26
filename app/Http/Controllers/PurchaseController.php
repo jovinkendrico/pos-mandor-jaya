@@ -423,7 +423,7 @@ class PurchaseController extends Controller
 
             // 9.5 x 11 inches = 241 x 279 mm = 684 x 792 points
             $pdf = Pdf::loadView('pdf.purchase', [
-                'title'    => 'PURCHASE ORDER - ' . $purchase->purchase_number,
+                'title'    => 'MB - ' . $purchase->purchase_number,
                 'purchase' => $purchase,
             ])->setPaper([0, 0, 684, 792], 'portrait'); // 9.5 x 11 inches
 
