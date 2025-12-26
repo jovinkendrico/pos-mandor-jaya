@@ -66,6 +66,11 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
 
     useEffect(() => {
         if (data.item_id) {
+            // If we already have the correct selected item (e.g. from onSelect), don't overwrite it
+            if (selectedItem && selectedItem.id === Number(data.item_id)) {
+                return;
+            }
+
             const item = items.find((i) => i.id === Number(data.item_id));
             setSelectedItem(item || null);
             if (item && !data.unit_cost) {
@@ -75,7 +80,7 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
         } else {
             setSelectedItem(null);
         }
-    }, [data.item_id, items, data.unit_cost, setData]);
+    }, [data.item_id, items, data.unit_cost, setData, selectedItem]);
 
     return (
         <Dialog open={isModalOpen} onOpenChange={onModalClose}>
@@ -102,6 +107,18 @@ const StockAdjustmentForm = (props: StockAdjustmentFormProps) => {
                                 onValueChange={(value) =>
                                     setData('item_id', Number(value))
                                 }
+                                onSelect={(option) => {
+                                    if (option && option.item) {
+                                        const item = option.item as IItem;
+                                        setSelectedItem(item);
+                                        if (!data.unit_cost) {
+                                            setData('unit_cost', item.modal_price || 0);
+                                            setUnitCostDisplayValue(formatCurrency(item.modal_price || 0));
+                                        }
+                                    } else {
+                                        setSelectedItem(null);
+                                    }
+                                }}
                                 placeholder="Pilih barang"
                                 searchUrl="/stock-adjustments/items/search"
                                 searchParam="search"
