@@ -123,6 +123,8 @@ class SaleController extends Controller
      */
     public function store(StoreSaleRequest $request): RedirectResponse
     {
+        $this->validateStockAvailability($request->details);
+
         DB::transaction(function () use ($request) {
             // Calculate totals dari semua items
             $subtotal             = 0;
@@ -144,7 +146,7 @@ class SaleController extends Controller
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal += $amount; // Sum all amounts before discount
+                $subtotal             += $amount; // Sum all amounts before discount
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
 
@@ -286,6 +288,8 @@ class SaleController extends Controller
         }
 
         DB::transaction(function () use ($request, $sale) {
+            $this->validateStockAvailability($request->details);
+
             // Calculate totals dari semua items (same as store)
             $subtotal             = 0;
             $totalDiscount1Amount = 0;
@@ -306,7 +310,7 @@ class SaleController extends Controller
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal += $amount; // Sum all amounts before discount
+                $subtotal             += $amount; // Sum all amounts before discount
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
 
@@ -457,6 +461,68 @@ class SaleController extends Controller
             return back()->withErrors([
                 'message' => 'Error generating PDF: ' . $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Validate stock availability for a list of details.
+     * Aggregates quantities by item and compares with available stock.
+     */
+    private function validateStockAvailability(array $details): void
+    {
+        $itemsRequested = [];
+
+        foreach ($details as $detail) {
+            $itemId    = $detail['item_id'];
+            $quantity  = $detail['quantity'];
+            $itemUomId = $detail['item_uom_id'];
+
+            if (!isset($itemsRequested[$itemId])) {
+                $itemsRequested[$itemId] = [];
+            }
+            $itemsRequested[$itemId][] = [
+                'quantity'    => $quantity,
+                'item_uom_id' => $itemUomId,
+            ];
+        }
+
+        $itemIds = array_keys($itemsRequested);
+        $items   = Item::with('itemUoms.uom')->whereIn('id', $itemIds)->get()->keyBy('id');
+
+        foreach ($itemsRequested as $itemId => $requests) {
+            $item = $items[$itemId] ?? null;
+            if (!$item) {
+                throw ValidationException::withMessages([
+                    'details' => "Item dengan ID {$itemId} tidak ditemukan.",
+                ]);
+            }
+
+            $totalRequestedBaseQty = 0;
+
+            foreach ($requests as $req) {
+                // Find conversion value for the UOM
+                $uom = $item->itemUoms->where('id', $req['item_uom_id'])->first();
+                if (!$uom) {
+                    throw ValidationException::withMessages([
+                        'details' => "Satuan tidak valid untuk item {$item->name}.",
+                    ]);
+                }
+                $totalRequestedBaseQty += $req['quantity'] * $uom->conversion_value;
+            }
+
+            if ($totalRequestedBaseQty > $item->stock) {
+                // Get base unit name
+                $baseUom      = $item->itemUoms->where('conversion_value', 1)->first();
+                $baseUnitName = $baseUom ? $baseUom->uom->name : 'Satuan Dasar';
+
+                // Format numbers for display
+                $stockDisplay = rtrim(rtrim(number_format($item->stock, 2, ',', '.'), '0'), ',');
+                $reqDisplay   = rtrim(rtrim(number_format($totalRequestedBaseQty, 2, ',', '.'), '0'), ',');
+
+                throw ValidationException::withMessages([
+                    'details' => "Stok {$item->name} tidak mencukupi untuk dijual. Stok saat ini: {$stockDisplay} {$baseUnitName}. Total permintaan: {$reqDisplay} {$baseUnitName}.",
+                ]);
+            }
         }
     }
 }
