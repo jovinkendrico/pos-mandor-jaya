@@ -27,6 +27,7 @@ interface AsyncComboboxProps {
     initialOptions?: AsyncComboboxOption[];
     value?: string;
     onValueChange?: (value: string) => void;
+    onSelect?: (option: AsyncComboboxOption | null) => void;
     placeholder?: string;
     emptyText?: string;
     searchPlaceholder?: string;
@@ -41,6 +42,7 @@ export function AsyncCombobox({
     initialOptions = [],
     value = '',
     onValueChange,
+    onSelect,
     placeholder = 'Select option...',
     emptyText = 'No option found.',
     searchPlaceholder = 'Search...',
@@ -133,11 +135,16 @@ export function AsyncCombobox({
             if (option) {
                 const newValue = option.value === value ? '' : option.value;
                 onValueChange?.(newValue);
+                if (newValue) {
+                    onSelect?.(option);
+                } else {
+                    onSelect?.(null);
+                }
                 setOpen(false);
                 setSearchValue(''); // Reset search after selection
             }
         },
-        [value, initialOptions, options, onValueChange],
+        [value, initialOptions, options, onValueChange, onSelect],
     );
 
     const handleSearchChange = (newSearchValue: string) => {
