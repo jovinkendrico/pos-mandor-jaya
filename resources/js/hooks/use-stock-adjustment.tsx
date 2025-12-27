@@ -14,9 +14,9 @@ const stockAdjustmentSchema = Yup.object().shape({
     item_id: Yup.number()
         .required('Barang harus dipilih.')
         .min(1, 'Barang harus dipilih.'),
-    // quantity: Yup.number()
-    //     .required('Jumlah barang harus diisi.')
-    //     .min(1, 'Jumlah barang minimal 1.'),
+    quantity: Yup.number()
+        .required('Jumlah barang harus diisi.')
+        .test('not-zero', 'Jumlah tidak boleh 0', (value) => value !== 0),
     unit_cost: Yup.number().nullable(),
     adjustment_date: Yup.date().required('Tanggal harus diisi.'),
     notes: Yup.string().max(255, 'Maksimal 255 karakter.').nullable(),
@@ -98,27 +98,28 @@ const useStockAdjustment = (closeModal: () => void = () => {}) => {
             return;
         }
 
-        // Allow typing "0" or "-0" initially without parsing immediately if it's just that
-        // But for consistency we might want normal parsing, but we must respect the string if it's incomplete
-        // actually standard behavior:
-        // "-5" -> parse to -5.
-        // "-" -> wait.
-
-        // Remove non-numeric chars except minus at start
-        const sanitized = input.replace(/[^0-9-]/g, '');
+        // Allow typing "0" or "-0" or "0." etc
+        // Remove non-numeric chars except minus, dot, and comma
         // Ensure minus is only at start
-        const validFormat = /^-?\d*$/.test(sanitized);
+        const sanitized = input.replace(/[^0-9.,-]/g, '');
 
-        if (!validFormat) return;
+        // Basic format check: minus at start, max one dot OR comma
+        // We will accept both dot and comma as decimal separator
+        // But we shouldn't allow multiple separators mixed if possible, but keep it simple
+        const validFormat = /^-?[0-9]*([.,][0-9]*)?$/.test(sanitized);
+
+        if (!validFormat && sanitized !== '-' && sanitized !== '') return;
 
         setQuantityDisplayValue(sanitized);
 
         // Only update data if it's a valid number
         if (sanitized !== '-' && sanitized !== '') {
-             const rawValue = parseInt(sanitized, 10);
-              if (!isNaN(rawValue)) {
-                   setData('quantity', rawValue);
-              }
+            // Normalize: replace comma with dot
+            const normalized = sanitized.replace(',', '.');
+            const rawValue = parseFloat(normalized);
+            if (!isNaN(rawValue)) {
+                setData('quantity', rawValue);
+            }
         }
     };
 

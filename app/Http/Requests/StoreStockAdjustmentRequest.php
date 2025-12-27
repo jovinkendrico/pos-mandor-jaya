@@ -23,7 +23,7 @@ class StoreStockAdjustmentRequest extends FormRequest
     {
         return [
             'item_id'         => 'required|exists:items,id',
-            // 'quantity' => 'required|numeric',
+            'quantity'        => 'required|numeric|not_in:0',
             'unit_cost'       => 'nullable|numeric|min:0',
             'adjustment_date' => 'required|date',
             'notes'           => 'nullable|string|max:500',
