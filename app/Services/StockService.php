@@ -36,7 +36,7 @@ class StockService
                 }
 
                 $totalCostInBaseUom = (float) $detail->subtotal;
-                $unitCost = $baseQuantity > 0 ? $totalCostInBaseUom / $baseQuantity : 0;
+                $unitCost           = $baseQuantity > 0 ? $totalCostInBaseUom / $baseQuantity : 0;
 
                 StockMovement::create([
                     'item_id'            => $detail->item_id,
@@ -53,7 +53,7 @@ class StockService
             }
 
             $purchase->update([
-                'status' => 'confirmed',
+                'status'     => 'confirmed',
                 'updated_by' => auth()->id(),
             ]);
 
@@ -63,7 +63,7 @@ class StockService
             } catch (\Exception $e) {
                 Log::error('Failed to post purchase to journal', [
                     'purchase_id' => $purchase->id,
-                    'error' => $e->getMessage(),
+                    'error'       => $e->getMessage(),
                 ]);
                 // Don't throw - allow purchase to be confirmed even if journal posting fails
             }
@@ -91,7 +91,7 @@ class StockService
             }
 
             $purchase->update([
-                'status' => 'pending',
+                'status'     => 'pending',
                 'updated_by' => auth()->id(),
             ]);
 
@@ -101,7 +101,7 @@ class StockService
             } catch (\Exception $e) {
                 Log::error('Failed to reverse purchase journal entry', [
                     'purchase_id' => $purchase->id,
-                    'error' => $e->getMessage(),
+                    'error'       => $e->getMessage(),
                 ]);
                 // Don't throw - allow unconfirm even if journal reversal fails
             }
@@ -133,8 +133,8 @@ class StockService
 
                 // Calculate FIFO cost and get mappings
                 $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $sale->sale_date);
-                $cost = $fifoResult['total_cost'];
-                $mappings = $fifoResult['mappings'];
+                $cost       = $fifoResult['total_cost'];
+                $mappings   = $fifoResult['mappings'];
 
                 // Create FIFO mappings for audit trail
                 foreach ($mappings as $mapping) {
@@ -184,7 +184,7 @@ class StockService
             } catch (\Exception $e) {
                 Log::error('Failed to post sale to journal', [
                     'sale_id' => $sale->id,
-                    'error' => $e->getMessage(),
+                    'error'   => $e->getMessage(),
                 ]);
                 // Don't throw - allow sale to be confirmed even if journal posting fails
             }
@@ -245,7 +245,7 @@ class StockService
             } catch (\Exception $e) {
                 Log::error('Failed to reverse sale journal entry', [
                     'sale_id' => $sale->id,
-                    'error' => $e->getMessage(),
+                    'error'   => $e->getMessage(),
                 ]);
                 // Don't throw - allow unconfirm even if journal reversal fails
             }
@@ -258,8 +258,8 @@ class StockService
     private function calculateFifoCostWithMappings(int $itemId, float $quantity, $date): array
     {
         $remainingQty = $quantity;
-        $totalCost = 0;
-        $mappings = [];
+        $totalCost    = 0;
+        $mappings     = [];
 
         // Get stock movements dengan remaining quantity > 0, FIFO order (oldest first)
         $movements = StockMovement::where('item_id', $itemId)
@@ -273,9 +273,9 @@ class StockService
         foreach ($movements as $movement) {
             if ($remainingQty <= 0) break;
 
-            $qtyToUse = min($remainingQty, $movement->remaining_quantity);
-            $costForThisMovement = $qtyToUse * $movement->unit_cost;
-            $totalCost += $costForThisMovement;
+            $qtyToUse             = min($remainingQty, $movement->remaining_quantity);
+            $costForThisMovement  = $qtyToUse * $movement->unit_cost;
+            $totalCost           += $costForThisMovement;
 
             // Store mapping for audit trail
             $mappings[] = [
@@ -293,15 +293,15 @@ class StockService
 
         // Jika masih ada remaining (stock tidak cukup), gunakan avg cost
         if ($remainingQty > 0) {
-            $avgCost = $this->getAverageCost($itemId);
-            $avgCostTotal = $remainingQty * $avgCost;
-            $totalCost += $avgCostTotal;
+            $avgCost       = $this->getAverageCost($itemId);
+            $avgCostTotal  = $remainingQty * $avgCost;
+            $totalCost    += $avgCostTotal;
 
             // Log warning for insufficient stock
             Log::warning('Insufficient stock for FIFO, using average cost', [
-                'item_id'      => $itemId,
-                'quantity'     => $remainingQty,
-                'avg_cost'     => $avgCost,
+                'item_id'  => $itemId,
+                'quantity' => $remainingQty,
+                'avg_cost' => $avgCost,
             ]);
         }
 
@@ -335,7 +335,7 @@ class StockService
      */
     private function convertToBaseUom(float $quantity, ItemUom $uom): float
     {
-        $conversion = (int) $uom->conversion_value;
+        $conversion = (float) $uom->conversion_value;
         if ($conversion < 1) {
             $conversion = 1;
         }
@@ -423,7 +423,7 @@ class StockService
 
                 // Calculate FIFO cost and get mappings (consume from oldest stock)
                 $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $purchaseReturn->return_date);
-                $mappings = $fifoResult['mappings'];
+                $mappings   = $fifoResult['mappings'];
 
                 // Create FIFO mappings for audit trail
                 foreach ($mappings as $mapping) {
@@ -459,23 +459,23 @@ class StockService
                 if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
                     // Create payment for cash refund (we receive money back via bank)
                     $purchasePayment = \App\Models\PurchasePayment::create([
-                        'payment_number' => \App\Models\PurchasePayment::generatePaymentNumber(),
-                        'payment_date' => $purchaseReturn->return_date,
-                        'total_amount' => $purchaseReturn->total_amount,
-                        'bank_id' => $purchaseReturn->refund_bank_id,
-                        'payment_method' => 'refund',
+                        'payment_number'   => \App\Models\PurchasePayment::generatePaymentNumber(),
+                        'payment_date'     => $purchaseReturn->return_date,
+                        'total_amount'     => $purchaseReturn->total_amount,
+                        'bank_id'          => $purchaseReturn->refund_bank_id,
+                        'payment_method'   => 'refund',
                         'reference_number' => $purchaseReturn->return_number,
-                        'notes' => "Cash Refund untuk Retur Pembelian #{$purchaseReturn->return_number}",
-                        'status' => 'confirmed',
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
+                        'notes'            => "Cash Refund untuk Retur Pembelian #{$purchaseReturn->return_number}",
+                        'status'           => 'confirmed',
+                        'created_by'       => auth()->id(),
+                        'updated_by'       => auth()->id(),
                     ]);
 
                     // Link payment to purchase
                     \App\Models\PurchasePaymentItem::create([
                         'purchase_payment_id' => $purchasePayment->id,
-                        'purchase_id' => $purchaseReturn->purchase_id,
-                        'amount' => $purchaseReturn->total_amount,
+                        'purchase_id'         => $purchaseReturn->purchase_id,
+                        'amount'              => $purchaseReturn->total_amount,
                     ]);
 
                     // Create cash movement (we're receiving money)
@@ -495,23 +495,23 @@ class StockService
                     // Create payment record to reduce payable (no bank transaction)
                     // This payment record will reduce the remaining_amount automatically
                     $purchasePayment = \App\Models\PurchasePayment::create([
-                        'payment_number' => \App\Models\PurchasePayment::generatePaymentNumber(),
-                        'payment_date' => $purchaseReturn->return_date,
-                        'total_amount' => $purchaseReturn->total_amount,
-                        'bank_id' => null, // No bank transaction
-                        'payment_method' => 'refund',
+                        'payment_number'   => \App\Models\PurchasePayment::generatePaymentNumber(),
+                        'payment_date'     => $purchaseReturn->return_date,
+                        'total_amount'     => $purchaseReturn->total_amount,
+                        'bank_id'          => null, // No bank transaction
+                        'payment_method'   => 'refund',
                         'reference_number' => $purchaseReturn->return_number,
-                        'notes' => "Potong Hutang untuk Retur Pembelian #{$purchaseReturn->return_number}",
-                        'status' => 'confirmed',
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
+                        'notes'            => "Potong Hutang untuk Retur Pembelian #{$purchaseReturn->return_number}",
+                        'status'           => 'confirmed',
+                        'created_by'       => auth()->id(),
+                        'updated_by'       => auth()->id(),
                     ]);
 
                     // Link payment to purchase
                     \App\Models\PurchasePaymentItem::create([
                         'purchase_payment_id' => $purchasePayment->id,
-                        'purchase_id' => $purchaseReturn->purchase_id,
-                        'amount' => $purchaseReturn->total_amount,
+                        'purchase_id'         => $purchaseReturn->purchase_id,
+                        'amount'              => $purchaseReturn->total_amount,
                     ]);
                     // Note: No bank balance change - this is just reducing the payable
                 }
@@ -593,7 +593,7 @@ class StockService
         DB::transaction(function () use ($saleReturn) {
             $saleReturn->loadMissing(['details.item', 'details.itemUom', 'details.saleDetail.fifoMappings.stockMovement']);
 
-            $totalCost = 0;
+            $totalCost             = 0;
             $totalProfitAdjustment = 0;
 
             foreach ($saleReturn->details as $detail) {
@@ -611,7 +611,7 @@ class StockService
 
                 // Get original sale detail's FIFO mappings to restore the same stock movements
                 $originalSaleDetail = $detail->saleDetail;
-                $restoredCost = 0;
+                $restoredCost       = 0;
 
                 if ($originalSaleDetail && $originalSaleDetail->fifoMappings()->exists()) {
                     // Restore stock movements from original sale (in reverse order - LIFO for returns)
@@ -658,8 +658,8 @@ class StockService
 
                     // If we couldn't restore all from original mappings (partial return), use average cost
                     if ($remainingQty > 0) {
-                        $avgCost = $this->getAverageCost($detail->item_id);
-                        $avgCostTotal = $remainingQty * $avgCost;
+                        $avgCost       = $this->getAverageCost($detail->item_id);
+                        $avgCostTotal  = $remainingQty * $avgCost;
                         $restoredCost += $avgCostTotal;
 
                         $newMovement = StockMovement::create([
@@ -684,7 +684,7 @@ class StockService
                     }
                 } else {
                     // No original sale detail found, use average cost
-                    $avgCost = $this->getAverageCost($detail->item_id);
+                    $avgCost      = $this->getAverageCost($detail->item_id);
                     $restoredCost = $baseQuantity * $avgCost;
 
                     $newMovement = StockMovement::create([
@@ -715,17 +715,17 @@ class StockService
                 $profitAdjustment = $detail->subtotal - $restoredCost;
 
                 $detail->update([
-                    'cost'             => $restoredCost,
+                    'cost'              => $restoredCost,
                     'profit_adjustment' => $profitAdjustment,
                 ]);
 
-                $totalCost += $restoredCost;
+                $totalCost             += $restoredCost;
                 $totalProfitAdjustment += $profitAdjustment;
             }
 
             $saleReturn->update([
-                'status'               => 'confirmed',
-                'total_cost'           => $totalCost,
+                'status'                  => 'confirmed',
+                'total_cost'              => $totalCost,
                 'total_profit_adjustment' => $totalProfitAdjustment,
             ]);
 
@@ -734,23 +734,23 @@ class StockService
                 if ($saleReturn->refund_method === 'cash_refund' && $saleReturn->refund_bank_id) {
                     // Create payment for cash refund (money is returned via bank)
                     $salePayment = \App\Models\SalePayment::create([
-                        'payment_number' => \App\Models\SalePayment::generatePaymentNumber(),
-                        'payment_date' => $saleReturn->return_date,
-                        'total_amount' => $saleReturn->total_amount,
-                        'bank_id' => $saleReturn->refund_bank_id,
-                        'payment_method' => 'refund',
+                        'payment_number'   => \App\Models\SalePayment::generatePaymentNumber(),
+                        'payment_date'     => $saleReturn->return_date,
+                        'total_amount'     => $saleReturn->total_amount,
+                        'bank_id'          => $saleReturn->refund_bank_id,
+                        'payment_method'   => 'refund',
                         'reference_number' => $saleReturn->return_number,
-                        'notes' => "Cash Refund untuk Retur Penjualan #{$saleReturn->return_number}",
-                        'status' => 'confirmed',
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
+                        'notes'            => "Cash Refund untuk Retur Penjualan #{$saleReturn->return_number}",
+                        'status'           => 'confirmed',
+                        'created_by'       => auth()->id(),
+                        'updated_by'       => auth()->id(),
                     ]);
 
                     // Link payment to sale
                     \App\Models\SalePaymentItem::create([
                         'sale_payment_id' => $salePayment->id,
-                        'sale_id' => $saleReturn->sale_id,
-                        'amount' => $saleReturn->total_amount,
+                        'sale_id'         => $saleReturn->sale_id,
+                        'amount'          => $saleReturn->total_amount,
                     ]);
 
                     // Create cash movement (we're paying out)
@@ -770,23 +770,23 @@ class StockService
                     // Create payment record to reduce receivable (no bank transaction)
                     // This payment record will reduce the remaining_amount automatically
                     $salePayment = \App\Models\SalePayment::create([
-                        'payment_number' => \App\Models\SalePayment::generatePaymentNumber(),
-                        'payment_date' => $saleReturn->return_date,
-                        'total_amount' => $saleReturn->total_amount,
-                        'bank_id' => null, // No bank transaction
-                        'payment_method' => 'refund',
+                        'payment_number'   => \App\Models\SalePayment::generatePaymentNumber(),
+                        'payment_date'     => $saleReturn->return_date,
+                        'total_amount'     => $saleReturn->total_amount,
+                        'bank_id'          => null, // No bank transaction
+                        'payment_method'   => 'refund',
                         'reference_number' => $saleReturn->return_number,
-                        'notes' => "Potong Piutang untuk Retur Penjualan #{$saleReturn->return_number}",
-                        'status' => 'confirmed',
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
+                        'notes'            => "Potong Piutang untuk Retur Penjualan #{$saleReturn->return_number}",
+                        'status'           => 'confirmed',
+                        'created_by'       => auth()->id(),
+                        'updated_by'       => auth()->id(),
                     ]);
 
                     // Link payment to sale
                     \App\Models\SalePaymentItem::create([
                         'sale_payment_id' => $salePayment->id,
-                        'sale_id' => $saleReturn->sale_id,
-                        'amount' => $saleReturn->total_amount,
+                        'sale_id'         => $saleReturn->sale_id,
+                        'amount'          => $saleReturn->total_amount,
                     ]);
                     // Note: No bank balance change - this is just reducing the receivable
                 }
@@ -825,7 +825,7 @@ class StockService
                 }
 
                 $detail->update([
-                    'cost'             => 0,
+                    'cost'              => 0,
                     'profit_adjustment' => 0,
                 ]);
             }
@@ -855,8 +855,8 @@ class StockService
             }
 
             $saleReturn->update([
-                'status'               => 'pending',
-                'total_cost'           => 0,
+                'status'                  => 'pending',
+                'total_cost'              => 0,
                 'total_profit_adjustment' => 0,
             ]);
         });
@@ -869,7 +869,7 @@ class StockService
         }
 
         $consumptionCost = $this->calculateFifoCost($item->id, $quantity, now());
-        $unitCost = $quantity > 0 ? $consumptionCost / $quantity : 0;
+        $unitCost        = $quantity > 0 ? $consumptionCost / $quantity : 0;
 
         $movementData = [
             'item_id'            => $item->id,
@@ -915,9 +915,9 @@ class StockService
                 $item->increment('stock', $quantity);
             } else {
                 // Decrease stock - use FIFO consumption
-                $absQuantity = abs($quantity);
+                $absQuantity     = abs($quantity);
                 $consumptionCost = $this->calculateFifoCost($item->id, $absQuantity, $adjustmentDate);
-                $avgUnitCost = $absQuantity > 0 ? $consumptionCost / $absQuantity : $unitCost;
+                $avgUnitCost     = $absQuantity > 0 ? $consumptionCost / $absQuantity : $unitCost;
 
                 // Create consumption movement
                 $stockMovement = StockMovement::create([
@@ -941,7 +941,7 @@ class StockService
                 } catch (\Exception $e) {
                     Log::error('Failed to post stock adjustment to journal', [
                         'stock_movement_id' => $stockMovement->id,
-                        'error' => $e->getMessage(),
+                        'error'             => $e->getMessage(),
                     ]);
                     // Don't throw - allow adjustment even if journal posting fails
                 }
