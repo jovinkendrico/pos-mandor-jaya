@@ -24,11 +24,19 @@ class QZPrintService {
     async connect() {
         if (this.connected) return;
         try {
-            await qz.websocket.connect({ host: '192.168.1.104', port: { secure: [8182], insecure: [8181] } });
+            // Secara eksplisit menetapkan host dan port sebelum koneksi
+            // Sesuai laporan: wss di 8181 dan ws di 8182
+            await qz.websocket.connect({
+                host: '192.168.1.104',
+                port: {
+                    secure: [8181],
+                    insecure: [8182]
+                }
+            });
             this.connected = true;
         } catch (e) {
             console.error('QZ Tray connection failed', e);
-            throw new Error('Gagal terhubung ke QZ Tray di 192.168.1.104:8182. Pastikan aplikasi QZ Tray di komputer server sudah jalan dan mengizinkan koneksi remote.');
+            throw new Error('Gagal terhubung ke QZ Tray di 192.168.1.104. Periksa koneksi wss://192.168.1.104:8181 atau ws://192.168.1.104:8182');
         }
     }
 
