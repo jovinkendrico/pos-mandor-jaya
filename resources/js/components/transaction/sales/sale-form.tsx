@@ -2,6 +2,7 @@ import { DatePicker } from '@/components/date-picker';
 import InputError from '@/components/input-error';
 import CityForm from '@/components/master/cities/city-form';
 import CustomerForm from '@/components/master/customers/customer-form';
+import { AsyncCombobox } from '@/components/ui/async-combobox';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
@@ -179,23 +180,43 @@ const SaleForm = (props: SaleFormProps) => {
                             <Label htmlFor="customer_id">Customer</Label>
                             <div className="flex gap-2">
                                 <div className="flex-1">
-                                    <Combobox
-                                        options={customerComboboxOptions}
-                                        value={dataSale.customer_id?.toString()}
+                                    <AsyncCombobox
+                                        initialOptions={customerComboboxOptions}
+                                        value={
+                                            dataSale.customer_id
+                                                ? dataSale.customer_id.toString()
+                                                : ''
+                                        }
                                         onValueChange={(value) =>
                                             setDataSale(
                                                 'customer_id',
                                                 Number(value),
                                             )
                                         }
+                                        onSelect={(option) => {
+                                            if (option && option.customer) {
+                                                const customer =
+                                                    option.customer as ICustomer;
+                                                // Add to local options so the combobox can display the label correctly from initialOptions next time
+                                                if (
+                                                    !localCustomers.find(
+                                                        (c) =>
+                                                            c.id ===
+                                                            customer.id,
+                                                    )
+                                                ) {
+                                                    setLocalCustomers(
+                                                        (prev) => [
+                                                            ...prev,
+                                                            customer,
+                                                        ],
+                                                    );
+                                                }
+                                            }
+                                        }}
                                         placeholder="Pilih customer..."
                                         searchPlaceholder="Cari customer..."
                                         className="combobox"
-                                        maxDisplayItems={10}
-                                        addLabel="Tambah Customer"
-                                        onAdd={() => {
-                                            setIsAddCustomerModalOpen(true);
-                                        }}
                                         searchUrl="/customers/search"
                                         searchParam="search"
                                     />
