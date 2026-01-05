@@ -84,7 +84,7 @@ const SaleForm = (props: SaleFormProps) => {
     const itemComboboxOptions: ComboboxOption[] = useMemo(() => {
         return items.map((item) => ({
             label: `${item.code} - ${item.name}`,
-            value: item.id.toString(),
+            value: item.id?.toString() || '',
         }));
     }, [items]);
 
@@ -104,7 +104,7 @@ const SaleForm = (props: SaleFormProps) => {
     const customerComboboxOptions: ComboboxOption[] = useMemo(() => {
         return localCustomers.map((customer) => ({
             label: customer.name,
-            value: customer.id.toString(),
+            value: customer.id?.toString() || '',
         }));
     }, [localCustomers]);
 
