@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import { create, destroy as destroySale, index } from '@/routes/sales';
 import { BreadcrumbItem, ISale, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface PageProps {
@@ -81,10 +81,20 @@ const SaleIndex = (props: PageProps) => {
                 <Head title="Penjualan" />
                 <div className="flex justify-between">
                     <PageTitle title="Penjualan" />
-                    <Button onClick={handleCreate} className="btn-primary">
-                        <Plus />
-                        Tambah Penjualan
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            className="btn-secondary"
+                            onClick={() => window.open('/scripts/MANDOR_JAYA_PRINTER.bat', '_blank')}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Download Printer Script (.bat)
+                        </Button>
+                        <Button onClick={handleCreate} className="btn-primary">
+                            <Plus />
+                            Tambah Penjualan
+                        </Button>
+                    </div>
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}
