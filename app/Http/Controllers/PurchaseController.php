@@ -421,11 +421,11 @@ class PurchaseController extends Controller
         try {
             $purchase->load(['supplier', 'details.item', 'details.itemUom.uom']);
 
-            // 9.5 x 11 inches = 241 x 279 mm = 684 x 792 points
+            // 24cm x 14cm = Approx 680pt x 397pt
             $pdf = Pdf::loadView('pdf.purchase', [
                 'title'    => 'MB - ' . $purchase->purchase_number,
                 'purchase' => $purchase,
-            ])->setPaper([0, 0, 684, 792], 'portrait'); // 9.5 x 11 inches
+            ])->setPaper([0, 0, 680, 397], 'portrait');
 
             $filename = 'purchase-' . $purchase->purchase_number . '.pdf';
 

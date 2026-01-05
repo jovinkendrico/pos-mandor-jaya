@@ -6,7 +6,8 @@
     <title>{{ $title }}</title>
     <style>
         @page {
-            size: 21cm 14.85cm;
+            size: 24cm 14cm;
+            margin: 0;
         }
 
         * {
@@ -209,45 +210,41 @@
             </tr>
         </thead>
         <tbody>
-             @if($purchase->details && count($purchase->details) > 0)
-                @foreach($purchase->details as $index => $detail)
-                <tr>
-                    <td class="text-center" style="border-right: 1px dashed #000;">{{ $index + 1 }}</td>
-                    <td class="text-center" style="border-right: 1px dashed #000;">{{ fmod($detail->quantity, 1) == 0 ? number_format($detail->quantity, 0, ',', '.') : number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
-                    <td style="border-right: 1px dashed #000;">{{ $detail->item->name ?? '-' }}</td>
-                    <td class="text-right" style="border-right: 1px dashed #000;">{{ number_format($detail->price, 0, ',', '.') }}</td>
-                    {{-- <td class="text-right">
-                        @if($detail->discount1_percent > 0)
-                            {{ number_format($detail->discount1_percent, 2, ',', '.') }}%
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td class="text-right">
-                        @if($detail->discount2_percent > 0)
-                            {{ number_format($detail->discount2_percent, 2, ',', '.') }}%
-                        @else
-                            -
-                        @endif
-                    </td> --}}
-                    <td class="text-right" style="border-right: 1px dashed #000;">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
-                </tr>
-                @endforeach
-                <tr>
-                    <td colspan="3" class="text-left" style="border-top: 1px dashed #000;">Terbilang : <i style="text-transform: capitalize;">
-                        {{ Terbilang::make($purchase->total_amount) }} Rupiah
-                    </i>
-                    </td>
-                    <td style="border-top: 1px dashed #000;">
-                        Total: 
-                    </td>
-                    <td style="border-left: none; border-top: 1px dashed #000;" class="text-right total">Rp. {{ number_format($purchase->total_amount, 0, ',', '.') }}</td>
-                </tr>
-            @else
-            <tr>
-                <td colspan="9" class="text-center">No items found</td>
-            </tr>
-            @endif
+             @php
+                $maxRows = 12;
+                $detailsCount = count($purchase->details);
+             @endphp
+
+             @foreach($purchase->details as $index => $detail)
+             <tr>
+                <td class="text-center" style="border-right: 1px dashed #000;">{{ $index + 1 }}</td>
+                <td class="text-center" style="border-right: 1px dashed #000;">{{ fmod($detail->quantity, 1) == 0 ? number_format($detail->quantity, 0, ',', '.') : number_format($detail->quantity, 2, ',', '.') }} {{ $detail->itemUom->uom->name ?? '-' }}</td>
+                <td style="border-right: 1px dashed #000;">{{ $detail->item->name ?? '-' }}</td>
+                <td class="text-right" style="border-right: 1px dashed #000;">{{ number_format($detail->price, 0, ',', '.') }}</td>
+                <td class="text-right" style="border-right: 1px dashed #000;">{{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+             </tr>
+             @endforeach
+
+             @for($i = $detailsCount; $i < $maxRows; $i++)
+             <tr>
+                <td class="text-center" style="border-right: 1px dashed #000;">{{ $i + 1 }}</td>
+                <td style="border-right: 1px dashed #000;">&nbsp;</td>
+                <td style="border-right: 1px dashed #000;">&nbsp;</td>
+                <td style="border-right: 1px dashed #000;">&nbsp;</td>
+                <td style="border-right: 1px dashed #000; border-left: none;">&nbsp;</td>
+             </tr>
+             @endfor
+
+             <tr>
+                <td colspan="3" class="text-left" style="border-top: 1px dashed #000;">Terbilang : <i style="text-transform: capitalize;">
+                    {{ Terbilang::make($purchase->total_amount) }} Rupiah
+                </i>
+                </td>
+                <td style="border-top: 1px dashed #000;">
+                    Total: 
+                </td>
+                <td style="border-left: none; border-top: 1px dashed #000;" class="text-right total">Rp. {{ number_format($purchase->total_amount, 0, ',', '.') }}</td>
+             </tr>
         </tbody>
     </table>
 
