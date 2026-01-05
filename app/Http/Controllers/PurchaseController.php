@@ -107,14 +107,23 @@ class PurchaseController extends Controller
      */
     public function create(): Response
     {
-        $suppliers = Supplier::orderBy('name')->limit(10)->get();
-        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
-
         return Inertia::render('transaction/purchase/create', [
-            'suppliers' => $suppliers,
-            'items'     => $items,
+            'suppliers' => Supplier::query()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get(),
+
+            'items'     => Item::query()
+                ->select('id', 'name')
+                ->with([
+                    'itemUoms:id,item_id,uom_id',
+                    'itemUoms.uom:id,name',
+                ])
+                ->orderBy('name')
+                ->get(),
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -142,7 +151,7 @@ class PurchaseController extends Controller
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal += $amount; // Sum all amounts before discount
+                $subtotal             += $amount; // Sum all amounts before discount
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
 
@@ -301,7 +310,7 @@ class PurchaseController extends Controller
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
                 $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal += $amount; // Sum all amounts before discount
+                $subtotal             += $amount; // Sum all amounts before discount
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
 

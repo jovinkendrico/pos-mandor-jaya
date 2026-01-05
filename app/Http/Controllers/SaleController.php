@@ -109,14 +109,25 @@ class SaleController extends Controller
      */
     public function create(): Response
     {
-        $customers = Customer::orderBy('name')->limit(10)->get();
-        $items     = Item::with('itemUoms.uom')->where('stock', '>', 0)->orderBy('name')->get();
-
         return Inertia::render('transaction/sale/create', [
-            'customers' => $customers,
-            'items'     => $items,
+            'customers' => Customer::query()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->limit(10)
+                ->get(),
+
+            'items'     => Item::query()
+                ->select('id', 'name', 'stock')
+                ->where('stock', '>', 0)
+                ->with([
+                    'itemUoms:id,item_id,uom_id',
+                    'itemUoms.uom:id,name',
+                ])
+                ->orderBy('name')
+                ->get(),
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
