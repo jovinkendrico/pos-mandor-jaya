@@ -180,7 +180,7 @@
             </div>
             
         </div>
-        <div class="info-section">
+        <div class="info-section" style="margin-top: 5cm; vertical-align: top;">
             <div class="info-row">
                 <span class="info-label">Kepada Yth.</span>
             </div>
