@@ -1,5 +1,6 @@
 import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
+import DotMatrixPrintButton from '@/components/DotMatrixPrintButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Modal from '@/components/ui/Modal/Modal';
@@ -162,14 +163,31 @@ const PurchaseShow = (props: PageProps) => {
                         )}
                     </div>
                 </div>
-                <div className="flex w-full justify-end">
+                <div className="flex w-full justify-end gap-2">
+                    <DotMatrixPrintButton
+                        data={{
+                            purchase_number: purchase.purchase_number,
+                            date: formatDatetoString(new Date(purchase.purchase_date)),
+                            due_date: purchase.due_date ? formatDatetoString(new Date(purchase.due_date)) : undefined,
+                            supplier_name: purchase.supplier?.name,
+                            total: purchase.total_amount,
+                            notes: purchase.notes,
+                            details: purchase.details.map(d => ({
+                                item_name: d.item?.name || '?',
+                                uom: d.item_uom?.uom.name || '',
+                                quantity: Number(d.quantity),
+                                price: Number(d.price),
+                                subtotal: Number(d.subtotal)
+                            }))
+                        }}
+                    />
                     <Button
                         className="btn-primary"
                         onClick={() => {
                             window.location.href = print(purchase.id).url;
                         }}
                     >
-                        <Download />
+                        <Download className="mr-2 h-4 w-4" />
                         Download Invoice
                     </Button>
                 </div>

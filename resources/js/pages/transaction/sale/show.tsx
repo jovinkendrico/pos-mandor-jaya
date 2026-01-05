@@ -1,5 +1,6 @@
 import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
+import DotMatrixPrintButton from '@/components/DotMatrixPrintButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Modal from '@/components/ui/Modal/Modal';
@@ -175,14 +176,31 @@ const SaleShow = (props: PageProps) => {
                         )}
                     </div>
                 </div>
-                <div className="flex w-full justify-end">
+                <div className="flex w-full justify-end gap-2">
+                    <DotMatrixPrintButton
+                        data={{
+                            sale_number: sale.sale_number,
+                            date: formatDatetoString(new Date(sale.sale_date)),
+                            due_date: sale.due_date ? formatDatetoString(new Date(sale.due_date)) : undefined,
+                            customer_name: sale.customer?.name,
+                            total: sale.total_amount,
+                            notes: sale.notes,
+                            details: sale.details.map(d => ({
+                                item_name: d.item?.name || '?',
+                                uom: d.item_uom?.uom.name || '',
+                                quantity: Number(d.quantity),
+                                price: Number(d.price),
+                                subtotal: Number(d.subtotal)
+                            }))
+                        }}
+                    />
                     <Button
                         className="btn-primary"
                         onClick={() => {
                             window.location.href = print(sale.id).url;
                         }}
                     >
-                        <Download />
+                        <Download className="mr-2 h-4 w-4" />
                         Download Invoice
                     </Button>
                 </div>
