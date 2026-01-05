@@ -196,6 +196,8 @@ const SaleForm = (props: SaleFormProps) => {
                                         onAdd={() => {
                                             setIsAddCustomerModalOpen(true);
                                         }}
+                                        searchUrl="/customers/search"
+                                        searchParam="search"
                                     />
                                     <InputError
                                         message={errorsSale.customer_id}
