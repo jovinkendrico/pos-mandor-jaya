@@ -198,9 +198,9 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                         );
                                     }}
                                     onSelect={(option) => {
-                                        if (option && option.value) {
+                                        if (option && option.supplier) {
                                             const newSupplier =
-                                                option as unknown as ISupplier;
+                                                option.supplier as ISupplier;
                                             setLocalSuppliers((prev) => {
                                                 if (
                                                     !prev.find(
