@@ -220,6 +220,11 @@ export function Combobox({
                                         onSelect={() =>
                                             handleSelect(option.value)
                                         }
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleSelect(option.value);
+                                        }}
                                         className="data-[disabled=true]:pointer-events-auto data-[disabled=true]:opacity-100"
                                     >
                                         {option.label}
