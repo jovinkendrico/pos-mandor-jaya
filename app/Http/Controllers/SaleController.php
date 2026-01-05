@@ -473,9 +473,12 @@ class SaleController extends Controller
             $raw .= str_pad("Tanda Terima", 20, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 20, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 20, ' ', STR_PAD_BOTH) . str_pad("Supir", 20, ' ', STR_PAD_BOTH) . "\n\n\n";
             $raw .= str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . "\n";
 
-            return response()->json(['raw' => $raw]);
+            $filename = 'sale-' . $sale->sale_number . '.txt';
+            return response($raw, 200)
+                ->header('Content-Type', 'text/plain')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return back()->withErrors(['message' => $e->getMessage()]);
         }
     }
 

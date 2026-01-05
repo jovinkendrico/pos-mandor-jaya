@@ -113,19 +113,8 @@ const SaleShow = (props: PageProps) => {
         router.visit(edit(sale.id).url);
     };
 
-    const handleRawPrint = async () => {
-        try {
-            const response = await axios.get(`/sales/${sale.id}/raw`);
-            if (response.data.raw) {
-                await printRaw(response.data.raw);
-                toast.success('Nota sedang dikirim ke printer...');
-            } else {
-                toast.error('Gagal mengambil data RAW');
-            }
-        } catch (err: any) {
-            console.error(err);
-            toast.error('Gagal print: ' + (err.response?.data?.error || err.message));
-        }
+    const handleRawPrint = () => {
+        window.location.href = `/sales/${sale.id}/raw`;
     };
 
     return (
@@ -200,7 +189,7 @@ const SaleShow = (props: PageProps) => {
                         onClick={handleRawPrint}
                     >
                         <Printer className="mr-2 h-4 w-4" />
-                        Print Dot Matrix (QZ Tray)
+                        Download RAW (.txt)
                     </Button>
                     <Button
                         className="btn-primary"

@@ -453,9 +453,12 @@ class PurchaseController extends Controller
             $raw .= str_pad("Tanda Terima", 26, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 26, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 26, ' ', STR_PAD_BOTH) . "\n\n\n";
             $raw .= str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . "\n";
 
-            return response()->json(['raw' => $raw]);
+            $filename = 'purchase-' . $purchase->purchase_number . '.txt';
+            return response($raw, 200)
+                ->header('Content-Type', 'text/plain')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return back()->withErrors(['message' => $e->getMessage()]);
         }
     }
 
