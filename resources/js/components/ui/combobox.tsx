@@ -65,10 +65,6 @@ export function Combobox({
     );
     const [loading, setLoading] = React.useState(false);
 
-    const [cachedSelectedOption, setCachedSelectedOption] = React.useState<
-        ComboboxOption | undefined
-    >(undefined);
-
     // Backend search effect
     React.useEffect(() => {
         if (!searchUrl || !searchValue.trim()) {
@@ -98,7 +94,7 @@ export function Combobox({
                     setSearchResults(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         fetchedOptions.map((opt: any) => ({
-                            value: String(opt.value || opt.id),
+                            value: opt.value || String(opt.id),
                             label:
                                 opt.label ||
                                 `${opt.purchase_number || opt.sale_number || opt.code || ''} - ${opt.supplier?.name || opt.customer?.name || opt.name || ''}`,
@@ -148,41 +144,28 @@ export function Combobox({
         });
     }, [options, searchValue, maxDisplayItems, searchUrl, searchResults]);
 
-    // Get selected option from cache, options, or search results
+    // Get selected option from both options and search results
     const selectedOption = React.useMemo(() => {
-        // 1. Check cached option (if value matches)
-        if (cachedSelectedOption && cachedSelectedOption.value === value) {
-            return cachedSelectedOption;
-        }
-
-        // 2. Check in options
-        const foundInOptions = options.find((option) => option.value === value);
-        if (foundInOptions) return foundInOptions;
-
-        // 3. Check in search results
+        // First check in search results
         if (searchUrl && searchResults.length > 0) {
-            const foundInSearch = searchResults.find(
-                (opt) => opt.value === value,
-            );
-            if (foundInSearch) return foundInSearch;
+            const found = searchResults.find((opt) => opt.value === value);
+            if (found) return found;
         }
-
-        return undefined;
-    }, [value, options, searchResults, searchUrl, cachedSelectedOption]);
+        // Then check in options
+        return options.find((option) => option.value === value);
+    }, [value, options, searchResults, searchUrl]);
 
     const handleSelect = (selectedValue: string) => {
-        // Find the full option object
-        let option = options.find((opt) => opt.value === selectedValue);
-        if (!option) {
-            option = searchResults.find((opt) => opt.value === selectedValue);
-        }
-
-        // Update cache if we found the option
-        if (option) {
-            setCachedSelectedOption(option);
-        }
-
         const newValue = selectedValue === value ? '' : selectedValue;
+        
+        // Find the selected option object
+        let option: ComboboxOption | undefined;
+        if (searchUrl && searchResults.length > 0) {
+            option = searchResults.find((opt) => opt.value === selectedValue);
+        } 
+        if (!option) {
+             option = options.find((opt) => opt.value === selectedValue);
+        }
 
         onValueChange?.(newValue, option);
         setOpen(false);
@@ -269,3 +252,4 @@ export function Combobox({
         </Popover>
     );
 }
+
