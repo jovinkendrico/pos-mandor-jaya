@@ -5,6 +5,7 @@ import SupplierForm from '@/components/master/suppliers/supplier-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AsyncCombobox, AsyncComboboxOption } from '@/components/ui/async-combobox';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -354,7 +355,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                             ? detail?.item_id?.toString()
                                                             : ''
                                                     }
-                                                    onValueChange={(value) => {
+                                                    onValueChange={(value: string) => {
                                                         handleChangeItem(
                                                             index,
                                                             'item_id',
@@ -393,7 +394,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                             ? detail.item_uom_id.toString()
                                                             : ''
                                                     }
-                                                    onValueChange={(value) => {
+                                                    onValueChange={(value: string) => {
                                                         handleChangeItem(
                                                             index,
                                                             'item_uom_id',
