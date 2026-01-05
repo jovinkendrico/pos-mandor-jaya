@@ -116,8 +116,10 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         const detailAccessors: ItemAccessors<IPurchaseDetail> = {
             getQuantity: (detail) => detail.quantity || 0,
             getPrice: (detail) => detail.price || 0,
-            getDiscount1Percent: (detail) => detail.discount1_percent || 0,
-            getDiscount2Percent: (detail) => detail.discount2_percent || 0,
+            getDiscount1Percent: (detail) => Number(detail.discount1_percent) || 0,
+            getDiscount2Percent: (detail) => Number(detail.discount2_percent) || 0,
+            getDiscount3Percent: (detail) => Number(detail.discount3_percent) || 0,
+            getDiscount4Percent: (detail) => Number(detail.discount4_percent) || 0,
         };
 
         return calculateTotals(
@@ -140,8 +142,10 @@ const PurchaseForm = (props: PurchaseFormProps) => {
             setDataPurchase('details', purchase.details);
             const formattedDiscount = purchase.details.map((detail) => ({
                 ...detail,
-                discount1_percent: formatNumber(detail.discount1_percent ?? 0),
-                discount2_percent: formatNumber(detail.discount2_percent ?? 0),
+                discount1_percent: detail.discount1_percent ?? 0,
+                discount2_percent: detail.discount2_percent ?? 0,
+                discount3_percent: detail.discount3_percent ?? 0,
+                discount4_percent: detail.discount4_percent ?? 0,
             }));
             setDataPurchase('details', formattedDiscount);
 
@@ -330,6 +334,12 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                     </TableHead>
                                     <TableHead className="min-w-[80px] text-center">
                                         Disc 2 (%)
+                                    </TableHead>
+                                    <TableHead className="min-w-[80px] text-center">
+                                        Disc 3 (%)
+                                    </TableHead>
+                                    <TableHead className="min-w-[80px] text-center">
+                                        Disc 4 (%)
                                     </TableHead>
                                     <TableHead className="min-w-[200px] text-center">
                                         Subtotal
@@ -553,6 +563,74 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                     }
                                                 />
                                             </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="text"
+                                                    value={
+                                                        detail.discount3_percent
+                                                    }
+                                                    onChange={(e) => {
+                                                        const value =
+                                                            formatDiscount(
+                                                                e.target.value,
+                                                            );
+
+                                                        handleChangeItem(
+                                                            index,
+                                                            'discount3_percent',
+                                                            value,
+                                                        );
+                                                    }}
+                                                    className="input-box text-right"
+                                                    disabled={!canEditPrice}
+                                                />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                        `details[${index}].discount3_percent`
+                                                        ]
+                                                    }
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="text"
+                                                    value={
+                                                        detail.discount4_percent
+                                                    }
+                                                    onChange={(e) => {
+                                                        const value =
+                                                            formatDiscount(
+                                                                e.target.value,
+                                                            );
+
+                                                        handleChangeItem(
+                                                            index,
+                                                            'discount4_percent',
+                                                            value,
+                                                        );
+                                                    }}
+                                                    className="input-box text-right"
+                                                    disabled={!canEditPrice}
+                                                />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsPurchase as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                        `details[${index}].discount4_percent`
+                                                        ]
+                                                    }
+                                                />
+                                            </TableCell>
                                             <TableCell className="text-center font-medium">
                                                 {formatCurrency(
                                                     calculations.subtotal || 0,
@@ -601,7 +679,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                     const value = formatDiscount(
                                         e.target.value,
                                     );
-                                    setDataPurchase('ppn_percent', value);
+                                    setDataPurchase('ppn_percent', value as any);
                                 }}
                                 className="input-box text-right"
                                 disabled={!canEditPrice}
@@ -659,6 +737,28 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                     -
                                     {formatCurrency(
                                         calculations.totalDiscount2Amount,
+                                    )}
+                                </span>
+                            </div>
+                        )}
+                        {calculations.totalDiscount3Amount > 0 && (
+                            <div className="flex justify-between text-sm text-red-600 dark:text-danger-400">
+                                <span>Total Diskon 3 (dari items):</span>
+                                <span>
+                                    -
+                                    {formatCurrency(
+                                        calculations.totalDiscount3Amount,
+                                    )}
+                                </span>
+                            </div>
+                        )}
+                        {calculations.totalDiscount4Amount > 0 && (
+                            <div className="flex justify-between text-sm text-red-600 dark:text-danger-400">
+                                <span>Total Diskon 4 (dari items):</span>
+                                <span>
+                                    -
+                                    {formatCurrency(
+                                        calculations.totalDiscount4Amount,
                                     )}
                                 </span>
                             </div>

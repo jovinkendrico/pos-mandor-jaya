@@ -183,6 +183,8 @@ const SaleShow = (props: PageProps) => {
                             date: formatDatetoString(new Date(sale.sale_date)),
                             due_date: sale.due_date ? formatDatetoString(new Date(sale.due_date)) : undefined,
                             customer_name: sale.customer?.name,
+                            customer_city: sale.customer?.city?.name,
+                            customer_phone: sale.customer?.phone_number,
                             total: sale.total_amount,
                             notes: sale.notes,
                             details: sale.details.map(d => ({

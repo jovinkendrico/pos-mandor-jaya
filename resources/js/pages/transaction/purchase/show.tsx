@@ -64,6 +64,8 @@ const PurchaseShow = (props: PageProps) => {
         'Harga',
         'Disc 1 (%)',
         'Disc 2 (%)',
+        'Disc 3 (%)',
+        'Disc 4 (%)',
         'Subtotal',
     ];
 
@@ -170,6 +172,8 @@ const PurchaseShow = (props: PageProps) => {
                             date: formatDatetoString(new Date(purchase.purchase_date)),
                             due_date: purchase.due_date ? formatDatetoString(new Date(purchase.due_date)) : undefined,
                             supplier_name: purchase.supplier?.name,
+                            supplier_city: purchase.supplier?.city?.name,
+                            supplier_phone: purchase.supplier?.phone_number,
                             total: purchase.total_amount,
                             notes: purchase.notes,
                             details: purchase.details.map(d => ({
@@ -271,14 +275,12 @@ const PurchaseShow = (props: PageProps) => {
                                     {formatCurrency(purchase.subtotal ?? 0)}
                                 </span>
                             </div>
-                            {formatNumber(purchase.discount1_percent ?? 0) >
+                            {Number(purchase.discount1_percent ?? 0) >
                                 0 && (
                                     <div className="flex justify-between text-red-600 dark:text-danger-400">
                                         <span>
                                             Diskon 1 (
-                                            {formatNumber(
-                                                purchase.discount1_percent ?? 0,
-                                            )}
+                                            {purchase.discount1_percent ?? 0}
                                             %):
                                         </span>
                                         <span>
@@ -289,14 +291,12 @@ const PurchaseShow = (props: PageProps) => {
                                         </span>
                                     </div>
                                 )}
-                            {formatNumber(purchase.discount2_percent ?? 0) >
+                            {Number(purchase.discount2_percent ?? 0) >
                                 0 && (
                                     <div className="flex justify-between text-red-600 dark:text-danger-400">
                                         <span>
                                             Diskon 2 (
-                                            {formatNumber(
-                                                purchase.discount2_percent ?? 0,
-                                            )}
+                                            {purchase.discount2_percent ?? 0}
                                             %):
                                         </span>
                                         <span>
@@ -307,13 +307,43 @@ const PurchaseShow = (props: PageProps) => {
                                         </span>
                                     </div>
                                 )}
-                            {formatNumber(purchase.ppn_percent ?? 0) > 0 && (
+                            {Number(purchase.discount3_percent ?? 0) >
+                                0 && (
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>
+                                            Diskon 3 (
+                                            {purchase.discount3_percent ?? 0}
+                                            %):
+                                        </span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                purchase.discount3_amount ?? 0,
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
+                            {Number(purchase.discount4_percent ?? 0) >
+                                0 && (
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>
+                                            Diskon 4 (
+                                            {purchase.discount4_percent ?? 0}
+                                            %):
+                                        </span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                purchase.discount4_amount ?? 0,
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
+                            {Number(purchase.ppn_percent ?? 0) > 0 && (
                                 <div className="flex justify-between text-blue-600 dark:text-primary-700">
                                     <span>
                                         PPN (
-                                        {formatNumber(
-                                            purchase.ppn_percent ?? 0,
-                                        )}
+                                        {purchase.ppn_percent ?? 0}
                                         %):
                                     </span>
                                     <span>
@@ -367,23 +397,35 @@ const PurchaseShow = (props: PageProps) => {
                                             {formatCurrency(detail.price)}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
-                                            {formatNumber(
+                                            {Number(
                                                 detail.discount1_percent ?? 0,
                                             ) > 0
-                                                ? `${formatNumber(
-                                                    detail.discount1_percent ??
-                                                    0,
-                                                )}%`
+                                                ? `${detail.discount1_percent ??
+                                                0}%`
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
-                                            {formatNumber(
+                                            {Number(
                                                 detail.discount2_percent ?? 0,
                                             ) > 0
-                                                ? `${formatNumber(
-                                                    detail.discount2_percent ??
-                                                    0,
-                                                )}%`
+                                                ? `${detail.discount2_percent ??
+                                                0}%`
+                                                : '-'}
+                                        </TableCell>
+                                        <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
+                                            {Number(
+                                                detail.discount3_percent ?? 0,
+                                            ) > 0
+                                                ? `${detail.discount3_percent ??
+                                                0}%`
+                                                : '-'}
+                                        </TableCell>
+                                        <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
+                                            {Number(
+                                                detail.discount4_percent ?? 0,
+                                            ) > 0
+                                                ? `${detail.discount4_percent ??
+                                                0}%`
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">

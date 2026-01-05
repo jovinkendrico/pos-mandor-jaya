@@ -6,7 +6,11 @@ export interface PrintData {
     date: string;
     due_date?: string;
     customer_name?: string;
+    customer_city?: string;
+    customer_phone?: string;
     supplier_name?: string;
+    supplier_city?: string;
+    supplier_phone?: string;
     details: Array<{
         item_name: string;
         uom: string;
@@ -24,8 +28,6 @@ class QZPrintService {
     async connect() {
         if (this.connected) return;
         try {
-            // Kembali menggunakan localhost sesuai permintaan
-            // Menggunakan port yang dilaporkan: wss di 8181 dan ws di 8182
             await qz.websocket.connect({
                 host: 'localhost',
                 port: {
@@ -40,62 +42,113 @@ class QZPrintService {
         }
     }
 
-    async findPrinter(printerName: string = 'Epson') {
-        await this.connect();
-        return qz.printers.find(printerName);
-    }
-
-    private formatLine(left: string, right: string, width: number = 40): string {
-        const spaceCount = width - left.length - right.length;
-        if (spaceCount < 1) return left + " " + right;
-        return left + " ".repeat(spaceCount) + right;
-    }
-
     private formatCurrency(num: number): string {
         return num.toLocaleString('id-ID');
+    }
+
+    private terbilang(n: number): string {
+        const bilangan = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+        let temp = '';
+
+        if (n < 12) {
+            temp = ' ' + bilangan[n];
+        } else if (n < 20) {
+            temp = this.terbilang(n - 10) + ' belas';
+        } else if (n < 100) {
+            temp = this.terbilang(Math.floor(n / 10)) + ' puluh' + this.terbilang(n % 10);
+        } else if (n < 200) {
+            temp = ' seratus' + this.terbilang(n - 100);
+        } else if (n < 1000) {
+            temp = this.terbilang(Math.floor(n / 100)) + ' ratus' + this.terbilang(n % 100);
+        } else if (n < 2000) {
+            temp = ' seribu' + this.terbilang(n - 1000);
+        } else if (n < 1000000) {
+            temp = this.terbilang(Math.floor(n / 1000)) + ' ribu' + this.terbilang(n % 1000);
+        } else if (n < 1000000000) {
+            temp = this.terbilang(Math.floor(n / 1000000)) + ' juta' + this.terbilang(n % 1000000);
+        }
+        return temp.trim();
     }
 
     async printRaw(data: PrintData, printerName: string) {
         await this.connect();
         const config = qz.configs.create(printerName);
 
-        const escp = [
-            '\x1B\x40',          // Initialize printer
-            '\x1B\x43\x21',      // Set page length to 33 lines (5.5 inches @ 6 LPI)
-            '\x1B\x4D\x01',      // Select 12 cpi (Condensed)
-
-            '      MANDOR JAYA\n',
-            '--------------------------------\n',
-            `No. Nota: ${data.sale_number || data.purchase_number}\n`,
-            `Tanggal : ${data.date}\n`,
-            `Pihak   : ${data.customer_name || data.supplier_name}\n`,
-            '--------------------------------\n',
-            'Item           Qty   Harga   Total\n',
-            '--------------------------------\n',
+        // Blade replicates: 32px padding ~ 3 blank lines
+        let escp = [
+            '\x1B\x40',          // Initialize
+            '\x1B\x43\x21',      // Page length 33 lines
+            '\x1B\x4D\x01',      // 12 CPI
+            '\n\n\n',            // Top padding
         ];
 
-        data.details.forEach((item, index) => {
-            const qtyStr = `${item.quantity} ${item.uom}`;
-            const priceStr = this.formatCurrency(item.price);
-            const subtotalStr = this.formatCurrency(item.subtotal);
+        // Header and Info Sections
+        const leftColWidth = 45;
+        const leftLines = [
+            `No. Faktur  : ${data.sale_number || data.purchase_number || '-'}`,
+            `Tanggal     : ${data.date}`,
+            `Jatuh Tempo : ${data.due_date || '-'}`,
+        ];
 
-            // Line 1: Item Name
-            escp.push(`${index + 1}. ${item.item_name}\n`);
-            // Line 2: Details
-            escp.push(`    ${qtyStr.padEnd(8)} ${priceStr.padStart(8)} ${subtotalStr.padStart(10)}\n`);
-        });
+        const rightLines = [
+            `Kepada Yth.`,
+            `${data.customer_name || data.supplier_name || '-'}`,
+            `${data.customer_city || data.supplier_city || '-'}`,
+            `${data.customer_phone || data.supplier_phone || '-'}`,
+        ];
 
-        escp.push('--------------------------------\n');
-        escp.push(this.formatLine('TOTAL:', this.formatCurrency(data.total)) + '\n');
+        const maxInfoLines = Math.max(leftLines.length, rightLines.length);
+        for (let i = 0; i < maxInfoLines; i++) {
+            let line = '     ';
+            line += (leftLines[i] || '').padEnd(leftColWidth);
+            line += (rightLines[i] || '');
+            escp.push(line + '\n');
+        }
+        escp.push('\n');
 
-        if (data.notes) {
-            escp.push(`Ket: ${data.notes}\n`);
+        // Table Header
+        escp.push('     --------------------------------------------------------------------------------------\n');
+        escp.push('     | No |   Quantity   | Nama Barang                              |   Harga @  |   Jumlah   |\n');
+        escp.push('     +----+--------------+------------------------------------------+------------+------------+\n');
+
+        // Table Body - Exact 12 Rows
+        const maxRows = 12;
+        for (let i = 0; i < maxRows; i++) {
+            let row = '     |';
+            const no = (i + 1).toString().padStart(2);
+            row += ` ${no} |`;
+
+            if (i < data.details.length) {
+                const item = data.details[i];
+                const qtyStr = `${item.quantity} ${item.uom}`.substring(0, 12).padEnd(12);
+                const nameStr = item.item_name.substring(0, 40).padEnd(40);
+                const priceStr = this.formatCurrency(item.price).padStart(10);
+                const subStr = this.formatCurrency(item.subtotal).padStart(10);
+
+                row += ` ${qtyStr} | ${nameStr} | ${priceStr} | ${subStr} |`;
+            } else {
+                row += `              |                                          |            |            |`;
+            }
+            escp.push(row + '\n');
         }
 
-        escp.push('\n\n');
-        escp.push('  Tanda Terima      Hormat Kami\n\n\n');
-        escp.push(' (____________)    (____________)\n');
-        escp.push('\x0C'); // Form Feed / Eject
+        // Table Footer
+        escp.push('     --------------------------------------------------------------------------------------\n');
+
+        // Terbilang and Total
+        const terbilangText = this.terbilang(data.total);
+        const terbilangDisplay = terbilangText ? `Terbilang: ${terbilangText.charAt(0).toUpperCase() + terbilangText.slice(1)} Rupiah` : '';
+        const totalLabel = "Total: ";
+        const totalValue = `Rp. ${this.formatCurrency(data.total)}`;
+
+        const footerLine = '     ' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(15);
+        escp.push(footerLine + '\n\n');
+
+        // Signatures
+        escp.push('            Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
+        escp.push('           (____________)      (____________)        (____________)        (____________)\n');
+
+        escp.push('\x0C');
 
         await qz.print(config, escp);
     }

@@ -94,10 +94,12 @@ export function formatDate(dateString: Date) {
 }
 
 export function formatDiscount(input: string) {
-    let parsedInput = parseStringtoNumber(input);
+    if (input.endsWith(',')) return input;
 
-    if (!parsedInput) {
-        parsedInput = 0;
+    let parsedInput = parseStringtoDecimal(input);
+
+    if (parsedInput === null) {
+        return 0;
     } else {
         if (parsedInput > 100) {
             parsedInput = 100;

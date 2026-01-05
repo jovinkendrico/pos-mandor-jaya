@@ -625,7 +625,7 @@ const SaleForm = (props: SaleFormProps) => {
                                     const value = formatDiscount(
                                         e.target.value,
                                     );
-                                    setDataSale('ppn_percent', value);
+                                    setDataSale('ppn_percent', value as any);
                                 }}
                                 className="input-box text-right"
                             />

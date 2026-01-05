@@ -308,6 +308,10 @@ export interface Purchase {
     discount1_amount?: number;
     discount2_percent?: number;
     discount2_amount?: number;
+    discount3_percent?: number;
+    discount3_amount?: number;
+    discount4_percent?: number;
+    discount4_amount?: number;
     total_after_discount: number;
     ppn_percent?: number;
     ppn_amount?: number;
@@ -327,8 +331,12 @@ export type IPurchase = Pick<
     | 'subtotal'
     | 'discount1_percent'
     | 'discount2_percent'
+    | 'discount3_percent'
+    | 'discount4_percent'
     | 'discount1_amount'
     | 'discount2_amount'
+    | 'discount3_amount'
+    | 'discount4_amount'
     | 'ppn_percent'
     | 'ppn_amount'
     | 'total_amount'
@@ -356,6 +364,10 @@ export interface PurchaseDetail {
     discount1_amount?: number;
     discount2_percent?: number;
     discount2_amount?: number;
+    discount3_percent?: number;
+    discount3_amount?: number;
+    discount4_percent?: number;
+    discount4_amount?: number;
     subtotal?: number;
 }
 
@@ -370,6 +382,8 @@ export type IPurchaseDetail = Pick<
     | 'price'
     | 'discount1_percent'
     | 'discount2_percent'
+    | 'discount3_percent'
+    | 'discount4_percent'
     | 'subtotal'
 >;
 

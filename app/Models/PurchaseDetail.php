@@ -17,6 +17,10 @@ class PurchaseDetail extends Model
         'discount1_amount',
         'discount2_percent',
         'discount2_amount',
+        'discount3_percent',
+        'discount3_amount',
+        'discount4_percent',
+        'discount4_amount',
         'subtotal',
     ];
 
@@ -27,6 +31,10 @@ class PurchaseDetail extends Model
         'discount1_amount' => 'decimal:2',
         'discount2_percent' => 'decimal:2',
         'discount2_amount' => 'decimal:2',
+        'discount3_percent' => 'decimal:4',
+        'discount3_amount' => 'decimal:2',
+        'discount4_percent' => 'decimal:4',
+        'discount4_amount' => 'decimal:2',
         'subtotal' => 'decimal:2',
     ];
 

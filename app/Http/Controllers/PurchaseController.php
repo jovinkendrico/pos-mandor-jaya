@@ -126,6 +126,8 @@ class PurchaseController extends Controller
             $subtotal             = 0;
             $totalDiscount1Amount = 0;
             $totalDiscount2Amount = 0;
+            $totalDiscount3Amount = 0;
+            $totalDiscount4Amount = 0;
             $detailsData          = [];
 
             foreach ($request->details as $detail) {
@@ -140,11 +142,23 @@ class PurchaseController extends Controller
                 // Discount 2 per item
                 $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
-                $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
+                $afterDiscount2       = $afterDiscount1 - $itemDiscount2Amount;
+
+                // Discount 3 per item
+                $itemDiscount3Percent = $detail['discount3_percent'] ?? 0;
+                $itemDiscount3Amount  = ($afterDiscount2 * $itemDiscount3Percent) / 100;
+                $afterDiscount3       = $afterDiscount2 - $itemDiscount3Amount;
+
+                // Discount 4 per item
+                $itemDiscount4Percent = $detail['discount4_percent'] ?? 0;
+                $itemDiscount4Amount  = ($afterDiscount3 * $itemDiscount4Percent) / 100;
+                $itemSubtotal         = $afterDiscount3 - $itemDiscount4Amount;
 
                 $subtotal             += $amount; // Sum all amounts before discount
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
+                $totalDiscount3Amount += $itemDiscount3Amount;
+                $totalDiscount4Amount += $itemDiscount4Amount;
 
                 $detailsData[] = [
                     'item_id'           => $detail['item_id'],
@@ -155,6 +169,10 @@ class PurchaseController extends Controller
                     'discount1_amount'  => $itemDiscount1Amount,
                     'discount2_percent' => $itemDiscount2Percent,
                     'discount2_amount'  => $itemDiscount2Amount,
+                    'discount3_percent' => $itemDiscount3Percent,
+                    'discount3_amount'  => $itemDiscount3Amount,
+                    'discount4_percent' => $itemDiscount4Percent,
+                    'discount4_amount'  => $itemDiscount4Amount,
                     'subtotal'          => $itemSubtotal,
                 ];
             }
@@ -168,7 +186,15 @@ class PurchaseController extends Controller
             $discount2Amount  = $totalDiscount2Amount;
             $discount2Percent = $afterDiscount1 > 0 ? ($discount2Amount / $afterDiscount1) * 100 : 0;
 
-            $totalAfterDiscount = $afterDiscount1 - $discount2Amount;
+            $afterDiscount2   = $afterDiscount1 - $discount2Amount;
+            $discount3Amount  = $totalDiscount3Amount;
+            $discount3Percent = $afterDiscount2 > 0 ? ($discount3Amount / $afterDiscount2) * 100 : 0;
+
+            $afterDiscount3   = $afterDiscount2 - $discount3Amount;
+            $discount4Amount  = $totalDiscount4Amount;
+            $discount4Percent = $afterDiscount3 > 0 ? ($discount4Amount / $afterDiscount3) * 100 : 0;
+
+            $totalAfterDiscount = $afterDiscount3 - $discount4Amount;
 
             // Calculate PPN
             $ppnPercent = $request->ppn_percent ?? 0;
@@ -195,6 +221,10 @@ class PurchaseController extends Controller
                         'discount1_amount'     => $discount1Amount,
                         'discount2_percent'    => $discount2Percent,
                         'discount2_amount'     => $discount2Amount,
+                        'discount3_percent'    => $discount3Percent,
+                        'discount3_amount'     => $discount3Amount,
+                        'discount4_percent'    => $discount4Percent,
+                        'discount4_amount'     => $discount4Amount,
                         'total_after_discount' => $totalAfterDiscount,
                         'ppn_percent'          => $ppnPercent,
                         'ppn_amount'           => $ppnAmount,
@@ -285,6 +315,8 @@ class PurchaseController extends Controller
             $subtotal             = 0;
             $totalDiscount1Amount = 0;
             $totalDiscount2Amount = 0;
+            $totalDiscount3Amount = 0;
+            $totalDiscount4Amount = 0;
             $detailsData          = [];
 
             foreach ($request->details as $detail) {
@@ -299,11 +331,23 @@ class PurchaseController extends Controller
                 // Discount 2 per item
                 $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
-                $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
+                $afterDiscount2       = $afterDiscount1 - $itemDiscount2Amount;
+
+                // Discount 3 per item
+                $itemDiscount3Percent = $detail['discount3_percent'] ?? 0;
+                $itemDiscount3Amount  = ($afterDiscount2 * $itemDiscount3Percent) / 100;
+                $afterDiscount3       = $afterDiscount2 - $itemDiscount3Amount;
+
+                // Discount 4 per item
+                $itemDiscount4Percent = $detail['discount4_percent'] ?? 0;
+                $itemDiscount4Amount  = ($afterDiscount3 * $itemDiscount4Percent) / 100;
+                $itemSubtotal         = $afterDiscount3 - $itemDiscount4Amount;
 
                 $subtotal             += $amount; // Sum all amounts before discount
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
+                $totalDiscount3Amount += $itemDiscount3Amount;
+                $totalDiscount4Amount += $itemDiscount4Amount;
 
                 $detailsData[] = [
                     'item_id'           => $detail['item_id'],
@@ -314,6 +358,10 @@ class PurchaseController extends Controller
                     'discount1_amount'  => $itemDiscount1Amount,
                     'discount2_percent' => $itemDiscount2Percent,
                     'discount2_amount'  => $itemDiscount2Amount,
+                    'discount3_percent' => $itemDiscount3Percent,
+                    'discount3_amount'  => $itemDiscount3Amount,
+                    'discount4_percent' => $itemDiscount4Percent,
+                    'discount4_amount'  => $itemDiscount4Amount,
                     'subtotal'          => $itemSubtotal,
                 ];
             }
@@ -326,7 +374,15 @@ class PurchaseController extends Controller
             $discount2Amount  = $totalDiscount2Amount;
             $discount2Percent = $afterDiscount1 > 0 ? ($discount2Amount / $afterDiscount1) * 100 : 0;
 
-            $totalAfterDiscount = $afterDiscount1 - $discount2Amount;
+            $afterDiscount2   = $afterDiscount1 - $discount2Amount;
+            $discount3Amount  = $totalDiscount3Amount;
+            $discount3Percent = $afterDiscount2 > 0 ? ($discount3Amount / $afterDiscount2) * 100 : 0;
+
+            $afterDiscount3   = $afterDiscount2 - $discount3Amount;
+            $discount4Amount  = $totalDiscount4Amount;
+            $discount4Percent = $afterDiscount3 > 0 ? ($discount4Amount / $afterDiscount3) * 100 : 0;
+
+            $totalAfterDiscount = $afterDiscount3 - $discount4Amount;
 
             $ppnPercent = $request->ppn_percent ?? 0;
             $ppnAmount  = ($totalAfterDiscount * $ppnPercent) / 100;
@@ -343,6 +399,10 @@ class PurchaseController extends Controller
                 'discount1_amount'     => $discount1Amount,
                 'discount2_percent'    => $discount2Percent,
                 'discount2_amount'     => $discount2Amount,
+                'discount3_percent'    => $discount3Percent,
+                'discount3_amount'     => $discount3Amount,
+                'discount4_percent'    => $discount4Percent,
+                'discount4_amount'     => $discount4Amount,
                 'total_after_discount' => $totalAfterDiscount,
                 'ppn_percent'          => $ppnPercent,
                 'ppn_amount'           => $ppnAmount,

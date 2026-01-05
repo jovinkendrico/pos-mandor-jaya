@@ -28,6 +28,8 @@ class StorePurchaseRequest extends FormRequest
             'due_date' => ['nullable', 'date', 'after_or_equal:purchase_date'],
             'discount1_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'discount2_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount3_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount4_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'ppn_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
             'details' => ['required', 'array', 'min:1'],
@@ -64,6 +66,8 @@ class StorePurchaseRequest extends FormRequest
             'details.*.price' => ['required', 'numeric', 'min:0'],
             'details.*.discount1_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'details.*.discount2_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'details.*.discount3_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'details.*.discount4_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

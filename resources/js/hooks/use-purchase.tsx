@@ -27,6 +27,12 @@ const detailsSchema = Yup.object().shape({
     discount2_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
+    discount3_percent: Yup.number()
+        .min(0, 'Diskon tidak boleh negatif.')
+        .max(100, 'Diskon tidak boleh lebih dari 100.'),
+    discount4_percent: Yup.number()
+        .min(0, 'Diskon tidak boleh negatif.')
+        .max(100, 'Diskon tidak boleh lebih dari 100.'),
 });
 
 const purchaseSchema = Yup.object().shape({
@@ -39,6 +45,12 @@ const purchaseSchema = Yup.object().shape({
         .min(0, 'Diskon tidak boleh negatif.')
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
     discount2_percent: Yup.number()
+        .min(0, 'Diskon tidak boleh negatif.')
+        .max(100, 'Diskon tidak boleh lebih dari 100.'),
+    discount3_percent: Yup.number()
+        .min(0, 'Diskon tidak boleh negatif.')
+        .max(100, 'Diskon tidak boleh lebih dari 100.'),
+    discount4_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
     ppn_percent: Yup.number()
@@ -64,6 +76,8 @@ const usePurchase = () => {
         due_date: null as unknown as null | Date,
         discount1_percent: 0,
         discount2_percent: 0,
+        discount3_percent: 0,
+        discount4_percent: 0,
         ppn_percent: 0,
         notes: '',
         details: [
@@ -74,6 +88,8 @@ const usePurchase = () => {
                 price: 0,
                 discount1_percent: 0,
                 discount2_percent: 0,
+                discount3_percent: 0,
+                discount4_percent: 0,
             },
         ] as IPurchaseDetail[],
     });
@@ -119,6 +135,8 @@ const usePurchase = () => {
         handleChangeItem(0, 'price', 0);
         handleChangeItem(0, 'discount1_percent', 0);
         handleChangeItem(0, 'discount2_percent', 0);
+        handleChangeItem(0, 'discount3_percent', 0);
+        handleChangeItem(0, 'discount4_percent', 0);
         reset();
     };
 
@@ -132,6 +150,8 @@ const usePurchase = () => {
                 price: 0,
                 discount1_percent: 0,
                 discount2_percent: 0,
+                discount3_percent: 0,
+                discount4_percent: 0,
             },
         ]);
     };
@@ -173,6 +193,12 @@ const usePurchase = () => {
                     break;
                 case 'discount2_percent':
                     detailToUpdate.discount2_percent = value as number;
+                    break;
+                case 'discount3_percent':
+                    detailToUpdate.discount3_percent = value as number;
+                    break;
+                case 'discount4_percent':
+                    detailToUpdate.discount4_percent = value as number;
                     break;
                 default:
                     break;

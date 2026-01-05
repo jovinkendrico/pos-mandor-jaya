@@ -17,15 +17,23 @@ export interface ItemAccessors<TItem> {
 
     /**
      * A function that returns the first discount percentage (e.g., 10 for 10%).
-     * Should handle any parsing and return 0 for invalid values.
      */
     getDiscount1Percent: (item: TItem) => number;
 
     /**
      * A function that returns the second discount percentage (e.g., 5 for 5%).
-     * Should handle any parsing and return 0 for invalid values.
      */
     getDiscount2Percent: (item: TItem) => number;
+
+    /**
+     * A function that returns the third discount percentage.
+     */
+    getDiscount3Percent?: (item: TItem) => number;
+
+    /**
+     * A function that returns the fourth discount percentage.
+     */
+    getDiscount4Percent?: (item: TItem) => number;
 }
 
 /**
@@ -40,6 +48,10 @@ export interface CalculatedItemDetails<TItem> {
     discount1Amount: number;
     /** The calculated monetary amount of the second discount (applied sequentially). */
     discount2Amount: number;
+    /** The calculated monetary amount of the third discount. */
+    discount3Amount: number;
+    /** The calculated monetary amount of the fourth discount. */
+    discount4Amount: number;
     /** The final net amount for the item after all discounts. */
     netAmount: number;
 }
@@ -56,6 +68,10 @@ export interface CalculationResult<TItem> {
     totalDiscount1Amount: number;
     /** The sum of all second discounts from all items. */
     totalDiscount2Amount: number;
+    /** The sum of all third discounts from all items. */
+    totalDiscount3Amount: number;
+    /** The sum of all fourth discounts from all items. */
+    totalDiscount4Amount: number;
     /** The final total after all discounts are subtracted from the subtotal. */
     totalAfterDiscounts: number;
     /** The calculated PPN (tax) amount. */
@@ -78,12 +94,20 @@ export function calculateTotals<TItem>(
     accessors: ItemAccessors<TItem>,
     ppnPercent: number | string,
 ): CalculationResult<TItem> {
-    const { getQuantity, getPrice, getDiscount1Percent, getDiscount2Percent } =
-        accessors;
+    const {
+        getQuantity,
+        getPrice,
+        getDiscount1Percent,
+        getDiscount2Percent,
+        getDiscount3Percent,
+        getDiscount4Percent
+    } = accessors;
 
     let subtotal = 0;
     let totalDiscount1Amount = 0;
     let totalDiscount2Amount = 0;
+    let totalDiscount3Amount = 0;
+    let totalDiscount4Amount = 0;
 
     // 1. Calculate each item with its sequential discounts
     const itemsCalculated = items.map((item) => {
@@ -91,18 +115,31 @@ export function calculateTotals<TItem>(
         const price = getPrice(item);
         const disc1Pct = getDiscount1Percent(item);
         const disc2Pct = getDiscount2Percent(item);
+        const disc3Pct = getDiscount3Percent ? getDiscount3Percent(item) : 0;
+        const disc4Pct = getDiscount4Percent ? getDiscount4Percent(item) : 0;
 
         const grossAmount = qty * price;
+
+        // Sequential discounts: Disc 1 -> Disc 2 -> Disc 3 -> Disc 4
         const discount1Amount = (grossAmount * disc1Pct) / 100;
         const afterDisc1 = grossAmount - discount1Amount;
+
         const discount2Amount = (afterDisc1 * disc2Pct) / 100;
-        const netAmount = afterDisc1 - discount2Amount;
+        const afterDisc2 = afterDisc1 - discount2Amount;
+
+        const discount3Amount = (afterDisc2 * disc3Pct) / 100;
+        const afterDisc3 = afterDisc2 - discount3Amount;
+
+        const discount4Amount = (afterDisc3 * disc4Pct) / 100;
+        const netAmount = afterDisc3 - discount4Amount;
 
         return {
             originalItem: item,
             grossAmount,
             discount1Amount,
             discount2Amount,
+            discount3Amount,
+            discount4Amount,
             netAmount,
         };
     });
@@ -112,12 +149,13 @@ export function calculateTotals<TItem>(
         subtotal += item.grossAmount;
         totalDiscount1Amount += item.discount1Amount;
         totalDiscount2Amount += item.discount2Amount;
+        totalDiscount3Amount += item.discount3Amount;
+        totalDiscount4Amount += item.discount4Amount;
     });
 
     // 3. Calculate header-level totals
-    // Your original logic summed the individual item discounts, which is correct.
     const totalAfterDiscounts =
-        subtotal - totalDiscount1Amount - totalDiscount2Amount;
+        subtotal - totalDiscount1Amount - totalDiscount2Amount - totalDiscount3Amount - totalDiscount4Amount;
 
     // 4. PPN (Tax)
     const ppnPct =
@@ -134,56 +172,10 @@ export function calculateTotals<TItem>(
         subtotal,
         totalDiscount1Amount,
         totalDiscount2Amount,
+        totalDiscount3Amount,
+        totalDiscount4Amount,
         totalAfterDiscounts,
         ppnAmount,
         grandTotal,
     };
 }
-
-// --- --- --- --- --- --- --- --- --- ---
-// --- --- ---  HOW TO USE IT  --- --- ---
-// --- --- --- --- --- --- --- --- --- ---
-
-/*
-// Assuming you have your types
-interface PurchaseDetail {
-  id: number;
-  quantity: string;
-  price: string;
-  discount1_percent: string;
-  discount2_percent: string;
-  // ...other properties
-}
-
-interface FormData {
-  details: PurchaseDetail[];
-  ppn_percent: string;
-  // ...other properties
-}
-
-// And your component data
-// const form = { data: { ... } }; // From your useMemo example
-
-// 1. Define your accessors to match your data structure.
-// This is where you put your parseFloat logic.
-const detailAccessors: ItemAccessors<PurchaseDetail> = {
-  getQuantity: (detail) => parseFloat(detail.quantity) || 0,
-  getPrice: (detail) => parseFloat(detail.price) || 0,
-  getDiscount1Percent: (detail) => parseFloat(detail.discount1_percent) || 0,
-  getDiscount2Percent: (detail) => parseFloat(detail.discount2_percent) || 0,
-};
-
-// 2. You can now use this inside your useMemo hook (or anywhere else)
-const calculations = useMemo(() => {
-  return calculateTotals(
-    form.data.details,
-    detailAccessors,
-    form.data.ppn_percent
-  );
-}, [form.data.details, form.data.ppn_percent]);
-
-// 3. You can access the results just as before
-// console.log(calculations.grandTotal);
-// console.log(calculations.items[0].netAmount);
-
-*/
