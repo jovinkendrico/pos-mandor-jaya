@@ -22,12 +22,9 @@ import {
     CheckCircle2,
     Download,
     Pencil,
-    Printer,
     XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import axios from 'axios';
-import { printRaw } from '@/lib/qz-service';
 
 interface PageProps {
     purchase: IPurchase;
@@ -105,21 +102,6 @@ const PurchaseShow = (props: PageProps) => {
         router.visit(edit(purchase.id).url);
     };
 
-    const handleRawPrint = async () => {
-        try {
-            const response = await axios.get(`/purchases/${purchase.id}/raw`);
-            if (response.data.raw) {
-                await printRaw(response.data.raw);
-                toast.success('Nota sedang dikirim ke printer...');
-            }
-        } catch (err: any) {
-            console.error('QZ Tray failed, falling back to download', err);
-            // Fallback to manual download if QZ fails
-            window.location.href = `/purchases/${purchase.id}/raw?download=1`;
-            toast.info('QZ Tray tidak aktif, mengunduh file nota (.txt)...');
-        }
-    };
-
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -180,23 +162,15 @@ const PurchaseShow = (props: PageProps) => {
                         )}
                     </div>
                 </div>
-                <div className="flex w-full justify-end gap-2">
-                    <Button
-                        variant="outline"
-                        className="btn-secondary"
-                        onClick={handleRawPrint}
-                    >
-                        <Printer className="mr-2 h-4 w-4" />
-                        Print Dot Matrix (Otomatis)
-                    </Button>
+                <div className="flex w-full justify-end">
                     <Button
                         className="btn-primary"
                         onClick={() => {
                             window.location.href = print(purchase.id).url;
                         }}
                     >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Invoice (PDF)
+                        <Download />
+                        Download Invoice
                     </Button>
                 </div>
 

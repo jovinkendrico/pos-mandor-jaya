@@ -436,69 +436,16 @@ class SaleController extends Controller
     /**
      * Print sale as PDF
      */
-    public function raw(Sale $sale)
-    {
-        try {
-            $sale->load(['customer.city', 'details.item', 'details.itemUom.uom']);
-
-            $line = str_repeat("-", 80) . "\n";
-            $raw = "            MANDOR JAYA\n";
-            $raw .= $line;
-            $raw .= str_pad("No. Faktur: " . $sale->sale_number, 40) . "Customer : " . ($sale->customer->name ?? '-') . "\n";
-            $raw .= str_pad("Tanggal   : " . $sale->sale_date->format('d-m-Y'), 40) . "Kota     : " . ($sale->customer->city->name ?? '-') . "\n";
-            $raw .= str_pad("Tempo     : " . ($sale->due_date ? $sale->due_date->format('d-m-Y') : '-'), 40) . "Telepon  : " . ($sale->customer->phone_number ?? '-') . "\n";
-            $raw .= $line;
-            $raw .= "No. Nama Barang                  Qty     Satuan      Harga           Subtotal\n";
-            $raw .= $line;
-
-            foreach ($sale->details as $index => $detail) {
-                $raw .= str_pad($index + 1, 3, ' ', STR_PAD_LEFT) . ". ";
-                $raw .= str_pad(substr($detail->item->name, 0, 26), 27, ' ');
-                $raw .= str_pad(number_format($detail->quantity, 0, ',', '.'), 7, ' ', STR_PAD_LEFT) . " ";
-                $raw .= str_pad($detail->itemUom->uom->name ?? '-', 10, ' ');
-                $raw .= str_pad(number_format($detail->price, 0, ',', '.'), 15, ' ', STR_PAD_LEFT);
-                $raw .= str_pad(number_format($detail->subtotal, 0, ',', '.'), 15, ' ', STR_PAD_LEFT) . "\n";
-            }
-
-            // Fill up to 12 rows
-            $rowCount = count($sale->details);
-            for ($i = $rowCount; $i < 12; $i++) {
-                $raw .= str_pad($i + 1, 3, ' ', STR_PAD_LEFT) . ".\n";
-            }
-
-            $raw .= $line;
-            $raw .= "Terbilang: " . \Riskihajar\Terbilang\Facades\Terbilang::make($sale->total_amount) . " Rupiah\r\n";
-            $raw .= str_pad("TOTAL: Rp. " . number_format($sale->total_amount, 0, ',', '.'), 80, ' ', STR_PAD_LEFT) . "\r\n";
-            $raw .= "\r\n\r\n";
-            $raw .= str_pad("Tanda Terima", 20, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 20, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 20, ' ', STR_PAD_BOTH) . str_pad("Supir", 20, ' ', STR_PAD_BOTH) . "\r\n\r\n\r\n";
-            $raw .= str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . "\r\n";
-
-            if (request()->has('download')) {
-                $filename = 'sale-' . $sale->sale_number . '.txt';
-                return response($raw, 200)
-                    ->header('Content-Type', 'text/plain')
-                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-            }
-
-            return response()->json(['raw' => $raw]);
-        } catch (\Exception $e) {
-            if (request()->has('download')) {
-                return back()->withErrors(['message' => $e->getMessage()]);
-            }
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
     public function print(Sale $sale)
     {
         try {
             $sale->load(['customer', 'details.item', 'details.itemUom.uom']);
 
-            // 24.13cm x 13.97cm (9.5 x 5.5 inch) = 684pt x 396pt
+            // 9.5 x 11 inches = 241 x 279 mm = 684 x 792 points
             $pdf = Pdf::loadView('pdf.sale', [
                 'title' => 'MJ - ' . $sale->sale_number,
                 'sale'  => $sale,
-            ])->setPaper([0, 0, 684, 396], 'portrait');
+            ])->setPaper([0, 0, 684, 792], 'portrait'); // 9.5 x 11 inches
 
             $filename = 'sale-' . $sale->sale_number . '.pdf';
 

@@ -15,7 +15,7 @@ import {
     PaginatedData,
 } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Download, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -98,20 +98,10 @@ const PurchaseIndex = (props: PageProps) => {
                 <Head title="Pembelian" />
                 <div className="flex justify-between">
                     <PageTitle title="Pembelian" />
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            className="btn-secondary"
-                            onClick={() => window.open('/scripts/MANDOR_JAYA_PRINTER.bat', '_blank')}
-                        >
-                            <Download className="mr-2 h-4 w-4" />
-                            Download Printer Script (.bat)
-                        </Button>
-                        <Button onClick={handleCreate} className="btn-primary">
-                            <Plus />
-                            Tambah Pembelian
-                        </Button>
-                    </div>
+                    <Button onClick={handleCreate} className="btn-primary">
+                        <Plus />
+                        Tambah Pembelian
+                    </Button>
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}
