@@ -186,12 +186,31 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                 <Combobox
                                     options={supplierComboboxOptions}
                                     value={dataPurchase.supplier_id?.toString()}
-                                    onValueChange={(value) =>
+                                    onValueChange={(value, option) => {
+                                        if (option && value) {
+                                            const newSupplier =
+                                                option as unknown as ISupplier;
+                                            setLocalSuppliers((prev) => {
+                                                if (
+                                                    !prev.find(
+                                                        (s) =>
+                                                            s.id ===
+                                                            newSupplier.id,
+                                                    )
+                                                ) {
+                                                    return [
+                                                        ...prev,
+                                                        newSupplier,
+                                                    ];
+                                                }
+                                                return prev;
+                                            });
+                                        }
                                         setDataPurchase(
                                             'supplier_id',
                                             Number(value),
-                                        )
-                                    }
+                                        );
+                                    }}
                                     placeholder="Pilih supplier..."
                                     searchPlaceholder="Cari supplier..."
                                     className="combobox"

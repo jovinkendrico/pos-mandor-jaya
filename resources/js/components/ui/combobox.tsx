@@ -28,7 +28,7 @@ export interface ComboboxOption {
 interface ComboboxProps {
     options: ComboboxOption[];
     value?: string;
-    onValueChange?: (value: string) => void;
+    onValueChange?: (value: string, option?: ComboboxOption) => void;
     placeholder?: string;
     emptyText?: string;
     searchPlaceholder?: string;
@@ -157,7 +157,17 @@ export function Combobox({
 
     const handleSelect = (selectedValue: string) => {
         const newValue = selectedValue === value ? '' : selectedValue;
-        onValueChange?.(newValue);
+        
+        // Find the selected option object
+        let option: ComboboxOption | undefined;
+        if (searchUrl && searchResults.length > 0) {
+            option = searchResults.find((opt) => opt.value === selectedValue);
+        } 
+        if (!option) {
+             option = options.find((opt) => opt.value === selectedValue);
+        }
+
+        onValueChange?.(newValue, option);
         setOpen(false);
     };
 
