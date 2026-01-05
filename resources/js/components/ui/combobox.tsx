@@ -65,6 +65,10 @@ export function Combobox({
     );
     const [loading, setLoading] = React.useState(false);
 
+    const [cachedSelectedOption, setCachedSelectedOption] = React.useState<
+        ComboboxOption | undefined
+    >(undefined);
+
     // Backend search effect
     React.useEffect(() => {
         if (!searchUrl || !searchValue.trim()) {
@@ -144,18 +148,40 @@ export function Combobox({
         });
     }, [options, searchValue, maxDisplayItems, searchUrl, searchResults]);
 
-    // Get selected option from both options and search results
+    // Get selected option from cache, options, or search results
     const selectedOption = React.useMemo(() => {
-        // First check in search results
-        if (searchUrl && searchResults.length > 0) {
-            const found = searchResults.find((opt) => opt.value === value);
-            if (found) return found;
+        // 1. Check cached option (if value matches)
+        if (cachedSelectedOption && cachedSelectedOption.value === value) {
+            return cachedSelectedOption;
         }
-        // Then check in options
-        return options.find((option) => option.value === value);
-    }, [value, options, searchResults, searchUrl]);
+
+        // 2. Check in options
+        const foundInOptions = options.find((option) => option.value === value);
+        if (foundInOptions) return foundInOptions;
+
+        // 3. Check in search results
+        if (searchUrl && searchResults.length > 0) {
+            const foundInSearch = searchResults.find(
+                (opt) => opt.value === value,
+            );
+            if (foundInSearch) return foundInSearch;
+        }
+
+        return undefined;
+    }, [value, options, searchResults, searchUrl, cachedSelectedOption]);
 
     const handleSelect = (selectedValue: string) => {
+        // Find the full option object
+        let option = options.find((opt) => opt.value === selectedValue);
+        if (!option) {
+            option = searchResults.find((opt) => opt.value === selectedValue);
+        }
+
+        // Update cache if we found the option
+        if (option) {
+            setCachedSelectedOption(option);
+        }
+
         const newValue = selectedValue === value ? '' : selectedValue;
         
         // Find the selected option object
