@@ -14,6 +14,7 @@ class FifoMapping extends Model
         'quantity_consumed',
         'unit_cost',
         'total_cost',
+        'is_estimated',
     ];
 
     protected $casts = [

@@ -50,6 +50,7 @@ class StockService
                 ]);
 
                 $detail->item->increment('stock', $baseQuantity);
+                $this->reconcileNegativeStock($detail->item_id);
             }
 
             $purchase->update([
@@ -145,6 +146,7 @@ class StockService
                         'quantity_consumed'   => $mapping['quantity'],
                         'unit_cost'           => $mapping['unit_cost'],
                         'total_cost'          => $mapping['total_cost'],
+                        'is_estimated'        => $mapping['is_estimated'] ?? false,
                     ]);
                 }
 
@@ -273,15 +275,15 @@ class StockService
         foreach ($movements as $movement) {
             if ($remainingQty <= 0) break;
 
-            $qtyToUse             = min($remainingQty, $movement->remaining_quantity);
-            $costForThisMovement  = $qtyToUse * $movement->unit_cost;
+            $qtyToUse             = min($remainingQty, (float)$movement->remaining_quantity);
+            $costForThisMovement  = $qtyToUse * (float)$movement->unit_cost;
             $totalCost           += $costForThisMovement;
 
             // Store mapping for audit trail
             $mappings[] = [
                 'movement_id' => $movement->id,
                 'quantity'    => $qtyToUse,
-                'unit_cost'   => $movement->unit_cost,
+                'unit_cost'   => (float)$movement->unit_cost,
                 'total_cost'  => $costForThisMovement,
             ];
 
@@ -291,14 +293,33 @@ class StockService
             $remainingQty -= $qtyToUse;
         }
 
-        // Jika masih ada remaining (stock tidak cukup), gunakan avg cost
+        // Jika masih ada remaining (stock tidak cukup / negatif), gunakan avg cost atau purchase price terakhir
         if ($remainingQty > 0) {
             $avgCost       = $this->getAverageCost($itemId);
+            
+            // Jika avgCost pun 0, coba ambil harga beli terakhir
+            if ($avgCost <= 0) {
+                $lastPurchase = StockMovement::where('item_id', $itemId)
+                    ->where('quantity', '>', 0)
+                    ->orderBy('movement_date', 'desc')
+                    ->orderBy('id', 'desc')
+                    ->first();
+                $avgCost = $lastPurchase ? (float)$lastPurchase->unit_cost : 0;
+            }
+
             $avgCostTotal  = $remainingQty * $avgCost;
             $totalCost    += $avgCostTotal;
 
-            // Log warning for insufficient stock
-            Log::warning('Insufficient stock for FIFO, using average cost', [
+            // Mark as estimated mapping for later reconciliation
+            $mappings[] = [
+                'movement_id' => null, // No movement backing this yet
+                'quantity'    => $remainingQty,
+                'unit_cost'   => $avgCost,
+                'total_cost'  => $avgCostTotal,
+                'is_estimated' => true,
+            ];
+
+            Log::info('Negative stock for FIFO, using estimated cost', [
                 'item_id'  => $itemId,
                 'quantity' => $remainingQty,
                 'avg_cost' => $avgCost,
@@ -434,6 +455,7 @@ class StockService
                         'quantity_consumed'   => $mapping['quantity'],
                         'unit_cost'           => $mapping['unit_cost'],
                         'total_cost'          => $mapping['total_cost'],
+                        'is_estimated'        => $mapping['is_estimated'] ?? false,
                     ]);
                 }
 
@@ -710,6 +732,7 @@ class StockService
 
                 // Update item stock
                 $detail->item->increment('stock', $baseQuantity);
+                $this->reconcileNegativeStock($detail->item_id);
 
                 // Calculate profit adjustment (negative because we're returning)
                 $profitAdjustment = $detail->subtotal - $restoredCost;
@@ -913,6 +936,7 @@ class StockService
                 ]);
 
                 $item->increment('stock', $quantity);
+                $this->reconcileNegativeStock($item->id);
             } else {
                 // Decrease stock - use FIFO consumption
                 $absQuantity     = abs($quantity);
@@ -947,6 +971,103 @@ class StockService
                 }
             }
         });
+    }
+    /**
+     * Reconcile sales made with 0 stock (negative stock) when new stock arrives.
+     * This will update FIFO mappings and adjust COGS/Profit.
+     */
+    public function reconcileNegativeStock(int $itemId): void
+    {
+        // Find all estimated mappings for this item (ordered by oldest first)
+        $estimatedMappings = FifoMapping::whereHas('saleDetail', function ($q) use ($itemId) {
+            $q->where('item_id', $itemId);
+        })
+        ->where('is_estimated', true)
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+        foreach ($estimatedMappings as $mapping) {
+            // Get available stock movements for this item
+            $availableMovements = StockMovement::where('item_id', $itemId)
+                ->where('remaining_quantity', '>', 0)
+                ->where('quantity', '>', 0)
+                ->orderBy('movement_date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            if ($availableMovements->isEmpty()) break;
+
+            $qtyToReconcile = (float)$mapping->quantity_consumed;
+            
+            DB::transaction(function () use ($mapping, $availableMovements, &$qtyToReconcile) {
+                $totalNewCost = 0;
+                $originalEstimatedCost = (float)$mapping->total_cost;
+                $remainingToReconcile = $qtyToReconcile;
+
+                foreach ($availableMovements as $movement) {
+                    if ($remainingToReconcile <= 0) break;
+
+                    $qtyFromThisMovement = min($remainingToReconcile, (float)$movement->remaining_quantity);
+                    $totalNewCost += $qtyFromThisMovement * (float)$movement->unit_cost;
+                    
+                    // Consume from movement
+                    $movement->decrement('remaining_quantity', $qtyFromThisMovement);
+                    $remainingToReconcile -= $qtyFromThisMovement;
+
+                    // If we fully reconciled this mapping or used up this movement...
+                    // In a perfect world, one mapping might be split across multiple movements.
+                    // But here we'll simplify: we update the existing mapping or split it if necessary.
+                }
+
+                if ($remainingToReconcile < $qtyToReconcile) {
+                    // We reconciled at least some of it
+                    $reconciledQty = $qtyToReconcile - $remainingToReconcile;
+                    
+                    // Update original mapping status
+                    if ($remainingToReconcile <= 0) {
+                        // Fully reconciled
+                        $mapping->update([
+                            'is_estimated' => false,
+                            // We might want to link it to the last movement id or handle multiple mappings
+                            // For simplicity, we'll mark as reconciled and update costs
+                            'unit_cost' => $reconciledQty > 0 ? $totalNewCost / $reconciledQty : $mapping->unit_cost,
+                            'total_cost' => $totalNewCost,
+                        ]);
+                    } else {
+                        // Partially reconciled - split mapping
+                        $mapping->update([
+                            'quantity_consumed' => $remainingToReconcile,
+                            // total_cost remains as estimated for the remaining part
+                        ]);
+
+                        FifoMapping::create([
+                            'reference_type' => $mapping->reference_type,
+                            'reference_detail_id' => $mapping->reference_detail_id,
+                            'stock_movement_id' => null, // Multiple movements possible
+                            'quantity_consumed' => $reconciledQty,
+                            'unit_cost' => $totalNewCost / $reconciledQty,
+                            'total_cost' => $totalNewCost,
+                            'is_estimated' => false,
+                        ]);
+                    }
+
+                    // Update Sale Detail Profit & Cost
+                    $detail = $mapping->saleDetail;
+                    if ($detail) {
+                        $costDifference = $totalNewCost - ($originalEstimatedCost * ($reconciledQty / $qtyToReconcile));
+                        $detail->increment('cost', $costDifference);
+                        $detail->decrement('profit', $costDifference);
+
+                        // Update Sale Header Profit & Cost
+                        $sale = $detail->sale;
+                        if ($sale) {
+                            $sale->increment('total_cost', $costDifference);
+                            $sale->decrement('total_profit', $costDifference);
+                        }
+                    }
+                }
+            });
+        }
     }
 }
 

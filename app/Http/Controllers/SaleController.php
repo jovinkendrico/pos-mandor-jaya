@@ -110,7 +110,7 @@ class SaleController extends Controller
     public function create(): Response
     {
         $customers = Customer::orderBy('name')->limit(10)->get();
-        $items     = Item::with('itemUoms.uom')->where('stock', '>', 0)->orderBy('name')->get();
+        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/create', [
             'customers' => $customers,
@@ -123,7 +123,7 @@ class SaleController extends Controller
      */
     public function store(StoreSaleRequest $request): RedirectResponse
     {
-        $this->validateStockAvailability($request->details);
+        // $this->validateStockAvailability($request->details);
 
         DB::transaction(function () use ($request) {
             // Calculate totals dari semua items
@@ -267,7 +267,7 @@ class SaleController extends Controller
 
         $sale->load(['details.item', 'details.itemUom']);
         $customers = Customer::orderBy('name')->limit(5)->get();
-        $items     = Item::with('itemUoms.uom')->where('stock', '>', 0)->orderBy('name')->get();
+        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/edit', [
             'sale'      => $sale,
@@ -288,7 +288,7 @@ class SaleController extends Controller
         }
 
         DB::transaction(function () use ($request, $sale) {
-            $this->validateStockAvailability($request->details);
+            // $this->validateStockAvailability($request->details);
 
             // Calculate totals dari semua items (same as store)
             $subtotal             = 0;

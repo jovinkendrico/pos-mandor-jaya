@@ -2,7 +2,6 @@ import { DatePicker } from '@/components/date-picker';
 import InputError from '@/components/input-error';
 import CityForm from '@/components/master/cities/city-form';
 import SupplierForm from '@/components/master/suppliers/supplier-form';
-import { AsyncCombobox } from '@/components/ui/async-combobox';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
@@ -184,23 +183,13 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                         <div className="flex w-full flex-row items-center justify-start gap-2 md:w-1/2 md:flex-col md:items-baseline md:justify-center">
                             <Label htmlFor="supplier_id">Supplier</Label>
                             <div className="w-full">
-                                <AsyncCombobox
-                                    initialOptions={supplierComboboxOptions}
-                                    value={
-                                        dataPurchase.supplier_id
-                                            ? dataPurchase.supplier_id.toString()
-                                            : ''
-                                    }
-                                    onValueChange={(value) => {
-                                        setDataPurchase(
-                                            'supplier_id',
-                                            Number(value),
-                                        );
-                                    }}
-                                    onSelect={(option) => {
-                                        if (option && option.supplier) {
+                                <Combobox
+                                    options={supplierComboboxOptions}
+                                    value={dataPurchase.supplier_id?.toString()}
+                                    onValueChange={(value, option) => {
+                                        if (option && value) {
                                             const newSupplier =
-                                                option.supplier as ISupplier;
+                                                option as unknown as ISupplier;
                                             setLocalSuppliers((prev) => {
                                                 if (
                                                     !prev.find(
@@ -217,10 +206,19 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 return prev;
                                             });
                                         }
+                                        setDataPurchase(
+                                            'supplier_id',
+                                            Number(value),
+                                        );
                                     }}
                                     placeholder="Pilih supplier..."
                                     searchPlaceholder="Cari supplier..."
                                     className="combobox"
+                                    maxDisplayItems={10}
+                                    addLabel="Tambah Supplier"
+                                    onAdd={() => {
+                                        setIsAddSupplierModalOpen(true);
+                                    }}
                                     searchUrl="/suppliers/search"
                                     searchParam="search"
                                 />
