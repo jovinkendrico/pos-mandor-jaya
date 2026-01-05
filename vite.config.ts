@@ -1,3 +1,4 @@
+import legacy from '@vitejs/plugin-legacy';
 import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
@@ -15,6 +16,9 @@ export default defineConfig({
         tailwindcss(),
         wayfinder({
             formVariants: true,
+        }),
+        legacy({
+            targets: ['defaults', 'not IE 11', 'chrome 50'],
         }),
     ],
     esbuild: {
