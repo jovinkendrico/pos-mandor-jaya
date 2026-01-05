@@ -24,10 +24,10 @@ class QZPrintService {
     async connect() {
         if (this.connected) return;
         try {
-            // Secara eksplisit menetapkan host dan port sebelum koneksi
-            // Sesuai laporan: wss di 8181 dan ws di 8182
+            // Kembali menggunakan localhost sesuai permintaan
+            // Menggunakan port yang dilaporkan: wss di 8181 dan ws di 8182
             await qz.websocket.connect({
-                host: '192.168.1.104',
+                host: 'localhost',
                 port: {
                     secure: [8181],
                     insecure: [8182]
@@ -36,7 +36,7 @@ class QZPrintService {
             this.connected = true;
         } catch (e) {
             console.error('QZ Tray connection failed', e);
-            throw new Error('Gagal terhubung ke QZ Tray di 192.168.1.104. Periksa koneksi wss://192.168.1.104:8181 atau ws://192.168.1.104:8182');
+            throw new Error('Gagal terhubung ke QZ Tray di localhost. Pastikan aplikasi QZ Tray sudah jalan dan port 8181/8182 sudah terbuka.');
         }
     }
 
