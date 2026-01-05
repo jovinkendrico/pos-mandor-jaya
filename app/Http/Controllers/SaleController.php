@@ -445,7 +445,7 @@ class SaleController extends Controller
             $pdf = Pdf::loadView('pdf.sale', [
                 'title' => 'MJ - ' . $sale->sale_number,
                 'sale'  => $sale,
-            ])->setPaper([0, 0, 680, 397], 'portrait');
+            ])->setPaper([0, 0, 680, 397], 'landscape');
 
             $filename = 'sale-' . $sale->sale_number . '.pdf';
 

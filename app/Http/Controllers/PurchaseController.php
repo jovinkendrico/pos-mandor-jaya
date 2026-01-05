@@ -425,7 +425,7 @@ class PurchaseController extends Controller
             $pdf = Pdf::loadView('pdf.purchase', [
                 'title'    => 'MB - ' . $purchase->purchase_number,
                 'purchase' => $purchase,
-            ])->setPaper([0, 0, 680, 397], 'portrait');
+            ])->setPaper([0, 0, 680, 397], 'landscape');
 
             $filename = 'purchase-' . $purchase->purchase_number . '.pdf';
 
