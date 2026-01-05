@@ -176,7 +176,7 @@
             </div>
             
         </div>
-        <div class="info-section" style="margin-top: 10px; vertical-align: top;">
+        <div class="info-section" style="margin-top: 8px; vertical-align: top;">
             <div class="info-row">
                 <span class="info-label">Kepada Yth.</span>
             </div>
