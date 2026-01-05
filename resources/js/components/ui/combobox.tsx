@@ -216,10 +216,11 @@ export function Combobox({
                                 {filteredOptions.map((option) => (
                                     <CommandItem
                                         key={option.value}
-                                        value={`${option.label} ${option.value}`}
+                                        value={option.value}
                                         onSelect={() =>
                                             handleSelect(option.value)
                                         }
+                                        className="data-[disabled=true]:pointer-events-auto data-[disabled=true]:opacity-100"
                                     >
                                         {option.label}
                                         <Check
