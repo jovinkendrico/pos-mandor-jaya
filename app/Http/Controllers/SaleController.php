@@ -441,11 +441,11 @@ class SaleController extends Controller
         try {
             $sale->load(['customer', 'details.item', 'details.itemUom.uom']);
 
-            // 24cm x 14cm = Approx 680pt x 397pt
+            // 24.13cm x 13.97cm (9.5 x 5.5 inch) = 684pt x 396pt
             $pdf = Pdf::loadView('pdf.sale', [
                 'title' => 'MJ - ' . $sale->sale_number,
                 'sale'  => $sale,
-            ])->setPaper([0, 0, 680, 397], 'landscape');
+            ])->setPaper([0, 0, 684, 396], 'portrait');
 
             $filename = 'sale-' . $sale->sale_number . '.pdf';
 

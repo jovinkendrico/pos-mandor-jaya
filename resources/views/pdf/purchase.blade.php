@@ -6,7 +6,7 @@
     <title>{{ $title }}</title>
     <style>
         @page {
-            size: 24cm 14cm;
+            size: 9.5in 5.5in;
             margin: 0;
         }
 
