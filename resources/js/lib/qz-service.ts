@@ -4,7 +4,11 @@ export const connectQz = async () => {
     if (qz.websocket.isActive()) return;
 
     try {
-        await qz.websocket.connect();
+        // Mencoba koneksi ke port-port standar QZ Tray
+        await qz.websocket.connect({
+            host: 'localhost',
+            port: { secure: [8181, 8282], insecure: [8182, 8283] }
+        });
         console.log('QZ Tray connected');
     } catch (err) {
         console.error('QZ Tray connection failed', err);
@@ -14,9 +18,9 @@ export const connectQz = async () => {
 
 export const printRaw = async (data: string) => {
     try {
-        // Cek koneksi
+        // Mencoba koneksi ulang jika belum aktif
         if (!qz.websocket.isActive()) {
-            await qz.websocket.connect();
+            await connectQz();
         }
 
         // Cari printer default
@@ -26,22 +30,15 @@ export const printRaw = async (data: string) => {
         }
 
         const config = qz.configs.create(printer);
-        // Tambahkan encoding agar support karakter spesial Dot Matrix
         config.setEncoding('UTF-8');
 
         await qz.print(config, [data]);
-    } catch (err) {
+    } catch (err: any) {
         console.error('Printing failed', err);
-        throw err;
-    }
-};
-
-export const findPrinters = async () => {
-    try {
-        await connectQz();
-        return await qz.printers.find();
-    } catch (err) {
-        console.error('Finding printers failed', err);
+        // Berikan pesan error yang lebih jelas untuk diberitahukan ke USER
+        if (err.message && err.message.includes('Permission denied')) {
+            throw new Error('Izin ditolak oleh QZ Tray. Silakan klik "Allow" saat popup muncul.');
+        }
         throw err;
     }
 };
