@@ -4,7 +4,7 @@ import CityForm from '@/components/master/cities/city-form';
 import SupplierForm from '@/components/master/suppliers/supplier-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Combobox, ComboboxOption } from '@/components/ui/combobox';
+import { AsyncCombobox, AsyncComboboxOption } from '@/components/ui/async-combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,7 +45,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
     const canEditPrice = auth.permissions.includes('price.edit');
 
     const [isReady, setIsReady] = useState(false);
-    const [cityOptions, setCityOptions] = useState<ComboboxOption[]>([]);
+    const [cityOptions, setCityOptions] = useState<AsyncComboboxOption[]>([]);
     const [localSuppliers, setLocalSuppliers] =
         useState<ISupplier[]>(supplierOptions);
     const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
@@ -84,16 +84,16 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         setLocalSuppliers(supplierOptions);
     }, [supplierOptions]);
 
-    const itemComboboxOptions: ComboboxOption[] = useMemo(() => {
+    const itemComboboxOptions: AsyncComboboxOption[] = useMemo(() => {
         return items.map((item) => ({
             label: `${item.code} - ${item.name}`,
-            value: item.id.toString(),
+            value: item.id?.toString() || '',
         }));
     }, [items]);
 
     const getItemUomComboboxOptions = (
         itemId: number | null,
-    ): ComboboxOption[] => {
+    ): AsyncComboboxOption[] => {
         if (!itemId) return [];
         const item = items.find((i) => i.id === itemId);
         if (!item || !item.item_uoms) return [];
@@ -104,10 +104,10 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         }));
     };
 
-    const supplierComboboxOptions: ComboboxOption[] = useMemo(() => {
+    const supplierComboboxOptions: AsyncComboboxOption[] = useMemo(() => {
         return localSuppliers.map((supplier) => ({
             label: supplier.name,
-            value: supplier.id.toString(),
+            value: supplier.id?.toString() || '',
         }));
     }, [localSuppliers]);
 
@@ -183,13 +183,23 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                         <div className="flex w-full flex-row items-center justify-start gap-2 md:w-1/2 md:flex-col md:items-baseline md:justify-center">
                             <Label htmlFor="supplier_id">Supplier</Label>
                             <div className="w-full">
-                                <Combobox
-                                    options={supplierComboboxOptions}
-                                    value={dataPurchase.supplier_id?.toString()}
-                                    onValueChange={(value, option) => {
-                                        if (option && value) {
+                                <AsyncCombobox
+                                    initialOptions={supplierComboboxOptions}
+                                    value={
+                                        dataPurchase.supplier_id
+                                            ? dataPurchase.supplier_id.toString()
+                                            : ''
+                                    }
+                                    onValueChange={(value) => {
+                                        setDataPurchase(
+                                            'supplier_id',
+                                            Number(value),
+                                        );
+                                    }}
+                                    onSelect={(option) => {
+                                        if (option && option.supplier) {
                                             const newSupplier =
-                                                option as unknown as ISupplier;
+                                                option.supplier as ISupplier;
                                             setLocalSuppliers((prev) => {
                                                 if (
                                                     !prev.find(
@@ -206,19 +216,10 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 return prev;
                                             });
                                         }
-                                        setDataPurchase(
-                                            'supplier_id',
-                                            Number(value),
-                                        );
                                     }}
                                     placeholder="Pilih supplier..."
                                     searchPlaceholder="Cari supplier..."
                                     className="combobox"
-                                    maxDisplayItems={10}
-                                    addLabel="Tambah Supplier"
-                                    onAdd={() => {
-                                        setIsAddSupplierModalOpen(true);
-                                    }}
                                     searchUrl="/suppliers/search"
                                     searchParam="search"
                                 />
