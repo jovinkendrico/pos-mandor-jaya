@@ -216,7 +216,7 @@ export function Combobox({
                                 {filteredOptions.map((option) => (
                                     <CommandItem
                                         key={option.value}
-                                        value={option.label}
+                                        value={option.value}
                                         onSelect={() =>
                                             handleSelect(option.value)
                                         }
