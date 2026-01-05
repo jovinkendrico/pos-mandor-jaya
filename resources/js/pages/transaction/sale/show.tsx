@@ -21,9 +21,12 @@ import {
     CheckCircle2,
     Download,
     Pencil,
+    Printer,
     XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
+import { printRaw } from '@/lib/qz-service';
 
 interface PageProps {
     sale: ISale;
@@ -110,6 +113,21 @@ const SaleShow = (props: PageProps) => {
         router.visit(edit(sale.id).url);
     };
 
+    const handleRawPrint = async () => {
+        try {
+            const response = await axios.get(`/sales/${sale.id}/raw`);
+            if (response.data.raw) {
+                await printRaw(response.data.raw);
+                toast.success('Nota sedang dikirim ke printer...');
+            } else {
+                toast.error('Gagal mengambil data RAW');
+            }
+        } catch (err: any) {
+            console.error(err);
+            toast.error('Gagal print: ' + (err.response?.data?.error || err.message));
+        }
+    };
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -175,15 +193,23 @@ const SaleShow = (props: PageProps) => {
                         )}
                     </div>
                 </div>
-                <div className="flex w-full justify-end">
+                <div className="flex w-full justify-end gap-2">
+                    <Button
+                        variant="outline"
+                        className="btn-secondary"
+                        onClick={handleRawPrint}
+                    >
+                        <Printer className="mr-2 h-4 w-4" />
+                        Print Dot Matrix (QZ Tray)
+                    </Button>
                     <Button
                         className="btn-primary"
                         onClick={() => {
                             window.location.href = print(sale.id).url;
                         }}
                     >
-                        <Download />
-                        Download Invoice
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Invoice (PDF)
                     </Button>
                 </div>
 
@@ -360,7 +386,7 @@ const SaleShow = (props: PageProps) => {
                                             <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-500">
                                                 {formatNumber(
                                                     detail.discount1_percent ??
-                                                        0,
+                                                    0,
                                                 ) > 0
                                                     ? `${detail.discount1_percent}%`
                                                     : '-'}
@@ -368,7 +394,7 @@ const SaleShow = (props: PageProps) => {
                                             <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-500">
                                                 {formatNumber(
                                                     detail.discount2_percent ??
-                                                        0,
+                                                    0,
                                                 ) > 0
                                                     ? `${detail.discount2_percent}%`
                                                     : '-'}

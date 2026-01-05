@@ -339,6 +339,8 @@ export type IPurchase = Pick<
     details: IPurchaseDetail[];
     total_paid?: number;
     remaining_amount?: number;
+    creator?: User;
+    updater?: User;
 };
 
 export interface PurchaseDetail {
@@ -421,6 +423,8 @@ export type ISale = Pick<
 > & {
     customer: ICustomer;
     details: ISaleDetail[];
+    creator?: User;
+    updater?: User;
 };
 
 export interface SaleDetail {

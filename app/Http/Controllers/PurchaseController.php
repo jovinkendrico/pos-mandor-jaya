@@ -416,6 +416,49 @@ class PurchaseController extends Controller
     /**
      * Print purchase as PDF
      */
+    public function raw(Purchase $purchase)
+    {
+        try {
+            $purchase->load(['supplier.city', 'details.item', 'details.itemUom.uom']);
+
+            $line = str_repeat("-", 80) . "\n";
+            $raw = "            INVOICE PEMBELIAN\n";
+            $raw .= $line;
+            $raw .= str_pad("No. Faktur: " . $purchase->purchase_number, 40) . "Supplier  : " . ($purchase->supplier->name ?? '-') . "\n";
+            $raw .= str_pad("Tanggal   : " . $purchase->purchase_date->format('d-m-Y'), 40) . "Kota      : " . ($purchase->supplier->city->name ?? '-') . "\n";
+            $raw .= str_pad("Tempo     : " . ($purchase->due_date ? $purchase->due_date->format('d-m-Y') : '-'), 40) . "Telepon   : " . ($purchase->supplier->phone_number ?? '-') . "\n";
+            $raw .= $line;
+            $raw .= "No. Nama Barang                  Qty     Satuan      Harga           Subtotal\n";
+            $raw .= $line;
+
+            foreach ($purchase->details as $index => $detail) {
+                $raw .= str_pad($index + 1, 3, ' ', STR_PAD_LEFT) . ". ";
+                $raw .= str_pad(substr($detail->item->name, 0, 26), 27, ' ');
+                $raw .= str_pad(number_format($detail->quantity, 0, ',', '.'), 7, ' ', STR_PAD_LEFT) . " ";
+                $raw .= str_pad($detail->itemUom->uom->name ?? '-', 10, ' ');
+                $raw .= str_pad(number_format($detail->price, 0, ',', '.'), 15, ' ', STR_PAD_LEFT);
+                $raw .= str_pad(number_format($detail->subtotal, 0, ',', '.'), 15, ' ', STR_PAD_LEFT) . "\n";
+            }
+
+            // Fill up to 12 rows
+            $rowCount = count($purchase->details);
+            for ($i = $rowCount; $i < 12; $i++) {
+                $raw .= str_pad($i + 1, 3, ' ', STR_PAD_LEFT) . ".\n";
+            }
+
+            $raw .= $line;
+            $raw .= "Terbilang: " . \Riskihajar\Terbilang\Facades\Terbilang::make($purchase->total_amount) . " Rupiah\n";
+            $raw .= str_pad("TOTAL: Rp. " . number_format($purchase->total_amount, 0, ',', '.'), 80, ' ', STR_PAD_LEFT) . "\n";
+            $raw .= "\n\n";
+            $raw .= str_pad("Tanda Terima", 26, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 26, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 26, ' ', STR_PAD_BOTH) . "\n\n\n";
+            $raw .= str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . "\n";
+
+            return response()->json(['raw' => $raw]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function print(Purchase $purchase)
     {
         try {

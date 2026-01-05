@@ -22,9 +22,12 @@ import {
     CheckCircle2,
     Download,
     Pencil,
+    Printer,
     XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
+import { printRaw } from '@/lib/qz-service';
 
 interface PageProps {
     purchase: IPurchase;
@@ -102,6 +105,21 @@ const PurchaseShow = (props: PageProps) => {
         router.visit(edit(purchase.id).url);
     };
 
+    const handleRawPrint = async () => {
+        try {
+            const response = await axios.get(`/purchases/${purchase.id}/raw`);
+            if (response.data.raw) {
+                await printRaw(response.data.raw);
+                toast.success('Nota sedang dikirim ke printer...');
+            } else {
+                toast.error('Gagal mengambil data RAW');
+            }
+        } catch (err: any) {
+            console.error(err);
+            toast.error('Gagal print: ' + (err.response?.data?.error || err.message));
+        }
+    };
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -162,15 +180,23 @@ const PurchaseShow = (props: PageProps) => {
                         )}
                     </div>
                 </div>
-                <div className="flex w-full justify-end">
+                <div className="flex w-full justify-end gap-2">
+                    <Button
+                        variant="outline"
+                        className="btn-secondary"
+                        onClick={handleRawPrint}
+                    >
+                        <Printer className="mr-2 h-4 w-4" />
+                        Print Dot Matrix (QZ Tray)
+                    </Button>
                     <Button
                         className="btn-primary"
                         onClick={() => {
                             window.location.href = print(purchase.id).url;
                         }}
                     >
-                        <Download />
-                        Download Invoice
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Invoice (PDF)
                     </Button>
                 </div>
 
@@ -255,40 +281,40 @@ const PurchaseShow = (props: PageProps) => {
                             </div>
                             {formatNumber(purchase.discount1_percent ?? 0) >
                                 0 && (
-                                <div className="flex justify-between text-red-600 dark:text-danger-400">
-                                    <span>
-                                        Diskon 1 (
-                                        {formatNumber(
-                                            purchase.discount1_percent ?? 0,
-                                        )}
-                                        %):
-                                    </span>
-                                    <span>
-                                        -
-                                        {formatCurrency(
-                                            purchase.discount1_amount ?? 0,
-                                        )}
-                                    </span>
-                                </div>
-                            )}
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>
+                                            Diskon 1 (
+                                            {formatNumber(
+                                                purchase.discount1_percent ?? 0,
+                                            )}
+                                            %):
+                                        </span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                purchase.discount1_amount ?? 0,
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             {formatNumber(purchase.discount2_percent ?? 0) >
                                 0 && (
-                                <div className="flex justify-between text-red-600 dark:text-danger-400">
-                                    <span>
-                                        Diskon 2 (
-                                        {formatNumber(
-                                            purchase.discount2_percent ?? 0,
-                                        )}
-                                        %):
-                                    </span>
-                                    <span>
-                                        -
-                                        {formatCurrency(
-                                            purchase.discount2_amount ?? 0,
-                                        )}
-                                    </span>
-                                </div>
-                            )}
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>
+                                            Diskon 2 (
+                                            {formatNumber(
+                                                purchase.discount2_percent ?? 0,
+                                            )}
+                                            %):
+                                        </span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                purchase.discount2_amount ?? 0,
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             {formatNumber(purchase.ppn_percent ?? 0) > 0 && (
                                 <div className="flex justify-between text-blue-600 dark:text-primary-700">
                                     <span>
@@ -353,9 +379,9 @@ const PurchaseShow = (props: PageProps) => {
                                                 detail.discount1_percent ?? 0,
                                             ) > 0
                                                 ? `${formatNumber(
-                                                      detail.discount1_percent ??
-                                                          0,
-                                                  )}%`
+                                                    detail.discount1_percent ??
+                                                    0,
+                                                )}%`
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-400">
@@ -363,9 +389,9 @@ const PurchaseShow = (props: PageProps) => {
                                                 detail.discount2_percent ?? 0,
                                             ) > 0
                                                 ? `${formatNumber(
-                                                      detail.discount2_percent ??
-                                                          0,
-                                                  )}%`
+                                                    detail.discount2_percent ??
+                                                    0,
+                                                )}%`
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
