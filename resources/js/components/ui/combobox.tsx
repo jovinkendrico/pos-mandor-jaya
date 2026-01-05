@@ -98,7 +98,7 @@ export function Combobox({
                     setSearchResults(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         fetchedOptions.map((opt: any) => ({
-                            value: opt.value || String(opt.id),
+                            value: String(opt.value || opt.id),
                             label:
                                 opt.label ||
                                 `${opt.purchase_number || opt.sale_number || opt.code || ''} - ${opt.supplier?.name || opt.customer?.name || opt.name || ''}`,
