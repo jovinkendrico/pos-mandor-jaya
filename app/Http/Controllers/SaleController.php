@@ -467,18 +467,25 @@ class SaleController extends Controller
             }
 
             $raw .= $line;
-            $raw .= "Terbilang: " . \Riskihajar\Terbilang\Facades\Terbilang::make($sale->total_amount) . " Rupiah\n";
-            $raw .= str_pad("TOTAL: Rp. " . number_format($sale->total_amount, 0, ',', '.'), 80, ' ', STR_PAD_LEFT) . "\n";
-            $raw .= "\n\n";
-            $raw .= str_pad("Tanda Terima", 20, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 20, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 20, ' ', STR_PAD_BOTH) . str_pad("Supir", 20, ' ', STR_PAD_BOTH) . "\n\n\n";
-            $raw .= str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . "\n";
+            $raw .= "Terbilang: " . \Riskihajar\Terbilang\Facades\Terbilang::make($sale->total_amount) . " Rupiah\r\n";
+            $raw .= str_pad("TOTAL: Rp. " . number_format($sale->total_amount, 0, ',', '.'), 80, ' ', STR_PAD_LEFT) . "\r\n";
+            $raw .= "\r\n\r\n";
+            $raw .= str_pad("Tanda Terima", 20, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 20, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 20, ' ', STR_PAD_BOTH) . str_pad("Supir", 20, ' ', STR_PAD_BOTH) . "\r\n\r\n\r\n";
+            $raw .= str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . str_pad("(          )", 20, ' ', STR_PAD_BOTH) . "\r\n";
 
-            $filename = 'sale-' . $sale->sale_number . '.txt';
-            return response($raw, 200)
-                ->header('Content-Type', 'text/plain')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            if (request()->has('download')) {
+                $filename = 'sale-' . $sale->sale_number . '.txt';
+                return response($raw, 200)
+                    ->header('Content-Type', 'text/plain')
+                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            }
+
+            return response()->json(['raw' => $raw]);
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+            if (request()->has('download')) {
+                return back()->withErrors(['message' => $e->getMessage()]);
+            }
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 

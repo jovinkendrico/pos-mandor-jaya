@@ -447,18 +447,25 @@ class PurchaseController extends Controller
             }
 
             $raw .= $line;
-            $raw .= "Terbilang: " . \Riskihajar\Terbilang\Facades\Terbilang::make($purchase->total_amount) . " Rupiah\n";
-            $raw .= str_pad("TOTAL: Rp. " . number_format($purchase->total_amount, 0, ',', '.'), 80, ' ', STR_PAD_LEFT) . "\n";
-            $raw .= "\n\n";
-            $raw .= str_pad("Tanda Terima", 26, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 26, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 26, ' ', STR_PAD_BOTH) . "\n\n\n";
-            $raw .= str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . "\n";
+            $raw .= "Terbilang: " . \Riskihajar\Terbilang\Facades\Terbilang::make($purchase->total_amount) . " Rupiah\r\n";
+            $raw .= str_pad("TOTAL: Rp. " . number_format($purchase->total_amount, 0, ',', '.'), 80, ' ', STR_PAD_LEFT) . "\r\n";
+            $raw .= "\r\n\r\n";
+            $raw .= str_pad("Tanda Terima", 26, ' ', STR_PAD_BOTH) . str_pad("Dikeluarkan", 26, ' ', STR_PAD_BOTH) . str_pad("Diperiksa", 26, ' ', STR_PAD_BOTH) . "\r\n\r\n\r\n";
+            $raw .= str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . str_pad("(          )", 26, ' ', STR_PAD_BOTH) . "\r\n";
 
-            $filename = 'purchase-' . $purchase->purchase_number . '.txt';
-            return response($raw, 200)
-                ->header('Content-Type', 'text/plain')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            if (request()->has('download')) {
+                $filename = 'purchase-' . $purchase->purchase_number . '.txt';
+                return response($raw, 200)
+                    ->header('Content-Type', 'text/plain')
+                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            }
+
+            return response()->json(['raw' => $raw]);
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => $e->getMessage()]);
+            if (request()->has('download')) {
+                return back()->withErrors(['message' => $e->getMessage()]);
+            }
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 

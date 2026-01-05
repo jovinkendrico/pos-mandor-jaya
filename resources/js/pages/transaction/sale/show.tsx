@@ -113,8 +113,19 @@ const SaleShow = (props: PageProps) => {
         router.visit(edit(sale.id).url);
     };
 
-    const handleRawPrint = () => {
-        window.location.href = `/sales/${sale.id}/raw`;
+    const handleRawPrint = async () => {
+        try {
+            const response = await axios.get(`/sales/${sale.id}/raw`);
+            if (response.data.raw) {
+                await printRaw(response.data.raw);
+                toast.success('Nota sedang dikirim ke printer...');
+            }
+        } catch (err: any) {
+            console.error('QZ Tray failed, falling back to download', err);
+            // Fallback to manual download if QZ fails
+            window.location.href = `/sales/${sale.id}/raw?download=1`;
+            toast.info('QZ Tray tidak aktif, mengunduh file nota (.txt)...');
+        }
     };
 
     return (
@@ -189,7 +200,7 @@ const SaleShow = (props: PageProps) => {
                         onClick={handleRawPrint}
                     >
                         <Printer className="mr-2 h-4 w-4" />
-                        Download RAW (.txt)
+                        Print Dot Matrix (Otomatis)
                     </Button>
                     <Button
                         className="btn-primary"
