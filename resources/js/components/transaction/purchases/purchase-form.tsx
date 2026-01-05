@@ -100,7 +100,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
 
         return item.item_uoms.map((itemUom) => ({
             label: itemUom.uom.name,
-            value: itemUom.id.toString(),
+            value: (itemUom.id ?? 0).toString(),
         }));
     };
 
@@ -200,6 +200,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                     onAdd={() => {
                                         setIsAddSupplierModalOpen(true);
                                     }}
+                                    searchUrl="/suppliers/search"
+                                    searchParam="search"
                                 />
                                 <InputError
                                     message={errorsPurchase.supplier_id}

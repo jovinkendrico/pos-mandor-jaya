@@ -73,6 +73,32 @@ class CustomerController extends Controller
     }
 
     /**
+     * Search customers for autocomplete
+     */
+    public function search(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $query = Customer::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%");
+        }
+
+        $customers = $query->limit(20)->get()->map(function ($customer) {
+            return [
+                'value' => $customer->id,
+                'label' => $customer->name,
+                'customer' => $customer, // Return full object if needed
+            ];
+        });
+
+        return response()->json([
+            'data' => $customers
+        ]);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create(): Response

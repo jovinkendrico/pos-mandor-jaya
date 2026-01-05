@@ -74,6 +74,32 @@ class SupplierController extends Controller
     }
 
     /**
+     * Search suppliers for autocomplete
+     */
+    public function search(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $query = Supplier::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%");
+        }
+
+        $suppliers = $query->limit(20)->get()->map(function ($supplier) {
+            return [
+                'value' => $supplier->id,
+                'label' => $supplier->name,
+                'supplier' => $supplier, // Return full object if needed
+            ];
+        });
+
+        return response()->json([
+            'data' => $suppliers
+        ]);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create(): Response
