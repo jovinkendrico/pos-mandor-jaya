@@ -122,11 +122,24 @@ class Purchase extends Model
         if ($lastPurchase) {
             // Get the numeric part after 'MB'
             $lastNumber = (int) substr($lastPurchase->purchase_number, 2);
-            $sequence = $lastNumber + 1;
+            $sequence   = $lastNumber + 1;
         } else {
             $sequence = 1;
         }
 
         return 'MB' . $sequence;
+    }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('purchase_number', 'like', '%' . $search . '%')
+                    ->orWhere('notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('supplier', function ($query) use ($search) {
+                        $query->where('name', 'like', '%' . $search . '%');
+                    });
+            });
+        });
     }
 }

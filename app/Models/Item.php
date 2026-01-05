@@ -20,7 +20,7 @@ class Item extends Model
     ];
 
     protected $casts = [
-        'stock' => 'decimal:2',
+        'stock'         => 'decimal:2',
         'initial_stock' => 'decimal:2',
     ];
 
@@ -37,5 +37,16 @@ class Item extends Model
     public function baseUom()
     {
         return $this->itemUoms()->where('is_base', true)->first();
+    }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('code', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        });
     }
 }

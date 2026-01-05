@@ -126,11 +126,24 @@ class Sale extends Model
         if ($lastSale) {
             // Get the numeric part after 'MJ'
             $lastNumber = (int) substr($lastSale->sale_number, 2);
-            $sequence = $lastNumber + 1;
+            $sequence   = $lastNumber + 1;
         } else {
             $sequence = 1;
         }
 
         return 'MJ' . $sequence;
+    }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('sale_number', 'like', '%' . $search . '%')
+                    ->orWhere('notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('customer', function ($query) use ($search) {
+                        $query->where('name', 'like', '%' . $search . '%');
+                    });
+            });
+        });
     }
 }

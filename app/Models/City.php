@@ -22,4 +22,11 @@ class City extends Model
     {
         return $this->hasMany(Supplier::class);
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        });
+    }
 }
