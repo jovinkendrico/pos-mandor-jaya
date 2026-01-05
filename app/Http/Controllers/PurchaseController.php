@@ -107,23 +107,14 @@ class PurchaseController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('transaction/purchase/create', [
-            'suppliers' => Supplier::query()
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get(),
+        $suppliers = Supplier::orderBy('name')->get();
+        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
-            'items'     => Item::query()
-                ->select('id', 'name')
-                ->with([
-                    'itemUoms:id,item_id,uom_id',
-                    'itemUoms.uom:id,name',
-                ])
-                ->orderBy('name')
-                ->get(),
+        return Inertia::render('transaction/purchase/create', [
+            'suppliers' => $suppliers,
+            'items'     => $items,
         ]);
     }
-
 
     /**
      * Store a newly created resource in storage.
