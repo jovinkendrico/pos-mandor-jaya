@@ -1,12 +1,10 @@
 import qz from 'qz-tray';
 
-let connected = false;
-
 export const connectQz = async () => {
-    if (connected) return;
+    if (qz.websocket.isActive()) return;
+
     try {
         await qz.websocket.connect();
-        connected = true;
         console.log('QZ Tray connected');
     } catch (err) {
         console.error('QZ Tray connection failed', err);
@@ -14,17 +12,23 @@ export const connectQz = async () => {
     }
 };
 
-export const getDefaultPrinter = async () => {
-    await connectQz();
-    return await qz.printers.getDefault();
-};
-
-export const printRaw = async (data: string, printerName?: string) => {
+export const printRaw = async (data: string) => {
     try {
-        await connectQz();
-        const printer = printerName || (await qz.printers.getDefault());
-        if (!printer) throw new Error('No printer found');
+        // Cek koneksi
+        if (!qz.websocket.isActive()) {
+            await qz.websocket.connect();
+        }
+
+        // Cari printer default
+        const printer = await qz.printers.getDefault();
+        if (!printer) {
+            throw new Error('Printer default tidak ditemukan. Silakan set "Default Printer" di Windows.');
+        }
+
         const config = qz.configs.create(printer);
+        // Tambahkan encoding agar support karakter spesial Dot Matrix
+        config.setEncoding('UTF-8');
+
         await qz.print(config, [data]);
     } catch (err) {
         console.error('Printing failed', err);
