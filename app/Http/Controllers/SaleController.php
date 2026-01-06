@@ -265,7 +265,7 @@ class SaleController extends Controller
                 ->with('error', 'Penjualan yang sudah dikonfirmasi tidak dapat diedit.');
         }
 
-        $sale->load(['details.item', 'details.itemUom']);
+        $sale->load(['customer.city', 'details.item', 'details.itemUom']);
         $customers = Customer::with('city')->orderBy('name')->limit(5)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 

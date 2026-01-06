@@ -31,7 +31,7 @@ import {
 } from '@/lib/utils';
 import { IItem, IPurchase, IPurchaseDetail, ISupplier, PageProps } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Building2, MapPin, Phone, Plus, Trash2, Truck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 interface PurchaseFormProps {
@@ -133,6 +133,13 @@ const PurchaseForm = (props: PurchaseFormProps) => {
 
     useEffect(() => {
         if (purchase) {
+            if (purchase.supplier) {
+                setLocalSuppliers((prev) => {
+                    if (prev.find((s) => s.id === purchase.supplier.id))
+                        return prev;
+                    return [purchase.supplier, ...prev];
+                });
+            }
             setDataPurchase('supplier_id', purchase.supplier_id);
             setDataPurchase('purchase_date', purchase.purchase_date);
             setDataPurchase('due_date', purchase.due_date ?? null);
@@ -260,35 +267,50 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                             if (!selectedSupplier)
                                                 return null;
                                             return (
-                                                <div className="space-y-1 rounded-md bg-slate-50 p-3 dark:bg-slate-900">
-                                                    <div className="flex justify-between">
-                                                        <span>No. HP:</span>
-                                                        <span className="font-medium text-foreground">
-                                                            {selectedSupplier.phone_number ||
-                                                                '-'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span>Kota:</span>
-                                                        <span className="font-medium text-foreground">
-                                                            {selectedSupplier
-                                                                .city
-                                                                ?.name ||
-                                                                '-'}
-                                                        </span>
-                                                    </div>
-                                                    {selectedSupplier.address && (
-                                                        <div className="flex justify-between">
-                                                            <span>
-                                                                Alamat:
-                                                            </span>
-                                                            <span className="max-w-[60%] text-right font-medium text-foreground">
+                                                <div className="mt-4 rounded-xl border bg-card p-4 text-card-foreground shadow-sm dark:bg-slate-900/50">
+                                                    <div className="mb-3 flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                                            <Truck className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-medium leading-none text-muted-foreground">
+                                                                Supplier
+                                                            </p>
+                                                            <p className="text-base font-semibold">
                                                                 {
-                                                                    selectedSupplier.address
+                                                                    selectedSupplier.name
                                                                 }
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2.5 text-sm">
+                                                        <div className="flex items-center gap-3 text-muted-foreground">
+                                                            <Phone className="h-4 w-4" />
+                                                            <span className="text-foreground">
+                                                                {selectedSupplier.phone_number ||
+                                                                    '-'}
                                                             </span>
                                                         </div>
-                                                    )}
+                                                        <div className="flex items-center gap-3 text-muted-foreground">
+                                                            <Building2 className="h-4 w-4" />
+                                                            <span className="text-foreground">
+                                                                {selectedSupplier
+                                                                    .city
+                                                                    ?.name ||
+                                                                    '-'}
+                                                            </span>
+                                                        </div>
+                                                        {selectedSupplier.address && (
+                                                            <div className="flex items-start gap-3 text-muted-foreground">
+                                                                <MapPin className="mt-0.5 h-4 w-4" />
+                                                                <span className="leading-snug text-foreground">
+                                                                    {
+                                                                        selectedSupplier.address
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             );
                                         })()}
