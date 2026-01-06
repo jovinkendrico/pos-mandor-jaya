@@ -1,6 +1,7 @@
 import { DatePicker } from '@/components/date-picker';
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
+import { AsyncCombobox } from '@/components/ui/async-combobox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,6 +86,7 @@ export default function ReceivableAgingIndex({
             sort_by: 'date',
             sort_order: 'desc',
             as_of_date: asOfDate,
+            customer_id: '',
         },
     );
 
@@ -104,23 +106,41 @@ export default function ReceivableAgingIndex({
                 showPaymentStatus={false}
                 showSort={false}
                 additionalFilters={
-                    <div className="w-[160px]">
-                        <Label htmlFor="as_of_date">Per Tanggal</Label>
-                        <DatePicker
-                            value={
-                                allFilters.as_of_date
-                                    ? new Date(allFilters.as_of_date)
-                                    : undefined
-                            }
-                            onChange={(date) =>
-                                handleFilterChange({
-                                    as_of_date: date
-                                        ? format(date, 'yyyy-MM-dd')
-                                        : '',
-                                })
-                            }
-                            className="input-box"
-                        />
+                    <div className="flex gap-4">
+                        <div className="w-[160px]">
+                            <Label htmlFor="as_of_date">Per Tanggal</Label>
+                            <DatePicker
+                                value={
+                                    allFilters.as_of_date
+                                        ? new Date(allFilters.as_of_date)
+                                        : undefined
+                                }
+                                onChange={(date) =>
+                                    handleFilterChange({
+                                        as_of_date: date
+                                            ? format(date, 'yyyy-MM-dd')
+                                            : '',
+                                    })
+                                }
+                                className="input-box"
+                            />
+                        </div>
+                        <div className="w-[300px]">
+                            <Label>Filter Customer</Label>
+                            <AsyncCombobox
+                                value={allFilters.customer_id}
+                                onValueChange={(val) =>
+                                    handleFilterChange({
+                                        customer_id: val,
+                                    })
+                                }
+                                searchUrl="/customers/search"
+                                searchParam="search"
+                                placeholder="Semua Customer"
+                                searchPlaceholder="Cari customer..."
+                                className="combobox"
+                            />
+                        </div>
                     </div>
                 }
             />
@@ -129,6 +149,8 @@ export default function ReceivableAgingIndex({
                     onClick={() => {
                         const params = new URLSearchParams({
                             as_of_date: allFilters.as_of_date as string,
+                            customer_id: (allFilters.customer_id as string) ||
+                                '',
                         });
                         window.open(
                             `/reports/receivable-aging/print?${params.toString()}`,

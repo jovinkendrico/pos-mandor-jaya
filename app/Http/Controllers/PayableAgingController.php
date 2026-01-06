@@ -22,9 +22,14 @@ class PayableAgingController extends Controller
         $asOfDateCarbon = Carbon::parse($asOfDate);
 
         // Get all confirmed purchases with remaining amount
-        $purchases = Purchase::with('supplier')
-            ->where('status', 'confirmed')
-            ->get()
+        $query = Purchase::with('supplier')
+            ->where('status', 'confirmed');
+
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->input('supplier_id'));
+        }
+
+        $purchases = $query->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($purchase) {
                 return $purchase->remaining_amount > 0;
@@ -140,9 +145,14 @@ class PayableAgingController extends Controller
             $asOfDate = $request->get('as_of_date', now()->format('Y-m-d'));
             $asOfDateCarbon = Carbon::parse($asOfDate);
 
-            $purchases = Purchase::with('supplier')
-                ->where('status', 'confirmed')
-                ->get()
+            $query = Purchase::with('supplier')
+                ->where('status', 'confirmed');
+
+            if ($request->filled('supplier_id')) {
+                $query->where('supplier_id', $request->input('supplier_id'));
+            }
+
+            $purchases = $query->get()
                 ->append(['total_paid', 'remaining_amount'])
                 ->filter(function ($purchase) {
                     return $purchase->remaining_amount > 0;

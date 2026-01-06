@@ -22,9 +22,14 @@ class ReceivableAgingController extends Controller
         $asOfDateCarbon = Carbon::parse($asOfDate);
 
         // Get all confirmed sales with remaining amount
-        $sales = Sale::with('customer')
-            ->where('status', 'confirmed')
-            ->get()
+        $query = Sale::with('customer')
+            ->where('status', 'confirmed');
+
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->input('customer_id'));
+        }
+
+        $sales = $query->get()
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($sale) {
                 return $sale->remaining_amount > 0;
@@ -140,9 +145,14 @@ class ReceivableAgingController extends Controller
             $asOfDate = $request->get('as_of_date', now()->format('Y-m-d'));
             $asOfDateCarbon = Carbon::parse($asOfDate);
 
-            $sales = Sale::with('customer')
-                ->where('status', 'confirmed')
-                ->get()
+            $query = Sale::with('customer')
+                ->where('status', 'confirmed');
+
+            if ($request->filled('customer_id')) {
+                $query->where('customer_id', $request->input('customer_id'));
+            }
+
+            $sales = $query->get()
                 ->append(['total_paid', 'remaining_amount'])
                 ->filter(function ($sale) {
                     return $sale->remaining_amount > 0;
