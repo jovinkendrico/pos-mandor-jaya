@@ -1,4 +1,3 @@
-import legacy from '@vitejs/plugin-legacy';
 import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
@@ -15,10 +14,10 @@ export default defineConfig({
         wayfinder({
             formVariants: true,
         }),
-        legacy({
-            targets: ['defaults', 'not IE 11', 'chrome 50'],
-        }),
     ],
+    build: {
+        cssMinify: 'lightningcss',
+    },
     esbuild: {
         jsx: 'automatic',
     },
