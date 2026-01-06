@@ -85,7 +85,7 @@ const SaleForm = (props: SaleFormProps) => {
     }, [customerOptions]);
     const itemComboboxOptions: ComboboxOption[] = useMemo(() => {
         return items.map((item) => ({
-            label: `${item.code} - ${item.name} (Sisa: ${formatNumber(item.available_stock ?? item.stock)})`,
+            label: `${item.code} - ${item.name} (Sisa: ${formatNumberWithSeparator(item.available_stock ?? item.stock)})`,
             value: item.id?.toString() || '',
         }));
     }, [items]);
@@ -464,7 +464,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                 <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
                                                                     <span title="Stok Fisik">
                                                                         Stok:{' '}
-                                                                        {formatNumber(
+                                                                        {formatNumberWithSeparator(
                                                                             item.stock,
                                                                         )}
                                                                     </span>
@@ -473,7 +473,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                         title="Stok Tertahan (Pending)"
                                                                     >
                                                                         Hold:{' '}
-                                                                        {formatNumber(
+                                                                        {formatNumberWithSeparator(
                                                                             item.pending_stock ??
                                                                             0,
                                                                         )}
@@ -489,7 +489,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                                         title="Stok Tersedia"
                                                                     >
                                                                         Sisa:{' '}
-                                                                        {formatNumber(
+                                                                        {formatNumberWithSeparator(
                                                                             item.available_stock ??
                                                                             item.stock,
                                                                         )}

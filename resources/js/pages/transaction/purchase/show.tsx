@@ -13,6 +13,7 @@ import {
     cn,
     formatCurrency,
     formatDatetoString,
+    formatNumberWithSeparator,
     formatNumber,
 } from '@/lib/utils';
 import { edit, index, print } from '@/routes/purchases';
@@ -418,9 +419,9 @@ const PurchaseShow = (props: PageProps) => {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
-                                            {formatNumber(
+                                            {formatNumberWithSeparator(
                                                 detail.quantity,
-                                            ).toLocaleString('id-ID')}
+                                            )}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
                                             {formatCurrency(detail.price)}
