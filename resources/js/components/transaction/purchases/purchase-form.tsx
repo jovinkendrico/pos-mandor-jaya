@@ -365,6 +365,9 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                         <Table className="content">
                             <TableHeader>
                                 <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="w-[50px] text-center">
+                                        No.
+                                    </TableHead>
                                     <TableHead className="min-w-[300px] text-center">
                                         Item
                                     </TableHead>
@@ -403,6 +406,9 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                         );
                                     return (
                                         <TableRow key={index}>
+                                            <TableCell className="text-center font-medium">
+                                                {index + 1}
+                                            </TableCell>
                                             <TableCell>
                                                 <Combobox
                                                     options={

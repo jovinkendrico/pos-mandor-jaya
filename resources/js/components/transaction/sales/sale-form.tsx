@@ -348,6 +348,9 @@ const SaleForm = (props: SaleFormProps) => {
                         <Table className="content">
                             <TableHeader>
                                 <TableRow className="dark:border-b-2 dark:border-white/25">
+                                    <TableHead className="w-[50px] text-center">
+                                        No.
+                                    </TableHead>
                                     <TableHead className="min-w-[300px] text-center">
                                         Item
                                     </TableHead>
@@ -381,6 +384,9 @@ const SaleForm = (props: SaleFormProps) => {
 
                                     return (
                                         <TableRow key={index}>
+                                            <TableCell className="text-center font-medium">
+                                                {index + 1}
+                                            </TableCell>
                                             <TableCell>
                                                 <Combobox
                                                     options={
@@ -785,7 +791,7 @@ const SaleForm = (props: SaleFormProps) => {
                 isModalOpen={isAddCityModalOpen}
                 onModalClose={() => setIsAddCityModalOpen(false)}
             />
-        </form>
+        </form >
     );
 };
 
