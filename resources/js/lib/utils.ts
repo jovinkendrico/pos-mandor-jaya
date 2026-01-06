@@ -104,7 +104,7 @@ export function formatDiscount(input: string) {
     let parsedInput = parseStringtoDecimal(input);
 
     if (parsedInput === null) {
-        return 0;
+        return '0';
     } else {
         if (parsedInput > 100) {
             parsedInput = 100;
@@ -113,7 +113,11 @@ export function formatDiscount(input: string) {
         }
     }
 
-    return parsedInput;
+    // Return as string with comma separator for Indonesian locale
+    return parsedInput.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 4,
+    });
 }
 
 export function formatDatetoString(date: Date) {
