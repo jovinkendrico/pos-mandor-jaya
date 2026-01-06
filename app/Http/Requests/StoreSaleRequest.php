@@ -16,6 +16,54 @@ class StoreSaleRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Normalize decimal separators (comma to dot)
+        $this->merge([
+            'discount1_percent' => $this->normalizeDecimal($this->discount1_percent),
+            'discount2_percent' => $this->normalizeDecimal($this->discount2_percent),
+            'ppn_percent' => $this->normalizeDecimal($this->ppn_percent),
+        ]);
+
+        // Normalize details array
+        if ($this->has('details') && is_array($this->details)) {
+            $details = $this->details;
+            foreach ($details as $index => $detail) {
+                $details[$index]['quantity'] = $this->normalizeDecimal($detail['quantity'] ?? null);
+                $details[$index]['price'] = $this->normalizeDecimal($detail['price'] ?? null);
+                $details[$index]['discount1_percent'] = $this->normalizeDecimal($detail['discount1_percent'] ?? null);
+                $details[$index]['discount2_percent'] = $this->normalizeDecimal($detail['discount2_percent'] ?? null);
+            }
+            $this->merge(['details' => $details]);
+        }
+    }
+
+    /**
+     * Normalize decimal separator from comma to dot
+     */
+    private function normalizeDecimal($value)
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        // Convert to string and replace comma with dot
+        $normalized = str_replace(',', '.', (string) $value);
+        
+        // Remove any thousand separators (dots before the last dot)
+        $parts = explode('.', $normalized);
+        if (count($parts) > 2) {
+            // Multiple dots found, keep only the last one as decimal separator
+            $decimal = array_pop($parts);
+            $normalized = implode('', $parts) . '.' . $decimal;
+        }
+
+        return $normalized;
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
