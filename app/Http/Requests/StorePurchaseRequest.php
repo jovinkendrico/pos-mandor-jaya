@@ -114,7 +114,7 @@ class StorePurchaseRequest extends FormRequest
                     }
                 },
             ],
-            'details.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'details.*.quantity' => ['required', 'numeric', 'gt:0'],
             'details.*.price' => ['required', 'numeric', 'min:0'],
             'details.*.discount1_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'details.*.discount2_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],

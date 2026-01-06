@@ -81,7 +81,7 @@ class StoreSaleRequest extends FormRequest
             'details' => ['required', 'array', 'min:1'],
             'details.*.item_id' => ['required', 'exists:items,id'],
             'details.*.item_uom_id' => ['required', 'exists:item_uoms,id'],
-            'details.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'details.*.quantity' => ['required', 'numeric', 'gt:0'],
             'details.*.price' => ['required', 'numeric', 'min:0'],
             'details.*.discount1_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'details.*.discount2_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
