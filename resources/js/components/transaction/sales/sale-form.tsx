@@ -206,7 +206,8 @@ const SaleForm = (props: SaleFormProps) => {
                                     <AsyncCombobox
                                         initialOptions={customerComboboxOptions}
                                         value={
-                                            dataSale.customer_id
+                                            dataSale.customer_id &&
+                                                Number(dataSale.customer_id) !== 0
                                                 ? dataSale.customer_id.toString()
                                                 : ''
                                         }
@@ -429,7 +430,8 @@ const SaleForm = (props: SaleFormProps) => {
                                                         itemComboboxOptions
                                                     }
                                                     value={
-                                                        detail?.item_id
+                                                        detail?.item_id &&
+                                                            Number(detail.item_id) !== 0
                                                             ? detail?.item_id?.toString()
                                                             : ''
                                                     }

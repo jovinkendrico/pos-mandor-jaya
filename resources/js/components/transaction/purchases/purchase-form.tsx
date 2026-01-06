@@ -215,7 +215,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                 <AsyncCombobox
                                     initialOptions={supplierComboboxOptions}
                                     value={
-                                        dataPurchase.supplier_id
+                                        dataPurchase.supplier_id &&
+                                            Number(dataPurchase.supplier_id) !== 0
                                             ? dataPurchase.supplier_id.toString()
                                             : ''
                                     }
@@ -452,7 +453,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                         itemComboboxOptions
                                                     }
                                                     value={
-                                                        detail?.item_id
+                                                        detail?.item_id &&
+                                                            Number(detail.item_id) !== 0
                                                             ? detail?.item_id?.toString()
                                                             : ''
                                                     }
