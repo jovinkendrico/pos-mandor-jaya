@@ -57,7 +57,6 @@ const PurchaseShow = (props: PageProps) => {
     } = useDisclosure();
 
     const tableColumn = [
-        'No.',
         'Kode',
         'Nama Item',
         'UOM',
@@ -405,11 +404,8 @@ const PurchaseShow = (props: PageProps) => {
                                 tableColumn={tableColumn}
                                 tableRow={purchase.details}
                                 pageFrom={1}
-                                renderRow={(detail, index) => (
+                                renderRow={(detail) => (
                                     <>
-                                        <TableCell className="w-[50px] text-center font-medium">
-                                            {index + 1}
-                                        </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center font-mono">
                                             {detail.item?.code}
                                         </TableCell>
