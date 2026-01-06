@@ -25,8 +25,8 @@ class PurchaseDetail extends Model
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
-        'price' => 'decimal:2',
+        'quantity' => 'decimal:4',
+        'price' => 'decimal:4',
         'discount1_percent' => 'decimal:2',
         'discount1_amount' => 'decimal:2',
         'discount2_percent' => 'decimal:2',

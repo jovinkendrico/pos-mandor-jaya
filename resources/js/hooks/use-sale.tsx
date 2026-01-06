@@ -1,7 +1,8 @@
 import {
     formatCurrency,
     formatNumberWithSeparator,
-    parseStringtoNumber,
+    parseCurrency,
+    parseStringtoDecimal,
 } from '@/lib/utils';
 import { store, update } from '@/routes/sales';
 import { ISale, ISaleDetail } from '@/types';
@@ -189,18 +190,16 @@ const useSale = () => {
         setQuantityDisplayValue: Dispatch<SetStateAction<string[]>>,
     ) => {
         const input = e.target.value;
-
-        if (input === '') {
-            handleChangeItem(index, 'quantity', 0);
+        if (input.endsWith(',')) {
             setQuantityDisplayValue([
                 ...quantityDisplayValues.slice(0, index),
-                '0',
+                input,
                 ...quantityDisplayValues.slice(index + 1),
             ]);
             return;
         }
 
-        const rawValue = parseStringtoNumber(input);
+        const rawValue = parseStringtoDecimal(input);
 
         const validRawValue = isNaN(rawValue ?? 0) ? 0 : rawValue;
 
@@ -219,18 +218,16 @@ const useSale = () => {
         setPriceDisplayValues: Dispatch<SetStateAction<string[]>>,
     ) => {
         const input = e.target.value;
-
-        if (input === '') {
-            handleChangeItem(index, 'price', 0);
+        if (input.endsWith(',')) {
             setPriceDisplayValues([
                 ...priceDisplayValues.slice(0, index),
-                '',
+                input,
                 ...priceDisplayValues.slice(index + 1),
             ]);
             return;
         }
 
-        const rawValue = parseStringtoNumber(input);
+        const rawValue = parseCurrency(input);
 
         handleChangeItem(index, 'price', rawValue);
         setPriceDisplayValues([
