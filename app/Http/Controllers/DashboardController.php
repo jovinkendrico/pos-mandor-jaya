@@ -520,6 +520,24 @@ class DashboardController extends Controller
                 'date_from' => $dateFrom ?: $periodStart->format('Y-m-d'),
                 'date_to' => $dateTo ?: $periodEnd->format('Y-m-d'),
             ],
+            'unconfirmed' => [
+                'sales' => [
+                    'count' => Sale::where('status', 'pending')
+                        ->whereBetween('sale_date', [$periodStart, $periodEnd])
+                        ->count(),
+                    'amount' => (float) Sale::where('status', 'pending')
+                        ->whereBetween('sale_date', [$periodStart, $periodEnd])
+                        ->sum('total_amount'),
+                ],
+                'purchases' => [
+                    'count' => Purchase::where('status', 'pending')
+                        ->whereBetween('purchase_date', [$periodStart, $periodEnd])
+                        ->count(),
+                    'amount' => (float) Purchase::where('status', 'pending')
+                        ->whereBetween('purchase_date', [$periodStart, $periodEnd])
+                        ->sum('total_amount'),
+                ],
+            ],
             'stats' => [
                 'sales' => [
                     'today' => (float) $todaySales,

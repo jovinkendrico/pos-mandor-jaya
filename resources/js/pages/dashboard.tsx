@@ -230,6 +230,16 @@ interface PageProps {
     topSellingItems: TopSellingItem[];
     topCustomers: TopCustomer[];
     topSuppliers: TopSupplier[];
+    unconfirmed: {
+        sales: {
+            count: number;
+            amount: number;
+        };
+        purchases: {
+            count: number;
+            amount: number;
+        };
+    };
 }
 
 export default function Dashboard({
@@ -247,6 +257,7 @@ export default function Dashboard({
     topSellingItems,
     topCustomers,
     topSuppliers,
+    unconfirmed,
 }: PageProps) {
     const [filters, setFilters] = useState({
         date_from: period.date_from,
@@ -521,6 +532,42 @@ export default function Dashboard({
                     </CardContent>
                 </Card>
 
+                {/* Unconfirmed Transactions Section */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card className="content border-yellow-200 bg-yellow-50/30">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Penjualan Belum Konfirmasi
+                            </CardTitle>
+                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {formatCurrency(unconfirmed.sales.amount)}
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {unconfirmed.sales.count} Transaksi pending
+                            </p>
+                        </CardContent>
+                    </Card>
+                    <Card className="content border-yellow-200 bg-yellow-50/30">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Pembelian Belum Konfirmasi
+                            </CardTitle>
+                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {formatCurrency(unconfirmed.purchases.amount)}
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {unconfirmed.purchases.count} Transaksi pending
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+
                 {/* Main Financial Overview */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <StatCard
@@ -600,7 +647,7 @@ export default function Dashboard({
                             >
                                 {formatCurrency(
                                     stats.payments.todaySalePayments -
-                                        stats.payments.todayPurchasePayments,
+                                    stats.payments.todayPurchasePayments,
                                 )}
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
@@ -633,126 +680,126 @@ export default function Dashboard({
                 {(criticalStockItems.length > 0 ||
                     overdueSales.length > 0 ||
                     stats.payments.overdueAmount > 0) && (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {criticalStockItems.length > 0 && (
-                            <Card className="border-red-200 bg-red-50/50">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-base">
-                                        <AlertCircle className="h-4 w-4 text-red-600 dark:text-danger-500" />
-                                        Stok Kritis ({criticalStockItems.length}
-                                        )
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="max-h-32 space-y-1.5 overflow-y-auto">
-                                        {criticalStockItems
-                                            .slice(0, 3)
-                                            .map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className="flex items-center justify-between text-sm"
-                                                >
-                                                    <span className="flex-1 truncate">
-                                                        {item.name}
-                                                    </span>
-                                                    <Badge
-                                                        variant="destructive"
-                                                        className="ml-2 text-xs"
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {criticalStockItems.length > 0 && (
+                                <Card className="border-red-200 bg-red-50/50">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="flex items-center gap-2 text-base">
+                                            <AlertCircle className="h-4 w-4 text-red-600 dark:text-danger-500" />
+                                            Stok Kritis ({criticalStockItems.length}
+                                            )
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="max-h-32 space-y-1.5 overflow-y-auto">
+                                            {criticalStockItems
+                                                .slice(0, 3)
+                                                .map((item) => (
+                                                    <div
+                                                        key={item.id}
+                                                        className="flex items-center justify-between text-sm"
                                                     >
-                                                        {item.stock}
-                                                    </Badge>
-                                                </div>
-                                            ))}
-                                        {criticalStockItems.length > 3 && (
-                                            <p className="pt-1 text-xs text-muted-foreground">
-                                                +{criticalStockItems.length - 3}{' '}
-                                                lainnya
-                                            </p>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {overdueSales.length > 0 && (
-                            <Card className="border-red-900 bg-red-500/30">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-base">
-                                        <XCircle className="h-4 w-4 text-red-600 dark:text-danger-500" />
-                                        Piutang Terlambat ({overdueSales.length}
-                                        )
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="max-h-32 space-y-1.5 overflow-y-auto">
-                                        {overdueSales
-                                            .slice(0, 3)
-                                            .map((sale) => (
-                                                <div
-                                                    key={sale.id}
-                                                    className="flex items-center justify-between text-sm"
-                                                >
-                                                    <div className="w-full">
-                                                        <p className="flex-1 truncate">
-                                                            {sale.sale_number}
-                                                        </p>
-                                                    </div>
-                                                    <div className="ml-2 flex w-full items-center justify-between px-2">
-                                                        <Badge className="badge-red-light text-left text-xs">
-                                                            {formatNumber(
-                                                                sale.days_overdue,
-                                                            )}{' '}
-                                                            hari
+                                                        <span className="flex-1 truncate">
+                                                            {item.name}
+                                                        </span>
+                                                        <Badge
+                                                            variant="destructive"
+                                                            className="ml-2 text-xs"
+                                                        >
+                                                            {item.stock}
                                                         </Badge>
-                                                        <p className="text-right text-xs font-medium">
-                                                            {formatCurrency(
-                                                                sale.remaining_amount,
-                                                            )}
-                                                        </p>
                                                     </div>
-                                                </div>
-                                            ))}
-                                        {overdueSales.length > 3 && (
-                                            <p className="pt-1 text-xs text-muted-foreground">
-                                                +{overdueSales.length - 3}{' '}
-                                                lainnya
-                                            </p>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                                ))}
+                                            {criticalStockItems.length > 3 && (
+                                                <p className="pt-1 text-xs text-muted-foreground">
+                                                    +{criticalStockItems.length - 3}{' '}
+                                                    lainnya
+                                                </p>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
 
-                        {stats.returnRate > 2 && (
-                            <Card
-                                className={
-                                    stats.returnRate > 5
-                                        ? 'border-red-200 bg-red-50/50'
-                                        : 'border-orange-200 bg-orange-50/50'
-                                }
-                            >
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-base">
-                                        <RotateCcw
-                                            className={`h-4 w-4 ${stats.returnRate > 5 ? 'text-red-600 dark:text-danger-500' : 'text-orange-600 dark:text-amber-500'}`}
-                                        />
-                                        Tingkat Retur
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div
-                                        className={`text-2xl font-bold ${stats.returnRate > 5 ? 'text-red-600 dark:text-danger-500' : 'text-orange-600 dark:text-amber-500'}`}
-                                    >
-                                        {stats.returnRate.toFixed(2)}%
-                                    </div>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        Retur penjualan {formatPeriod()}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-                )}
+                            {overdueSales.length > 0 && (
+                                <Card className="border-red-900 bg-red-500/30">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="flex items-center gap-2 text-base">
+                                            <XCircle className="h-4 w-4 text-red-600 dark:text-danger-500" />
+                                            Piutang Terlambat ({overdueSales.length}
+                                            )
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="max-h-32 space-y-1.5 overflow-y-auto">
+                                            {overdueSales
+                                                .slice(0, 3)
+                                                .map((sale) => (
+                                                    <div
+                                                        key={sale.id}
+                                                        className="flex items-center justify-between text-sm"
+                                                    >
+                                                        <div className="w-full">
+                                                            <p className="flex-1 truncate">
+                                                                {sale.sale_number}
+                                                            </p>
+                                                        </div>
+                                                        <div className="ml-2 flex w-full items-center justify-between px-2">
+                                                            <Badge className="badge-red-light text-left text-xs">
+                                                                {formatNumber(
+                                                                    sale.days_overdue,
+                                                                )}{' '}
+                                                                hari
+                                                            </Badge>
+                                                            <p className="text-right text-xs font-medium">
+                                                                {formatCurrency(
+                                                                    sale.remaining_amount,
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            {overdueSales.length > 3 && (
+                                                <p className="pt-1 text-xs text-muted-foreground">
+                                                    +{overdueSales.length - 3}{' '}
+                                                    lainnya
+                                                </p>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {stats.returnRate > 2 && (
+                                <Card
+                                    className={
+                                        stats.returnRate > 5
+                                            ? 'border-red-200 bg-red-50/50'
+                                            : 'border-orange-200 bg-orange-50/50'
+                                    }
+                                >
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="flex items-center gap-2 text-base">
+                                            <RotateCcw
+                                                className={`h-4 w-4 ${stats.returnRate > 5 ? 'text-red-600 dark:text-danger-500' : 'text-orange-600 dark:text-amber-500'}`}
+                                            />
+                                            Tingkat Retur
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div
+                                            className={`text-2xl font-bold ${stats.returnRate > 5 ? 'text-red-600 dark:text-danger-500' : 'text-orange-600 dark:text-amber-500'}`}
+                                        >
+                                            {stats.returnRate.toFixed(2)}%
+                                        </div>
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            Retur penjualan {formatPeriod()}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    )}
 
                 {/* Business Insights - 3 Column Grid */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -921,50 +968,50 @@ export default function Dashboard({
                     {/* Low Stock Items */}
                     {(lowStockItems.length > 0 ||
                         criticalStockItems.length > 0) && (
-                        <Card className="content">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <AlertTriangle className="h-4 w-4 text-orange-500" />
-                                    Stok Menipis
-                                </CardTitle>
-                                <CardDescription className="text-xs">
-                                    Stok ≤ 10
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {lowStockItems.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">
-                                        Tidak ada
-                                    </p>
-                                ) : (
-                                    <div className="max-h-48 space-y-1.5 overflow-y-auto">
-                                        {lowStockItems
-                                            .slice(0, 8)
-                                            .map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className="flex items-center justify-between rounded border p-1.5 text-sm"
-                                                >
-                                                    <span className="flex-1 truncate">
-                                                        {item.name}
-                                                    </span>
-                                                    <Badge
-                                                        className={cn(
-                                                            item.stock <= 5
-                                                                ? 'badge-red-light'
-                                                                : 'badge-yellow-light',
-                                                            'ml-2 text-xs',
-                                                        )}
+                            <Card className="content">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center gap-2 text-base">
+                                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                        Stok Menipis
+                                    </CardTitle>
+                                    <CardDescription className="text-xs">
+                                        Stok ≤ 10
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {lowStockItems.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">
+                                            Tidak ada
+                                        </p>
+                                    ) : (
+                                        <div className="max-h-48 space-y-1.5 overflow-y-auto">
+                                            {lowStockItems
+                                                .slice(0, 8)
+                                                .map((item) => (
+                                                    <div
+                                                        key={item.id}
+                                                        className="flex items-center justify-between rounded border p-1.5 text-sm"
                                                     >
-                                                        {item.stock}
-                                                    </Badge>
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    )}
+                                                        <span className="flex-1 truncate">
+                                                            {item.name}
+                                                        </span>
+                                                        <Badge
+                                                            className={cn(
+                                                                item.stock <= 5
+                                                                    ? 'badge-red-light'
+                                                                    : 'badge-yellow-light',
+                                                                'ml-2 text-xs',
+                                                            )}
+                                                        >
+                                                            {item.stock}
+                                                        </Badge>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
 
                     {/* Dead Stock */}
                     {deadStockItems.length > 0 && (
@@ -991,7 +1038,7 @@ export default function Dashboard({
                                             <p className="text-xs text-muted-foreground">
                                                 Stok: {item.stock.toFixed(0)} •{' '}
                                                 {item.days_since_last_sale !==
-                                                null
+                                                    null
                                                     ? `${item.days_since_last_sale} hari lalu`
                                                     : 'Belum pernah'}
                                             </p>
@@ -1153,10 +1200,10 @@ export default function Dashboard({
                                                                 sale.due_date,
                                                             ).getTime() -
                                                                 new Date().getTime()) /
-                                                                (1000 *
-                                                                    60 *
-                                                                    60 *
-                                                                    24),
+                                                            (1000 *
+                                                                60 *
+                                                                60 *
+                                                                24),
                                                         );
                                                     const isDueSoon =
                                                         daysUntilDue <= 7 &&
@@ -1247,10 +1294,10 @@ export default function Dashboard({
                                                                 purchase.due_date,
                                                             ).getTime() -
                                                                 new Date().getTime()) /
-                                                                (1000 *
-                                                                    60 *
-                                                                    60 *
-                                                                    24),
+                                                            (1000 *
+                                                                60 *
+                                                                60 *
+                                                                24),
                                                         );
                                                     const isDueSoon =
                                                         daysUntilDue <= 7 &&
