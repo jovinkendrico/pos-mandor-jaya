@@ -24,6 +24,7 @@ import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
 import {
     formatCurrency,
     formatDiscount,
+    formatDiscountDisplay,
     formatNumber,
     formatNumberWithSeparator,
     parseStringtoDecimal,
@@ -500,21 +501,18 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 <Input
                                                     type="text"
                                                     value={
-                                                        detail.discount1_percent
+                                                        formatDiscountDisplay(detail.discount1_percent || 0)
                                                     }
                                                     onChange={(e) => {
-                                                        const formattedValue =
+                                                        const value =
                                                             formatDiscount(
                                                                 e.target.value,
                                                             );
-                                                        const numericValue = typeof formattedValue === 'string'
-                                                            ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                                            : formattedValue;
 
                                                         handleChangeItem(
                                                             index,
                                                             'discount1_percent',
-                                                            numericValue,
+                                                            value,
                                                         );
                                                     }}
                                                     className="input-box text-right"
@@ -537,21 +535,18 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 <Input
                                                     type="text"
                                                     value={
-                                                        detail.discount2_percent
+                                                        formatDiscountDisplay(detail.discount2_percent || 0)
                                                     }
                                                     onChange={(e) => {
-                                                        const formattedValue =
+                                                        const value =
                                                             formatDiscount(
                                                                 e.target.value,
                                                             );
-                                                        const numericValue = typeof formattedValue === 'string'
-                                                            ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                                            : formattedValue;
 
                                                         handleChangeItem(
                                                             index,
                                                             'discount2_percent',
-                                                            numericValue,
+                                                            value,
                                                         );
                                                     }}
                                                     className="input-box text-right"
@@ -574,21 +569,18 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 <Input
                                                     type="text"
                                                     value={
-                                                        detail.discount3_percent
+                                                        formatDiscountDisplay(detail.discount3_percent || 0)
                                                     }
                                                     onChange={(e) => {
-                                                        const formattedValue =
+                                                        const value =
                                                             formatDiscount(
                                                                 e.target.value,
                                                             );
-                                                        const numericValue = typeof formattedValue === 'string'
-                                                            ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                                            : formattedValue;
 
                                                         handleChangeItem(
                                                             index,
                                                             'discount3_percent',
-                                                            numericValue,
+                                                            value,
                                                         );
                                                     }}
                                                     className="input-box text-right"
@@ -611,21 +603,18 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                 <Input
                                                     type="text"
                                                     value={
-                                                        detail.discount4_percent
+                                                        formatDiscountDisplay(detail.discount4_percent || 0)
                                                     }
                                                     onChange={(e) => {
-                                                        const formattedValue =
+                                                        const value =
                                                             formatDiscount(
                                                                 e.target.value,
                                                             );
-                                                        const numericValue = typeof formattedValue === 'string'
-                                                            ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                                            : formattedValue;
 
                                                         handleChangeItem(
                                                             index,
                                                             'discount4_percent',
-                                                            numericValue,
+                                                            value,
                                                         );
                                                     }}
                                                     className="input-box text-right"
@@ -687,15 +676,12 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                             <Input
                                 id="ppn_percent"
                                 type="text"
-                                value={dataPurchase.ppn_percent}
+                                value={formatDiscountDisplay(dataPurchase.ppn_percent || 0)}
                                 onChange={(e) => {
-                                    const formattedValue = formatDiscount(
+                                    const value = formatDiscount(
                                         e.target.value,
                                     );
-                                    const numericValue = typeof formattedValue === 'string'
-                                        ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                        : formattedValue;
-                                    setDataPurchase('ppn_percent', numericValue as any);
+                                    setDataPurchase('ppn_percent', value as any);
                                 }}
                                 className="input-box text-right"
                                 disabled={!canEditPrice}

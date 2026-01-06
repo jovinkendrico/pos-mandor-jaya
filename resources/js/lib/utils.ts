@@ -98,13 +98,13 @@ export function formatDate(dateString: Date) {
     });
 }
 
-export function formatDiscount(input: string) {
+export function formatDiscount(input: string): number | string {
     if (input.endsWith(',')) return input;
 
     let parsedInput = parseStringtoDecimal(input);
 
     if (parsedInput === null) {
-        return '0';
+        return 0;
     } else {
         if (parsedInput > 100) {
             parsedInput = 100;
@@ -113,8 +113,11 @@ export function formatDiscount(input: string) {
         }
     }
 
-    // Return as string with comma separator for Indonesian locale
-    return parsedInput.toLocaleString('id-ID', {
+    return parsedInput;
+}
+
+export function formatDiscountDisplay(value: number): string {
+    return value.toLocaleString('id-ID', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 4,
     });

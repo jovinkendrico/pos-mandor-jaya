@@ -24,6 +24,7 @@ import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
 import {
     formatCurrency,
     formatDiscount,
+    formatDiscountDisplay,
     formatNumber,
     formatNumberWithSeparator,
     parseStringtoDecimal,
@@ -516,23 +517,17 @@ const SaleForm = (props: SaleFormProps) => {
                                                 <Input
                                                     type="text"
                                                     value={
-                                                        detail.discount1_percent
+                                                        formatDiscountDisplay(detail.discount1_percent || 0)
                                                     }
                                                     onChange={(e) => {
-                                                        const formattedValue =
-                                                            formatDiscount(
-                                                                e.target.value,
-                                                            );
-
-                                                        // Parse back to number for storage
-                                                        const numericValue = typeof formattedValue === 'string'
-                                                            ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                                            : formattedValue;
+                                                        const value = formatDiscount(
+                                                            e.target.value,
+                                                        );
 
                                                         handleChangeItem(
                                                             index,
                                                             'discount1_percent',
-                                                            numericValue,
+                                                            value,
                                                         );
                                                     }}
                                                     className="input-box text-right"
@@ -554,23 +549,17 @@ const SaleForm = (props: SaleFormProps) => {
                                                 <Input
                                                     type="text"
                                                     value={
-                                                        detail.discount2_percent
+                                                        formatDiscountDisplay(detail.discount2_percent || 0)
                                                     }
                                                     onChange={(e) => {
-                                                        const formattedValue =
-                                                            formatDiscount(
-                                                                e.target.value,
-                                                            );
-
-                                                        // Parse back to number for storage
-                                                        const numericValue = typeof formattedValue === 'string'
-                                                            ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                                            : formattedValue;
+                                                        const value = formatDiscount(
+                                                            e.target.value,
+                                                        );
 
                                                         handleChangeItem(
                                                             index,
                                                             'discount2_percent',
-                                                            numericValue,
+                                                            value,
                                                         );
                                                     }}
                                                     className="input-box text-right"
@@ -631,15 +620,12 @@ const SaleForm = (props: SaleFormProps) => {
                             <Input
                                 id="ppn_percent"
                                 type="text"
-                                value={dataSale.ppn_percent}
+                                value={formatDiscountDisplay(dataSale.ppn_percent || 0)}
                                 onChange={(e) => {
-                                    const formattedValue = formatDiscount(
+                                    const value = formatDiscount(
                                         e.target.value,
                                     );
-                                    const numericValue = typeof formattedValue === 'string'
-                                        ? (parseStringtoDecimal(formattedValue) ?? 0)
-                                        : formattedValue;
-                                    setDataSale('ppn_percent', numericValue as any);
+                                    setDataSale('ppn_percent', value as any);
                                 }}
                                 className="input-box text-right"
                             />
