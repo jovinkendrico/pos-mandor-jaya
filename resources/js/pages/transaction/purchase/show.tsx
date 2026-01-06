@@ -213,6 +213,32 @@ const PurchaseShow = (props: PageProps) => {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
+                                    No. HP:
+                                </span>
+                                <span className="font-medium">
+                                    {purchase.supplier?.phone_number || '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Kota:
+                                </span>
+                                <span className="font-medium">
+                                    {purchase.supplier?.city?.name || '-'}
+                                </span>
+                            </div>
+                            {purchase.supplier?.address && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">
+                                        Alamat:
+                                    </span>
+                                    <span className="font-medium text-right max-w-[50%]">
+                                        {purchase.supplier.address}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
                                     Tanggal:
                                 </span>
                                 <span className="font-medium">

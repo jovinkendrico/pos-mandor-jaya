@@ -30,7 +30,7 @@ class PurchaseController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Purchase::with(['supplier', 'details.item', 'details.itemUom', 'creator', 'updater']);
+        $query = Purchase::with(['supplier.city', 'details.item', 'details.itemUom', 'creator', 'updater']);
 
         // Search
         if ($request->filled('search')) {
@@ -107,7 +107,7 @@ class PurchaseController extends Controller
      */
     public function create(): Response
     {
-        $suppliers = Supplier::orderBy('name')->get();
+        $suppliers = Supplier::with('city')->orderBy('name')->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
         return Inertia::render('transaction/purchase/create', [
@@ -269,7 +269,7 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase): Response
     {
-        $purchase->load(['supplier', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
+        $purchase->load(['supplier.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
         return Inertia::render('transaction/purchase/show', [
             'purchase' => $purchase,
@@ -288,7 +288,7 @@ class PurchaseController extends Controller
         }
 
         $purchase->load(['details.item', 'details.itemUom.uom']);
-        $suppliers = Supplier::orderBy('name')->limit(10)->get();
+        $suppliers = Supplier::with('city')->orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
 

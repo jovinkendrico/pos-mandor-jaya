@@ -225,6 +225,52 @@ const SaleForm = (props: SaleFormProps) => {
                                     <InputError
                                         message={errorsSale.customer_id}
                                     />
+                                    {dataSale.customer_id && (
+                                        <div className="mt-2 text-sm text-muted-foreground">
+                                            {(() => {
+                                                const selectedCustomer =
+                                                    localCustomers.find(
+                                                        (c) =>
+                                                            c.id ===
+                                                            dataSale.customer_id,
+                                                    );
+                                                if (!selectedCustomer)
+                                                    return null;
+                                                return (
+                                                    <div className="space-y-1 rounded-md bg-slate-50 p-3 dark:bg-slate-900">
+                                                        <div className="flex justify-between">
+                                                            <span>No. HP:</span>
+                                                            <span className="font-medium text-foreground">
+                                                                {selectedCustomer.phone_number ||
+                                                                    '-'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span>Kota:</span>
+                                                            <span className="font-medium text-foreground">
+                                                                {selectedCustomer
+                                                                    .city
+                                                                    ?.name ||
+                                                                    '-'}
+                                                            </span>
+                                                        </div>
+                                                        {selectedCustomer.address && (
+                                                            <div className="flex justify-between">
+                                                                <span>
+                                                                    Alamat:
+                                                                </span>
+                                                                <span className="max-w-[60%] text-right font-medium text-foreground">
+                                                                    {
+                                                                        selectedCustomer.address
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

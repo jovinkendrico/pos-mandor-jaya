@@ -224,6 +224,32 @@ const SaleShow = (props: PageProps) => {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
+                                    No. HP:
+                                </span>
+                                <span className="font-medium">
+                                    {sale.customer?.phone_number || '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Kota:
+                                </span>
+                                <span className="font-medium">
+                                    {sale.customer?.city?.name || '-'}
+                                </span>
+                            </div>
+                            {sale.customer?.address && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">
+                                        Alamat:
+                                    </span>
+                                    <span className="font-medium text-right max-w-[50%]">
+                                        {sale.customer.address}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
                                     Tanggal:
                                 </span>
                                 <span className="font-medium">

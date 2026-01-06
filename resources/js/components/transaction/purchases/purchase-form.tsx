@@ -233,6 +233,52 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                 <InputError
                                     message={errorsPurchase.supplier_id}
                                 />
+                                {dataPurchase.supplier_id && (
+                                    <div className="mt-2 text-sm text-muted-foreground">
+                                        {(() => {
+                                            const selectedSupplier =
+                                                localSuppliers.find(
+                                                    (s) =>
+                                                        s.id ===
+                                                        dataPurchase.supplier_id,
+                                                );
+                                            if (!selectedSupplier)
+                                                return null;
+                                            return (
+                                                <div className="space-y-1 rounded-md bg-slate-50 p-3 dark:bg-slate-900">
+                                                    <div className="flex justify-between">
+                                                        <span>No. HP:</span>
+                                                        <span className="font-medium text-foreground">
+                                                            {selectedSupplier.phone_number ||
+                                                                '-'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>Kota:</span>
+                                                        <span className="font-medium text-foreground">
+                                                            {selectedSupplier
+                                                                .city
+                                                                ?.name ||
+                                                                '-'}
+                                                        </span>
+                                                    </div>
+                                                    {selectedSupplier.address && (
+                                                        <div className="flex justify-between">
+                                                            <span>
+                                                                Alamat:
+                                                            </span>
+                                                            <span className="max-w-[60%] text-right font-medium text-foreground">
+                                                                {
+                                                                    selectedSupplier.address
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="flex flex-row gap-4 md:pr-6">

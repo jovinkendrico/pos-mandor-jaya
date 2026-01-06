@@ -31,7 +31,7 @@ class SaleController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Sale::with(['customer', 'details.item', 'details.itemUom', 'creator', 'updater']);
+        $query = Sale::with(['customer.city', 'details.item', 'details.itemUom', 'creator', 'updater']);
 
         // Search
         if ($request->filled('search')) {
@@ -109,7 +109,7 @@ class SaleController extends Controller
      */
     public function create(): Response
     {
-        $customers = Customer::orderBy('name')->limit(10)->get();
+        $customers = Customer::with('city')->orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/create', [
@@ -247,7 +247,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): Response
     {
-        $sale->load(['customer', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
+        $sale->load(['customer.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
         return Inertia::render('transaction/sale/show', [
             'sale' => $sale,
@@ -266,7 +266,7 @@ class SaleController extends Controller
         }
 
         $sale->load(['details.item', 'details.itemUom']);
-        $customers = Customer::orderBy('name')->limit(5)->get();
+        $customers = Customer::with('city')->orderBy('name')->limit(5)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
         return Inertia::render('transaction/sale/edit', [
@@ -439,7 +439,7 @@ class SaleController extends Controller
     public function print(Sale $sale)
     {
         try {
-            $sale->load(['customer', 'details.item', 'details.itemUom.uom']);
+            $sale->load(['customer.city', 'details.item', 'details.itemUom.uom']);
 
             // 9.5 x 11 inches = 241 x 279 mm = 684 x 792 points
             $pdf = Pdf::loadView('pdf.sale', [
