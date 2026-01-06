@@ -85,7 +85,7 @@ const SaleForm = (props: SaleFormProps) => {
     }, [customerOptions]);
     const itemComboboxOptions: ComboboxOption[] = useMemo(() => {
         return items.map((item) => ({
-            label: `${item.code} - ${item.name}`,
+            label: `${item.code} - ${item.name} (Sisa: ${formatNumber(item.available_stock ?? item.stock)})`,
             value: item.id?.toString() || '',
         }));
     }, [items]);
@@ -450,6 +450,53 @@ const SaleForm = (props: SaleFormProps) => {
                                                     searchPlaceholder="Cari item..."
                                                     className="combobox"
                                                 />
+                                                {detail.item_id &&
+                                                    (() => {
+                                                        const item = items.find(
+                                                            (i) =>
+                                                                i.id ===
+                                                                detail.item_id,
+                                                        );
+                                                        if (item) {
+                                                            return (
+                                                                <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                                                    <span title="Stok Fisik">
+                                                                        Stok:{' '}
+                                                                        {formatNumber(
+                                                                            item.stock,
+                                                                        )}
+                                                                    </span>
+                                                                    <span
+                                                                        className="text-orange-500"
+                                                                        title="Stok Tertahan (Pending)"
+                                                                    >
+                                                                        Hold:{' '}
+                                                                        {formatNumber(
+                                                                            item.pending_stock ??
+                                                                            0,
+                                                                        )}
+                                                                    </span>
+                                                                    <span
+                                                                        className={
+                                                                            item.available_stock &&
+                                                                                item.available_stock <
+                                                                                0
+                                                                                ? 'font-bold text-red-500'
+                                                                                : 'font-bold text-green-600'
+                                                                        }
+                                                                        title="Stok Tersedia"
+                                                                    >
+                                                                        Sisa:{' '}
+                                                                        {formatNumber(
+                                                                            item.available_stock ??
+                                                                            item.stock,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })()}
                                                 <InputError
                                                     message={
                                                         (

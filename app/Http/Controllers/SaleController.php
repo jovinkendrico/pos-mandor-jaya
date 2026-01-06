@@ -112,6 +112,20 @@ class SaleController extends Controller
         $customers = Customer::with('city')->orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
+        // Calculate pending stock for all items
+        $pendingQuantities = DB::table('sale_details')
+            ->join('sales', 'sales.id', '=', 'sale_details.sale_id')
+            ->join('item_uoms', 'item_uoms.id', '=', 'sale_details.item_uom_id')
+            ->where('sales.status', 'pending')
+            ->select('sale_details.item_id', DB::raw('SUM(sale_details.quantity * item_uoms.conversion_value) as pending_qty'))
+            ->groupBy('sale_details.item_id')
+            ->pluck('pending_qty', 'sale_details.item_id');
+
+        $items->each(function ($item) use ($pendingQuantities) {
+            $item->pending_stock = (float) ($pendingQuantities[$item->id] ?? 0);
+            $item->available_stock = $item->stock - $item->pending_stock;
+        });
+
         return Inertia::render('transaction/sale/create', [
             'customers' => $customers,
             'items'     => $items,
@@ -268,6 +282,22 @@ class SaleController extends Controller
         $sale->load(['customer.city', 'details.item', 'details.itemUom']);
         $customers = Customer::with('city')->orderBy('name')->limit(5)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
+
+        // Calculate pending stock for all items
+        $pendingQuantities = DB::table('sale_details')
+            ->join('sales', 'sales.id', '=', 'sale_details.sale_id')
+            ->join('item_uoms', 'item_uoms.id', '=', 'sale_details.item_uom_id')
+            ->where('sales.status', 'pending')
+            // Exclude current sale from pending calculation if we are editing it
+            ->where('sales.id', '!=', $sale->id)
+            ->select('sale_details.item_id', DB::raw('SUM(sale_details.quantity * item_uoms.conversion_value) as pending_qty'))
+            ->groupBy('sale_details.item_id')
+            ->pluck('pending_qty', 'sale_details.item_id');
+
+        $items->each(function ($item) use ($pendingQuantities) {
+            $item->pending_stock = (float) ($pendingQuantities[$item->id] ?? 0);
+            $item->available_stock = $item->stock - $item->pending_stock;
+        });
 
         return Inertia::render('transaction/sale/edit', [
             'sale'      => $sale,

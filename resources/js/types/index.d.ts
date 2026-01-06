@@ -235,6 +235,8 @@ export type IItem = Pick<
 > & {
     item_uoms: IItemUOM[];
     stock_movements: IItemStockMovement[];
+    pending_stock?: number;
+    available_stock?: number;
 };
 
 export interface PageProps {
