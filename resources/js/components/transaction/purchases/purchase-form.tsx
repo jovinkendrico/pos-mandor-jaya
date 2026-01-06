@@ -31,7 +31,7 @@ import {
 } from '@/lib/utils';
 import { IItem, IPurchase, IPurchaseDetail, ISupplier, PageProps } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 interface PurchaseFormProps {
@@ -172,6 +172,21 @@ const PurchaseForm = (props: PurchaseFormProps) => {
     if (!isReady) {
         return <Skeleton className="h-full w-full" />;
     }
+
+    const handleRemoveItem = (index: number) => {
+        removeItem(index);
+        setQuantityDisplayValues((prev) => {
+            const newArr = [...prev];
+            newArr.splice(index, 1);
+            return newArr;
+        });
+        setPriceDisplayValues((prev) => {
+            const newArr = [...prev];
+            newArr.splice(index, 1);
+            return newArr;
+        });
+    };
+
     return (
         <form
             onSubmit={(e) => {
@@ -695,16 +710,12 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                     type="button"
                                                     size="icon"
                                                     variant="ghost"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-600"
                                                     onClick={() =>
-                                                        removeItem(index)
+                                                        handleRemoveItem(index)
                                                     }
-                                                    disabled={
-                                                        dataPurchase.details
-                                                            .length === 1
-                                                    }
-                                                    className="btn-trash"
                                                 >
-                                                    <Trash className="h-4 w-4" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </TableCell>
                                         </TableRow>

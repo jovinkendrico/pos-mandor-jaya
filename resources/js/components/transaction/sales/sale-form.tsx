@@ -163,6 +163,20 @@ const SaleForm = (props: SaleFormProps) => {
         return <Skeleton className="h-full w-full" />;
     }
 
+    const handleRemoveItem = (index: number) => {
+        removeItem(index);
+        setQuantityDisplayValues((prev) => {
+            const newArr = [...prev];
+            newArr.splice(index, 1);
+            return newArr;
+        });
+        setPriceDisplayValues((prev) => {
+            const newArr = [...prev];
+            newArr.splice(index, 1);
+            return newArr;
+        });
+    };
+
     return (
         <form
             onSubmit={(e) => {
@@ -639,14 +653,14 @@ const SaleForm = (props: SaleFormProps) => {
                                                     type="button"
                                                     size="icon"
                                                     variant="ghost"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-600"
                                                     onClick={() =>
-                                                        removeItem(index)
+                                                        handleRemoveItem(index)
                                                     }
                                                     disabled={
                                                         dataSale.details
                                                             .length === 1
                                                     }
-                                                    className="btn-trash"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
