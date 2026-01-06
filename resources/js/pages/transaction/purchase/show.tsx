@@ -113,9 +113,12 @@ const PurchaseShow = (props: PageProps) => {
                 <div className="mb-2 flex items-center justify-between">
                     <div>
                         <div className="flex flex-row items-center gap-2">
-                            <Link href={index().url}>
+                            <div
+                                className="cursor-pointer"
+                                onClick={() => window.history.back()}
+                            >
                                 <ArrowLeft className="h-8 w-8" />
-                            </Link>
+                            </div>
                             <PageTitle
                                 title={`Pembelian ${purchase.purchase_number}`}
                             />
