@@ -221,12 +221,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
-    // Debug Zero Price Sales
-    Route::get('/debug/zero-price-sales', function () {
-        $details = \App\Models\SaleDetail::where('price', '<=', 0)
-            ->whereHas('sale') // Ensure sale exists
-            ->with(['sale', 'item'])
-            ->get();
+    // Identify Reconstructed/Missing Items (Based on Timestamp mismatch)
+    Route::get('/debug/identify-reconstructed', function () {
+        // Find details created significantly later than the sale header (> 1 hour)
+        // This indicates they were added later (e.g. via reconstruction script)
+        $details = \App\Models\SaleDetail::with(['sale', 'item'])
+            ->whereHas('sale')
+            ->get() // Get all and filter in PHP for flexible date comparison
+            ->filter(function ($detail) {
+                if (!$detail->sale || !$detail->created_at || !$detail->sale->created_at) return false;
+                
+                $saleTime = $detail->sale->created_at;
+                $detailTime = $detail->created_at;
+                
+                // Check difference in minutes
+                $diff = $saleTime->diffInMinutes($detailTime);
+                
+                // If detailed created > 60 mins after sale, it's suspicious/reconstructed
+                return $diff > 60;
+            });
 
         $sales = [];
         foreach ($details as $detail) {
@@ -235,21 +248,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 $sales[$saleId] = [
                     'sale_id' => $saleId,
                     'sale_number' => $detail->sale->sale_number,
-                    'status' => $detail->sale->status,
-                    'date' => $detail->sale->sale_date,
-                    'zero_price_items' => []
+                    'sale_date' => $detail->sale->sale_date->format('Y-m-d'),
+                    'detail_created_at' => $detail->created_at->format('Y-m-d H:i:s'),
+                    'reconstructed_items' => []
                 ];
             }
             
-            $sales[$saleId]['zero_price_items'][] = [
+            $sales[$saleId]['reconstructed_items'][] = [
                 'item_name' => $detail->item->name ?? 'Unknown',
-                'quantity' => $detail->quantity + 0, // Cast to number
-                'price' => $detail->price + 0
+                'quantity' => $detail->quantity + 0,
+                'price' => $detail->price + 0,
+                'subtotal' => $detail->subtotal + 0
             ];
         }
 
+        // Sort by Sale Number
+        usort($sales, function($a, $b) {
+            return strcmp($a['sale_number'], $b['sale_number']);
+        });
+
         return response()->json([
             'count' => count($sales),
+            'note' => 'Sales listing items that were created > 1 hour after the sale header (likely reconstructed items)',
             'sales' => array_values($sales)
         ]);
     });

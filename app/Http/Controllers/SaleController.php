@@ -322,6 +322,12 @@ class SaleController extends Controller
         }
 
         DB::transaction(function () use ($request, $sale) {
+            $sale = Sale::lockForUpdate()->find($sale->id);
+
+            if ($sale->status === 'confirmed') {
+                // If confirmed during the request race
+                throw new \Exception('Penjualan status berubah menjadi confirmed saat proses.');
+            }
             // $this->validateStockAvailability($request->details);
 
             // Calculate totals dari semua items (same as store)
@@ -435,24 +441,28 @@ class SaleController extends Controller
      */
     public function confirm(Sale $sale): RedirectResponse
     {
-        if ($sale->status === 'confirmed') {
-            return redirect()->route('sales.show', $sale)
-                ->with('error', 'Penjualan sudah dikonfirmasi.');
-        }
+        return DB::transaction(function () use ($sale) {
+            $sale = Sale::lockForUpdate()->find($sale->id);
 
-        // Check stock availability
-        foreach ($sale->details as $detail) {
-            $baseQty = $detail->quantity * $detail->itemUom->conversion_value;
-            if ($detail->item->stock < $baseQty) {
-                $errorMessage = "Stok {$detail->item->name} tidak mencukupi.";
-                return redirect()->back()->withErrors(['msg' => $errorMessage]);
+            if ($sale->status === 'confirmed') {
+                return redirect()->route('sales.show', $sale)
+                    ->with('error', 'Penjualan sudah dikonfirmasi.');
             }
-        }
 
-        $this->stockService->confirmSale($sale);
+            // Check stock availability
+            foreach ($sale->details as $detail) {
+                $baseQty = $detail->quantity * $detail->itemUom->conversion_value;
+                if ($detail->item->stock < $baseQty) {
+                    $errorMessage = "Stok {$detail->item->name} tidak mencukupi.";
+                    return redirect()->back()->withErrors(['msg' => $errorMessage]);
+                }
+            }
 
-        return redirect()->route('sales.show', $sale)
-            ->with('success', 'Penjualan berhasil dikonfirmasi. Profit sudah dihitung dengan FIFO.');
+            $this->stockService->confirmSale($sale);
+
+            return redirect()->route('sales.show', $sale)
+                ->with('success', 'Penjualan berhasil dikonfirmasi. Profit sudah dihitung dengan FIFO.');
+        });
     }
 
     /**
@@ -460,15 +470,19 @@ class SaleController extends Controller
      */
     public function unconfirm(Sale $sale): RedirectResponse
     {
-        if ($sale->status === 'pending') {
+        return DB::transaction(function () use ($sale) {
+            $sale = Sale::lockForUpdate()->find($sale->id);
+
+            if ($sale->status === 'pending') {
+                return redirect()->route('sales.show', $sale)
+                    ->with('error', 'Penjualan belum dikonfirmasi.');
+            }
+
+            $this->stockService->unconfirmSale($sale);
+
             return redirect()->route('sales.show', $sale)
-                ->with('error', 'Penjualan belum dikonfirmasi.');
-        }
-
-        $this->stockService->unconfirmSale($sale);
-
-        return redirect()->route('sales.show', $sale)
-            ->with('success', 'Konfirmasi penjualan dibatalkan. Stock dikembalikan.');
+                ->with('success', 'Konfirmasi penjualan dibatalkan. Stock dikembalikan.');
+        });
     }
 
     /**
