@@ -396,8 +396,8 @@ export interface Sale {
     customer_id: number;
     sale_number: string;
     customer: Customer;
-    sale_date: Date;
-    due_date?: Date;
+    sale_date: string;
+    due_date?: string;
     subtotal?: number;
     discount1_percent?: number;
     discount1_amount?: number;
