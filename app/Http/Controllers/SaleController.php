@@ -179,6 +179,10 @@ class SaleController extends Controller
                 ];
             }
 
+            if (empty($detailsData)) {
+                throw new \Exception('Tidak ada detail item yang diproses. Silakan input ulang barang.');
+            }
+
             // Header discount calculated from sum of item discounts
             $discount1Amount  = $totalDiscount1Amount;
             $discount1Percent = $subtotal > 0 ? ($discount1Amount / $subtotal) * 100 : 0;
@@ -357,6 +361,10 @@ class SaleController extends Controller
                     'cost'              => 0,
                     'profit'            => 0,
                 ];
+            }
+
+            if (empty($detailsData)) {
+                throw new \Exception('Tidak ada detail item yang diproses. Silakan input ulang barang.');
             }
 
             // Header discount calculated from sum of item discounts
