@@ -358,10 +358,11 @@ class StockService
         $mappings     = [];
 
         // Get stock movements dengan remaining quantity > 0, FIFO order (oldest first)
+        // NOTE: We REMOVED the date check (movement_date <= $date) to allow "backdated" sales to consume "future" stock.
+        // This supports the workflow: Process ALL Purchases first (fill pool) -> Process ALL Sales.
         $movements = StockMovement::where('item_id', $itemId)
             ->where('remaining_quantity', '>', 0)
             ->where('quantity', '>', 0) // Only inbound movements
-            ->where('movement_date', '<=', $date)
             ->orderBy('movement_date', 'asc')
             ->orderBy('id', 'asc')
             ->get();
@@ -387,28 +388,11 @@ class StockService
             $remainingQty -= $qtyToUse;
         }
 
-        // Jika masih ada remaining (stock tidak cukup / negatif), gunakan Model B: PROFT DITAHAN (Cost = 0)
-        if ($remainingQty > 0) {
-            // MODEL B: Deferred COGS
-            // Cost di-nol-kan sementara. Profit akan terlihat besar TAPI statusnya 'unrealized'.
-            // Laporan harus memfilter profit_status = 'realized' agar tidak salah baca.
-            
-            $zerCost = 0;
-            $zeroTotal = 0;
-
-            // Mark as estimated/unrealized mapping for later reconciliation
-            $mappings[] = [
-                'movement_id' => null, // No movement backing this yet
-                'quantity'    => $remainingQty,
-                'unit_cost'   => 0,
-                'total_cost'  => 0,
-                'is_estimated' => true, // Acts as 'unrealized' flag
-            ];
-
-            Log::info('Negative stock - Deferred COGS (Unrealized)', [
-                'item_id'  => $itemId,
-                'quantity' => $remainingQty,
-            ]);
+        // Jika masih ada remaining (stock tidak cukup / negatif)
+        if ($remainingQty > 0.0001) {
+             // STRICT MODE: Fail if stock is insufficient at this date
+             // This ensures we only confirm sales that have physical stock backing them (Realized)
+             throw new \Exception("Insufficient stock for item ID {$itemId} on {$date}. Missing: {$remainingQty}");
         }
 
         return [
