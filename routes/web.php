@@ -221,44 +221,51 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
-    // Identify Reconstructed/Missing Items (Based on Timestamp mismatch)
+    // Identify Reconstructed/Missing Items AND Empty Sales
     Route::get('/debug/identify-reconstructed', function () {
-        // Find details created significantly later than the sale header (> 1 hour)
-        // This indicates they were added later (e.g. via reconstruction script)
+        $sales = [];
+
+        // 1. Find details created significantly later than the sale header (> 1 hour)
         $details = \App\Models\SaleDetail::with(['sale', 'item'])
             ->whereHas('sale')
-            ->get() // Get all and filter in PHP for flexible date comparison
+            ->get() 
             ->filter(function ($detail) {
                 if (!$detail->sale || !$detail->created_at || !$detail->sale->created_at) return false;
-                
-                $saleTime = $detail->sale->created_at;
-                $detailTime = $detail->created_at;
-                
-                // Check difference in minutes
-                $diff = $saleTime->diffInMinutes($detailTime);
-                
-                // If detailed created > 60 mins after sale, it's suspicious/reconstructed
+                $diff = $detail->sale->created_at->diffInMinutes($detail->created_at);
                 return $diff > 60;
             });
 
-        $sales = [];
         foreach ($details as $detail) {
             $saleId = $detail->sale_id;
             if (!isset($sales[$saleId])) {
                 $sales[$saleId] = [
+                    'type' => 'RECONSTRUCTED_ITEMS',
                     'sale_id' => $saleId,
                     'sale_number' => $detail->sale->sale_number,
                     'sale_date' => $detail->sale->sale_date->format('Y-m-d'),
                     'detail_created_at' => $detail->created_at->format('Y-m-d H:i:s'),
-                    'reconstructed_items' => []
+                    'items' => []
                 ];
             }
             
-            $sales[$saleId]['reconstructed_items'][] = [
+            $sales[$saleId]['items'][] = [
                 'item_name' => $detail->item->name ?? 'Unknown',
                 'quantity' => $detail->quantity + 0,
                 'price' => $detail->price + 0,
                 'subtotal' => $detail->subtotal + 0
+            ];
+        }
+
+        // 2. Find Sales with NO details at all
+        $emptySales = \App\Models\Sale::doesntHave('details')->get();
+        foreach ($emptySales as $emptySale) {
+            $sales['empty_' . $emptySale->id] = [
+                'type' => 'EMPTY_SALE_NO_ITEMS',
+                'sale_id' => $emptySale->id,
+                'sale_number' => $emptySale->sale_number,
+                'sale_date' => $emptySale->sale_date->format('Y-m-d'),
+                'detail_created_at' => '-',
+                'items' => []
             ];
         }
 
@@ -269,7 +276,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return response()->json([
             'count' => count($sales),
-            'note' => 'Sales listing items that were created > 1 hour after the sale header (likely reconstructed items)',
+            'note' => 'List includes sales with reconstructed items AND sales with absolutely no items.',
             'sales' => array_values($sales)
         ]);
     });
