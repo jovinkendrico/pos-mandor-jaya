@@ -66,9 +66,11 @@ const SaleShow = (props: PageProps) => {
         'Subtotal',
         'Cost',
         'Profit',
+        'Status Profit',
     ];
 
     if (sale.status === 'pending') {
+        tableColumn.pop();
         tableColumn.pop();
         tableColumn.pop();
     }
@@ -439,6 +441,20 @@ const SaleShow = (props: PageProps) => {
                                                         {formatCurrency(
                                                             detail.profit,
                                                         )}
+                                                    </TableCell>
+                                                    <TableCell className="flex w-full items-center justify-center text-center">
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className={cn(
+                                                                detail.profit_status === 'unrealized'
+                                                                    ? 'badge-yellow-light'
+                                                                    : 'badge-green-light',
+                                                            )}
+                                                        >
+                                                            {detail.profit_status === 'unrealized'
+                                                                ? 'Unrealized'
+                                                                : 'Realized'}
+                                                        </Badge>
                                                     </TableCell>
                                                 </>
                                             )}

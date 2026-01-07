@@ -210,9 +210,12 @@ class StockService
 
                 // Create FIFO mappings for audit trail
                 $isUnrealized = false;
+                $unrealizedBaseQty = 0;
+
                 foreach ($mappings as $mapping) {
                     if (!empty($mapping['is_estimated'])) {
                         $isUnrealized = true;
+                        $unrealizedBaseQty += $mapping['quantity'];
                     }
                     FifoMapping::create([
                         'reference_type'      => 'Sale',
@@ -225,11 +228,18 @@ class StockService
                     ]);
                 }
 
-                $profit = $detail->subtotal - $cost;
-                if ($isUnrealized) {
-                    $profit = 0; // Model B: Hide profit until realized
-                    $unrealizedRevenue += $detail->subtotal;
+                // Calculate proportional unrealized revenue
+                $itemUnrealizedRevenue = 0;
+                if ($baseQuantity > 0) {
+                     $itemUnrealizedRevenue = ($unrealizedBaseQty / $baseQuantity) * $detail->subtotal;
                 }
+                
+                if ($isUnrealized) {
+                    $unrealizedRevenue += $itemUnrealizedRevenue;
+                }
+
+                // Profit = Realized Revenue - Realized Cost
+                $profit = ($detail->subtotal - $itemUnrealizedRevenue) - $cost;
 
                 $detail->update([
                     'cost'   => $cost,

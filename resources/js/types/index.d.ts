@@ -460,6 +460,7 @@ export interface SaleDetail {
     cost?: number;
     profit?: number;
     profit_adjustment?: number;
+    profit_status?: 'realized' | 'unrealized';
 }
 
 export type ISaleDetail = Pick<
@@ -477,6 +478,7 @@ export type ISaleDetail = Pick<
     | 'cost'
     | 'profit'
     | 'profit_adjustment'
+    | 'profit_status'
 >;
 
 export interface PurchaseReturn {
