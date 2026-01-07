@@ -25,20 +25,17 @@ class FifoMapping extends Model
 
     public function saleDetail(): BelongsTo
     {
-        return $this->belongsTo(SaleDetail::class, 'reference_detail_id')
-            ->where('reference_type', 'Sale');
+        return $this->belongsTo(SaleDetail::class, 'reference_detail_id');
     }
 
     public function purchaseReturnDetail(): BelongsTo
     {
-        return $this->belongsTo(PurchaseReturnDetail::class, 'reference_detail_id')
-            ->where('reference_type', 'PurchaseReturn');
+        return $this->belongsTo(PurchaseReturnDetail::class, 'reference_detail_id');
     }
 
     public function saleReturnDetail(): BelongsTo
     {
-        return $this->belongsTo(SaleReturnDetail::class, 'reference_detail_id')
-            ->where('reference_type', 'SaleReturn');
+        return $this->belongsTo(SaleReturnDetail::class, 'reference_detail_id');
     }
 
     public function stockMovement(): BelongsTo

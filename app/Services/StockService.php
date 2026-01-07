@@ -979,7 +979,8 @@ class StockService
     public function reconcileNegativeStock(int $itemId): void
     {
         // Find all estimated mappings for this item (ordered by oldest first)
-        $estimatedMappings = FifoMapping::whereHas('saleDetail', function ($q) use ($itemId) {
+        $estimatedMappings = FifoMapping::where('reference_type', 'Sale')
+        ->whereHas('saleDetail', function ($q) use ($itemId) {
             $q->where('item_id', $itemId);
         })
         ->where('is_estimated', true)
@@ -1052,8 +1053,8 @@ class StockService
                     }
 
                     // Update Sale Detail Profit & Cost
-                    // Update Sale Detail Profit & Cost
-                    $detail = $mapping->saleDetail;
+                    // Use explicit find to avoid relationship issues with reference_type
+                    $detail = \App\Models\SaleDetail::find($mapping->reference_detail_id);
                     if ($detail) {
                         $costDifference = $totalNewCost - ($originalEstimatedCost * ($reconciledQty / $qtyToReconcile));
                         // Update detail
