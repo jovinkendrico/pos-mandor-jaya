@@ -185,11 +185,11 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                                         <TableRow className="bg-muted/50 font-bold border-t">
                                             <TableCell colSpan={3} className="text-right py-2">TOTAL:</TableCell>
                                             <TableCell className="text-right text-red-600 dark:text-red-400 py-2">
-                                                {formatCurrency(sale.status === 'pending' ? 0 : sale.details.reduce((acc, curr) => acc + curr.cost, 0))}
+                                                {formatCurrency(sale.status === 'pending' ? 0 : sale.details.reduce((acc, curr) => acc + Number(curr.cost), 0))}
                                             </TableCell>
                                             <TableCell className="py-2"></TableCell>
                                             <TableCell className="text-right py-2">
-                                                {formatCurrency(sale.details.reduce((acc, curr) => acc + curr.subtotal, 0))}
+                                                {formatCurrency(sale.details.reduce((acc, curr) => acc + Number(curr.subtotal), 0))}
                                             </TableCell>
                                         </TableRow>
                                     </TableBody>
