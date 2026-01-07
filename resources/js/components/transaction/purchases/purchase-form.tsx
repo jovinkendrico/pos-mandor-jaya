@@ -748,7 +748,8 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                             </TableCell>
                                             <TableCell className="text-center font-medium">
                                                 {formatCurrency(
-                                                    calculations.subtotal || 0,
+                                                    calculations.items[index]
+                                                        ?.netAmount || 0,
                                                 )}
                                             </TableCell>
                                             <TableCell>
