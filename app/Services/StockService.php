@@ -372,8 +372,10 @@ class StockService
         // Jika masih ada remaining (stock tidak cukup / negatif)
         if ($remainingQty > 0.0001) {
              // STRICT MODE: Fail if stock is insufficient at this date
-             // This ensures we only confirm sales that have physical stock backing them (Realized)
-             throw new \Exception("Insufficient stock for item ID {$itemId} on {$date}. Missing: {$remainingQty}");
+             $itemName = \App\Models\Item::find($itemId)?->name ?? "ID {$itemId}";
+             
+             // Friendly error message for user
+             throw new \Exception("Stok tidak cukup untuk barang '{$itemName}'. Kurang: " . round($remainingQty, 2));
         }
 
         return [

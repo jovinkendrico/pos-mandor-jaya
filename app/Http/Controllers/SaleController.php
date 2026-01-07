@@ -441,23 +441,29 @@ class SaleController extends Controller
      */
     public function confirm(Sale $sale): RedirectResponse
     {
-        return DB::transaction(function () use ($sale) {
-            $sale = Sale::lockForUpdate()->find($sale->id);
+        try {
+            return DB::transaction(function () use ($sale) {
+                $sale = Sale::lockForUpdate()->find($sale->id);
 
-            if ($sale->status === 'confirmed') {
+                if ($sale->status === 'confirmed') {
+                    return redirect()->route('sales.show', $sale)
+                        ->with('error', 'Penjualan sudah dikonfirmasi.');
+                }
+
+                $this->stockService->confirmSale($sale);
+
                 return redirect()->route('sales.show', $sale)
-                    ->with('error', 'Penjualan sudah dikonfirmasi.');
-            }
-
-            // Stock check removed to allow negative stock confirmation
-            // The StockService handles negative FIFO by using estimated costs.
-            // foreach ($sale->details as $detail) { ... }
-
-            $this->stockService->confirmSale($sale);
-
+                    ->with('success', 'Penjualan berhasil dikonfirmasi. Profit sudah dihitung dengan FIFO.');
+            });
+        } catch (\Exception $e) {
+            Log::error('Sale Confirmation Error', [
+                'sale_id' => $sale->id, 
+                'error' => $e->getMessage()
+            ]);
+            
             return redirect()->route('sales.show', $sale)
-                ->with('success', 'Penjualan berhasil dikonfirmasi. Profit sudah dihitung dengan FIFO.');
-        });
+                ->with('error', 'Gagal Konfirmasi: ' . $e->getMessage());
+        }
     }
 
     /**
