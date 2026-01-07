@@ -218,6 +218,8 @@ export interface Item {
     modal_price?: number;
     item_uoms: ItemUom[];
     stock_movements: ItemStockMovement[];
+    pending_stock?: number;
+    available_stock?: number;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;

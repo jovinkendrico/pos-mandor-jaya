@@ -56,7 +56,7 @@ const ItemTable = (props: ItemTableProps) => {
     const tableColumn = [
         'Kode',
         'Nama Barang',
-        'Stok',
+        'Stok (Fisik / Tersedia)',
         'Harga Modal',
         'Deskripsi',
         'Satuan (UOM)',
@@ -93,11 +93,25 @@ const ItemTable = (props: ItemTableProps) => {
                             {row.name}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
-                            {currentUom
-                                ? formatNumberWithSeparator(
-                                      row.stock / currentUom?.conversion_value,
-                                  )
-                                : '-'}
+                            {currentUom ? (
+                                <div className="flex flex-col items-center">
+                                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {formatNumberWithSeparator(
+                                            row.stock / currentUom?.conversion_value,
+                                        )}
+                                    </span>
+                                    <span className="text-xs text-blue-500 dark:text-blue-400" title="Stok Tersedia (Dikurangi Penjualan Pending)">
+                                        (
+                                        {formatNumberWithSeparator(
+                                            ((row.available_stock ?? row.stock) /
+                                                currentUom?.conversion_value),
+                                        )}
+                                        )
+                                    </span>
+                                </div>
+                            ) : (
+                                '-'
+                            )}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {formatCurrency(

@@ -69,6 +69,22 @@ class ItemController extends Controller
         $query->orderBy('id', 'asc');
 
         $items = $query->paginate(10)->withQueryString();
+
+        // Calculate pending stock for each item (Sales that are Pending)
+        $items->getCollection()->transform(function ($item) {
+             $pendingSalesQty = \App\Models\SaleDetail::query()
+                ->join('sales', 'sales.id', '=', 'sale_details.sale_id')
+                ->join('item_uoms', 'item_uoms.id', '=', 'sale_details.item_uom_id')
+                ->where('sale_details.item_id', $item->id)
+                ->where('sales.status', 'pending')
+                ->sum(\DB::raw('sale_details.quantity * item_uoms.conversion_value'));
+             
+             $item->pending_stock = (float)$pendingSalesQty;
+             $item->available_stock = (float)$item->stock - (float)$pendingSalesQty;
+             
+             return $item;
+        });
+
         $uoms  = Uom::orderBy('name')->get();
 
         return Inertia::render('master/item/index', [
