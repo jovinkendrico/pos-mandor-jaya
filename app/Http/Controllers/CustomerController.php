@@ -149,7 +149,7 @@ class CustomerController extends Controller
     {
         $customer->update($request->validated());
 
-        return redirect()->route('customers.index')
+        return redirect()->back()
             ->with('success', 'Customer berhasil diperbarui.');
     }
 
@@ -160,7 +160,7 @@ class CustomerController extends Controller
     {
         $customer->delete();
 
-        return redirect()->route('customers.index')
+        return redirect()->back()
             ->with('success', 'Customer berhasil dihapus.');
     }
 }

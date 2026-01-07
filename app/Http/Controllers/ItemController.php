@@ -388,7 +388,7 @@ class ItemController extends Controller
             }
         });
 
-        return redirect()->route('items.index')
+        return redirect()->back()
             ->with('success', 'Barang berhasil diperbarui.');
     }
 

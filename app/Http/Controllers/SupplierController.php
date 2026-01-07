@@ -141,7 +141,7 @@ class SupplierController extends Controller
     {
         $supplier->update($request->validated());
 
-        return redirect()->route('suppliers.index')
+        return redirect()->back()
             ->with('success', 'Supplier berhasil diperbarui.');
     }
 
@@ -152,7 +152,7 @@ class SupplierController extends Controller
     {
         $supplier->delete();
 
-        return redirect()->route('suppliers.index')
+        return redirect()->back()
             ->with('success', 'Supplier berhasil dihapus.');
     }
 }

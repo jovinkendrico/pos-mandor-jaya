@@ -94,7 +94,7 @@ class UomController extends Controller
     {
         //
         $uom->update($request->validated());
-        return redirect()->route('uoms.index')
+        return redirect()->back()
             ->with('success', 'UOM berhasil diperbarui.');
     }
 
@@ -118,7 +118,7 @@ class UomController extends Controller
         }
         $uom->delete();
 
-        return redirect()->route('uoms.index')
+        return redirect()->back()
             ->with('success', 'Uom berhasil dihapus.');
     }
 

@@ -130,7 +130,7 @@ class CityController extends Controller
     {
         $city->update($request->validated());
 
-        return redirect()->route('cities.index')
+        return redirect()->back()
             ->with('success', 'Kota berhasil diperbarui.');
     }
 
