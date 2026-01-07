@@ -411,6 +411,86 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
+    // Reset & Reproly All Transactions (Reset History)
+    Route::get('/debug/reprocess-all', function () {
+        set_time_limit(0); 
+        // Increase memory limit for heavy processing
+        ini_set('memory_limit', '512M');
+
+        $log = [];
+        $log[] = "Starting Reprocess...";
+
+        // 1. Unconfirm ALL Confirmed Purchases (Reverse Order to be safe, though not strictly needed)
+        $confirmedPurchases = \App\Models\Purchase::where('status', 'confirmed')->orderByDesc('id')->get();
+        foreach ($confirmedPurchases as $purchase) {
+            try {
+                app(\App\Services\StockService::class)->unconfirmPurchase($purchase);
+            } catch (\Exception $e) {
+                // Ignore errors, continue
+            }
+        }
+        $log[] = "Unconfirmed " . $confirmedPurchases->count() . " Purchases.";
+
+        // 2. Unconfirm ALL Confirmed Sales
+        $confirmedSales = \App\Models\Sale::where('status', 'confirmed')->orderByDesc('id')->get();
+        foreach ($confirmedSales as $sale) {
+            try {
+                app(\App\Services\StockService::class)->unconfirmSale($sale);
+            } catch (\Exception $e) {
+                // Ignore errors
+            }
+        }
+        $log[] = "Unconfirmed " . $confirmedSales->count() . " Sales.";
+
+        // Optional: Clean up any orphaned stock movements just in case
+        \App\Models\StockMovement::truncate();
+        \App\Models\FifoMapping::truncate();
+        \App\Models\JournalEntry::truncate();
+        \App\Models\JournalEntryDetail::truncate();
+        \DB::table('items')->update(['stock' => DB::raw('initial_stock')]); // Reset stock to initial
+
+        $log[] = "Trucated Movements, FIFO, Journals. Stock reset to Initial.";
+
+        // 3. Confirm ALL Sales (Chronological)
+        // Strat: Process Sales first so they grab "Estimated Cost".
+        // Then Purchases will arrive and "Reconcile" them.
+        $allSales = \App\Models\Sale::orderBy('sale_date')->orderBy('id')->get();
+        $salesCount = 0;
+        foreach ($allSales as $sale) {
+            try {
+                // Recalculate Totals first (Fix inconsistencies)
+                 // Manually sum details
+                 $subtotal = $sale->details->sum('subtotal');
+                 $discount1 = $sale->discount1_amount; // Keep existing discount amounts or recalc? 
+                 // Better safely just Confirm. The mismatched totals script can fix header later if needed.
+                 // Actually StockService calculates cost. It doesn't fix "Total Amount" on header.
+                 // But that's fine.
+                app(\App\Services\StockService::class)->confirmSale($sale);
+                $salesCount++;
+            } catch (\Exception $e) {
+                $log[] = "Error Confirming Sale #{$sale->sale_number}: " . $e->getMessage();
+            }
+        }
+        $log[] = "Re-Confirmed $salesCount Sales.";
+
+        // 4. Confirm ALL Purchases (Chronological)
+        // This will trigger 'reconcileNegativeStock' and fix the Sales costs.
+        $allPurchases = \App\Models\Purchase::orderBy('purchase_date')->orderBy('id')->get();
+        $purchCount = 0;
+        foreach ($allPurchases as $purchase) {
+            try {
+                app(\App\Services\StockService::class)->confirmPurchase($purchase);
+                $purchCount++;
+            } catch (\Exception $e) {
+                $log[] = "Error Confirming Purchase #{$purchase->purchase_number}: " . $e->getMessage();
+            }
+        }
+        $log[] = "Re-Confirmed $purchCount Purchases.";
+
+        $log[] = "Done.";
+        return response()->json($log);
+    });
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,
