@@ -43,7 +43,7 @@ class QZPrintService {
     }
 
     private formatCurrency(num: number): string {
-        return num.toLocaleString('id-ID');
+        return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
     private terbilang(n: number): string {
@@ -67,7 +67,7 @@ class QZPrintService {
         } else if (n < 1000000000) {
             temp = this.terbilang(Math.floor(n / 1000000)) + ' juta' + this.terbilang(n % 1000000);
         }
-        return temp.trim();
+        return temp;
     }
 
     async printRaw(data: PrintData, printerName: string) {
@@ -99,7 +99,7 @@ class QZPrintService {
 
         const maxInfoLines = Math.max(leftLines.length, rightLines.length);
         for (let i = 0; i < maxInfoLines; i++) {
-            let line = '     ';
+            let line = '';
             line += (leftLines[i] || '').padEnd(leftColWidth);
             line += (rightLines[i] || '');
             escp.push(line + '\n');
@@ -107,14 +107,14 @@ class QZPrintService {
         escp.push('\n');
 
         // Table Header
-        escp.push('     --------------------------------------------------------------------------------------\n');
-        escp.push('     | No |   Quantity   | Nama Barang                              |   Harga @  |   Jumlah   |\n');
-        escp.push('     +----+--------------+------------------------------------------+------------+------------+\n');
+        escp.push('--------------------------------------------------------------------------------------\n');
+        escp.push('| No |   Quantity   | Nama Barang                              |   Harga @  |   Jumlah   |\n');
+        escp.push('+----+--------------+------------------------------------------+------------+------------+\n');
 
         // Table Body - Exact 12 Rows
         const maxRows = 12;
         for (let i = 0; i < maxRows; i++) {
-            let row = '     |';
+            let row = '|';
             const no = (i + 1).toString().padStart(2);
             row += ` ${no} |`;
 
@@ -133,20 +133,20 @@ class QZPrintService {
         }
 
         // Table Footer
-        escp.push('     --------------------------------------------------------------------------------------\n');
+        escp.push('--------------------------------------------------------------------------------------\n');
 
         // Terbilang and Total
-        const terbilangText = this.terbilang(data.total);
+        const terbilangText = this.terbilang(data.total).trim();
         const terbilangDisplay = terbilangText ? `Terbilang: ${terbilangText.charAt(0).toUpperCase() + terbilangText.slice(1)} Rupiah` : '';
         const totalLabel = "Total: ";
         const totalValue = `Rp. ${this.formatCurrency(data.total)}`;
 
-        const footerLine = '     ' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(15);
+        const footerLine = '' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(15);
         escp.push(footerLine + '\n\n');
 
         // Signatures
-        escp.push('            Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
-        escp.push('           (____________)      (____________)        (____________)        (____________)\n');
+        escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
+        escp.push('      (____________)      (____________)        (____________)        (____________)\n');
 
         escp.push('\x0C');
 
