@@ -84,6 +84,76 @@ class StockService
                 ->get();
 
             foreach ($movements as $movement) {
+                // 1. Handle Sales linked to this purchase (De-Reconciliation)
+                // This prevents the need for global "Reprocess All" by locally fixing affected sales
+                $mappings = FifoMapping::where('stock_movement_id', $movement->id)->get();
+                
+                foreach ($mappings as $mapping) {
+                    // Only handle Sales logic for now
+                    if ($mapping->reference_type !== 'Sale') {
+                        $mapping->delete();
+                        continue;
+                    }
+
+                    $detail = \App\Models\SaleDetail::find($mapping->reference_detail_id);
+                    if ($detail) {
+                        // Determine Fallback Cost (to use as new Estimated Cost)
+                        // We must exclude the CURRENT Purchase from this check as it is being deleted
+                        $fallbackCost = 0;
+                        
+                        // Try last valid movement EXCLUDING this purchase
+                        $lastValid = StockMovement::where('item_id', $detail->item_id)
+                            ->where('unit_cost', '>', 0)
+                            ->whereNot(function($q) use ($purchase) {
+                                $q->where('reference_type', 'Purchase')
+                                  ->where('reference_id', $purchase->id);
+                            })
+                            ->orderBy('movement_date', 'desc')
+                            ->orderBy('id', 'desc')
+                            ->first();
+
+                        if ($lastValid) {
+                            $fallbackCost = (float)$lastValid->unit_cost;
+                        } elseif ($detail->item && $detail->item->modal_price > 0) {
+                            $fallbackCost = (float)$detail->item->modal_price;
+                        }
+
+                        // Calculate Diff
+                        $revertedTotalCost = $fallbackCost * $mapping->quantity_consumed;
+                        $originalTotalCost = $mapping->total_cost;
+                        $costDiff = $revertedTotalCost - $originalTotalCost;
+
+                        // Apply Diff to Sales
+                        $detail->increment('cost', $costDiff);
+                        $detail->decrement('profit', $costDiff);
+
+                        $sale = $detail->sale;
+                        if ($sale) {
+                            $sale->increment('total_cost', $costDiff);
+                            $sale->decrement('total_profit', $costDiff);
+
+                            // Journal Adjustment for the reversal
+                            if (abs($costDiff) > 0.01) {
+                                try {
+                                    app(JournalService::class)->adjustSaleCogs($sale, $costDiff);
+                                } catch (\Exception $e) {}
+                            }
+                        }
+
+                        // Convert Mapping to Estimated
+                        $mapping->update([
+                            'stock_movement_id' => null,
+                            'unit_cost' => $fallbackCost,
+                            'total_cost' => $revertedTotalCost,
+                            'is_estimated' => true
+                        ]);
+                    } else {
+                        // Orphaned mapping
+                        $mapping->delete();
+                    }
+                }
+
+                // 2. Standard Stock Reversal
                 $item = $movement->item;
                 if ($item) {
                     $item->decrement('stock', $movement->quantity);
@@ -118,6 +188,7 @@ class StockService
             $sale->loadMissing(['details.item', 'details.itemUom']);
 
             $totalCost = 0;
+            $unrealizedRevenue = 0;
 
             foreach ($sale->details as $detail) {
                 if (!$detail->item || !$detail->itemUom) {
@@ -138,7 +209,11 @@ class StockService
                 $mappings   = $fifoResult['mappings'];
 
                 // Create FIFO mappings for audit trail
+                $isUnrealized = false;
                 foreach ($mappings as $mapping) {
+                    if (!empty($mapping['is_estimated'])) {
+                        $isUnrealized = true;
+                    }
                     FifoMapping::create([
                         'reference_type'      => 'Sale',
                         'reference_detail_id' => $detail->id,
@@ -150,9 +225,16 @@ class StockService
                     ]);
                 }
 
+                $profit = $detail->subtotal - $cost;
+                if ($isUnrealized) {
+                    $profit = 0; // Model B: Hide profit until realized
+                    $unrealizedRevenue += $detail->subtotal;
+                }
+
                 $detail->update([
                     'cost'   => $cost,
-                    'profit' => $detail->subtotal - $cost,
+                    'profit' => $profit,
+                    'profit_status' => $isUnrealized ? 'unrealized' : 'realized',
                 ]);
 
                 $totalCost += $cost;
@@ -173,10 +255,12 @@ class StockService
 
             // Calculate profit using total_after_discount (without PPN) - same as in Profit Loss Report
             $revenue = (float) $sale->total_after_discount;
+            $realizedProfit = $revenue - $totalCost - $unrealizedRevenue;
+
             $sale->update([
                 'status'       => 'confirmed',
                 'total_cost'   => $totalCost,
-                'total_profit' => $revenue - $totalCost, // Revenue (after discount, without PPN) - Cost
+                'total_profit' => $realizedProfit,
                 'updated_by'   => auth()->id(),
             ]);
 
@@ -293,36 +377,27 @@ class StockService
             $remainingQty -= $qtyToUse;
         }
 
-        // Jika masih ada remaining (stock tidak cukup / negatif), gunakan avg cost atau purchase price terakhir
+        // Jika masih ada remaining (stock tidak cukup / negatif), gunakan Model B: PROFT DITAHAN (Cost = 0)
         if ($remainingQty > 0) {
-            $avgCost       = $this->getAverageCost($itemId);
+            // MODEL B: Deferred COGS
+            // Cost di-nol-kan sementara. Profit akan terlihat besar TAPI statusnya 'unrealized'.
+            // Laporan harus memfilter profit_status = 'realized' agar tidak salah baca.
             
-            // Jika avgCost pun 0, coba ambil harga beli terakhir
-            if ($avgCost <= 0) {
-                $lastPurchase = StockMovement::where('item_id', $itemId)
-                    ->where('quantity', '>', 0)
-                    ->orderBy('movement_date', 'desc')
-                    ->orderBy('id', 'desc')
-                    ->first();
-                $avgCost = $lastPurchase ? (float)$lastPurchase->unit_cost : 0;
-            }
+            $zerCost = 0;
+            $zeroTotal = 0;
 
-            $avgCostTotal  = $remainingQty * $avgCost;
-            $totalCost    += $avgCostTotal;
-
-            // Mark as estimated mapping for later reconciliation
+            // Mark as estimated/unrealized mapping for later reconciliation
             $mappings[] = [
                 'movement_id' => null, // No movement backing this yet
                 'quantity'    => $remainingQty,
-                'unit_cost'   => $avgCost,
-                'total_cost'  => $avgCostTotal,
-                'is_estimated' => true,
+                'unit_cost'   => 0,
+                'total_cost'  => 0,
+                'is_estimated' => true, // Acts as 'unrealized' flag
             ];
 
-            Log::info('Negative stock for FIFO, using estimated cost', [
+            Log::info('Negative stock - Deferred COGS (Unrealized)', [
                 'item_id'  => $itemId,
                 'quantity' => $remainingQty,
-                'avg_cost' => $avgCost,
             ]);
         }
 
@@ -373,7 +448,28 @@ class StockService
             ->where('remaining_quantity', '>', 0)
             ->avg('unit_cost');
 
-        return $avg ?? 0;
+        if ($avg && $avg > 0) {
+            return (float)$avg;
+        }
+
+        // Fallback 1: Manual Modal Price
+        $item = \App\Models\Item::find($itemId);
+        if ($item && $item->modal_price > 0) {
+            return (float)$item->modal_price;
+        }
+
+        // Fallback 2: Last Valid Cost from any Stock Movement (Purchase, Adjustment, Opening)
+        $lastMovement = StockMovement::where('item_id', $itemId)
+            ->where('unit_cost', '>', 0)
+            ->orderBy('movement_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastMovement) {
+            return (float)$lastMovement->unit_cost;
+        }
+
+        return 0;
     }
 
     /**
@@ -1057,17 +1153,44 @@ class StockService
                     $detail = \App\Models\SaleDetail::find($mapping->reference_detail_id);
                     if ($detail) {
                         $costDifference = $totalNewCost - ($originalEstimatedCost * ($reconciledQty / $qtyToReconcile));
-                        // Update detail
+                        
+                        // 1. Update Cost (Increment by the actual cost of the reconciled part)
                         $detail->increment('cost', $costDifference);
-                        $detail->decrement('profit', $costDifference);
+                        
+                        // 2. Check if this detail is now FULLY realized (Model B logic)
+                        $hasUnrealized = FifoMapping::where('reference_type', 'Sale')
+                            ->where('reference_detail_id', $detail->id)
+                            ->where('is_estimated', true)
+                            ->exists();
+
+                        $oldProfit = $detail->profit;
+                        $newProfit = 0; // Default for unrealized
+
+                        if (!$hasUnrealized) {
+                             // Fully Realized! Reveal the profit.
+                             // Calculate based on updated cost (Old Cost + Difference)
+                             $newProfit = $detail->subtotal - ($detail->cost + $costDifference);
+                             $detail->profit_status = 'realized';
+                        } else {
+                             // Still partial unrealized? Keep profit hidden (0)
+                             $newProfit = 0;
+                             $detail->profit_status = 'unrealized';
+                        }
+                        
+                        $detail->profit = $newProfit;
+                        $detail->save();
 
                         // Update Sale Header Profit & Cost
                         $sale = $detail->sale;
                         if ($sale) {
                             $sale->increment('total_cost', $costDifference);
-                            $sale->decrement('total_profit', $costDifference);
+                            
+                            $profitDiff = $newProfit - $oldProfit;
+                            if ($profitDiff != 0) {
+                                $sale->increment('total_profit', $profitDiff);
+                            }
 
-                            // Update Journal (Adjustment)
+                            // Update Journal (Adjustment) - Post the cost increase
                              try {
                                 app(\App\Services\JournalService::class)->adjustSaleCogs($sale, $costDifference);
                             } catch (\Exception $e) {
