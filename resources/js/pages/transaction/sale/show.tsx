@@ -80,12 +80,17 @@ const SaleShow = (props: PageProps) => {
             `/sales/${sale.id}/confirm`,
             {},
             {
-                onSuccess: () => {
-                    toast.success('Penjualan dikonfirmasi');
+                onSuccess: (page) => {
+                    const flash = page.props.flash as { error?: string; success?: string };
+                    if (flash.error) {
+                        toast.error(flash.error);
+                    } else if (flash.success) {
+                        toast.success(flash.success);
+                    }
                     closeConfirmModal();
                 },
                 onError: (errors: Record<string, string>) => {
-                    const message = errors.msg || 'Gagal konfirmasi penjualan';
+                    const message = errors.error || errors.msg || errors.message || 'Gagal konfirmasi penjualan';
                     closeConfirmModal();
                     toast.error(message);
                 },
@@ -98,8 +103,13 @@ const SaleShow = (props: PageProps) => {
             `/sales/${sale.id}/unconfirm`,
             {},
             {
-                onSuccess: () => {
-                    toast.success('Konfirmasi dibatalkan');
+                onSuccess: (page) => {
+                    const flash = page.props.flash as { error?: string; success?: string };
+                    if (flash.error) {
+                        toast.error(flash.error);
+                    } else if (flash.success) {
+                        toast.success(flash.success);
+                    }
                     closeConfirmModal();
                 },
                 onError: () => {
