@@ -12,11 +12,15 @@ interface DotMatrixPrintButtonProps {
 export default function DotMatrixPrintButton({ data, className }: DotMatrixPrintButtonProps) {
     const [isPrinting, setIsPrinting] = useState(false);
 
-    const handlePrint = async () => {
+    const handlePrint = async (e: React.MouseEvent<HTMLButtonElement>) => {
         let printerName = localStorage.getItem('qz_printer_name');
 
+        if (e.shiftKey) {
+            printerName = null;
+        }
+
         if (!printerName) {
-            printerName = window.prompt('Masukkan Nama Printer Dot Matrix (cek di Control Panel):', 'Epson LX-310');
+            printerName = window.prompt('Masukkan Nama Printer Dot Matrix (cek di Control Panel):', 'EPSON LX-310 ESC/P (Copy 1)');
             if (!printerName) return;
             localStorage.setItem('qz_printer_name', printerName);
         }
