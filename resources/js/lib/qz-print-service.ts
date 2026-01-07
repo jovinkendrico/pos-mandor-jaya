@@ -154,13 +154,13 @@ class QZPrintService {
 
                 row += `${qtyStr}| ${nameStr} | ${priceStr} | ${subStr} |`;
             } else {
-                row += `          |                                                  |            |            |`;
+                row += `          |                                                |            |            |`;
             }
             escp.push(row + '\n');
         }
 
         // Table Footer
-        escp.push('------------------------------------------------------------------------------------------\n');
+        escp.push('+----+----------+------------------------------------------------+------------+------------+\n');
 
         // Terbilang and Total
         const terbilangText = this.terbilang(data.total).trim();
@@ -171,9 +171,9 @@ class QZPrintService {
         // Align total value to the right (under Jumlah column)
         // Table width is 90 chars.
         // Footer line construction:
-        const footerLine = '' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(20);
+        const footerLine = '| ' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(20) + '|';
         escp.push(footerLine + '\n');
-        escp.push('------------------------------------------------------------------------------------------\n\n');
+        escp.push('--------------------------------------------------------------------------------------------\n\n');
 
         // Signatures
         escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
