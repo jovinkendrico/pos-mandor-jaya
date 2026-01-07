@@ -304,6 +304,9 @@ class ItemController extends Controller
             $existingUomIds = $item->itemUoms->pluck('id')->toArray();
             $keptUomIds = [];
 
+            // Reset is_base for all UOMs of this item to ensure single base integrity
+            $item->itemUoms()->update(['is_base' => false]);
+
             foreach ($request->uoms as $uomData) {
                 // Try to find existing ItemUom by uom_id (Unit of Measure ID) for this Item
                 $existingItemUom = $item->itemUoms()->where('uom_id', $uomData['uom_id'])->first();
@@ -314,11 +317,15 @@ class ItemController extends Controller
                         'conversion_value' => $uomData['conversion_value'],
                         'price'            => $uomData['price'] ?? 0,
                         'is_active'        => true, // Reactivate if it was soft deleted
+                        'is_base'          => $uomData['is_base'] ?? false,
                     ]);
                     $keptUomIds[] = $existingItemUom->id;
                 } else {
                     // Create new
-                    $newItemUom = $item->itemUoms()->create(array_merge($uomData, ['is_active' => true]));
+                    $newItemUom = $item->itemUoms()->create(array_merge($uomData, [
+                        'is_active' => true,
+                        'is_base'   => $uomData['is_base'] ?? false
+                    ]));
                     $keptUomIds[] = $newItemUom->id;
                 }
             }

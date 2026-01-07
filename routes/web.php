@@ -351,6 +351,66 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
+    // Validasi Purchase Total Header vs Detail
+    Route::get('/debug/purchase-mismatch-totals', function () {
+        $purchases = \App\Models\Purchase::with('details')->get();
+        $mismatches = [];
+
+        foreach ($purchases as $purchase) {
+            // 1. Cek Gross Sum (Header Subtotal vs Sum(Qty * Price))
+            $detailGross = $purchase->details->reduce(function ($carry, $detail) {
+                return $carry + ($detail->quantity * $detail->price);
+            }, 0);
+            $headerGross = $purchase->subtotal;
+
+            if (abs($detailGross - $headerGross) > 50) {
+                $mismatches[] = [
+                    'purchase_number' => $purchase->purchase_number,
+                    'issue' => 'Gross Subtotal Mismatch',
+                    'header_subtotal' => $headerGross,
+                    'detail_gross_sum' => $detailGross,
+                    'diff' => $headerGross - $detailGross
+                ];
+                continue;
+            }
+
+            // 2. Cek Net Sum (Header Total After Discount vs Sum(Detail Subtotal))
+            // Detail Subtotal = Net Amount per line
+            $detailNet = $purchase->details->sum('subtotal');
+            $headerNet = $purchase->total_after_discount;
+
+            if (abs($detailNet - $headerNet) > 50) {
+                 $mismatches[] = [
+                    'purchase_number' => $purchase->purchase_number,
+                    'issue' => 'Net Amount Mismatch',
+                    'header_net' => $headerNet,
+                    'detail_net_sum' => $detailNet,
+                    'diff' => $headerNet - $detailNet
+                ];
+                continue;
+            }
+
+            // 3. Cek Grand Total (Header Total Amount vs Header Net + PPN)
+            $calcTotal = $headerNet + $purchase->ppn_amount;
+            
+            if (abs($purchase->total_amount - $calcTotal) > 50) {
+                 $mismatches[] = [
+                    'purchase_number' => $purchase->purchase_number,
+                    'issue' => 'Grand Total Calculation Error',
+                    'header_total' => $purchase->total_amount,
+                    'calculated_total' => $calcTotal,
+                    'diff' => $purchase->total_amount - $calcTotal
+                ];
+            }
+        }
+
+        return response()->json([
+            'count' => count($mismatches),
+            'description' => 'Mismatches in Purchase Totals (Gross, Net, or Grand Total)',
+            'mismatches' => $mismatches
+        ]);
+    });
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,
