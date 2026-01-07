@@ -251,6 +251,10 @@ const mainNavItems: NavItem[] = [
                 title: 'Laporan Analisis Margin per Customer',
                 href: '/reports/margin-by-customer',
             },
+            {
+                title: 'Laporan Binder',
+                href: '/reports/binder',
+            },
         ],
     },
     {

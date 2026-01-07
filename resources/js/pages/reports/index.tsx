@@ -11,6 +11,7 @@ import { Head, Link } from '@inertiajs/react';
 import {
     AlertTriangle,
     ArrowLeftRight,
+    BookOpen,
     Building2,
     CreditCard,
     DollarSign,
@@ -235,6 +236,16 @@ const reports = [
         icon: Percent,
         color: 'text-indigo-600',
         bgColor: 'bg-indigo-50',
+    },
+    {
+        id: 'binder',
+        title: 'Laporan Binder',
+        description:
+            'Laporan arsip penjualan per 10 transaksi (10 MJ) untuk keperluan binder',
+        href: '/reports/binder',
+        icon: BookOpen,
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
     },
 ];
 

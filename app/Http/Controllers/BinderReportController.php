@@ -14,8 +14,21 @@ class BinderReportController extends Controller
 {
     public function index(Request $request): Response
     {
+        $query = Sale::with(['details.item', 'details.itemUom.uom', 'customer', 'creator'])
+            ->where('status', 'confirmed')
+            ->orderBy('sale_date', 'desc')
+            ->orderBy('sale_number', 'desc');
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('sale_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('sale_date', '<=', $request->date_to);
+        }
+
         return Inertia::render('reports/binder/index', [
             'filters' => $request->all(['date_from', 'date_to']),
+            'sales' => $query->paginate(10)->withQueryString(),
         ]);
     }
 
