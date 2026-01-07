@@ -306,6 +306,51 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
+    // Validasi Total Header vs Detail
+    Route::get('/debug/mismatch-totals', function () {
+        $sales = \App\Models\Sale::with('details')->get();
+        $mismatches = [];
+
+        foreach ($sales as $sale) {
+            // 1. Cek Subtotal (Header vs Sum Detail)
+            $detailSubtotal = $sale->details->sum('subtotal');
+            $headerSubtotal = $sale->subtotal;
+
+            if (abs($detailSubtotal - $headerSubtotal) > 50) { // Toleransi 50 perak (pembulatan)
+                $mismatches[] = [
+                    'sale_number' => $sale->sale_number,
+                    'issue' => 'Subtotal Mismatch',
+                    'header_subtotal' => $headerSubtotal,
+                    'detail_sum' => $detailSubtotal,
+                    'diff' => $headerSubtotal - $detailSubtotal
+                ];
+                continue;
+            }
+
+            // 2. Cek Rumus Grand Total
+            // Subtotal - Disc + PPN = Total
+            $calcAfterDisc = $sale->subtotal - $sale->discount1_amount - $sale->discount2_amount;
+            $calcPpn = $sale->ppn_amount;
+            $calcTotal = $calcAfterDisc + $calcPpn;
+            
+            if (abs($sale->total_amount - $calcTotal) > 50) {
+                 $mismatches[] = [
+                    'sale_number' => $sale->sale_number,
+                    'issue' => 'Grand Total Calculation Error',
+                    'header_total' => $sale->total_amount,
+                    'calculated_total' => $calcTotal,
+                    'diff' => $sale->total_amount - $calcTotal
+                ];
+            }
+        }
+
+        return response()->json([
+            'count' => count($mismatches),
+            'note' => 'Sales where Header Money does not match Item Details Sum',
+            'mismatches' => $mismatches
+        ]);
+    });
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,
