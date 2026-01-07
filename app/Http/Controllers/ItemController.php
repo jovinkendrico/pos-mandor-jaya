@@ -90,7 +90,8 @@ class ItemController extends Controller
              
              $item->pending_stock = (float)$pendingSalesQty; // Customer booked but not confirmed
              $item->pending_purchase_stock = (float)$pendingPurchasesQty; // On the way
-             $item->available_stock = (float)$item->stock - (float)$pendingSalesQty;
+             // User Request: available stock = item->stock + pending purchase - pending stock
+             $item->available_stock = (float)$item->stock + (float)$pendingPurchasesQty - (float)$pendingSalesQty;
              
              return $item;
         });
