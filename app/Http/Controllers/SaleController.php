@@ -449,14 +449,9 @@ class SaleController extends Controller
                     ->with('error', 'Penjualan sudah dikonfirmasi.');
             }
 
-            // Check stock availability
-            foreach ($sale->details as $detail) {
-                $baseQty = $detail->quantity * $detail->itemUom->conversion_value;
-                if ($detail->item->stock < $baseQty) {
-                    $errorMessage = "Stok {$detail->item->name} tidak mencukupi.";
-                    return redirect()->back()->withErrors(['msg' => $errorMessage]);
-                }
-            }
+            // Stock check removed to allow negative stock confirmation
+            // The StockService handles negative FIFO by using estimated costs.
+            // foreach ($sale->details as $detail) { ... }
 
             $this->stockService->confirmSale($sale);
 

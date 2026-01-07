@@ -831,5 +831,70 @@ class JournalService
             $journalEntry->update(['status' => 'reversed']);
         });
     }
+
+    /**
+     * Adjust COGS for a sale when stock costs are reconciled (e.g. negative stock replenishment)
+     */
+    public function adjustSaleCogs($sale, float $costDifference): void
+    {
+        if (abs($costDifference) < 0.01) {
+            return;
+        }
+
+        DB::transaction(function () use ($sale, $costDifference) {
+            // Get accounts
+            $hppAccount = ChartOfAccount::where('code', '5101')->where('is_active', true)->first();
+            $inventoryAccount = ChartOfAccount::where('code', '1301')->where('is_active', true)->first();
+
+            if (!$hppAccount || !$inventoryAccount) {
+                Log::warning("Cannot adjust COGS for Sale #{$sale->id}: Accounts 5101 or 1301 not found.");
+                return;
+            }
+
+            $journalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date'   => now(),
+                'reference_type' => 'Sale', // Link to Sale so it builds up history
+                'reference_id'   => $sale->id,
+                'description'    => "Penyesuaian HPP (Reconciliasi Stok) Penjualan #{$sale->sale_number}",
+                'status'         => 'posted',
+            ]);
+
+            if ($costDifference > 0) {
+                // Cost Increased (Actual Cost > Estimated): Debit HPP, Credit Inventory
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $hppAccount->id,
+                    'debit'               => $costDifference,
+                    'credit'              => 0,
+                    'description'         => "Penyesuaian HPP (Naik) #{$sale->sale_number}",
+                ]);
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $inventoryAccount->id,
+                    'debit'               => 0,
+                    'credit'              => $costDifference,
+                    'description'         => "Penyesuaian HPP (Naik) #{$sale->sale_number}",
+                ]);
+            } else {
+                // Cost Decreased (Actual Cost < Estimated): Debit Inventory, Credit HPP
+                $absDiff = abs($costDifference);
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $inventoryAccount->id,
+                    'debit'               => $absDiff,
+                    'credit'              => 0,
+                    'description'         => "Penyesuaian HPP (Turun) #{$sale->sale_number}",
+                ]);
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $hppAccount->id,
+                    'debit'               => 0,
+                    'credit'              => $absDiff,
+                    'description'         => "Penyesuaian HPP (Turun) #{$sale->sale_number}",
+                ]);
+            }
+        });
+    }
 }
 

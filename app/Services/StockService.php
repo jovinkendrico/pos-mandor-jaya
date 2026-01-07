@@ -1052,9 +1052,11 @@ class StockService
                     }
 
                     // Update Sale Detail Profit & Cost
+                    // Update Sale Detail Profit & Cost
                     $detail = $mapping->saleDetail;
                     if ($detail) {
                         $costDifference = $totalNewCost - ($originalEstimatedCost * ($reconciledQty / $qtyToReconcile));
+                        // Update detail
                         $detail->increment('cost', $costDifference);
                         $detail->decrement('profit', $costDifference);
 
@@ -1063,6 +1065,16 @@ class StockService
                         if ($sale) {
                             $sale->increment('total_cost', $costDifference);
                             $sale->decrement('total_profit', $costDifference);
+
+                            // Update Journal (Adjustment)
+                             try {
+                                app(\App\Services\JournalService::class)->adjustSaleCogs($sale, $costDifference);
+                            } catch (\Exception $e) {
+                                Log::error('Failed to post COGS adjustment to journal', [
+                                    'sale_id' => $sale->id,
+                                    'error'   => $e->getMessage(),
+                                ]);
+                            }
                         }
                     }
                 }
