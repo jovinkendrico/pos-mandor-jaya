@@ -297,10 +297,46 @@ class ItemController extends Controller
                 'description' => $request->description,
             ]);
 
-            $item->itemUoms()->forceDelete();
+            $existingUomIds = $item->itemUoms->pluck('id')->toArray();
+            $keptUomIds = [];
 
-            foreach ($request->uoms as $uom) {
-                $item->itemUoms()->create($uom);
+            foreach ($request->uoms as $uomData) {
+                // Try to find existing ItemUom by uom_id (Unit of Measure ID) for this Item
+                $existingItemUom = $item->itemUoms()->where('uom_id', $uomData['uom_id'])->first();
+
+                if ($existingItemUom) {
+                    // Update existing
+                    $existingItemUom->update([
+                        'conversion_value' => $uomData['conversion_value'],
+                        'price'            => $uomData['price'] ?? 0,
+                    ]);
+                    $keptUomIds[] = $existingItemUom->id;
+                } else {
+                    // Create new
+                    $newItemUom = $item->itemUoms()->create($uomData);
+                    $keptUomIds[] = $newItemUom->id;
+                }
+            }
+
+            // Identify metadata to delete (ItemUoms that are no longer in the request)
+            $uomIdsToDelete = array_diff($existingUomIds, $keptUomIds);
+
+            if (!empty($uomIdsToDelete)) {
+                // Determine if any can be deleted
+                foreach ($uomIdsToDelete as $idToDelete) {
+                    $isUsedInSales = \DB::table('sale_details')->where('item_uom_id', $idToDelete)->exists();
+                    $isUsedInPurchases = \DB::table('purchase_details')->where('item_uom_id', $idToDelete)->exists();
+
+                    if ($isUsedInSales || $isUsedInPurchases) {
+                        // CANNOT DELETE: It is used in transactions.
+                        // We skip deletion to prevent data loss.
+                        // Ideally, we'd warn the user, but in a transaction block, we just protect the data.
+                        continue; 
+                    }
+
+                    // Safe to delete
+                    \App\Models\ItemUom::where('id', $idToDelete)->delete();
+                }
             }
 
             $diff = $targetStock - $existingStock;
