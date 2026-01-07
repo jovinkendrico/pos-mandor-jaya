@@ -142,7 +142,8 @@ class QZPrintService {
         const totalValue = `Rp. ${this.formatCurrency(data.total)}`;
 
         const footerLine = '' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(15);
-        escp.push(footerLine + '\n\n');
+        escp.push(footerLine + '\n');
+        escp.push('--------------------------------------------------------------------------------------\n\n');
 
         // Signatures
         escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
