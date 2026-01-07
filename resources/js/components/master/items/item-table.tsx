@@ -56,7 +56,9 @@ const ItemTable = (props: ItemTableProps) => {
     const tableColumn = [
         'Kode',
         'Nama Barang',
-        'Stok (Fisik / Tersedia)',
+        'Stok Fisik',
+        'Stok Pending',
+        'Stok Tersedia',
         'Harga Modal',
         'Deskripsi',
         'Satuan (UOM)',
@@ -92,27 +94,36 @@ const ItemTable = (props: ItemTableProps) => {
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {row.name}
                         </TableCell>
-                        <TableCell className="flex w-full items-center justify-center text-center">
-                            {currentUom ? (
-                                <div className="flex flex-col items-center">
-                                    <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                        {formatNumberWithSeparator(
-                                            row.stock / currentUom?.conversion_value,
-                                        )}
-                                    </span>
-                                    <span className="text-xs text-blue-500 dark:text-blue-400" title="Stok Tersedia (Dikurangi Penjualan Pending)">
-                                        (
-                                        {formatNumberWithSeparator(
-                                            ((row.available_stock ?? row.stock) /
-                                                currentUom?.conversion_value),
-                                        )}
-                                        )
-                                    </span>
-                                </div>
-                            ) : (
-                                '-'
-                            )}
+
+                        {/* Stok Fisik */}
+                        <TableCell className="flex w-full items-center justify-center text-center font-medium">
+                            {currentUom
+                                ? formatNumberWithSeparator(
+                                    row.stock / currentUom.conversion_value,
+                                )
+                                : '-'}
                         </TableCell>
+
+                        {/* Stok Pending */}
+                        <TableCell className="flex w-full items-center justify-center text-center text-yellow-600 dark:text-yellow-500">
+                            {currentUom
+                                ? formatNumberWithSeparator(
+                                    (row.pending_stock ?? 0) /
+                                    currentUom.conversion_value,
+                                )
+                                : '-'}
+                        </TableCell>
+
+                        {/* Stok Tersedia */}
+                        <TableCell className="flex w-full items-center justify-center text-center font-bold text-blue-600 dark:text-blue-500">
+                            {currentUom
+                                ? formatNumberWithSeparator(
+                                    (row.available_stock ?? row.stock) /
+                                    currentUom.conversion_value,
+                                )
+                                : '-'}
+                        </TableCell>
+
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {formatCurrency(
                                 parseStringtoNumber(
