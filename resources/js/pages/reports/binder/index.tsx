@@ -7,7 +7,15 @@ import { Head, Link } from '@inertiajs/react';
 import { Printer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, formatDatetoString, formatNumber } from '@/lib/utils';
-import Pagination from '@/components/ui/pagination';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+    PaginationEllipsis,
+} from '@/components/ui/pagination';
 import {
     Table,
     TableBody,
@@ -183,8 +191,48 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                     )}
                 </CardContent>
                 {sales.meta.last_page > 1 && (
-                    <div className="p-4 border-t">
-                        <Pagination links={sales.links} />
+                    <div className="p-4 border-t flex justify-center">
+                        <Pagination>
+                            <PaginationContent>
+                                {sales.links.map((link, i) => {
+                                    const isPrevious = link.label.includes('Previous');
+                                    const isNext = link.label.includes('Next');
+
+                                    if (link.url === null) {
+                                        if (isPrevious || isNext) return null; // Hide disabled prev/next
+                                        return (
+                                            <PaginationItem key={i}>
+                                                <PaginationEllipsis />
+                                            </PaginationItem>
+                                        );
+                                    }
+
+                                    if (isPrevious) {
+                                        return (
+                                            <PaginationItem key={i}>
+                                                <PaginationPrevious href={link.url} />
+                                            </PaginationItem>
+                                        );
+                                    }
+
+                                    if (isNext) {
+                                        return (
+                                            <PaginationItem key={i}>
+                                                <PaginationNext href={link.url} />
+                                            </PaginationItem>
+                                        );
+                                    }
+
+                                    return (
+                                        <PaginationItem key={i}>
+                                            <PaginationLink href={link.url} isActive={link.active}>
+                                                {link.label}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    );
+                                })}
+                            </PaginationContent>
+                        </Pagination>
                     </div>
                 )}
             </Card>
