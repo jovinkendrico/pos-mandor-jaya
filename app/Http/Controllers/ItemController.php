@@ -309,11 +309,12 @@ class ItemController extends Controller
                     $existingItemUom->update([
                         'conversion_value' => $uomData['conversion_value'],
                         'price'            => $uomData['price'] ?? 0,
+                        'is_active'        => true, // Reactivate if it was soft deleted
                     ]);
                     $keptUomIds[] = $existingItemUom->id;
                 } else {
                     // Create new
-                    $newItemUom = $item->itemUoms()->create($uomData);
+                    $newItemUom = $item->itemUoms()->create(array_merge($uomData, ['is_active' => true]));
                     $keptUomIds[] = $newItemUom->id;
                 }
             }
@@ -329,8 +330,8 @@ class ItemController extends Controller
 
                     if ($isUsedInSales || $isUsedInPurchases) {
                         // CANNOT DELETE: It is used in transactions.
-                        // We skip deletion to prevent data loss.
-                        // Ideally, we'd warn the user, but in a transaction block, we just protect the data.
+                        // Soft delete (deactivate) so it remains in history but hidden from new selections
+                        \App\Models\ItemUom::where('id', $idToDelete)->update(['is_active' => false]);
                         continue; 
                     }
 
