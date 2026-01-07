@@ -169,7 +169,7 @@ class QZPrintService {
         const totalValue = `Rp. ${this.formatCurrency(data.total)}`;
 
         // Word wrap logic
-        const maxLen = 60;
+        const maxLen = 58;
         const words = terbilangDisplay.split(' ');
         const wrappedLines: string[] = [];
         let currentLine = '';
@@ -189,14 +189,14 @@ class QZPrintService {
 
         // First line with Total
         const firstLine = wrappedLines[0];
-        const footerLine1 = '| ' + firstLine.padEnd(65) + totalLabel + totalValue.padStart(20) + '|';
+        const footerLine1 = '| ' + firstLine.padEnd(62) + totalLabel + totalValue.padStart(20) + '|';
         escp.push(footerLine1 + '\n');
 
         // Subsequent lines (if any) with empty Total space
         for (let i = 1; i < wrappedLines.length; i++) {
             const nextLine = wrappedLines[i];
             // 7 (Total:) + 20 (Value) = 27 spaces
-            const footerLineNext = '| ' + nextLine.padEnd(65) + ''.padEnd(27) + '|';
+            const footerLineNext = '| ' + nextLine.padEnd(62) + ''.padEnd(27) + '|';
             escp.push(footerLineNext + '\n');
         }
 
