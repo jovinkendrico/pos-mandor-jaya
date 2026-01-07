@@ -56,6 +56,11 @@ class ReprocessAllTransactions extends Command
             FifoMapping::query()->delete(); 
             JournalEntry::whereIn('reference_type', ['Sale', 'Purchase', 'SaleReturn', 'PurchaseReturn'])->delete();
             
+            // CRITICAL FIX: Reset remaining_quantity for preserved movements (Adjustments/OpeningBalance)
+            // Because previously confirmed sales (now deleted/reset) consumed these, we must restore them to full capacity.
+            // Only for Inbound movements (quantity > 0)
+            DB::statement("UPDATE stock_movements SET remaining_quantity = quantity WHERE quantity > 0");
+            
             // 3. Reset Items Stock (Adjustments + Opening)
             $this->info('Resetting Base Stock...');
             $items = Item::all();
