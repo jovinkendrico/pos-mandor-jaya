@@ -188,7 +188,6 @@ class StockService
             $sale->loadMissing(['details.item', 'details.itemUom']);
 
             $totalCost = 0;
-            $unrealizedRevenue = 0;
 
             foreach ($sale->details as $detail) {
                 if (!$detail->item || !$detail->itemUom) {
@@ -204,19 +203,13 @@ class StockService
                 }
 
                 // Calculate FIFO cost and get mappings
+                // This will THROW Exception if stock is insufficient (so we never confirm negative stock sales)
                 $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $sale->sale_date);
                 $cost       = $fifoResult['total_cost'];
                 $mappings   = $fifoResult['mappings'];
 
                 // Create FIFO mappings for audit trail
-                $isUnrealized = false;
-                $unrealizedBaseQty = 0;
-
                 foreach ($mappings as $mapping) {
-                    if (!empty($mapping['is_estimated'])) {
-                        $isUnrealized = true;
-                        $unrealizedBaseQty += $mapping['quantity'];
-                    }
                     FifoMapping::create([
                         'reference_type'      => 'Sale',
                         'reference_detail_id' => $detail->id,
@@ -224,27 +217,16 @@ class StockService
                         'quantity_consumed'   => $mapping['quantity'],
                         'unit_cost'           => $mapping['unit_cost'],
                         'total_cost'          => $mapping['total_cost'],
-                        'is_estimated'        => $mapping['is_estimated'] ?? false,
+                        'is_estimated'        => false, 
                     ]);
                 }
 
-                // Calculate proportional unrealized revenue
-                $itemUnrealizedRevenue = 0;
-                if ($baseQuantity > 0) {
-                     $itemUnrealizedRevenue = ($unrealizedBaseQty / $baseQuantity) * $detail->subtotal;
-                }
+                $profit = $detail->subtotal - $cost;
                 
-                if ($isUnrealized) {
-                    $unrealizedRevenue += $itemUnrealizedRevenue;
-                }
-
-                // Profit = Realized Revenue - Realized Cost
-                $profit = ($detail->subtotal - $itemUnrealizedRevenue) - $cost;
-
                 $detail->update([
                     'cost'   => $cost,
                     'profit' => $profit,
-                    'profit_status' => $isUnrealized ? 'unrealized' : 'realized',
+                    'profit_status' => 'realized',
                 ]);
 
                 $totalCost += $cost;
@@ -265,12 +247,11 @@ class StockService
 
             // Calculate profit using total_after_discount (without PPN) - same as in Profit Loss Report
             $revenue = (float) $sale->total_after_discount;
-            $realizedProfit = $revenue - $totalCost - $unrealizedRevenue;
             
             $sale->update([
                 'status'       => 'confirmed',
                 'total_cost'   => $totalCost,
-                'total_profit' => $realizedProfit, 
+                'total_profit' => $revenue - $totalCost, 
                 'updated_by'   => auth()->id(),
             ]);
 
