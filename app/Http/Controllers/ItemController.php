@@ -14,6 +14,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use App\Models\Sale;
+use App\Models\Purchase;
+use App\Models\SaleReturn;
+use App\Models\PurchaseReturn;
 
 class ItemController extends Controller
 {
@@ -211,11 +215,41 @@ class ItemController extends Controller
             ];
         });
 
-        // Paginate manually
         $page = (int) $request->get('page', 1);
         $perPage = 15;
         $total = $transactionsWithBalance->count();
         $items = $transactionsWithBalance->slice(($page - 1) * $perPage, $perPage)->values();
+
+        // Enrich items with entity names (Customer/Supplier)
+        $saleIds = $items->where('reference_type', 'Sale')->pluck('reference_id');
+        $purchaseIds = $items->where('reference_type', 'Purchase')->pluck('reference_id');
+        $saleReturnIds = $items->where('reference_type', 'SaleReturn')->pluck('reference_id');
+        $purchaseReturnIds = $items->where('reference_type', 'PurchaseReturn')->pluck('reference_id');
+
+        $sales = Sale::whereIn('id', $saleIds)->with('customer:id,name')->get()->keyBy('id');
+        $purchases = Purchase::whereIn('id', $purchaseIds)->with('supplier:id,name')->get()->keyBy('id');
+        $saleReturns = SaleReturn::whereIn('id', $saleReturnIds)->with('sale.customer:id,name')->get()->keyBy('id');
+        $purchaseReturns = PurchaseReturn::whereIn('id', $purchaseReturnIds)->with('purchase.supplier:id,name')->get()->keyBy('id');
+
+        $items->transform(function ($item) use ($sales, $purchases, $saleReturns, $purchaseReturns) {
+            $entityName = '';
+            
+            if ($item['reference_type'] === 'Sale' && isset($sales[$item['reference_id']])) {
+                $entityName = $sales[$item['reference_id']]->customer->name ?? '';
+            } elseif ($item['reference_type'] === 'Purchase' && isset($purchases[$item['reference_id']])) {
+                $entityName = $purchases[$item['reference_id']]->supplier->name ?? '';
+            } elseif ($item['reference_type'] === 'SaleReturn' && isset($saleReturns[$item['reference_id']])) {
+                $entityName = $saleReturns[$item['reference_id']]->sale->customer->name ?? '';
+            } elseif ($item['reference_type'] === 'PurchaseReturn' && isset($purchaseReturns[$item['reference_id']])) {
+                $entityName = $purchaseReturns[$item['reference_id']]->purchase->supplier->name ?? '';
+            }
+
+            if ($entityName) {
+                $item['notes'] = ($item['notes'] ? $item['notes'] . ' - ' : '') . $entityName;
+            }
+            
+            return $item;
+        });
 
         $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
             $items,
