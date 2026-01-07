@@ -70,16 +70,26 @@ class ItemController extends Controller
 
         $items = $query->paginate(10)->withQueryString();
 
-        // Calculate pending stock for each item (Sales that are Pending)
+        // Calculate pending stock for each item (Sales and Purchases that are Pending)
         $items->getCollection()->transform(function ($item) {
+             // Sales Pending (Stock Out Pending)
              $pendingSalesQty = \App\Models\SaleDetail::query()
                 ->join('sales', 'sales.id', '=', 'sale_details.sale_id')
                 ->join('item_uoms', 'item_uoms.id', '=', 'sale_details.item_uom_id')
                 ->where('sale_details.item_id', $item->id)
                 ->where('sales.status', 'pending')
                 ->sum(\DB::raw('sale_details.quantity * item_uoms.conversion_value'));
+
+             // Purchases Pending (Stock In Pending)
+             $pendingPurchasesQty = \App\Models\PurchaseDetail::query()
+                ->join('purchases', 'purchases.id', '=', 'purchase_details.purchase_id')
+                ->join('item_uoms', 'item_uoms.id', '=', 'purchase_details.item_uom_id')
+                ->where('purchase_details.item_id', $item->id)
+                ->where('purchases.status', 'pending')
+                ->sum(\DB::raw('purchase_details.quantity * item_uoms.conversion_value'));
              
-             $item->pending_stock = (float)$pendingSalesQty;
+             $item->pending_stock = (float)$pendingSalesQty; // Customer booked but not confirmed
+             $item->pending_purchase_stock = (float)$pendingPurchasesQty; // On the way
              $item->available_stock = (float)$item->stock - (float)$pendingSalesQty;
              
              return $item;

@@ -219,6 +219,7 @@ export interface Item {
     item_uoms: ItemUom[];
     stock_movements: ItemStockMovement[];
     pending_stock?: number;
+    pending_purchase_stock?: number;
     available_stock?: number;
     created_at: string;
     updated_at: string;
@@ -238,6 +239,7 @@ export type IItem = Pick<
     item_uoms: IItemUOM[];
     stock_movements: IItemStockMovement[];
     pending_stock?: number;
+    pending_purchase_stock?: number;
     available_stock?: number;
 };
 

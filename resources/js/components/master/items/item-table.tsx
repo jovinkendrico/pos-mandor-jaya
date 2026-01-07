@@ -57,7 +57,8 @@ const ItemTable = (props: ItemTableProps) => {
         'Kode',
         'Nama Barang',
         'Stok Fisik',
-        'Stok Pending',
+        'Pembelian (Pending)',
+        'Penjualan (Pending)',
         'Stok Tersedia',
         'Harga Modal',
         'Deskripsi',
@@ -100,6 +101,16 @@ const ItemTable = (props: ItemTableProps) => {
                             {currentUom
                                 ? formatNumberWithSeparator(
                                     row.stock / currentUom.conversion_value,
+                                )
+                                : '-'}
+                        </TableCell>
+
+                        {/* Pembelian (Pending) */}
+                        <TableCell className="flex w-full items-center justify-center text-center text-orange-600 dark:text-orange-500">
+                            {currentUom
+                                ? formatNumberWithSeparator(
+                                    (row.pending_purchase_stock ?? 0) /
+                                    currentUom.conversion_value,
                                 )
                                 : '-'}
                         </TableCell>
