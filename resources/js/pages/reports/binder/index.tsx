@@ -53,13 +53,11 @@ interface PageProps {
     sales: {
         data: Sale[];
         links: any[];
-        meta: {
-            from: number;
-            to: number;
-            total: number;
-            last_page: number;
-            current_page: number;
-        };
+        total: number;
+        last_page: number;
+        current_page: number;
+        from: number;
+        to: number;
     };
 }
 
@@ -121,7 +119,7 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
 
             <Card className="content mt-6">
                 <CardHeader>
-                    <CardTitle>Preview Laporan ({sales.meta.total} Transaksi)</CardTitle>
+                    <CardTitle>Preview Laporan ({sales.total} Transaksi)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {sales.data.length === 0 ? (
@@ -190,7 +188,7 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                         ))
                     )}
                 </CardContent>
-                {sales.meta.last_page > 1 && (
+                {sales.last_page > 1 && (
                     <div className="p-4 border-t flex justify-center">
                         <Pagination>
                             <PaginationContent>
