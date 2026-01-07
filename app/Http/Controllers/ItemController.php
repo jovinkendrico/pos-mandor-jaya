@@ -31,7 +31,9 @@ class ItemController extends Controller
      */
     public function index(\Illuminate\Http\Request $request): Response
     {
-        $query = Item::with('itemUoms.uom');
+        $query = Item::with(['itemUoms' => function ($q) {
+            $q->where('is_active', true)->with('uom');
+        }]);
 
         // Search
         if ($request->has('search') && $request->search) {
@@ -141,7 +143,9 @@ class ItemController extends Controller
      */
     public function show(Item $item): Response
     {
-        $item->load('itemUoms.uom');
+        $item->load(['itemUoms' => function ($q) {
+            $q->where('is_active', true)->with('uom');
+        }]);
 
         $stockMovements = $item->stockMovements()
             ->orderByDesc('movement_date')
