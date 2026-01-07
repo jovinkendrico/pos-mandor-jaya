@@ -256,11 +256,11 @@ class StockService
             // Calculate profit using total_after_discount (without PPN) - same as in Profit Loss Report
             $revenue = (float) $sale->total_after_discount;
             $realizedProfit = $revenue - $totalCost - $unrealizedRevenue;
-
+            
             $sale->update([
                 'status'       => 'confirmed',
                 'total_cost'   => $totalCost,
-                'total_profit' => $realizedProfit,
+                'total_profit' => $realizedProfit, 
                 'updated_by'   => auth()->id(),
             ]);
 
