@@ -122,8 +122,10 @@ class Purchase extends Model
     public static function generatePurchaseNumber($purchaseDate = null): string
     {
         // Find the last purchase that starts with 'MB'
+        // Use lockForUpdate to prevent race conditions
         $lastPurchase = static::withTrashed()
             ->where('purchase_number', 'LIKE', 'MB%')
+            ->lockForUpdate()
             ->orderByRaw('CAST(SUBSTRING(purchase_number, 3) AS UNSIGNED) DESC')
             ->first();
 

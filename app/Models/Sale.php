@@ -118,8 +118,10 @@ class Sale extends Model
     public static function generateSaleNumber($saleDate = null): string
     {
         // Find the last sale that starts with 'MJ'
+        // Use lockForUpdate to prevent race conditions
         $lastSale = static::withTrashed()
             ->where('sale_number', 'LIKE', 'MJ%')
+            ->lockForUpdate()
             ->orderByRaw('CAST(SUBSTRING(sale_number, 3) AS UNSIGNED) DESC')
             ->first();
 
