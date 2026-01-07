@@ -129,6 +129,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/stock-turnover', [StockTurnoverReportController::class, 'index'])->name('reports.stock-turnover');
     Route::get('reports/margin-by-item', [MarginByItemReportController::class, 'index'])->name('reports.margin-by-item');
     Route::get('reports/margin-by-customer', [MarginByCustomerReportController::class, 'index'])->name('reports.margin-by-customer');
+    Route::get('reports/binder', [\App\Http\Controllers\BinderReportController::class, 'index'])->name('reports.binder');
 
     // Print routes for all reports
     Route::get('reports/sale-report/print', [SaleReportController::class, 'print'])->name('reports.sale-report.print');
@@ -152,6 +153,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/receivable-aging/print', [ReceivableAgingController::class, 'print'])->name('reports.receivable-aging.print');
     Route::get('reports/payable-aging/print', [PayableAgingController::class, 'print'])->name('reports.payable-aging.print');
     Route::get('reports/cash-flow/print', [CashFlowController::class, 'print'])->name('reports.cash-flow.print');
+    Route::get('reports/binder/print', [\App\Http\Controllers\BinderReportController::class, 'print'])->name('reports.binder.print');
 
     // Payment Receipt
     Route::get('payment-receipt', [PaymentReceiptController::class, 'index'])->name('payment-receipt.index');
