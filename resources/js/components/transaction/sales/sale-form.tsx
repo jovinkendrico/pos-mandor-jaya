@@ -83,18 +83,40 @@ const SaleForm = (props: SaleFormProps) => {
     useEffect(() => {
         setLocalCustomers(customerOptions);
     }, [customerOptions]);
+    const allItems = useMemo(() => {
+        const extraItems: IItem[] = [];
+        if (sale && sale.details) {
+            sale.details.forEach((d) => {
+                if (
+                    d.item &&
+                    d.item.id &&
+                    !items.find((i) => i.id === d.item?.id)
+                ) {
+                    // Check if already added to extraItems
+                    if (!extraItems.find((i) => i.id === d.item?.id)) {
+                        extraItems.push(d.item);
+                    }
+                }
+            });
+        }
+        // sort by name
+        return [...items, ...extraItems].sort((a, b) =>
+            a.name.localeCompare(b.name),
+        );
+    }, [items, sale]);
+
     const itemComboboxOptions: ComboboxOption[] = useMemo(() => {
-        return items.map((item) => ({
+        return allItems.map((item) => ({
             label: `${item.code} - ${item.name} (Sisa: ${formatNumberWithSeparator(item.available_stock ?? item.stock)})`,
             value: item.id?.toString() || '',
         }));
-    }, [items]);
+    }, [allItems]);
 
     const getItemUomComboboxOptions = (
         itemId: number | null,
     ): ComboboxOption[] => {
         if (!itemId) return [];
-        const item = items.find((i) => i.id === itemId);
+        const item = allItems.find((i) => i.id === itemId);
         if (!item || !item.item_uoms) return [];
 
         return item.item_uoms.map((itemUom) => ({
@@ -454,7 +476,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                 />
                                                 {detail.item_id &&
                                                     (() => {
-                                                        const item = items.find(
+                                                        const item = allItems.find(
                                                             (i) =>
                                                                 i.id ===
                                                                 detail.item_id,
@@ -529,7 +551,7 @@ const SaleForm = (props: SaleFormProps) => {
                                                         );
 
                                                         // Auto-populate price from Item Master
-                                                        const item = items.find(
+                                                        const item = allItems.find(
                                                             (i) =>
                                                                 i.id ===
                                                                 detail.item_id,

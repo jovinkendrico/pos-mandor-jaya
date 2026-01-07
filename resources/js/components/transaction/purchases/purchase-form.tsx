@@ -87,18 +87,40 @@ const PurchaseForm = (props: PurchaseFormProps) => {
         setLocalSuppliers(supplierOptions);
     }, [supplierOptions]);
 
+    const allItems = useMemo(() => {
+        const extraItems: IItem[] = [];
+        if (purchase && purchase.details) {
+            purchase.details.forEach((d) => {
+                if (
+                    d.item &&
+                    d.item.id &&
+                    !items.find((i) => i.id === d.item?.id)
+                ) {
+                    // Check if already added to extraItems
+                    if (!extraItems.find((i) => i.id === d.item?.id)) {
+                        extraItems.push(d.item);
+                    }
+                }
+            });
+        }
+        // sort by name
+        return [...items, ...extraItems].sort((a, b) =>
+            a.name.localeCompare(b.name),
+        );
+    }, [items, purchase]);
+
     const itemComboboxOptions: AsyncComboboxOption[] = useMemo(() => {
-        return items.map((item) => ({
+        return allItems.map((item) => ({
             label: `${item.code} - ${item.name}`,
             value: item.id?.toString() || '',
         }));
-    }, [items]);
+    }, [allItems]);
 
     const getItemUomComboboxOptions = (
         itemId: number | null,
     ): AsyncComboboxOption[] => {
         if (!itemId) return [];
-        const item = items.find((i) => i.id === itemId);
+        const item = allItems.find((i) => i.id === itemId);
         if (!item || !item.item_uoms) return [];
 
         return item.item_uoms.map((itemUom) => ({

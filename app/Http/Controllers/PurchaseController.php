@@ -291,7 +291,7 @@ class PurchaseController extends Controller
                 ->with('error', 'Pembelian yang sudah dikonfirmasi tidak dapat diedit.');
         }
 
-        $purchase->load(['supplier.city', 'details.item', 'details.itemUom.uom']);
+        $purchase->load(['supplier.city', 'details.item.itemUoms.uom', 'details.itemUom.uom']);
         $suppliers = Supplier::with('city')->orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
 
