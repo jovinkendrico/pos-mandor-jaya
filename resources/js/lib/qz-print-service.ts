@@ -42,8 +42,10 @@ class QZPrintService {
         }
     }
 
-    private formatCurrency(num: number): string {
-        return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    private formatCurrency(num: number | string): string {
+        const n = Number(num);
+        if (isNaN(n)) return '0';
+        return n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
     private terbilang(n: number): string {
@@ -106,9 +108,9 @@ class QZPrintService {
         escp.push('\n');
 
         // Table Header
-        // Widths: No:4, QTY:10, Name:46, Price:12, Total:12. Total Chars = 4+10+46+12+12 + 6*1 = 90
-        escp.push('-------------------------------------------------------------------------------------------+\n');
-        escp.push('| No |    QTY   | Nama Barang                                    |   Harga @  |   Jumlah   |\n');
+        // Widths: No:4, QTY:10, Name:46, Price:12, Total:12. Separators: 6. Total: 90.
+        escp.push('--------------------------------------------------------------------------------------------\n');
+        escp.push('| No |    QTY   | Nama Barang                                      |   Harga @  |   Jumlah   |\n');
         escp.push('+----+----------+------------------------------------------------+------------+------------+\n');
 
         // Table Body - Exact 12 Rows
@@ -145,19 +147,19 @@ class QZPrintService {
                 const qNum6 = this.formatCurrency(item.quantity).padStart(6);
                 const qtyStr = `${qNum6} ${qUom}`; // 6+1+3 = 10 chars. Exactly matches column.
 
-                const nameStr = item.item_name.substring(0, 44).padEnd(44);
+                const nameStr = item.item_name.substring(0, 46).padEnd(46);
                 const priceStr = this.formatCurrency(item.price).padStart(10);
                 const subStr = this.formatCurrency(item.subtotal).padStart(10);
 
                 row += `${qtyStr}| ${nameStr} | ${priceStr} | ${subStr} |`;
             } else {
-                row += `          |                                                |            |            |`;
+                row += `          |                                                  |            |            |`;
             }
             escp.push(row + '\n');
         }
 
         // Table Footer
-        escp.push('-------------------------------------------------------------------------------------------+\n');
+        escp.push('------------------------------------------------------------------------------------------\n');
 
         // Terbilang and Total
         const terbilangText = this.terbilang(data.total).trim();
@@ -170,7 +172,7 @@ class QZPrintService {
         // Footer line construction:
         const footerLine = '' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(20);
         escp.push(footerLine + '\n');
-        escp.push('-------------------------------------------------------------------------------------------+\n\n');
+        escp.push('------------------------------------------------------------------------------------------\n\n');
 
         // Signatures
         escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
