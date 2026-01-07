@@ -281,6 +281,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
+    // Dedicated Empty Sales Check
+    Route::get('/debug/empty-sales', function () {
+        $emptySales = \App\Models\Sale::doesntHave('details')->with('customer')->get();
+        
+        $results = [];
+        foreach ($emptySales as $sale) {
+            $results[] = [
+                'sale_id' => $sale->id,
+                'sale_number' => $sale->sale_number,
+                'status' => $sale->status,
+                'date' => $sale->sale_date->format('Y-m-d'),
+                'customer' => $sale->customer->name ?? 'Unknown',
+                'total_amount' => number_format($sale->total_amount, 2),
+                'created_at' => $sale->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $sale->updated_at->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        return response()->json([
+            'count' => count($results),
+            'description' => 'List of Sales IDs that exist in database but have ZERO rows in sale_details table.',
+            'sales' => $results
+        ]);
+    });
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,
