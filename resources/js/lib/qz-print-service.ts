@@ -81,6 +81,7 @@ class QZPrintService {
             '\x1B\x40',          // Initialize
             '\x1B\x43\x21',      // Page length 33 lines
             '\x1B\x4D\x01',      // 12 CPI
+            '\n',
         ];
 
         // Header and Info Sections
