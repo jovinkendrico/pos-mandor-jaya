@@ -16,6 +16,7 @@ import {
     PaginationPrevious,
     PaginationEllipsis,
 } from '@/components/ui/pagination';
+import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,
@@ -43,6 +44,7 @@ interface Sale {
     creator: { name: string };
     details: SaleDetail[];
     total_amount: number;
+    status: string;
 }
 
 interface PageProps {
@@ -127,7 +129,7 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                     ) : (
                         sales.data.map((sale) => (
                             <div key={sale.id} className="border rounded-md overflow-hidden">
-                                <div className="bg-muted px-4 py-2 text-sm font-semibold flex flex-wrap gap-4 border-b">
+                                <div className="bg-muted px-4 py-2 text-sm font-semibold flex flex-wrap gap-4 border-b items-center">
                                     <span>{sale.sale_number}</span>
                                     <span className="text-muted-foreground">|</span>
                                     <span>{formatDatetoString(new Date(sale.sale_date))}</span>
@@ -135,6 +137,11 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                                     <span>Customer: {sale.customer?.name || 'UMUM'}</span>
                                     <span className="text-muted-foreground">|</span>
                                     <span>Created: {sale.creator?.name || '-'}</span>
+                                    {sale.status === 'pending' && (
+                                        <Badge variant="outline" className="text-yellow-600 border-yellow-600 ml-auto">
+                                            BELUM KONFIRMASI
+                                        </Badge>
+                                    )}
                                 </div>
                                 <Table>
                                     <TableHeader>
@@ -149,7 +156,10 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                                     </TableHeader>
                                     <TableBody>
                                         {sale.details.map((detail) => {
-                                            const unitCost = detail.quantity ? detail.cost / detail.quantity : 0;
+                                            const isPending = sale.status === 'pending';
+                                            const unitCost = isPending ? 0 : (detail.quantity ? detail.cost / detail.quantity : 0);
+                                            const totalCost = isPending ? 0 : detail.cost;
+
                                             return (
                                                 <TableRow key={detail.id} className="hover:bg-transparent">
                                                     <TableCell className="py-2">{detail.item?.name || '-'}</TableCell>
@@ -160,7 +170,7 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                                                         {formatCurrency(unitCost)}
                                                     </TableCell>
                                                     <TableCell className="text-right text-red-600 dark:text-red-400 font-mono text-xs py-2">
-                                                        {formatCurrency(detail.cost)}
+                                                        {formatCurrency(totalCost)}
                                                     </TableCell>
                                                     <TableCell className="text-right font-mono text-xs py-2">
                                                         {formatCurrency(detail.price)}
@@ -175,7 +185,7 @@ export default function BinderReportIndex({ filters, sales }: PageProps) {
                                         <TableRow className="bg-muted/50 font-bold border-t">
                                             <TableCell colSpan={3} className="text-right py-2">TOTAL:</TableCell>
                                             <TableCell className="text-right text-red-600 dark:text-red-400 py-2">
-                                                {formatCurrency(sale.details.reduce((acc, curr) => acc + curr.cost, 0))}
+                                                {formatCurrency(sale.status === 'pending' ? 0 : sale.details.reduce((acc, curr) => acc + curr.cost, 0))}
                                             </TableCell>
                                             <TableCell className="py-2"></TableCell>
                                             <TableCell className="text-right py-2">

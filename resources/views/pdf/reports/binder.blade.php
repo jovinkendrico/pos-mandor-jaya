@@ -46,6 +46,9 @@
                         TGL: {{ $sale->sale_date->format('d/m/Y') }} | 
                         CUST: {{ $sale->customer->name ?? 'UMUM' }} |
                         CREATED: {{ $sale->creator->name ?? 'System' }}
+                        @if($sale->status === 'pending')
+                            <span style="color: red; float: right;">(BELUM KONFIRMASI)</span>
+                        @endif
                     </div>
 
                     <table style="width: 100%; margin-bottom: 10px;">
@@ -62,8 +65,10 @@
                         <tbody>
                             @foreach($sale->details as $detail)
                             @php
+                                $isPending = $sale->status === 'pending';
                                 $qty = $detail->quantity ?: 1;
-                                $unitCost = $detail->cost / $qty;
+                                $unitCost = $isPending ? 0 : ($detail->cost / $qty);
+                                $totalCost = $isPending ? 0 : $detail->cost;
                             @endphp
                             <tr>
                                 <td>{{ $detail->item->name ?? '-' }}</td>
@@ -71,7 +76,7 @@
                                 <!-- Harga Beli (Unit Cost) -->
                                 <td class="text-right">{{ number_format($unitCost, 2, ',', '.') }}</td>
                                 <!-- Total Harga Beli (Total Cost) -->
-                                <td class="text-right">{{ number_format($detail->cost, 2, ',', '.') }}</td>
+                                <td class="text-right">{{ number_format($totalCost, 2, ',', '.') }}</td>
                                 <!-- Harga Jual (Unit Price) -->
                                 <td class="text-right">{{ number_format($detail->price, 2, ',', '.') }}</td>
                                 <!-- Total Harga Jual (Subtotal) -->
@@ -81,7 +86,7 @@
                             <!-- Summary per Sale -->
                             <tr style="background-color: #f9f9f9; font-weight: bold;">
                                 <td colspan="3" class="text-right">TOTAL TRANSAKSI INI:</td>
-                                <td class="text-right">{{ number_format($sale->details->sum('cost'), 2, ',', '.') }}</td>
+                                <td class="text-right">{{ number_format($sale->status === 'pending' ? 0 : $sale->details->sum('cost'), 2, ',', '.') }}</td>
                                 <td></td>
                                 <td class="text-right">{{ number_format($sale->details->sum('subtotal'), 2, ',', '.') }}</td>
                             </tr>

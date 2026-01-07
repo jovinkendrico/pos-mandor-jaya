@@ -15,7 +15,7 @@ class BinderReportController extends Controller
     public function index(Request $request): Response
     {
         $query = Sale::with(['details.item', 'details.itemUom.uom', 'customer', 'creator'])
-            ->where('status', 'confirmed')
+            ->whereIn('status', ['confirmed', 'pending'])
             ->orderBy('sale_date', 'desc')
             ->orderBy('sale_number', 'desc');
 
@@ -35,10 +35,10 @@ class BinderReportController extends Controller
     public function print(Request $request)
     {
         try {
-            $query = Sale::with(['details.item', 'details.itemUom.uom', 'customer'])
-                ->where('status', 'confirmed')
-                ->orderBy('sale_date')
-                ->orderBy('sale_number');
+            $query = Sale::with(['details.item', 'details.itemUom.uom', 'customer', 'creator'])
+                ->whereIn('status', ['confirmed', 'pending'])
+                ->orderBy('sale_date', 'desc')
+                ->orderBy('sale_number', 'desc');
 
             if ($request->filled('date_from')) {
                 $query->whereDate('sale_date', '>=', $request->date_from);
