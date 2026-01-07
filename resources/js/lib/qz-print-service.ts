@@ -110,7 +110,7 @@ class QZPrintService {
         // Table Header
         // Widths: No:4, QTY:10, Name:46, Price:12, Total:12. Separators: 6. Total: 90.
         escp.push('--------------------------------------------------------------------------------------------\n');
-        escp.push('| No |    QTY   | Nama Barang                                      |   Harga @  |   Jumlah   |\n');
+        escp.push('| No |    QTY   | Nama Barang                                    |   Harga @  |   Jumlah   |\n');
         escp.push('+----+----------+------------------------------------------------+------------+------------+\n');
 
         // Table Body - Exact 12 Rows
@@ -176,7 +176,7 @@ class QZPrintService {
 
         // Signatures
         escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
-        escp.push('      (____________)      (____________)        (____________)        (____________)\n');
+        escp.push('      ______________      ______________        ______________        ______________\n');
 
         escp.push('\x0C');
 
