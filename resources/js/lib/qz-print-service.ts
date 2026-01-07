@@ -79,7 +79,6 @@ class QZPrintService {
             '\x1B\x40',          // Initialize
             '\x1B\x43\x21',      // Page length 33 lines
             '\x1B\x4D\x01',      // 12 CPI
-            '\n\n\n',            // Top padding
         ];
 
         // Header and Info Sections
@@ -107,9 +106,10 @@ class QZPrintService {
         escp.push('\n');
 
         // Table Header
-        escp.push('--------------------------------------------------------------------------------------\n');
-        escp.push('| No |   Quantity   | Nama Barang                              |   Harga @  |   Jumlah   |\n');
-        escp.push('+----+--------------+------------------------------------------+------------+------------+\n');
+        // Widths: No:4, QTY:10, Name:46, Price:12, Total:12. Total Chars = 4+10+46+12+12 + 6*1 = 90
+        escp.push('-------------------------------------------------------------------------------------------+\n');
+        escp.push('| No |    QTY   | Nama Barang                                    |   Harga @  |   Jumlah   |\n');
+        escp.push('+----+----------+------------------------------------------------+------------+------------+\n');
 
         // Table Body - Exact 12 Rows
         const maxRows = 12;
@@ -120,20 +120,44 @@ class QZPrintService {
 
             if (i < data.details.length) {
                 const item = data.details[i];
-                const qtyStr = `${item.quantity} ${item.uom}`.substring(0, 12).padEnd(12);
-                const nameStr = item.item_name.substring(0, 40).padEnd(40);
+
+                // QTY: 10 chars inner. " 1234 UOM "
+                // Num: 6 chars right aligned
+                // UOM: 3 chars left aligned
+                const qtyNum = this.formatCurrency(item.quantity).padStart(5);
+                const uomStr = item.uom.substring(0, 3).padEnd(3);
+                const qtyFinal = `${qtyNum} ${uomStr}`; // 5 + 1 + 3 = 9 chars? Need 10.
+                // Let's do: margin 1 + 5 num + 1 space + 3 uom = 10.
+
+                // Actually, let's just construct it directly into the cell space
+                // Cell is 10 chars.
+                // " 9999 PC " -> length 9. 
+                // Let's use 6 for num, 3 for UOM. " 9999 BOX" -> 9 chars?
+                // Let's align cleanly: "   50 KTK "
+                const qNum = this.formatCurrency(item.quantity).padStart(5);
+                const qUom = item.uom.substring(0, 3).padEnd(3);
+                const qtyCell = `${qNum} ${qUom}`; // 5+1+3 = 9 chars.
+                // Add 1 char padding at end to make 10? Or center? 
+                // To align "angka sejajar", number must be fixed width right aligned.
+                // "   50 KTK" -> 9 chars.
+                // Header is 10. "    QTY   ".
+                // Let's padStart 6 for num.
+                const qNum6 = this.formatCurrency(item.quantity).padStart(6);
+                const qtyStr = `${qNum6} ${qUom}`; // 6+1+3 = 10 chars. Exactly matches column.
+
+                const nameStr = item.item_name.substring(0, 44).padEnd(44);
                 const priceStr = this.formatCurrency(item.price).padStart(10);
                 const subStr = this.formatCurrency(item.subtotal).padStart(10);
 
-                row += ` ${qtyStr} | ${nameStr} | ${priceStr} | ${subStr} |`;
+                row += `${qtyStr}| ${nameStr} | ${priceStr} | ${subStr} |`;
             } else {
-                row += `              |                                          |            |            |`;
+                row += `          |                                                |            |            |`;
             }
             escp.push(row + '\n');
         }
 
         // Table Footer
-        escp.push('--------------------------------------------------------------------------------------\n');
+        escp.push('-------------------------------------------------------------------------------------------+\n');
 
         // Terbilang and Total
         const terbilangText = this.terbilang(data.total).trim();
@@ -141,9 +165,12 @@ class QZPrintService {
         const totalLabel = "Total: ";
         const totalValue = `Rp. ${this.formatCurrency(data.total)}`;
 
-        const footerLine = '' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(15);
+        // Align total value to the right (under Jumlah column)
+        // Table width is 90 chars.
+        // Footer line construction:
+        const footerLine = '' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(20);
         escp.push(footerLine + '\n');
-        escp.push('--------------------------------------------------------------------------------------\n\n');
+        escp.push('-------------------------------------------------------------------------------------------+\n\n');
 
         // Signatures
         escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
