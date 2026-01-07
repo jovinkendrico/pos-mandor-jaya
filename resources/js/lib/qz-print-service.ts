@@ -168,11 +168,38 @@ class QZPrintService {
         const totalLabel = "Total: ";
         const totalValue = `Rp. ${this.formatCurrency(data.total)}`;
 
-        // Align total value to the right (under Jumlah column)
-        // Table width is 90 chars.
-        // Footer line construction:
-        const footerLine = '| ' + terbilangDisplay.substring(0, 60).padEnd(65) + totalLabel + totalValue.padStart(20) + '|';
-        escp.push(footerLine + '\n');
+        // Word wrap logic
+        const maxLen = 60;
+        const words = terbilangDisplay.split(' ');
+        const wrappedLines: string[] = [];
+        let currentLine = '';
+
+        words.forEach(word => {
+            if ((currentLine + word).length > maxLen) {
+                wrappedLines.push(currentLine.trim());
+                currentLine = word + ' ';
+            } else {
+                currentLine += word + ' ';
+            }
+        });
+        if (currentLine.trim().length > 0) {
+            wrappedLines.push(currentLine.trim());
+        }
+        if (wrappedLines.length === 0) wrappedLines.push('');
+
+        // First line with Total
+        const firstLine = wrappedLines[0];
+        const footerLine1 = '| ' + firstLine.padEnd(65) + totalLabel + totalValue.padStart(20) + '|';
+        escp.push(footerLine1 + '\n');
+
+        // Subsequent lines (if any) with empty Total space
+        for (let i = 1; i < wrappedLines.length; i++) {
+            const nextLine = wrappedLines[i];
+            // 7 (Total:) + 20 (Value) = 27 spaces
+            const footerLineNext = '| ' + nextLine.padEnd(65) + ''.padEnd(27) + '|';
+            escp.push(footerLineNext + '\n');
+        }
+
         escp.push('--------------------------------------------------------------------------------------------\n\n');
 
         // Signatures
