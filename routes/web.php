@@ -174,6 +174,53 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('suppliers/import', [ImportSupplierController::class, 'store'])->name('suppliers.import.store');
     Route::get('suppliers/import/template', [ImportSupplierController::class, 'downloadTemplate'])->name('suppliers.import.template');
 
+    // Debug Orphans
+    Route::get('/debug/orphans', function () {
+        $movements = \App\Models\StockMovement::where('reference_type', 'Sale')->get();
+        $orphans = [];
+
+        foreach ($movements as $movement) {
+            // Check if sale exists
+            $sale = \App\Models\Sale::find($movement->reference_id);
+            if (!$sale) {
+                // Orphan because Sale header is gone (very bad)
+                $orphans[] = [
+                    'type' => 'Missing Sale Header',
+                    'movement_id' => $movement->id,
+                    'reference_id' => $movement->reference_id,
+                    'item_id' => $movement->item_id,
+                    'item_name' => $movement->item->name ?? 'Unknown Item',
+                    'quantity' => $movement->quantity,
+                    'date' => $movement->movement_date,
+                    'notes' => $movement->notes
+                ];
+                continue;
+            }
+
+            // Check if detail exists
+            $detail = $sale->details()->where('item_id', $movement->item_id)->first();
+            if (!$detail) {
+                // Orphan because Sale Detail is gone
+                $orphans[] = [
+                    'type' => 'Missing Sale Detail',
+                    'movement_id' => $movement->id,
+                    'reference_id' => $movement->reference_id,
+                    'sale_number' => $sale->sale_number,
+                    'item_id' => $movement->item_id,
+                    'item_name' => $movement->item->name ?? 'Unknown Item',
+                    'quantity' => $movement->quantity, // Negative for sales
+                    'date' => $movement->movement_date,
+                    'notes' => $movement->notes
+                ];
+            }
+        }
+
+        return response()->json([
+            'count' => count($orphans),
+            'orphans' => $orphans
+        ]);
+    });
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,
