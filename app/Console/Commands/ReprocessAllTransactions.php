@@ -37,11 +37,13 @@ class ReprocessAllTransactions extends Command
     {
         $this->info('Starting Reprocess All Transactions...');
 
-        // 1. Capture IDs of currently CONFIRMED transactions (Before we wipe anything)
-        $confirmedPurchaseIds = Purchase::where('status', 'confirmed')->pluck('id');
-        $confirmedSaleIds = Sale::where('status', 'confirmed')->pluck('id');
-        $confirmedPurchaseReturnIds = PurchaseReturn::where('status', 'confirmed')->pluck('id');
-        $confirmedSaleReturnIds = SaleReturn::where('status', 'confirmed')->pluck('id');
+        // 1. Capture IDs of ALL transactions (Including Pending/Confirmed)
+        // Since previous failed runs might have reset everything to 'pending', and user wants to "Process All",
+        // we essentially confirm EVERYTHING that is not explicitly cancelled.
+        $confirmedPurchaseIds = Purchase::where('status', '!=', 'cancelled')->pluck('id');
+        $confirmedSaleIds = Sale::where('status', '!=', 'cancelled')->pluck('id');
+        $confirmedPurchaseReturnIds = PurchaseReturn::where('status', '!=', 'cancelled')->pluck('id');
+        $confirmedSaleReturnIds = SaleReturn::where('status', '!=', 'cancelled')->pluck('id');
         
         $this->info("Found: " . $confirmedPurchaseIds->count() . " Purchases, " . $confirmedSaleIds->count() . " Sales.");
 
