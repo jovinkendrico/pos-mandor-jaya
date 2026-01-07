@@ -221,6 +221,113 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
+    // Reconstruct Details (Add missing items back to Sale)
+    Route::get('/debug/reconstruct-details', function () {
+        $movements = \App\Models\StockMovement::where('reference_type', 'Sale')->get();
+        $reconstructedCount = 0;
+        $affectedSaleIds = [];
+        $log = [];
+
+        DB::transaction(function () use ($movements, &$reconstructedCount, &$affectedSaleIds, &$log) {
+            foreach ($movements as $movement) {
+                $saleId = $movement->reference_id;
+                $itemId = $movement->item_id;
+
+                // Check availability
+                $sale = \App\Models\Sale::find($saleId);
+                if (!$sale) continue; // Skip if sale header is gone
+
+                // Check if detail already exists
+                $detail = $sale->details()->where('item_id', $itemId)->first();
+                if ($detail) continue; // Skip if detail exists (not an orphan)
+
+                // ORPHAN FOUND - RECONSTRUCT IT
+                $item = \App\Models\Item::find($itemId);
+                if (!$item) continue;
+
+                // Find Base UOM (or first available)
+                $uom = \App\Models\ItemUom::where('item_id', $itemId)
+                    ->orderBy('conversion_value', 'asc') // Prefer smallest unit (Base)
+                    ->first();
+                
+                if (!$uom) {
+                    $log[] = "Skipped Item {$itemId}: No UOM found.";
+                    continue;
+                }
+
+                $qty = abs($movement->quantity); // Movement is negative
+                $price = $uom->price ?? 0;
+                $subtotal = $qty * $price;
+
+                // Re-create Sale Detail
+                \App\Models\SaleDetail::create([
+                    'sale_id' => $saleId,
+                    'item_id' => $itemId,
+                    'item_uom_id' => $uom->id,
+                    'quantity' => $qty,
+                    'price' => $price,
+                    'discount1_percent' => 0,
+                    'discount1_amount' => 0,
+                    'discount2_percent' => 0,
+                    'discount2_amount' => 0,
+                    'subtotal' => $subtotal,
+                    'cost' => abs($movement->total_cost ?? ($movement->unit_cost * $qty)), // Best guess from movement
+                    'profit' => $subtotal - abs($movement->total_cost ?? ($movement->unit_cost * $qty)),
+                ]);
+
+                $affectedSaleIds[$saleId] = true;
+                $reconstructedCount++;
+                $log[] = "Reconstructed Item '{$item->name}' ({$qty} PCS) into Sale #{$sale->sale_number}";
+            }
+
+            // Recalculate Headers for Affected Sales
+            foreach (array_keys($affectedSaleIds) as $saleId) {
+                $sale = \App\Models\Sale::with('details')->find($saleId);
+                
+                // Recalculate Subtotal from details
+                $subtotal = $sale->details->sum('subtotal');
+                $totalCost = $sale->details->sum('cost');
+                $totalProfit = $sale->details->sum('profit');
+
+                // Recalculate Discounts (Preserve percentages from header if possible, or reset?)
+                // Strategy: Keep % fixed, recalculate Amount
+                $d1_pct = $sale->discount1_percent;
+                $d1_amt = ($subtotal * $d1_pct) / 100;
+                $after1 = $subtotal - $d1_amt;
+
+                $d2_pct = $sale->discount2_percent;
+                $d2_amt = ($after1 * $d2_pct) / 100;
+                $after2 = $after1 - $d2_amt;
+
+                $totalAfterDisc = $after2;
+
+                // Recalculate PPN
+                $ppn_pct = $sale->ppn_percent;
+                $ppn_amt = ($totalAfterDisc * $ppn_pct) / 100;
+                
+                $grandTotal = $totalAfterDisc + $ppn_amt;
+
+                $sale->update([
+                    'subtotal' => $subtotal,
+                    'discount1_amount' => $d1_amt,
+                    'discount2_amount' => $d2_amt,
+                    'total_after_discount' => $totalAfterDisc,
+                    'ppn_amount' => $ppn_amt,
+                    'total_amount' => $grandTotal,
+                    'total_cost' => $totalCost,
+                    'total_profit' => $totalProfit
+                ]);
+                
+                $log[] = "Updated Totals for Sale #{$sale->sale_number}: New Total Rp " . number_format($grandTotal, 0);
+            }
+        });
+
+        return response()->json([
+            'message' => "Successfully reconstructed {$reconstructedCount} missing details.",
+            'log' => $log
+        ]);
+    });
+
     Route::resources([
         'users'             => UserController::class,
         'roles'             => RoleController::class,
