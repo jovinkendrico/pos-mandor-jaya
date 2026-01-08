@@ -173,8 +173,11 @@ const SaleForm = (props: SaleFormProps) => {
                 });
             }
             setDataSale('customer_id', sale.customer_id);
-            setDataSale('sale_date', sale.sale_date);
-            setDataSale('due_date', sale.due_date ?? null);
+            setDataSale('sale_date', new Date(sale.sale_date));
+            setDataSale(
+                'due_date',
+                sale.due_date ? new Date(sale.due_date) : null,
+            );
             setDataSale('ppn_percent', formatNumber(sale.ppn_percent ?? 0));
             setDataSale('notes', sale.notes ?? '');
             setDataSale('details', sale.details);

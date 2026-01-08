@@ -179,8 +179,14 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                 });
             }
             setDataPurchase('supplier_id', purchase.supplier_id);
-            setDataPurchase('purchase_date', purchase.purchase_date);
-            setDataPurchase('due_date', purchase.due_date ?? null);
+            setDataPurchase(
+                'purchase_date',
+                new Date(purchase.purchase_date),
+            );
+            setDataPurchase(
+                'due_date',
+                purchase.due_date ? new Date(purchase.due_date) : null,
+            );
             setDataPurchase(
                 'ppn_percent',
                 formatNumber(purchase.ppn_percent ?? 0),
