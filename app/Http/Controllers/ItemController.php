@@ -174,7 +174,18 @@ class ItemController extends Controller
              return $item;
         });
 
-        return response()->json($items);
+        // Map to AsyncComboboxOption format
+        $results = $items->map(function ($item) {
+            return [
+                'value' => (string)$item->id,
+                'label' => $item->code . ' - ' . $item->name,
+                'item'  => $item,
+            ];
+        });
+
+        return response()->json([
+            'data' => $results
+        ]);
     }
 
     /**
