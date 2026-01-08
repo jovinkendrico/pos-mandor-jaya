@@ -247,6 +247,9 @@ class PurchasePaymentController extends Controller
     {
         $purchasePayment->load(['purchases.supplier', 'bank', 'items.purchase.supplier', 'creator', 'updater']);
 
+        // Sort items by purchase number
+        $purchasePayment->setRelation('items', $purchasePayment->items->sortBy('purchase.purchase_number', SORT_NATURAL)->values());
+
         return Inertia::render('transaction/purchase-payment/show', [
             'purchase_payment' => $purchasePayment,
         ]);

@@ -245,6 +245,9 @@ class SalePaymentController extends Controller
     {
         $salePayment->load(['sales.customer', 'bank', 'items.sale.customer', 'creator', 'updater']);
 
+        // Sort items by sale number
+        $salePayment->setRelation('items', $salePayment->items->sortBy('sale.sale_number', SORT_NATURAL)->values());
+
         return Inertia::render('transaction/sale-payment/show', [
             'sale_payment' => $salePayment,
         ]);
