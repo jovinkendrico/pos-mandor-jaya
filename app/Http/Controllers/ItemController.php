@@ -287,53 +287,60 @@ class ItemController extends Controller
         ->get()
         ->keyBy('purchase_return_id');
 
-    $items->transform(function ($item) use ($sales, $purchases, $saleReturns, $purchaseReturns, $saleDetails, $purchaseDetails, $saleReturnDetails, $purchaseReturnDetails) {
+    // Get Base UOM Name
+    $baseUomName = $item->itemUoms()->where('is_base', true)->with('uom')->first()->uom->name ?? 'Units';
+
+    $items->transform(function ($row) use ($sales, $purchases, $saleReturns, $purchaseReturns, $saleDetails, $purchaseDetails, $saleReturnDetails, $purchaseReturnDetails, $baseUomName) {
         $entityName = '';
         $price = 0;
-        $uom = '';
+        $uom = $baseUomName;
         
-        if ($item['reference_type'] === 'Sale') {
-            if (isset($sales[$item['reference_id']])) {
-                $entityName = $sales[$item['reference_id']]->customer->name ?? '';
+        if ($row['reference_type'] === 'Sale') {
+            if (isset($sales[$row['reference_id']])) {
+                $entityName = $sales[$row['reference_id']]->customer->name ?? '';
             }
-            if (isset($saleDetails[$item['reference_id']])) {
-                $price = $saleDetails[$item['reference_id']]->price;
-                $uom = $saleDetails[$item['reference_id']]->itemUom->uom->name ?? '';
+            if (isset($saleDetails[$row['reference_id']])) {
+                $detail = $saleDetails[$row['reference_id']];
+                $conversion = $detail->itemUom->conversion_value ?? 1;
+                $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
             }
-        } elseif ($item['reference_type'] === 'Purchase') {
-            if (isset($purchases[$item['reference_id']])) {
-                $entityName = $purchases[$item['reference_id']]->supplier->name ?? '';
+        } elseif ($row['reference_type'] === 'Purchase') {
+            if (isset($purchases[$row['reference_id']])) {
+                $entityName = $purchases[$row['reference_id']]->supplier->name ?? '';
             }
-             if (isset($purchaseDetails[$item['reference_id']])) {
-                $price = $purchaseDetails[$item['reference_id']]->price;
-                $uom = $purchaseDetails[$item['reference_id']]->itemUom->uom->name ?? '';
+             if (isset($purchaseDetails[$row['reference_id']])) {
+                $detail = $purchaseDetails[$row['reference_id']];
+                $conversion = $detail->itemUom->conversion_value ?? 1;
+                $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
             }
-        } elseif ($item['reference_type'] === 'SaleReturn') {
-            if (isset($saleReturns[$item['reference_id']])) {
-                $entityName = $saleReturns[$item['reference_id']]->sale->customer->name ?? '';
+        } elseif ($row['reference_type'] === 'SaleReturn') {
+            if (isset($saleReturns[$row['reference_id']])) {
+                $entityName = $saleReturns[$row['reference_id']]->sale->customer->name ?? '';
             }
-            if (isset($saleReturnDetails[$item['reference_id']])) {
-                $price = $saleReturnDetails[$item['reference_id']]->price; // Or cost if return doesn't track price? Usually returns track price.
-                $uom = $saleReturnDetails[$item['reference_id']]->itemUom->uom->name ?? '';
+            if (isset($saleReturnDetails[$row['reference_id']])) {
+                $detail = $saleReturnDetails[$row['reference_id']];
+                $conversion = $detail->itemUom->conversion_value ?? 1;
+                $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
             }
-        } elseif ($item['reference_type'] === 'PurchaseReturn') {
-            if (isset($purchaseReturns[$item['reference_id']])) {
-                $entityName = $purchaseReturns[$item['reference_id']]->purchase->supplier->name ?? '';
+        } elseif ($row['reference_type'] === 'PurchaseReturn') {
+            if (isset($purchaseReturns[$row['reference_id']])) {
+                $entityName = $purchaseReturns[$row['reference_id']]->purchase->supplier->name ?? '';
             }
-            if (isset($purchaseReturnDetails[$item['reference_id']])) {
-                $price = $purchaseReturnDetails[$item['reference_id']]->price;
-                $uom = $purchaseReturnDetails[$item['reference_id']]->itemUom->uom->name ?? '';
+            if (isset($purchaseReturnDetails[$row['reference_id']])) {
+                $detail = $purchaseReturnDetails[$row['reference_id']];
+                $conversion = $detail->itemUom->conversion_value ?? 1;
+                $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
             }
         }
 
         if ($entityName) {
-            $item['notes'] = ($item['notes'] ? $item['notes'] . ' - ' : '') . $entityName;
+            $row['notes'] = ($row['notes'] ? $row['notes'] . ' - ' : '') . $entityName;
         }
 
-        $item['price'] = $price;
-        $item['uom'] = $uom;
+        $row['price'] = $price;
+        $row['uom'] = $uom; // Always use base UOM
         
-        return $item;
+        return $row;
     });
 
         $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
