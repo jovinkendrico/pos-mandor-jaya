@@ -368,12 +368,13 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                 </Label>
                                 <DatePicker
                                     value={dataPurchase.purchase_date}
-                                    onChange={(value) =>
+                                    onChange={(value) => {
+                                        if (value) value.setHours(12, 0, 0, 0);
                                         setDataPurchase(
                                             'purchase_date',
                                             value as Date,
-                                        )
-                                    }
+                                        );
+                                    }}
                                     className="input-box"
                                 />
                                 <InputError
@@ -389,12 +390,14 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                         value={
                                             dataPurchase.due_date ?? undefined
                                         }
-                                        onChange={(value) =>
+                                        onChange={(value) => {
+                                            if (value)
+                                                value.setHours(12, 0, 0, 0);
                                             setDataPurchase(
                                                 'due_date',
                                                 value as Date,
-                                            )
-                                        }
+                                            );
+                                        }}
                                         className="input-box"
                                     />
                                     {dataPurchase.due_date && (
