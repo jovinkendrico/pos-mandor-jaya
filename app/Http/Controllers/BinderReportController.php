@@ -49,16 +49,11 @@ class BinderReportController extends Controller
 
             $sales = $query->get();
 
-            // Prepare data: flatten or keep structured?
-            // "Setiap halaman terdapat 10 mj"
-            // We pass chunks of sales. View will handle iterating and page breaks.
-            $chunks = $sales->chunk(10);
-
             $pdf = Pdf::loadView('pdf.reports.binder', [
-                'chunks' => $chunks,
+                'sales'     => $sales,
                 'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'title' => 'Laporan Binder (10 MJ/Halaman)',
+                'date_to'   => $request->date_to,
+                'title'     => 'Laporan Binder',
             ])->setPaper('a4', 'landscape');
 
             $filename = 'laporan-binder-' . now()->format('Y-m-d-His') . '.pdf';
