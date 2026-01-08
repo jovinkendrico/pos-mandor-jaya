@@ -71,6 +71,7 @@ const usePurchase = () => {
         reset,
         setError,
         clearErrors,
+        transform,
     } = useForm({
         supplier_id: 0,
         purchase_date: new Date(),
@@ -94,6 +95,27 @@ const usePurchase = () => {
             },
         ] as IPurchaseDetail[],
     });
+
+    // Ensure dates are sent as YYYY-MM-DD in local time
+    transform((data) => ({
+        ...data,
+        purchase_date: data.purchase_date
+            ? (new Date(
+                data.purchase_date.getTime() -
+                data.purchase_date.getTimezoneOffset() * 60000,
+            )
+                .toISOString()
+                .split('T')[0] as unknown as Date)
+            : data.purchase_date,
+        due_date: data.due_date
+            ? (new Date(
+                data.due_date.getTime() -
+                data.due_date.getTimezoneOffset() * 60000,
+            )
+                .toISOString()
+                .split('T')[0] as unknown as Date)
+            : data.due_date,
+    }));
 
     const handleSubmit = async (purchase?: IPurchase) => {
         clearErrors();

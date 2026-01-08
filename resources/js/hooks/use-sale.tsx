@@ -59,6 +59,7 @@ const useSale = () => {
         reset,
         setError,
         clearErrors,
+        transform,
     } = useForm({
         customer_id: 0,
         sale_date: new Date(),
@@ -78,6 +79,27 @@ const useSale = () => {
             },
         ] as ISaleDetail[],
     });
+
+    // Ensure dates are sent as YYYY-MM-DD in local time
+    transform((data) => ({
+        ...data,
+        sale_date: data.sale_date
+            ? (new Date(
+                data.sale_date.getTime() -
+                data.sale_date.getTimezoneOffset() * 60000,
+            )
+                .toISOString()
+                .split('T')[0] as unknown as Date)
+            : data.sale_date,
+        due_date: data.due_date
+            ? (new Date(
+                data.due_date.getTime() -
+                data.due_date.getTimezoneOffset() * 60000,
+            )
+                .toISOString()
+                .split('T')[0] as unknown as Date)
+            : data.due_date,
+    }));
 
     const handleSubmit = async (sale?: ISale) => {
         clearErrors();

@@ -358,10 +358,9 @@ const SaleForm = (props: SaleFormProps) => {
                                 </Label>
                                 <DatePicker
                                     value={dataSale.sale_date}
-                                    onChange={(value) => {
-                                        if (value) value.setHours(12, 0, 0, 0);
-                                        setDataSale('sale_date', value as Date);
-                                    }}
+                                    onChange={(value) =>
+                                        setDataSale('sale_date', value as Date)
+                                    }
                                     className="input-box"
                                 />
                                 <InputError message={errorsSale.sale_date} />
@@ -373,14 +372,12 @@ const SaleForm = (props: SaleFormProps) => {
                                 <div className="flex flex-row gap-2">
                                     <DatePicker
                                         value={dataSale.due_date ?? undefined}
-                                        onChange={(value) => {
-                                            if (value)
-                                                value.setHours(12, 0, 0, 0);
+                                        onChange={(value) =>
                                             setDataSale(
                                                 'due_date',
                                                 value as Date,
-                                            );
-                                        }}
+                                            )
+                                        }
                                         className="input-box"
                                     />
                                     {dataSale.due_date && (
