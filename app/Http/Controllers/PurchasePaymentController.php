@@ -151,9 +151,7 @@ class PurchasePaymentController extends Controller
         $purchaseId = $request->get('id', '');
         $limit = $request->get('limit', 20);
 
-        $query = Purchase::with('supplier')
-            ->orderBy('purchase_date', 'desc')
-            ->orderBy('id', 'desc');
+        $query = Purchase::with('supplier');
 
         // If searching by ID, get that specific purchase
         if ($purchaseId) {
@@ -165,6 +163,16 @@ class PurchasePaymentController extends Controller
                         $q->where('name', 'like', "%{$search}%");
                     });
             });
+            
+            // Should optimize search results: 
+            // 1. Sort by length of purchase_number (shorter is likely closer to exact "MB1" vs "MB1000")
+            // 2. Sort naturally by the number part
+            $query->orderByRaw('LENGTH(purchase_number) ASC')
+                  ->orderByRaw('CAST(SUBSTRING(purchase_number, 3) AS UNSIGNED) ASC');
+        } else {
+            // Default latest first
+            $query->orderBy('purchase_date', 'desc')
+                  ->orderBy('id', 'desc');
         }
 
         $purchases = $query->limit($limit)->get()

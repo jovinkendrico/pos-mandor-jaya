@@ -151,10 +151,8 @@ class SalePaymentController extends Controller
         $saleId = $request->get('id', '');
         $limit = $request->get('limit', 20);
 
-        $query = Sale::with('customer')
-            ->orderBy('sale_date', 'desc')
-            ->orderBy('id', 'desc');
-
+        $query = Sale::with('customer');
+            
         // If searching by ID, get that specific sale
         if ($saleId) {
             $query->where('id', $saleId);
@@ -165,6 +163,14 @@ class SalePaymentController extends Controller
                         $q->where('name', 'like', "%{$search}%");
                     });
             });
+
+            // Optimize search results for exact/short matches like "MJ1"
+            $query->orderByRaw('LENGTH(sale_number) ASC')
+                  ->orderByRaw('CAST(SUBSTRING(sale_number, 3) AS UNSIGNED) ASC');
+        } else {
+            // Default latest first
+            $query->orderBy('sale_date', 'desc')
+                  ->orderBy('id', 'desc');
         }
 
         $sales = $query->limit($limit)->get()
