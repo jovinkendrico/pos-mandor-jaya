@@ -547,6 +547,51 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'data' => $duplicates
         ]);
     });
+    
+    // Check for Negative Profit
+    Route::get('/debug/negative-profit', function () {
+        // 1. Check Detail Profit < 0
+        $negativeDetails = \App\Models\SaleDetail::with(['sale', 'item'])
+            ->where('profit', '<', 0)
+            ->get()
+            ->map(function ($detail) {
+                return [
+                    'type' => 'Detail Negative Profit',
+                    'sale_id' => $detail->sale_id,
+                    'sale_number' => $detail->sale->sale_number ?? 'Unknown',
+                    'item_name' => $detail->item->name ?? 'Unknown',
+                    'quantity' => (float) $detail->quantity,
+                    'price' => (float) $detail->price,
+                    'cost' => (float) $detail->cost,
+                    'profit' => (float) $detail->profit,
+                    'created_at' => $detail->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
+
+        // 2. Check Header Total Profit < 0
+        $negativeHeaders = \App\Models\Sale::with('customer')
+            ->where('total_profit', '<', 0)
+            ->get()
+            ->map(function ($sale) {
+                return [
+                    'type' => 'Header Negative Profit',
+                    'sale_id' => $sale->id,
+                    'sale_number' => $sale->sale_number,
+                    'customer' => $sale->customer->name ?? 'Unknown',
+                    'total_amount' => (float) $sale->total_amount,
+                    'total_cost' => (float) $sale->total_cost,
+                    'total_profit' => (float) $sale->total_profit,
+                    'date' => $sale->sale_date->format('Y-m-d'),
+                ];
+            });
+
+        return response()->json([
+            'negative_details_count' => $negativeDetails->count(),
+            'negative_headers_count' => $negativeHeaders->count(),
+            'negative_details' => $negativeDetails,
+            'negative_headers' => $negativeHeaders,
+        ]);
+    });
 
     Route::resources([
         'users'             => UserController::class,
