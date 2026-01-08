@@ -261,22 +261,21 @@ class SalePaymentController extends Controller
         // Get IDs of sales already in this payment
         $existingSaleIds = $salePayment->items->pluck('sale_id')->toArray();
 
-        // Load existing sales in payment + initial 10 other unpaid sales
-        $sales = Sale::with('customer')
-            ->where(function ($query) use ($existingSaleIds) {
-                // Include sales already in this payment
-                if (!empty($existingSaleIds)) {
-                    $query->whereIn('id', $existingSaleIds);
-                }
-            })
-            ->orWhere(function ($query) {
-                // Include unpaid sales (will be filtered after)
-                $query->whereRaw('1 = 1'); // Placeholder, will filter after
-            })
+        // Load specific sales already in this payment
+        $existingSales = Sale::with('customer')
+            ->whereIn('id', $existingSaleIds)
+            ->get();
+
+        // Load latest 10 unpaid sales excluding the ones above
+        $latestSales = Sale::with('customer')
+            ->whereNotIn('id', $existingSaleIds)
             ->orderBy('sale_date', 'desc')
             ->orderBy('id', 'desc')
-            ->limit(10 + count($existingSaleIds))
-            ->get()
+            ->limit(20)
+            ->get();
+
+        $sales = $existingSales->merge($latestSales)
+            ->unique('id')
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($sale) use ($existingSaleIds) {
                 // Show sales that are either:
@@ -284,6 +283,7 @@ class SalePaymentController extends Controller
                 // 2. Not fully paid (remaining_amount > 0)
                 return in_array($sale->id, $existingSaleIds) || $sale->remaining_amount > 0;
             })
+            ->take(10 + count($existingSaleIds))
             ->map(function ($sale) {
                 return [
                     'id' => $sale->id,

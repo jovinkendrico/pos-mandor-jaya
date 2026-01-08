@@ -263,22 +263,21 @@ class PurchasePaymentController extends Controller
         // Get IDs of purchases already in this payment
         $existingPurchaseIds = $purchasePayment->items->pluck('purchase_id')->toArray();
 
-        // Load existing purchases in payment + initial 10 other unpaid purchases
-        $purchases = Purchase::with('supplier')
-            ->where(function ($query) use ($existingPurchaseIds) {
-                // Include purchases already in this payment
-                if (!empty($existingPurchaseIds)) {
-                    $query->whereIn('id', $existingPurchaseIds);
-                }
-            })
-            ->orWhere(function ($query) {
-                // Include unpaid purchases (will be filtered after)
-                $query->whereRaw('1 = 1'); // Placeholder, will filter after
-            })
+        // Load specific purchases already in this payment
+        $existingPurchases = Purchase::with('supplier')
+            ->whereIn('id', $existingPurchaseIds)
+            ->get();
+
+        // Load latest 10 unpaid purchases excluding the ones above
+        $latestPurchases = Purchase::with('supplier')
+            ->whereNotIn('id', $existingPurchaseIds)
             ->orderBy('purchase_date', 'desc')
             ->orderBy('id', 'desc')
-            ->limit(10 + count($existingPurchaseIds))
-            ->get()
+            ->limit(20) // Fetch a few more to allow for filtering
+            ->get();
+
+        $purchases = $existingPurchases->merge($latestPurchases)
+            ->unique('id')
             ->append(['total_paid', 'remaining_amount'])
             ->filter(function ($purchase) use ($existingPurchaseIds) {
                 // Show purchases that are either:
@@ -286,6 +285,7 @@ class PurchasePaymentController extends Controller
                 // 2. Not fully paid (remaining_amount > 0)
                 return in_array($purchase->id, $existingPurchaseIds) || $purchase->remaining_amount > 0;
             })
+            ->take(10 + count($existingPurchaseIds))
             ->map(function ($purchase) {
                 return [
                     'id' => $purchase->id,
