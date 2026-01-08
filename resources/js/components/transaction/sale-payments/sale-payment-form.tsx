@@ -44,6 +44,16 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
     );
     const [localSales, setLocalSales] = useState<ISale[]>(sales);
 
+    useEffect(() => {
+        setLocalSales(prev => {
+            const newSales = sales.filter(s => !prev.some(prevS => prevS.id === s.id));
+            if (newSales.length > 0) {
+                return [...prev, ...newSales];
+            }
+            return prev;
+        });
+    }, [sales]);
+
     const {
         data: dataSalePayment,
         setData: setDataSalePayment,

@@ -46,6 +46,16 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
         purchases,
     );
 
+    useEffect(() => {
+        setLocalPurchases(prev => {
+            const newPurchases = purchases.filter(p => !prev.some(prevP => prevP.id === p.id));
+            if (newPurchases.length > 0) {
+                return [...prev, ...newPurchases];
+            }
+            return prev;
+        });
+    }, [purchases]);
+
     const {
         data: dataPurchasePayment,
         setData: setDataPurchasePayment,
