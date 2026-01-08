@@ -159,10 +159,8 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                         'payment_method',
                                         value as PaymentMethod,
                                     );
-
-                                    if (value === PaymentMethod.CASH) {
-                                        setDataPurchasePayment('bank_id', null);
-                                    }
+                                    // Reset bank/cash account selection when method changes
+                                    setDataPurchasePayment('bank_id', null);
                                 }}
                             >
                                 <SelectTrigger className="combobox">
@@ -201,22 +199,25 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                             >
                                 <SelectTrigger
                                     className="combobox"
-                                    disabled={
-                                        dataPurchasePayment.payment_method ===
-                                        PaymentMethod.CASH
-                                    }
                                 >
-                                    <SelectValue placeholder="Pilih bank..." />
+                                    <SelectValue placeholder="Pilih Akun Kas/Bank..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {banks.map((bank) => (
-                                        <SelectItem
-                                            key={bank.id}
-                                            value={bank.id.toString()}
-                                        >
-                                            {bank.name}
-                                        </SelectItem>
-                                    ))}
+                                    {banks
+                                        .filter((bank) =>
+                                            dataPurchasePayment.payment_method ===
+                                                PaymentMethod.CASH
+                                                ? bank.type === 'cash'
+                                                : bank.type === 'bank',
+                                        )
+                                        .map((bank) => (
+                                            <SelectItem
+                                                key={bank.id}
+                                                value={bank.id.toString()}
+                                            >
+                                                {bank.name}
+                                            </SelectItem>
+                                        ))}
                                 </SelectContent>
                             </Select>
                             <InputError
