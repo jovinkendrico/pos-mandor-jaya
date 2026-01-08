@@ -52,7 +52,7 @@ const BankIndex = (props: PageProps) => {
         filters = {
             search: '',
             type: 'all',
-            sort_by: 'name',
+            sort_by: 'id',
             sort_order: 'asc',
         },
     } = props;

@@ -44,14 +44,14 @@ class BankController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'name');
+        $sortBy = $request->get('sort_by', 'id');
         $sortOrder = $request->get('sort_order', 'asc');
 
         $allowedSortFields = ['name', 'balance', 'type'];
         if (in_array($sortBy, $allowedSortFields)) {
             $query->orderBy($sortBy, $sortOrder);
         } else {
-            $query->orderBy('name', 'asc');
+            $query->orderBy('id', 'asc');
         }
         $query->orderBy('id', 'asc');
 
