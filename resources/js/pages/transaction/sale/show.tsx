@@ -196,9 +196,27 @@ const SaleShow = (props: PageProps) => {
                     <DotMatrixPrintButton
                         data={{
                             sale_number: sale.sale_number,
-                            date: formatDatetoString(new Date(sale.sale_date)),
+                            date: (() => {
+                                const d = new Date(sale.sale_date);
+                                const day = String(d.getDate()).padStart(2, '0');
+                                const month = String(d.getMonth() + 1).padStart(2,
+                                    '0');
+                                const year = d.getFullYear();
+                                return `${day}-${month}-${year}`;
+                            })(),
                             due_date: sale.due_date
-                                ? formatDatetoString(new Date(sale.due_date))
+                                ? (() => {
+                                    const d = new Date(sale.due_date);
+                                    const day = String(d.getDate()).padStart(
+                                        2,
+                                        '0',
+                                    );
+                                    const month = String(
+                                        d.getMonth() + 1,
+                                    ).padStart(2, '0');
+                                    const year = d.getFullYear();
+                                    return `${day}-${month}-${year}`;
+                                })()
                                 : undefined,
                             customer_name: sale.customer?.name,
                             customer_city: sale.customer?.city?.name,
