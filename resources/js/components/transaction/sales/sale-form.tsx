@@ -80,6 +80,20 @@ const SaleForm = (props: SaleFormProps) => {
         handlePriceChange,
     } = useSale();
 
+    const [localItems, setLocalItems] = useState<IItem[]>(items);
+
+    useEffect(() => {
+        setLocalItems((prev) => {
+            const newItems = [...prev];
+            items.forEach((item) => {
+                if (!newItems.find((i) => i.id === item.id)) {
+                    newItems.push(item);
+                }
+            });
+            return newItems;
+        });
+    }, [items]);
+
     useEffect(() => {
         setLocalCustomers(customerOptions);
     }, [customerOptions]);
@@ -90,7 +104,8 @@ const SaleForm = (props: SaleFormProps) => {
                 if (
                     d.item &&
                     d.item.id &&
-                    !items.find((i) => i.id === d.item?.id)
+                    !items.find((i) => i.id === d.item?.id) &&
+                    !localItems.find((i) => i.id === d.item?.id)
                 ) {
                     // Check if already added to extraItems
                     if (!extraItems.find((i) => i.id === d.item?.id)) {
@@ -100,15 +115,16 @@ const SaleForm = (props: SaleFormProps) => {
             });
         }
         // sort by name
-        return [...items, ...extraItems].sort((a, b) =>
+        return [...localItems, ...extraItems].sort((a, b) =>
             a.name.localeCompare(b.name),
         );
-    }, [items, sale]);
+    }, [items, sale, localItems]);
 
     const itemComboboxOptions: ComboboxOption[] = useMemo(() => {
         return allItems.map((item) => ({
             label: `${item.code} - ${item.name} (Sisa: ${formatNumberWithSeparator(item.available_stock ?? item.stock)})`,
             value: item.id?.toString() || '',
+            item: item, // Pass full item object for onSelect usage 
         }));
     }, [allItems]);
 
@@ -447,8 +463,8 @@ const SaleForm = (props: SaleFormProps) => {
                                                 {index + 1}
                                             </TableCell>
                                             <TableCell>
-                                                <Combobox
-                                                    options={
+                                                <AsyncCombobox
+                                                    initialOptions={
                                                         itemComboboxOptions
                                                     }
                                                     value={
@@ -470,9 +486,36 @@ const SaleForm = (props: SaleFormProps) => {
                                                             0,
                                                         );
                                                     }}
+                                                    onSelect={(option) => {
+                                                        if (option && (option as any).item) {
+                                                            const item = (
+                                                                option as any
+                                                            ).item as IItem;
+                                                            setLocalItems(
+                                                                (prev) => {
+                                                                    if (
+                                                                        prev.find(
+                                                                            (
+                                                                                i,
+                                                                            ) =>
+                                                                                i.id ===
+                                                                                item.id,
+                                                                        )
+                                                                    )
+                                                                        return prev;
+                                                                    return [
+                                                                        ...prev,
+                                                                        item,
+                                                                    ];
+                                                                },
+                                                            );
+                                                        }
+                                                    }}
                                                     placeholder="Pilih item..."
                                                     searchPlaceholder="Cari item..."
                                                     className="combobox"
+                                                    searchUrl="/items/search"
+                                                    searchParam="term"
                                                 />
                                                 {detail.item_id &&
                                                     (() => {

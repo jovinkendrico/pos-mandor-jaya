@@ -116,7 +116,7 @@ class SaleController extends Controller
     public function create(): Response
     {
         $customers = Customer::with('city')->orderBy('name')->limit(10)->get();
-        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
+        $items     = Item::with('itemUoms.uom')->orderBy('name')->limit(20)->get();
 
         // Calculate pending stock for all items
         $pendingQuantities = DB::table('sale_details')

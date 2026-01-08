@@ -38,10 +38,21 @@ class ItemController extends Controller
         // Search
         if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+            // Split search term by spaces to allow for "smart" searching (e.g. "Semen 50kg" matches "Semen Holcim 50kg")
+            $tokens = explode(' ', $search);
+            
+            $query->where(function ($q) use ($tokens) {
+                foreach ($tokens as $token) {
+                    // Each token must match at least one column (AND logic for tokens)
+                    $token = trim($token);
+                    if ($token === '') continue;
+                    
+                    $q->where(function ($subQ) use ($token) {
+                        $subQ->where('code', 'like', "%{$token}%")
+                             ->orWhere('name', 'like', "%{$token}%")
+                             ->orWhere('description', 'like', "%{$token}%");
+                    });
+                }
             });
         }
 
@@ -108,6 +119,62 @@ class ItemController extends Controller
                 'sort_order' => $sortOrder,
             ],
         ]);
+    }
+
+    /**
+     * Search items for async combobox
+     */
+    public function searchItems(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search = $request->get('term', '');
+        $query = Item::with(['itemUoms' => function ($q) {
+            $q->where('is_active', true)->with('uom');
+        }]);
+
+        if ($search) {
+            // Split search term by spaces to allow for "smart" searching
+            $tokens = explode(' ', $search);
+            
+            $query->where(function ($q) use ($tokens) {
+                foreach ($tokens as $token) {
+                    $token = trim($token);
+                    if ($token === '') continue;
+                    
+                    $q->where(function ($subQ) use ($token) {
+                        $subQ->where('code', 'like', "%{$token}%")
+                             ->orWhere('name', 'like', "%{$token}%")
+                             ->orWhere('description', 'like', "%{$token}%");
+                    });
+                }
+            });
+        }
+        
+        $items = $query->orderBy('name')->limit(20)->get();
+
+        // Calculate pending stock
+        $items->transform(function ($item) {
+             $pendingSalesQty = \App\Models\SaleDetail::query()
+                ->join('sales', 'sales.id', '=', 'sale_details.sale_id')
+                ->join('item_uoms', 'item_uoms.id', '=', 'sale_details.item_uom_id')
+                ->where('sale_details.item_id', $item->id)
+                ->where('sales.status', 'pending')
+                ->sum(\DB::raw('sale_details.quantity * item_uoms.conversion_value'));
+
+             $pendingPurchasesQty = \App\Models\PurchaseDetail::query()
+                ->join('purchases', 'purchases.id', '=', 'purchase_details.purchase_id')
+                ->join('item_uoms', 'item_uoms.id', '=', 'purchase_details.item_uom_id')
+                ->where('purchase_details.item_id', $item->id)
+                ->where('purchases.status', 'pending')
+                ->sum(\DB::raw('purchase_details.quantity * item_uoms.conversion_value'));
+             
+             $item->pending_stock = (float)$pendingSalesQty;
+             $item->pending_purchase_stock = (float)$pendingPurchasesQty;
+             $item->available_stock = (float)$item->stock + (float)$pendingPurchasesQty - (float)$pendingSalesQty;
+             
+             return $item;
+        });
+
+        return response()->json($items);
     }
 
     /**

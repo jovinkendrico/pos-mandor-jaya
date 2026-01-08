@@ -115,7 +115,7 @@ class PurchaseController extends Controller
     public function create(): Response
     {
         $suppliers = Supplier::with('city')->orderBy('name')->get();
-        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
+        $items     = Item::with('itemUoms.uom')->orderBy('name')->limit(20)->get();
 
         return Inertia::render('transaction/purchase/create', [
             'suppliers' => $suppliers,
