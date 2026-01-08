@@ -62,8 +62,15 @@ class PurchaseController extends Controller
         $sortOrder = $request->get('sort_order', 'desc');
 
         $allowedSortFields = ['purchase_date', 'purchase_number', 'total_amount', 'status'];
-        $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'purchase_number', $sortOrder)
-            ->orderBy('purchase_number', $sortOrder);
+
+        if ($sortBy === 'purchase_number') {
+            $query->orderByRaw('CAST(SUBSTRING(purchase_number, 3) AS UNSIGNED) ' . $sortOrder);
+        } else {
+            $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'purchase_number', $sortOrder);
+        }
+
+        // Secondary sort always by purchase number desc
+        $query->orderByRaw('CAST(SUBSTRING(purchase_number, 3) AS UNSIGNED) DESC');
 
         // Default per-page 10
         $perPage = $request->get('per_page', 10);

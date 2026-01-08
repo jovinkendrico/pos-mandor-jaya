@@ -64,8 +64,14 @@ class SaleController extends Controller
 
         $allowedSortFields = ['sale_date', 'sale_number', 'total_amount', 'status'];
 
-        $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'sale_number', $sortOrder)
-            ->orderBy('sale_number', $sortOrder);
+        if ($sortBy === 'sale_number') {
+            $query->orderByRaw('CAST(SUBSTRING(sale_number, 3) AS UNSIGNED) ' . $sortOrder);
+        } else {
+            $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'sale_number', $sortOrder);
+        }
+
+        // Secondary sort always by sale number desc (latest created) to handle same-date or same-amount collisions
+        $query->orderByRaw('CAST(SUBSTRING(sale_number, 3) AS UNSIGNED) DESC');
 
         // Default page size 10
         $perPage = $request->get('per_page', 10);
