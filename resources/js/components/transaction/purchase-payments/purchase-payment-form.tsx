@@ -42,6 +42,9 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
     const [amountDisplayValues, setAmountDisplayValues] = useState<string[]>(
         [],
     );
+    const [localPurchases, setLocalPurchases] = useState<IPurchase[]>(
+        purchases,
+    );
 
     const {
         data: dataPurchasePayment,
@@ -92,7 +95,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
         }
     }, [purchase_payment, setDataPurchasePayment, resetpurchasePayment]);
 
-    const purchaseComboboxOptions: ComboboxOption[] = purchases.map(
+    const purchaseComboboxOptions: ComboboxOption[] = localPurchases.map(
         (purchase) => ({
             value: purchase.id.toString(),
             label: `${purchase.purchase_number} - ${purchase.supplier.name} - ${formatCurrency(purchase.total_amount)}`,
@@ -303,15 +306,15 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                             <TableBody>
                                 {dataPurchasePayment.items.map(
                                     (item, index) => {
-                                        const purchase = purchases.find(
+                                        const purchase = localPurchases.find(
                                             (p) =>
                                                 p.id ===
                                                 Number(item.purchase_id),
                                         );
                                         const remaining = purchase
                                             ? (purchase.remaining_amount ??
-                                              Number(purchase.total_amount) -
-                                                  (purchase.total_paid || 0))
+                                                Number(purchase.total_amount) -
+                                                (purchase.total_paid || 0))
                                             : 0;
 
                                         return (
@@ -328,7 +331,34 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                                         }
                                                         onValueChange={(
                                                             value,
+                                                            option,
                                                         ) => {
+                                                            if (
+                                                                option &&
+                                                                option.purchase
+                                                            ) {
+                                                                const newPurchase =
+                                                                    option.purchase as IPurchase;
+                                                                setLocalPurchases(
+                                                                    (prev) => {
+                                                                        if (
+                                                                            !prev.find(
+                                                                                (
+                                                                                    p,
+                                                                                ) =>
+                                                                                    p.id ===
+                                                                                    newPurchase.id,
+                                                                            )
+                                                                        ) {
+                                                                            return [
+                                                                                ...prev,
+                                                                                newPurchase,
+                                                                            ];
+                                                                        }
+                                                                        return prev;
+                                                                    },
+                                                                );
+                                                            }
                                                             handleChangeInvoice(
                                                                 index,
                                                                 'purchase_id',
@@ -337,6 +367,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                                         }}
                                                         placeholder="Pilih invoice..."
                                                         searchPlaceholder="Cari invoice..."
+                                                        searchUrl="/purchase-payments/search-purchases"
                                                         className="combobox"
                                                     />
                                                     <InputError
@@ -347,7 +378,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                                                     string
                                                                 >
                                                             )[
-                                                                `items[${index}].purchase_id`
+                                                            `items[${index}].purchase_id`
                                                             ]
                                                         }
                                                     />
@@ -359,16 +390,16 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                                 <TableCell className="text-center">
                                                     {purchase
                                                         ? formatCurrency(
-                                                              purchase.total_amount,
-                                                          )
+                                                            purchase.total_amount,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     {purchase
                                                         ? formatCurrency(
-                                                              purchase.total_paid ||
-                                                                  0,
-                                                          )
+                                                            purchase.total_paid ||
+                                                            0,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
@@ -393,7 +424,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                                         type="text"
                                                         value={
                                                             amountDisplayValues[
-                                                                index
+                                                            index
                                                             ] ?? '0'
                                                         }
                                                         onChange={(e) => {
@@ -418,7 +449,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                                                     string
                                                                 >
                                                             )[
-                                                                `items[${index}].amount`
+                                                            `items[${index}].amount`
                                                             ]
                                                         }
                                                         className="text-left"
@@ -480,8 +511,8 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                     {processingPurchasePayment
                         ? 'Menyimpan...'
                         : purchase_payment
-                          ? 'Perbarui'
-                          : 'Simpan'}
+                            ? 'Perbarui'
+                            : 'Simpan'}
                 </Button>
             </div>
         </form>

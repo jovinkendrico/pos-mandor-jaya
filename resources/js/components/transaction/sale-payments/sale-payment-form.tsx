@@ -42,6 +42,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
     const [amountDisplayValues, setAmountDisplayValues] = useState<string[]>(
         [],
     );
+    const [localSales, setLocalSales] = useState<ISale[]>(sales);
 
     const {
         data: dataSalePayment,
@@ -92,7 +93,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
         }
     }, [sale_payment, setDataSalePayment, resetSalePayment]);
 
-    const saleComboboxOptions: ComboboxOption[] = sales.map(
+    const saleComboboxOptions: ComboboxOption[] = localSales.map(
         (sale) => ({
             value: sale.id.toString(),
             label: `${sale.sale_number} - ${sale.customer.name} - ${formatCurrency(sale.total_amount)}`,
@@ -304,15 +305,15 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                             <TableBody>
                                 {dataSalePayment.items.map(
                                     (item, index) => {
-                                        const sale = sales.find(
+                                        const sale = localSales.find(
                                             (s) =>
                                                 s.id ===
                                                 Number(item.sale_id),
                                         );
                                         const remaining = sale
                                             ? (sale.remaining_amount ??
-                                              Number(sale.total_amount) -
-                                                  (sale.total_paid || 0))
+                                                Number(sale.total_amount) -
+                                                (sale.total_paid || 0))
                                             : 0;
 
                                         return (
@@ -329,7 +330,35 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                                                         }
                                                         onValueChange={(
                                                             value,
+                                                            option,
                                                         ) => {
+                                                            if (
+                                                                option &&
+                                                                option.sale
+                                                            ) {
+                                                                const newSale =
+                                                                    option.sale as ISale;
+                                                                setLocalSales(
+                                                                    (prev) => {
+                                                                        if (
+                                                                            !prev.find(
+                                                                                (
+                                                                                    s,
+                                                                                ) =>
+                                                                                    s.id ===
+                                                                                    newSale.id,
+                                                                            )
+                                                                        ) {
+                                                                            return [
+                                                                                ...prev,
+                                                                                newSale,
+                                                                            ];
+                                                                        }
+                                                                        return prev;
+                                                                    },
+                                                                );
+                                                            }
+
                                                             handleChangeInvoice(
                                                                 index,
                                                                 'sale_id',
@@ -338,6 +367,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                                                         }}
                                                         placeholder="Pilih invoice..."
                                                         searchPlaceholder="Cari invoice..."
+                                                        searchUrl="/sale-payments/search-sales"
                                                         className="combobox"
                                                     />
                                                     <InputError
@@ -348,7 +378,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                                                                     string
                                                                 >
                                                             )[
-                                                                `items[${index}].sale_id`
+                                                            `items[${index}].sale_id`
                                                             ]
                                                         }
                                                     />
@@ -360,16 +390,16 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                                                 <TableCell className="text-center">
                                                     {sale
                                                         ? formatCurrency(
-                                                              sale.total_amount,
-                                                          )
+                                                            sale.total_amount,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     {sale
                                                         ? formatCurrency(
-                                                              sale.total_paid ||
-                                                                  0,
-                                                          )
+                                                            sale.total_paid ||
+                                                            0,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
@@ -394,7 +424,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                                                         type="text"
                                                         value={
                                                             amountDisplayValues[
-                                                                index
+                                                            index
                                                             ] ?? '0'
                                                         }
                                                         onChange={(e) => {
@@ -419,7 +449,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                                                                     string
                                                                 >
                                                             )[
-                                                                `items[${index}].amount`
+                                                            `items[${index}].amount`
                                                             ]
                                                         }
                                                         className="text-left"
@@ -481,8 +511,8 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                     {processingSalePayment
                         ? 'Menyimpan...'
                         : sale_payment
-                          ? 'Perbarui'
-                          : 'Simpan'}
+                            ? 'Perbarui'
+                            : 'Simpan'}
                 </Button>
             </div>
         </form>
