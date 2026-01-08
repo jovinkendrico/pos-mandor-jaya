@@ -550,8 +550,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Check for Negative Profit
     Route::get('/debug/negative-profit', function () {
-        // 1. Check Detail Profit < 0
+        // 1. Check Detail Profit < 0 (Only Confirmed Sales)
         $negativeDetails = \App\Models\SaleDetail::with(['sale', 'item'])
+            ->whereHas('sale', function ($q) {
+                $q->where('status', 'confirmed');
+            })
             ->where('profit', '<', 0)
             ->get()
             ->map(function ($detail) {
@@ -568,8 +571,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ];
             });
 
-        // 2. Check Header Total Profit < 0
+        // 2. Check Header Total Profit < 0 (Only Confirmed Sales)
         $negativeHeaders = \App\Models\Sale::with('customer')
+            ->where('status', 'confirmed')
             ->where('total_profit', '<', 0)
             ->get()
             ->map(function ($sale) {
