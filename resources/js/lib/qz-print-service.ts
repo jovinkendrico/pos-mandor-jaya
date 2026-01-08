@@ -45,11 +45,40 @@ class QZPrintService {
     private formatCurrency(num: number | string): string {
         const n = Number(num);
         if (isNaN(n)) return '0';
-        return n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        return n.toLocaleString('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        });
+    }
+
+    private formatQuantity(num: number | string): string {
+        const n = Number(num);
+        if (isNaN(n)) return '0';
+        // Check if decimal
+        if (n % 1 !== 0) {
+            return n.toLocaleString('id-ID', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 2,
+            });
+        }
+        return n.toLocaleString('id-ID', { maximumFractionDigits: 0 });
     }
 
     private terbilang(n: number): string {
-        const bilangan = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+        const bilangan = [
+            '',
+            'satu',
+            'dua',
+            'tiga',
+            'empat',
+            'lima',
+            'enam',
+            'tujuh',
+            'delapan',
+            'sembilan',
+            'sepuluh',
+            'sebelas',
+        ];
         let temp = '';
 
         if (n < 12) {
@@ -57,17 +86,29 @@ class QZPrintService {
         } else if (n < 20) {
             temp = this.terbilang(n - 10) + ' belas';
         } else if (n < 100) {
-            temp = this.terbilang(Math.floor(n / 10)) + ' puluh' + this.terbilang(n % 10);
+            temp =
+                this.terbilang(Math.floor(n / 10)) +
+                ' puluh' +
+                this.terbilang(n % 10);
         } else if (n < 200) {
             temp = ' seratus' + this.terbilang(n - 100);
         } else if (n < 1000) {
-            temp = this.terbilang(Math.floor(n / 100)) + ' ratus' + this.terbilang(n % 100);
+            temp =
+                this.terbilang(Math.floor(n / 100)) +
+                ' ratus' +
+                this.terbilang(n % 100);
         } else if (n < 2000) {
             temp = ' seribu' + this.terbilang(n - 1000);
         } else if (n < 1000000) {
-            temp = this.terbilang(Math.floor(n / 1000)) + ' ribu' + this.terbilang(n % 1000);
+            temp =
+                this.terbilang(Math.floor(n / 1000)) +
+                ' ribu' +
+                this.terbilang(n % 1000);
         } else if (n < 1000000000) {
-            temp = this.terbilang(Math.floor(n / 1000000)) + ' juta' + this.terbilang(n % 1000000);
+            temp =
+                this.terbilang(Math.floor(n / 1000000)) +
+                ' juta' +
+                this.terbilang(n % 1000000);
         }
         return temp;
     }
@@ -78,9 +119,9 @@ class QZPrintService {
 
         // Blade replicates: 32px padding ~ 3 blank lines
         let escp = [
-            '\x1B\x40',          // Initialize
-            '\x1B\x43\x21',      // Page length 33 lines
-            '\x1B\x4D\x01',      // 12 CPI
+            '\x1B\x40', // Initialize
+            '\x1B\x43\x21', // Page length 33 lines
+            '\x1B\x4D\x01', // 12 CPI
             '\n',
         ];
 
@@ -103,16 +144,22 @@ class QZPrintService {
         for (let i = 0; i < maxInfoLines; i++) {
             let line = '';
             line += (leftLines[i] || '').padEnd(leftColWidth);
-            line += (rightLines[i] || '');
+            line += rightLines[i] || '';
             escp.push(line + '\n');
         }
         escp.push('\n');
 
         // Table Header
         // Widths: No:4, QTY:10, Name:46, Price:12, Total:12. Separators: 6. Total: 90.
-        escp.push('--------------------------------------------------------------------------------------------\n');
-        escp.push('| No |    QTY   | Nama Barang                                    |   Harga @  |   Jumlah   |\n');
-        escp.push('+----+----------+------------------------------------------------+------------+------------+\n');
+        escp.push(
+            '--------------------------------------------------------------------------------------------\n',
+        );
+        escp.push(
+            '| No |    QTY   | Nama Barang                                    |   Harga @  |   Jumlah   |\n',
+        );
+        escp.push(
+            '+----+----------+------------------------------------------------+------------+------------+\n',
+        );
 
         // Table Body - Exact 12 Rows
         const maxRows = 12;
@@ -127,25 +174,25 @@ class QZPrintService {
                 // QTY: 10 chars inner. " 1234 UOM "
                 // Num: 6 chars right aligned
                 // UOM: 3 chars left aligned
-                const qtyNum = this.formatCurrency(item.quantity).padStart(5);
-                const uomStr = item.uom.substring(0, 3).padEnd(3);
-                const qtyFinal = `${qtyNum} ${uomStr}`; // 5 + 1 + 3 = 9 chars? Need 10.
+                // const qtyNum = this.formatCurrency(item.quantity).padStart(5);
+                // const uomStr = item.uom.substring(0, 3).padEnd(3);
+                // const qtyFinal = `${qtyNum} ${uomStr}`; // 5 + 1 + 3 = 9 chars? Need 10.
                 // Let's do: margin 1 + 5 num + 1 space + 3 uom = 10.
 
                 // Actually, let's just construct it directly into the cell space
                 // Cell is 10 chars.
-                // " 9999 PC " -> length 9. 
+                // " 9999 PC " -> length 9.
                 // Let's use 6 for num, 3 for UOM. " 9999 BOX" -> 9 chars?
                 // Let's align cleanly: "   50 KTK "
-                const qNum = this.formatCurrency(item.quantity).padStart(5);
+                // const qNum = this.formatCurrency(item.quantity).padStart(5);
                 const qUom = item.uom.substring(0, 3).padEnd(3);
-                const qtyCell = `${qNum} ${qUom}`; // 5+1+3 = 9 chars.
-                // Add 1 char padding at end to make 10? Or center? 
+                // const qtyCell = `${qNum} ${qUom}`; // 5+1+3 = 9 chars.
+                // Add 1 char padding at end to make 10? Or center?
                 // To align "angka sejajar", number must be fixed width right aligned.
                 // "   50 KTK" -> 9 chars.
                 // Header is 10. "    QTY   ".
                 // Let's padStart 6 for num.
-                const qNum6 = this.formatCurrency(item.quantity).padStart(6);
+                const qNum6 = this.formatQuantity(item.quantity).padStart(6);
                 const qtyStr = `${qNum6} ${qUom}`; // 6+1+3 = 10 chars. Exactly matches column.
 
                 const nameStr = item.item_name.substring(0, 46).padEnd(46);
@@ -160,12 +207,16 @@ class QZPrintService {
         }
 
         // Table Footer
-        escp.push('+----+----------+------------------------------------------------+------------+------------+\n');
+        escp.push(
+            '+----+----------+------------------------------------------------+------------+------------+\n',
+        );
 
         // Terbilang and Total
         const terbilangText = this.terbilang(data.total).trim();
-        const terbilangDisplay = terbilangText ? `Terbilang: ${terbilangText.charAt(0).toUpperCase() + terbilangText.slice(1)} Rupiah` : '';
-        const totalLabel = "Total: ";
+        const terbilangDisplay = terbilangText
+            ? `Terbilang: ${terbilangText.charAt(0).toUpperCase() + terbilangText.slice(1)} Rupiah`
+            : '';
+        const totalLabel = 'Total: ';
         const totalValue = `Rp. ${this.formatCurrency(data.total)}`;
 
         // Word wrap logic
@@ -174,7 +225,7 @@ class QZPrintService {
         const wrappedLines: string[] = [];
         let currentLine = '';
 
-        words.forEach(word => {
+        words.forEach((word) => {
             if ((currentLine + word).length > maxLen) {
                 wrappedLines.push(currentLine.trim());
                 currentLine = word + ' ';
@@ -189,22 +240,34 @@ class QZPrintService {
 
         // First line with Total
         const firstLine = wrappedLines[0];
-        const footerLine1 = '| ' + firstLine.padEnd(62) + totalLabel + totalValue.padStart(20) + '|';
+        const footerLine1 =
+            '| ' +
+            firstLine.padEnd(62) +
+            totalLabel +
+            totalValue.padStart(20) +
+            '|';
         escp.push(footerLine1 + '\n');
 
         // Subsequent lines (if any) with empty Total space
         for (let i = 1; i < wrappedLines.length; i++) {
             const nextLine = wrappedLines[i];
             // 7 (Total:) + 20 (Value) = 27 spaces
-            const footerLineNext = '| ' + nextLine.padEnd(62) + ''.padEnd(27) + '|';
+            const footerLineNext =
+                '| ' + nextLine.padEnd(62) + ''.padEnd(27) + '|';
             escp.push(footerLineNext + '\n');
         }
 
-        escp.push('--------------------------------------------------------------------------------------------\n\n');
+        escp.push(
+            '--------------------------------------------------------------------------------------------\n\n',
+        );
 
         // Signatures
-        escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
-        escp.push('      ______________      ______________        ______________        ______________\n');
+        escp.push(
+            '       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n',
+        );
+        escp.push(
+            '      ______________      ______________        ______________        ______________\n',
+        );
 
         escp.push('\x0C');
 
