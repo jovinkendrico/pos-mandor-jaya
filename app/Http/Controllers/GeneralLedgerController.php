@@ -89,6 +89,7 @@ class GeneralLedgerController extends Controller
             ->join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $account->id)
             ->where('journal_entries.status', 'posted')
+            ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo)
             ->orderBy('journal_entries.journal_date')
