@@ -44,6 +44,7 @@ const useSalePayments = () => {
         reset,
         setError,
         clearErrors,
+        transform,
     } = useForm({
         payment_date: new Date(),
         items: [
@@ -58,6 +59,18 @@ const useSalePayments = () => {
         notes: '',
         status: SalePaymentStatus.PENDING,
     });
+
+    transform((data) => ({
+        ...data,
+        payment_date: data.payment_date
+            ? (new Date(
+                data.payment_date.getTime() -
+                data.payment_date.getTimezoneOffset() * 60000,
+            )
+                .toISOString()
+                .split('T')[0] as unknown as Date)
+            : data.payment_date,
+    }));
 
     const handleSubmit = async (sale_payment?: ISalePayment) => {
         clearErrors();

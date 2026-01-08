@@ -76,7 +76,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
         if (purchase_payment) {
             setDataPurchasePayment(
                 'payment_date',
-                purchase_payment.payment_date,
+                new Date(purchase_payment.payment_date),
             );
             setDataPurchasePayment(
                 'payment_method',

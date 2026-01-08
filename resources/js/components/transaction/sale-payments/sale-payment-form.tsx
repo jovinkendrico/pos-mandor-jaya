@@ -74,7 +74,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
         if (sale_payment) {
             setDataSalePayment(
                 'payment_date',
-                sale_payment.payment_date,
+                new Date(sale_payment.payment_date),
             );
             setDataSalePayment(
                 'payment_method',
