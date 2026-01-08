@@ -21,6 +21,7 @@ const CashOutTable = (props: CashOutTableProps) => {
         'Tanggal',
         'Bank/Kas',
         'Akun Pengeluaran',
+        'Supplier',
         'Jumlah',
         'Keterangan',
         'Status',
@@ -49,6 +50,12 @@ const CashOutTable = (props: CashOutTableProps) => {
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.chart_of_account?.name || '-'}
+                    </TableCell>
+                    <TableCell className="flex w-full items-center justify-center text-center">
+                        {row.reference_type === 'PurchasePayment' &&
+                            row.reference?.items?.[0]?.purchase?.supplier?.name
+                            ? row.reference.items[0].purchase.supplier.name
+                            : '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {formatCurrency(row.amount)}

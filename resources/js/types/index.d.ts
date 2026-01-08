@@ -815,6 +815,9 @@ export type ICashOut = Pick<
     bank?: IBank;
     auto_post?: boolean;
     chart_of_account?: IChartOfAccount;
+    reference?: IPurchasePayment | ISalePayment | any;
+    creator?: User;
+    updater?: User;
 };
 
 export interface JournalEntryDetail {

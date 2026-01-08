@@ -23,7 +23,11 @@ class CashOutController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = CashOut::with(['bank', 'chartOfAccount', 'creator', 'updater'])
+        $query = CashOut::with(['bank', 'chartOfAccount', 'creator', 'updater', 'reference' => function ($morphTo) {
+            $morphTo->morphWith([
+                \App\Models\PurchasePayment::class => ['items.purchase.supplier'],
+            ]);
+        }])
             ->orderBy('cash_out_date', 'desc')
             ->orderBy('id', 'desc');
 

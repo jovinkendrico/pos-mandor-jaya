@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
+            'PurchasePayment' => \App\Models\PurchasePayment::class,
+            'SalePayment' => \App\Models\SalePayment::class,
+        ]);
     }
 }
