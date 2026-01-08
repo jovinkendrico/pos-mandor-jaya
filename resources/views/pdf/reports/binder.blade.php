@@ -97,6 +97,20 @@
                         <td class="text-right">{{ number_format($sale->details->sum('subtotal'), 2, ',', '.') }}
                         </td>
                     </tr>
+                    <tr style="background-color: #f9f9f9; font-weight: bold;">
+                        <td colspan="5" class="text-right">TOTAL PROFIT:</td>
+                        <td class="text-right">
+                            @php
+                                $sumCost =
+                                    $sale->status === 'pending'
+                                        ? 0
+                                        : $sale->details->sum('cost');
+                                $sumSale = $sale->details->sum('subtotal');
+                                $sumProfit = $sumSale - $sumCost;
+                            @endphp
+                            {{ number_format($sumProfit, 2, ',', '.') }}
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
