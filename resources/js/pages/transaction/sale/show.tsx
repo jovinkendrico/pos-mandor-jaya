@@ -196,8 +196,10 @@ const SaleShow = (props: PageProps) => {
                     <DotMatrixPrintButton
                         data={{
                             sale_number: sale.sale_number,
-                            date: sale.sale_date.split('T')[0].split('-').reverse().join('-'),
-                            due_date: sale.due_date ? sale.due_date.split('T')[0].split('-').reverse().join('-') : undefined,
+                            date: formatDatetoString(new Date(sale.sale_date)),
+                            due_date: sale.due_date
+                                ? formatDatetoString(new Date(sale.due_date))
+                                : undefined,
                             customer_name: sale.customer?.name,
                             customer_city: sale.customer?.city?.name,
                             customer_phone: sale.customer?.phone_number,
