@@ -226,7 +226,7 @@ class ItemController extends Controller
             // Opening stock = Initial stock + movements before date
             $openingStock = $initialStock + (float) $movementsBefore;
         } else {
-            // No date filter: opening stock is the initial stock when item was created
+            // No replacement needed here, just checking.r: opening stock is the initial stock when item was created
             $openingStock = $initialStock;
         }
 
