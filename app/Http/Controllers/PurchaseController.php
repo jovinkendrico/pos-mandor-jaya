@@ -58,12 +58,12 @@ class PurchaseController extends Controller
         }
 
         // Sort
-        $sortBy    = $request->get('sort_by', 'purchase_date');
+        $sortBy    = $request->get('sort_by', 'purchase_number');
         $sortOrder = $request->get('sort_order', 'desc');
 
         $allowedSortFields = ['purchase_date', 'purchase_number', 'total_amount', 'status'];
-        $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'purchase_date', $sortOrder)
-            ->orderBy('id', 'desc');
+        $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'purchase_number', $sortOrder)
+            ->orderBy('purchase_number', $sortOrder);
 
         // Default per-page 10
         $perPage = $request->get('per_page', 10);

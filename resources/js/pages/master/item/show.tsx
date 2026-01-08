@@ -9,7 +9,7 @@ import {
     IItemStockMovement,
     PaginatedData,
 } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
@@ -40,9 +40,9 @@ const ShowStock = (props: PageProps) => {
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Barang" />
                 <div className="flex flex-row items-center gap-2">
-                    <Link href={index().url}>
+                    <button type="button" onClick={() => window.history.back()}>
                         <ArrowLeft className="h-8 w-8" />
-                    </Link>
+                    </button>
                     <PageTitle title={`Perpindahan Stok (${item.name})`} />
                 </div>
                 <StockMovementTable

@@ -46,7 +46,7 @@ const SaleIndex = (props: PageProps) => {
             payment_status: 'all',
             date_from: '',
             date_to: '',
-            sort_by: 'sale_date',
+            sort_by: 'sale_number',
             sort_order: 'desc',
         },
     } = props;

@@ -7,7 +7,7 @@ import InputError from '@/components/input-error';
 import AppLayout from '@/layouts/app-layout';
 import items, { index } from '@/routes/items';
 import { BreadcrumbItem, PageProps as InertiaPageProps } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, Download, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -72,9 +72,9 @@ const ItemImport = () => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Import Barang" />
             <div className="mb-4 flex items-center gap-2">
-                <Link href={index().url}>
+                <button type="button" onClick={() => window.history.back()}>
                     <ArrowLeft className="h-8 w-8" />
-                </Link>
+                </button>
                 <PageTitle title="Import Barang" />
             </div>
 

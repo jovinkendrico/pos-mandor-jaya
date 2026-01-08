@@ -59,13 +59,13 @@ class SaleController extends Controller
         }
 
         // Sorting
-        $sortBy    = $request->get('sort_by', 'sale_date');
+        $sortBy    = $request->get('sort_by', 'sale_number');
         $sortOrder = $request->get('sort_order', 'desc');
 
         $allowedSortFields = ['sale_date', 'sale_number', 'total_amount', 'status'];
 
-        $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'sale_date', $sortOrder)
-            ->orderBy('id', 'desc');
+        $query->orderBy(in_array($sortBy, $allowedSortFields) ? $sortBy : 'sale_number', $sortOrder)
+            ->orderBy('sale_number', $sortOrder);
 
         // Default page size 10
         $perPage = $request->get('per_page', 10);

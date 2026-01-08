@@ -25,7 +25,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatDate, formatNumberWithSeparator } from '@/lib/utils';
 import { index } from '@/routes/items';
 import { BreadcrumbItem, IItem, PaginatedData } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
 interface StockCardTransaction {
@@ -139,11 +139,13 @@ const StockCardPage = (props: PageProps) => {
                 <Head title={`Kartu Stok - ${item.name}`} />
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href={index().url}>
-                            <Button variant="ghost" size="icon">
-                                <ArrowLeft />
-                            </Button>
-                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => window.history.back()}
+                        >
+                            <ArrowLeft />
+                        </Button>
                         <div>
                             <PageTitle title={`Kartu Stok - ${item.name}`} />
                             <p className="text-sm text-muted-foreground">
@@ -293,15 +295,15 @@ const StockCardPage = (props: PageProps) => {
                                                     <TableCell className="text-center text-green-600">
                                                         {transaction.in > 0
                                                             ? formatNumberWithSeparator(
-                                                                  transaction.in,
-                                                              )
+                                                                transaction.in,
+                                                            )
                                                             : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-center text-red-600">
                                                         {transaction.out > 0
                                                             ? formatNumberWithSeparator(
-                                                                  transaction.out,
-                                                              )
+                                                                transaction.out,
+                                                            )
                                                             : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-center font-semibold">

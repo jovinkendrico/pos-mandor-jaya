@@ -52,7 +52,7 @@ const PurchaseIndex = (props: PageProps) => {
             payment_status: 'all',
             date_from: '',
             date_to: '',
-            sort_by: 'purchase_date',
+            sort_by: 'purchase_number',
             sort_order: 'desc',
         },
     } = props;
