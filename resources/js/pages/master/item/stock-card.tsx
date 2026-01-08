@@ -22,7 +22,7 @@ import {
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { formatDate, formatNumberWithSeparator } from '@/lib/utils';
+import { formatCurrency, formatDate, formatNumberWithSeparator } from '@/lib/utils';
 import { index } from '@/routes/items';
 import { BreadcrumbItem, IItem, PaginatedData } from '@/types';
 import { Head } from '@inertiajs/react';
@@ -37,6 +37,8 @@ interface StockCardTransaction {
     in: number;
     out: number;
     balance: number;
+    price: number;
+    uom: string;
 }
 
 interface PageProps {
@@ -253,6 +255,12 @@ const StockCardPage = (props: PageProps) => {
                                         Keluar
                                     </TableHead>
                                     <TableHead className="text-center">
+                                        Satuan
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Harga
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Saldo
                                     </TableHead>
                                 </TableRow>
@@ -305,6 +313,12 @@ const StockCardPage = (props: PageProps) => {
                                                                 transaction.out,
                                                             )
                                                             : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.uom || '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.price && transaction.price > 0 ? formatCurrency(transaction.price) : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-center font-semibold">
                                                         {formatNumberWithSeparator(

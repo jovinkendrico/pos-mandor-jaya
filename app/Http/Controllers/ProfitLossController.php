@@ -42,8 +42,9 @@ class ProfitLossController extends Controller
         $totalIncome = 0;
         $incomeDetails = [];
         foreach ($incomeAccounts as $account) {
-            $income = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit');
-            if ($income > 0) {
+            // Income is Credit normal. Net = Credit - Debit.
+            $income = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'net_credit');
+            if ($income != 0) {
                 $incomeDetails[] = [
                     'code' => $account->code,
                     'name' => $account->name,
@@ -60,15 +61,17 @@ class ProfitLossController extends Controller
 
         $totalHPP = 0;
         if ($hppAccount) {
-            $totalHPP = $this->getAccountBalance($hppAccount->id, $dateFrom, $dateTo, 'debit');
+            // HPP is Expense (Debit normal). Net = Debit - Credit.
+            $totalHPP = $this->getAccountBalance($hppAccount->id, $dateFrom, $dateTo, 'net_debit');
         }
 
         // Calculate expense totals (HPP already excluded from query above)
         $totalExpense = 0;
         $expenseDetails = [];
         foreach ($expenseAccounts as $account) {
-            $expense = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'debit');
-            if ($expense > 0) {
+            // Expense is Debit normal. Net = Debit - Credit.
+            $expense = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'net_debit');
+            if ($expense != 0) {
                 $expenseDetails[] = [
                     'code' => $account->code,
                     'name' => $account->name,
@@ -105,13 +108,18 @@ class ProfitLossController extends Controller
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo);
 
+        $debit = (float) $query->sum('journal_entry_details.debit');
+        $credit = (float) $query->sum('journal_entry_details.credit');
+
         if ($type === 'debit') {
-            return (float) $query->sum('journal_entry_details.debit') ?? 0;
+            return $debit;
         } elseif ($type === 'credit') {
-            return (float) $query->sum('journal_entry_details.credit') ?? 0;
+            return $credit;
+        } elseif ($type === 'net_debit') {
+            return $debit - $credit;
+        } elseif ($type === 'net_credit') {
+            return $credit - $debit;
         } else {
-            $debit = (float) $query->sum('journal_entry_details.debit') ?? 0;
-            $credit = (float) $query->sum('journal_entry_details.credit') ?? 0;
             return $debit - $credit;
         }
     }

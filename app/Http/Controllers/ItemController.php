@@ -251,36 +251,90 @@ class ItemController extends Controller
         $total = $transactionsWithBalance->count();
         $items = $transactionsWithBalance->slice(($page - 1) * $perPage, $perPage)->values();
 
-        // Enrich items with entity names (Customer/Supplier)
-        $saleIds = $items->where('reference_type', 'Sale')->pluck('reference_id');
-        $purchaseIds = $items->where('reference_type', 'Purchase')->pluck('reference_id');
-        $saleReturnIds = $items->where('reference_type', 'SaleReturn')->pluck('reference_id');
-        $purchaseReturnIds = $items->where('reference_type', 'PurchaseReturn')->pluck('reference_id');
+        // Enrich items with entity names (Customer/Supplier) and Prices
+    $saleIds = $items->where('reference_type', 'Sale')->pluck('reference_id');
+    $purchaseIds = $items->where('reference_type', 'Purchase')->pluck('reference_id');
+    $saleReturnIds = $items->where('reference_type', 'SaleReturn')->pluck('reference_id');
+    $purchaseReturnIds = $items->where('reference_type', 'PurchaseReturn')->pluck('reference_id');
 
-        $sales = Sale::whereIn('id', $saleIds)->with('customer:id,name')->get()->keyBy('id');
-        $purchases = Purchase::whereIn('id', $purchaseIds)->with('supplier:id,name')->get()->keyBy('id');
-        $saleReturns = SaleReturn::whereIn('id', $saleReturnIds)->with('sale.customer:id,name')->get()->keyBy('id');
-        $purchaseReturns = PurchaseReturn::whereIn('id', $purchaseReturnIds)->with('purchase.supplier:id,name')->get()->keyBy('id');
+    $sales = Sale::whereIn('id', $saleIds)->with('customer:id,name')->get()->keyBy('id');
+    $purchases = Purchase::whereIn('id', $purchaseIds)->with('supplier:id,name')->get()->keyBy('id');
+    $saleReturns = SaleReturn::whereIn('id', $saleReturnIds)->with('sale.customer:id,name')->get()->keyBy('id');
+    $purchaseReturns = PurchaseReturn::whereIn('id', $purchaseReturnIds)->with('purchase.supplier:id,name')->get()->keyBy('id');
 
-        $items->transform(function ($item) use ($sales, $purchases, $saleReturns, $purchaseReturns) {
-            $entityName = '';
-            
-            if ($item['reference_type'] === 'Sale' && isset($sales[$item['reference_id']])) {
+    // Fetch Details for Pricing
+    $saleDetails = \App\Models\SaleDetail::whereIn('sale_id', $saleIds)
+        ->where('item_id', $item->id)
+        ->with('itemUom.uom')
+        ->get()
+        ->keyBy('sale_id');
+
+    $purchaseDetails = \App\Models\PurchaseDetail::whereIn('purchase_id', $purchaseIds)
+        ->where('item_id', $item->id)
+        ->with('itemUom.uom')
+        ->get()
+        ->keyBy('purchase_id');
+        
+    $saleReturnDetails = \App\Models\SaleReturnDetail::whereIn('sale_return_id', $saleReturnIds)
+        ->where('item_id', $item->id)
+        ->with('itemUom.uom')
+        ->get()
+        ->keyBy('sale_return_id');
+
+    $purchaseReturnDetails = \App\Models\PurchaseReturnDetail::whereIn('purchase_return_id', $purchaseReturnIds)
+        ->where('item_id', $item->id)
+        ->with('itemUom.uom')
+        ->get()
+        ->keyBy('purchase_return_id');
+
+    $items->transform(function ($item) use ($sales, $purchases, $saleReturns, $purchaseReturns, $saleDetails, $purchaseDetails, $saleReturnDetails, $purchaseReturnDetails) {
+        $entityName = '';
+        $price = 0;
+        $uom = '';
+        
+        if ($item['reference_type'] === 'Sale') {
+            if (isset($sales[$item['reference_id']])) {
                 $entityName = $sales[$item['reference_id']]->customer->name ?? '';
-            } elseif ($item['reference_type'] === 'Purchase' && isset($purchases[$item['reference_id']])) {
+            }
+            if (isset($saleDetails[$item['reference_id']])) {
+                $price = $saleDetails[$item['reference_id']]->price;
+                $uom = $saleDetails[$item['reference_id']]->itemUom->uom->name ?? '';
+            }
+        } elseif ($item['reference_type'] === 'Purchase') {
+            if (isset($purchases[$item['reference_id']])) {
                 $entityName = $purchases[$item['reference_id']]->supplier->name ?? '';
-            } elseif ($item['reference_type'] === 'SaleReturn' && isset($saleReturns[$item['reference_id']])) {
+            }
+             if (isset($purchaseDetails[$item['reference_id']])) {
+                $price = $purchaseDetails[$item['reference_id']]->price;
+                $uom = $purchaseDetails[$item['reference_id']]->itemUom->uom->name ?? '';
+            }
+        } elseif ($item['reference_type'] === 'SaleReturn') {
+            if (isset($saleReturns[$item['reference_id']])) {
                 $entityName = $saleReturns[$item['reference_id']]->sale->customer->name ?? '';
-            } elseif ($item['reference_type'] === 'PurchaseReturn' && isset($purchaseReturns[$item['reference_id']])) {
+            }
+            if (isset($saleReturnDetails[$item['reference_id']])) {
+                $price = $saleReturnDetails[$item['reference_id']]->price; // Or cost if return doesn't track price? Usually returns track price.
+                $uom = $saleReturnDetails[$item['reference_id']]->itemUom->uom->name ?? '';
+            }
+        } elseif ($item['reference_type'] === 'PurchaseReturn') {
+            if (isset($purchaseReturns[$item['reference_id']])) {
                 $entityName = $purchaseReturns[$item['reference_id']]->purchase->supplier->name ?? '';
             }
-
-            if ($entityName) {
-                $item['notes'] = ($item['notes'] ? $item['notes'] . ' - ' : '') . $entityName;
+            if (isset($purchaseReturnDetails[$item['reference_id']])) {
+                $price = $purchaseReturnDetails[$item['reference_id']]->price;
+                $uom = $purchaseReturnDetails[$item['reference_id']]->itemUom->uom->name ?? '';
             }
-            
-            return $item;
-        });
+        }
+
+        if ($entityName) {
+            $item['notes'] = ($item['notes'] ? $item['notes'] . ' - ' : '') . $entityName;
+        }
+
+        $item['price'] = $price;
+        $item['uom'] = $uom;
+        
+        return $item;
+    });
 
         $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
             $items,
