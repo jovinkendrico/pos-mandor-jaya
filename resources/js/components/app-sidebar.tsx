@@ -184,95 +184,135 @@ const mainNavItems: NavItem[] = [
         title: 'Laporan',
         href: '/reports',
         icon: FileText,
-        permissions: ['reports.view'],
         children: [
             {
                 title: 'Laporan Penjualan',
                 href: '/reports/sale-report',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Pembelian',
                 href: '/reports/purchase-report',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Piutang Usaha',
                 href: '/reports/receivable-aging',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Hutang Usaha',
                 href: '/reports/payable-aging',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Nilai Persediaan',
                 href: '/reports/inventory-valuation',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Arus Kas',
                 href: '/reports/cash-flow',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Penjualan per Customer',
                 href: '/reports/sale-by-customer',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Penjualan per Item',
                 href: '/reports/sale-by-item',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Pembelian per Supplier',
                 href: '/reports/purchase-by-supplier',
+                permissions: ['reports.view'],
             },
             {
                 title: 'Laporan Stok Minimum/Maksimum',
                 href: '/reports/stock-min-max',
+                permissions: ['reports.view'],
             },
             {
                 title: 'Laporan Neraca',
                 href: '/reports/balance-sheet',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Retur Penjualan',
                 href: '/reports/sale-return',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Retur Pembelian',
                 href: '/reports/purchase-return',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Pembayaran Penjualan',
                 href: '/reports/sale-payment',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Pembayaran Pembelian',
                 href: '/reports/purchase-payment',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Kas Masuk/Keluar',
                 href: '/reports/cash-in-out',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Barang Paling Laku',
                 href: '/reports/best-seller',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Barang Paling Tidak Laku',
                 href: '/reports/dead-stock',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Perputaran Stok',
                 href: '/reports/stock-turnover',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Analisis Margin per Item',
                 href: '/reports/margin-by-item',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Analisis Margin per Customer',
                 href: '/reports/margin-by-customer',
+                permissions: ['reports.view'],
+
             },
             {
                 title: 'Laporan Binder',
                 href: '/reports/binder',
+                permissions: ['reports.binder'],
             },
         ],
     },

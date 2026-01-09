@@ -141,6 +141,7 @@ class RoleSeeder extends Seeder
 
             // Reports & Finance Views
             ['name' => 'reports.view', 'group' => 'reports'],
+            ['name' => 'reports.binder', 'group' => 'reports'],
             ['name' => 'finance.view', 'group' => 'finance'],
 
 
@@ -223,7 +224,7 @@ class RoleSeeder extends Seeder
             'cash-ins.index', 'cash-ins.show', 'cash-ins.create', 'cash-ins.edit',
             'cash-outs.index', 'cash-outs.show', 'cash-outs.create', 'cash-outs.edit',
             'journal-entries.index', 'journal-entries.show', 'journal-entries.create',
-            'finance.view', 'reports.view',
+            'finance.view', 'reports.view', 'reports.binder',
             // Masters
             'suppliers.index', 'suppliers.show', 'suppliers.create', 'suppliers.edit',
             'customers.index', 'customers.show', 'customers.create', 'customers.edit',
