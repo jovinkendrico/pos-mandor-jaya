@@ -196,38 +196,50 @@ class TransferController extends Controller
                     ->where('reference_id', $transfer->id)
                     ->get();
 
+                \Log::info('Transfer Deletion', [
+                    'transfer_id' => $transfer->id,
+                    'movements_found' => $movements->count(),
+                    'reference_type' => Transfer::class
+                ]);
+
                 foreach ($movements as $movement) {
                     $this->cashMovementService->reverseMovement($movement);
                 }
 
                 // 1. Update associated CashIn and CashOut status to cancelled then soft delete
-                CashIn::where('reference_type', Transfer::class)
+                $cashIns = CashIn::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
-                    ->update(['status' => 'cancelled']);
+                    ->get();
                 
-                CashIn::where('reference_type', Transfer::class)
-                    ->where('reference_id', $transfer->id)
-                    ->delete();
-
-                CashOut::where('reference_type', Transfer::class)
-                    ->where('reference_id', $transfer->id)
-                    ->update(['status' => 'cancelled']);
+                \Log::info('CashIns found', ['count' => $cashIns->count()]);
                 
-                CashOut::where('reference_type', Transfer::class)
-                    ->where('reference_id', $transfer->id)
-                    ->delete();
+                foreach ($cashIns as $cashIn) {
+                    $cashIn->update(['status' => 'cancelled']);
+                    $cashIn->delete();
+                }
 
-                // 2. Reverse associated Journal Entry (Status Reversed)
-                // We don't delete Journal Entry if we follow "Reversed" pattern, but TransferController logic was delete.
-                // If we want "Reversed", we should use JournalService::reverseJournalEntry if it existed.
-                // But here let's stick to what we have: update status then delete.
-                JournalEntry::where('reference_type', Transfer::class)
+                $cashOuts = CashOut::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
-                    ->update(['status' => 'cancelled']); // or 'reversed'
+                    ->get();
+                
+                \Log::info('CashOuts found', ['count' => $cashOuts->count()]);
+                
+                foreach ($cashOuts as $cashOut) {
+                    $cashOut->update(['status' => 'cancelled']);
+                    $cashOut->delete();
+                }
 
-                JournalEntry::where('reference_type', Transfer::class)
+                // 2. Update and delete associated Journal Entry
+                $journals = JournalEntry::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
-                    ->delete();
+                    ->get();
+                
+                \Log::info('Journals found', ['count' => $journals->count()]);
+                
+                foreach ($journals as $journal) {
+                    $journal->update(['status' => 'cancelled']);
+                    $journal->delete();
+                }
 
                 // 3. Update Transfer status and Delete
                 $transfer->update(['status' => 'cancelled']);
