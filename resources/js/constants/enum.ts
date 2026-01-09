@@ -18,11 +18,13 @@ export enum SaleStatus {
 export enum CashInStatus {
     DRAFT = 'draft',
     POSTED = 'posted',
+    CANCELLED = 'cancelled',
 }
 
 export enum CashOutStatus {
     DRAFT = 'draft',
     POSTED = 'posted',
+    CANCELLED = 'cancelled',
 }
 
 export enum ReturnType {

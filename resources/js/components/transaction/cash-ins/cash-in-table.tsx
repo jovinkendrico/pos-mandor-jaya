@@ -6,6 +6,7 @@ import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
 import { ICashIn } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Info, Trash } from 'lucide-react';
+import { CashInStatus } from '@/constants/enum';
 
 interface CashInTableProps {
     cashIns: ICashIn[];
@@ -59,12 +60,18 @@ const CashInTable = (props: CashInTableProps) => {
                     <TableCell className="flex w-full items-center justify-center text-center">
                         <Badge
                             className={cn(
-                                row.status === 'posted'
+                                row.status === CashInStatus.POSTED
                                     ? 'badge-green-light'
-                                    : 'badge-yellow-light',
+                                    : row.status === CashInStatus.CANCELLED
+                                        ? 'badge-red-light'
+                                        : 'badge-yellow-light',
                             )}
                         >
-                            {row.status === 'posted' ? 'Posted' : 'Draft'}
+                            {row.status === CashInStatus.POSTED
+                                ? 'Posted'
+                                : row.status === CashInStatus.CANCELLED
+                                    ? 'Dibatalkan'
+                                    : 'Draft'}
                         </Badge>
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">

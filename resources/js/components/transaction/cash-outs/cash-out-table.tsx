@@ -6,6 +6,7 @@ import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
 import { ICashOut } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Info, Trash } from 'lucide-react';
+import { CashOutStatus } from '@/constants/enum';
 
 interface CashOutTableProps {
     cashOuts: ICashOut[];
@@ -66,12 +67,18 @@ const CashOutTable = (props: CashOutTableProps) => {
                     <TableCell className="flex w-full items-center justify-center text-center">
                         <Badge
                             className={cn(
-                                row.status === 'posted'
+                                row.status === CashOutStatus.POSTED
                                     ? 'badge-green-light'
-                                    : 'badge-yellow-light',
+                                    : row.status === CashOutStatus.CANCELLED
+                                        ? 'badge-red-light'
+                                        : 'badge-yellow-light',
                             )}
                         >
-                            {row.status === 'posted' ? 'Posted' : 'Draft'}
+                            {row.status === CashOutStatus.POSTED
+                                ? 'Posted'
+                                : row.status === CashOutStatus.CANCELLED
+                                    ? 'Dibatalkan'
+                                    : 'Draft'}
                         </Badge>
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
