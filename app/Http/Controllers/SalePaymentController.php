@@ -595,8 +595,25 @@ class SalePaymentController extends Controller
                 }
             }
 
+            // Reverse overpayment liability journal entry if exists
+            if ($salePayment->overpayment_amount > 0) {
+                $overpaymentJournal = JournalEntry::where('reference_type', 'SalePayment')
+                    ->where('reference_id', $salePayment->id)
+                    ->where('description', 'like', 'Kelebihan Pembayaran%')
+                    ->where('status', 'posted')
+                    ->first();
+
+                if ($overpaymentJournal) {
+                    // Mark as reversed
+                    $overpaymentJournal->update(['status' => 'reversed']);
+                }
+            }
+
+            // Reset overpayment fields
             $salePayment->update([
                 'status' => 'pending',
+                'overpayment_amount' => 0,
+                'overpayment_status' => 'none',
                 'updated_by' => auth()->id(),
             ]);
         });
