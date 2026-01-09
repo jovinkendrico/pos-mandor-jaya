@@ -231,7 +231,7 @@ class TransferController extends Controller
                     $cashOut->update(['status' => 'cancelled']);
                 }
 
-                // 2. Update associated Journal Entry status to cancelled (DO NOT DELETE)
+                // 2. Update associated Journal Entry status to reversed (DO NOT DELETE)
                 $journals = JournalEntry::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
                     ->get();
@@ -239,7 +239,7 @@ class TransferController extends Controller
                 \Log::info('Journals found', ['count' => $journals->count()]);
                 
                 foreach ($journals as $journal) {
-                    $journal->update(['status' => 'cancelled']);
+                    $journal->update(['status' => 'reversed']);
                 }
 
                 // 3. Update Transfer status to cancelled (DO NOT DELETE)
