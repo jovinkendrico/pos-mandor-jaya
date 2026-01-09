@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PaymentMethod, SalePaymentStatus } from '@/constants/enum';
 import useSalePayments from '@/hooks/use-sale-payment';
 import { formatCurrency, formatNumberWithSeparator } from '@/lib/utils';
-import { IBank, ISale, ISalePayment } from '@/types';
+import { IBank, ISale, ISalePayment, ISalePaymentItem } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -112,7 +112,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
 
     const totalAmount = useMemo(() => {
         return dataSalePayment.items.reduce(
-            (sum, item) => sum + (item.amount || 0),
+            (sum: number, item: ISalePaymentItem) => sum + (item.amount || 0),
             0,
         );
     }, [dataSalePayment.items]);
@@ -315,7 +315,7 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                             </TableHeader>
                             <TableBody>
                                 {dataSalePayment.items.map(
-                                    (item, index) => {
+                                    (item: ISalePaymentItem, index: number) => {
                                         const sale = localSales.find(
                                             (s) =>
                                                 s.id ===

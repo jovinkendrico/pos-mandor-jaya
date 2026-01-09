@@ -34,7 +34,7 @@ const salePaymentSchema = Yup.object().shape({
         .required('Status pembayaran harus dipilih.'),
 });
 
-const useSalePayments = () => {
+const useSalePayments = (): any => {
     const {
         data,
         setData,
@@ -45,7 +45,7 @@ const useSalePayments = () => {
         setError,
         clearErrors,
         transform,
-    } = useForm({
+    } = useForm<any>({
         payment_date: new Date(),
         items: [
             {

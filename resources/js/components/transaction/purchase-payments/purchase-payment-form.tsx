@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PaymentMethod, PurchasePaymentStatus } from '@/constants/enum';
 import usePurchasePayments from '@/hooks/use-purchase-payment';
 import { formatCurrency, formatNumberWithSeparator } from '@/lib/utils';
-import { IBank, IPurchase, IPurchasePayment } from '@/types';
+import { IBank, IPurchase, IPurchasePayment, IPurchasePaymentItem } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -117,7 +117,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
         let invoice = 0;
         let remaining = 0;
 
-        dataPurchasePayment.items.forEach((item) => {
+        dataPurchasePayment.items.forEach((item: IPurchasePaymentItem) => {
             amount += item.amount || 0;
 
             const purchase = localPurchases.find(
@@ -334,7 +334,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                             </TableHeader>
                             <TableBody>
                                 {dataPurchasePayment.items.map(
-                                    (item, index) => {
+                                    (item: IPurchasePaymentItem, index: number) => {
                                         const purchase = localPurchases.find(
                                             (p) =>
                                                 p.id ===

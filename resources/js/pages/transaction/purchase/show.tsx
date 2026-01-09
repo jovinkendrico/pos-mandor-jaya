@@ -139,7 +139,7 @@ const PurchaseShow = (props: PageProps) => {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        {purchase.status === PurchaseStatus.PENDING && (
+                        {purchase.status === PurchaseStatus.PENDING && purchase.can?.edit && (
                             <>
                                 <Button
                                     onClick={handleEdit}
@@ -158,7 +158,7 @@ const PurchaseShow = (props: PageProps) => {
                                 </Button>
                             </>
                         )}
-                        {purchase.status === PurchaseStatus.CONFIRMED && (
+                        {purchase.status === PurchaseStatus.CONFIRMED && purchase.can?.edit && (
                             <Button
                                 onClick={openConfirmModal}
                                 className="btn-danger"

@@ -162,7 +162,7 @@ const SaleShow = (props: PageProps) => {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        {sale.status === 'pending' && (
+                        {sale.status === 'pending' && sale.can?.edit && (
                             <>
                                 <Button
                                     onClick={handleEdit}
@@ -181,7 +181,7 @@ const SaleShow = (props: PageProps) => {
                                 </Button>
                             </>
                         )}
-                        {sale.status === 'confirmed' && (
+                        {sale.status === 'confirmed' && sale.can?.edit && (
                             <Button
                                 onClick={openConfirmModal}
                                 variant="destructive"

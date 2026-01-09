@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import PurchaseTable from '@/components/transaction/purchases/purchase-table';
@@ -58,6 +59,8 @@ const PurchaseIndex = (props: PageProps) => {
     } = props;
     const { flash } = usePage<InertiaPageProps>().props;
 
+    const { hasPermission } = usePermission();
+
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
         filters,
@@ -98,10 +101,12 @@ const PurchaseIndex = (props: PageProps) => {
                 <Head title="Pembelian" />
                 <div className="flex justify-between">
                     <PageTitle title="Pembelian" />
-                    <Button onClick={handleCreate} className="btn-primary">
-                        <Plus />
-                        Tambah Pembelian
-                    </Button>
+                    {hasPermission('purchases.create') && (
+                        <Button onClick={handleCreate} className="btn-primary">
+                            <Plus />
+                            Tambah Pembelian
+                        </Button>
+                    )}
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}

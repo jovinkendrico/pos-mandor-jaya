@@ -30,6 +30,8 @@ class PurchaseController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Purchase::class);
+
         $query = Purchase::with(['supplier.city', 'details.item', 'details.itemUom', 'creator', 'updater']);
 
         // Search
@@ -93,6 +95,16 @@ class PurchaseController extends Controller
             $purchases->setCollection($filtered->values());
         }
 
+        // Add permissions
+        $purchases->getCollection()->transform(function ($purchase) {
+            $purchase->can = [
+                'edit'   => auth()->user() ? auth()->user()->can('update', $purchase) : false,
+                'delete' => auth()->user() ? auth()->user()->can('delete', $purchase) : false,
+            ];
+
+            return $purchase;
+        });
+
         return Inertia::render('transaction/purchase/index', [
             'purchases' => $purchases,
             'filters'   => [
@@ -114,6 +126,8 @@ class PurchaseController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', Purchase::class);
+
         $suppliers = Supplier::with('city')->orderBy('name')->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->limit(20)->get();
 
@@ -128,6 +142,8 @@ class PurchaseController extends Controller
      */
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
+        $this->authorize('create', Purchase::class);
+
         DB::transaction(function () use ($request) {
             // Calculate totals dari semua items
             $subtotal             = 0;
@@ -280,7 +296,14 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase): Response
     {
+        $this->authorize('view', $purchase);
+
         $purchase->load(['supplier.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
+
+        $purchase->can = [
+            'edit'   => auth()->user() ? auth()->user()->can('update', $purchase) : false,
+            'delete' => auth()->user() ? auth()->user()->can('delete', $purchase) : false,
+        ];
 
         return Inertia::render('transaction/purchase/show', [
             'purchase' => $purchase,
@@ -292,6 +315,8 @@ class PurchaseController extends Controller
      */
     public function edit(Purchase $purchase): Response|RedirectResponse
     {
+        $this->authorize('update', $purchase);
+
         if ($purchase->status === 'confirmed') {
             return redirect()
                 ->route('purchases.show', $purchase)
@@ -315,6 +340,8 @@ class PurchaseController extends Controller
      */
     public function update(UpdatePurchaseRequest $request, Purchase $purchase): RedirectResponse
     {
+        $this->authorize('update', $purchase);
+
         // Only allow update if status is pending
         if ($purchase->status === 'confirmed') {
             return redirect()->route('purchases.show', $purchase)
@@ -444,6 +471,8 @@ class PurchaseController extends Controller
      */
     public function destroy(Purchase $purchase): RedirectResponse
     {
+        $this->authorize('delete', $purchase);
+
         // Only allow delete if status is pending
         if ($purchase->status === 'confirmed') {
             $errorMessage = "Pembelian yang sudah dikonfirmasi tidak dapat dihapus.";
@@ -461,6 +490,8 @@ class PurchaseController extends Controller
      */
     public function confirm(Purchase $purchase): RedirectResponse
     {
+        $this->authorize('update', $purchase);
+
         if ($purchase->status === 'confirmed') {
             return redirect()->route('purchases.show', $purchase)
                 ->with('error', 'Pembelian sudah dikonfirmasi.');
@@ -477,6 +508,8 @@ class PurchaseController extends Controller
      */
     public function unconfirm(Purchase $purchase): RedirectResponse
     {
+        $this->authorize('update', $purchase);
+
         if ($purchase->status === 'pending') {
             return redirect()->route('purchases.show', $purchase)
                 ->with('error', 'Pembelian belum dikonfirmasi.');
@@ -493,6 +526,8 @@ class PurchaseController extends Controller
      */
     public function print(Purchase $purchase)
     {
+        $this->authorize('view', $purchase);
+
         try {
             $purchase->load(['supplier', 'details.item', 'details.itemUom.uom']);
 

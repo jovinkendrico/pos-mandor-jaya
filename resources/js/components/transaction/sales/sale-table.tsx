@@ -118,14 +118,16 @@ const SaleTable = (props: SaleTableProps) => {
                                     <Info />
                                 </Button>
                             </Link>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => onDelete(row)}
-                                className="btn-trash"
-                            >
-                                <Trash />
-                            </Button>
+                            {row.can?.delete && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onDelete(row)}
+                                    className="btn-trash"
+                                >
+                                    <Trash />
+                                </Button>
+                            )}
                         </TableCell>
                     </>
                 );

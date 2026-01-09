@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import SaleTable from '@/components/transaction/sales/sale-table';
@@ -51,6 +52,8 @@ const SaleIndex = (props: PageProps) => {
         },
     } = props;
 
+    const { hasPermission } = usePermission();
+
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
         filters,
@@ -81,10 +84,12 @@ const SaleIndex = (props: PageProps) => {
                 <Head title="Penjualan" />
                 <div className="flex justify-between">
                     <PageTitle title="Penjualan" />
-                    <Button onClick={handleCreate} className="btn-primary">
-                        <Plus />
-                        Tambah Penjualan
-                    </Button>
+                    {hasPermission('sales.create') && (
+                        <Button onClick={handleCreate} className="btn-primary">
+                            <Plus />
+                            Tambah Penjualan
+                        </Button>
+                    )}
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}

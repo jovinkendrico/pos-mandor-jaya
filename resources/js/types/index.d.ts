@@ -355,6 +355,10 @@ export type IPurchase = Pick<
     remaining_amount?: number;
     creator?: User;
     updater?: User;
+    can?: {
+        edit: boolean;
+        delete: boolean;
+    };
 };
 
 export interface PurchaseDetail {
@@ -445,6 +449,10 @@ export type ISale = Pick<
     details: ISaleDetail[];
     creator?: User;
     updater?: User;
+    can?: {
+        edit: boolean;
+        delete: boolean;
+    };
 };
 
 export interface SaleDetail {

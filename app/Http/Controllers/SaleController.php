@@ -31,6 +31,8 @@ class SaleController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Sale::class);
+
         $query = Sale::with(['customer.city', 'details.item', 'details.itemUom', 'creator', 'updater']);
 
         // Search
@@ -93,6 +95,16 @@ class SaleController extends Controller
             $sales->setCollection($filtered->values());
         }
 
+        // Add permissions
+        $sales->getCollection()->transform(function ($sale) {
+            $sale->can = [
+                'edit'   => auth()->user() ? auth()->user()->can('update', $sale) : false,
+                'delete' => auth()->user() ? auth()->user()->can('delete', $sale) : false,
+            ];
+
+            return $sale;
+        });
+
         return Inertia::render('transaction/sale/index', [
             'sales'   => $sales,
             'filters' => [
@@ -115,6 +127,8 @@ class SaleController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', Sale::class);
+
         $customers = Customer::with('city')->orderBy('name')->limit(10)->get();
         $items     = Item::with('itemUoms.uom')->orderBy('name')->limit(20)->get();
 
@@ -143,6 +157,8 @@ class SaleController extends Controller
      */
     public function store(StoreSaleRequest $request): RedirectResponse
     {
+        $this->authorize('create', Sale::class);
+
         // $this->validateStockAvailability($request->details);
 
         DB::transaction(function () use ($request) {
@@ -271,7 +287,14 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): Response
     {
+        $this->authorize('view', $sale);
+
         $sale->load(['customer.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
+
+        $sale->can = [
+            'edit'   => auth()->user() ? auth()->user()->can('update', $sale) : false,
+            'delete' => auth()->user() ? auth()->user()->can('delete', $sale) : false,
+        ];
 
         return Inertia::render('transaction/sale/show', [
             'sale' => $sale,
@@ -283,6 +306,8 @@ class SaleController extends Controller
      */
     public function edit(Sale $sale): Response|RedirectResponse
     {
+        $this->authorize('update', $sale);
+
         // Only allow edit if status is pending
         if ($sale->status === 'confirmed') {
             return redirect()->route('sales.show', $sale)
@@ -321,6 +346,8 @@ class SaleController extends Controller
      */
     public function update(UpdateSaleRequest $request, Sale $sale): RedirectResponse
     {
+        $this->authorize('update', $sale);
+
         // Only allow update if status is pending
         if ($sale->status === 'confirmed') {
             return redirect()->route('sales.show', $sale)
@@ -430,6 +457,8 @@ class SaleController extends Controller
      */
     public function destroy(Sale $sale): RedirectResponse
     {
+        $this->authorize('delete', $sale);
+
         // Only allow delete if status is pending
         if ($sale->status === 'confirmed') {
             $errorMessage = "Penjualan yang sudah dikonfirmasi tidak dapat dihapus.";
@@ -447,6 +476,8 @@ class SaleController extends Controller
      */
     public function confirm(Sale $sale): RedirectResponse
     {
+        $this->authorize('update', $sale);
+
         try {
             return DB::transaction(function () use ($sale) {
                 $sale = Sale::lockForUpdate()->find($sale->id);
@@ -477,6 +508,8 @@ class SaleController extends Controller
      */
     public function unconfirm(Sale $sale): RedirectResponse
     {
+        $this->authorize('update', $sale);
+
         return DB::transaction(function () use ($sale) {
             $sale = Sale::lockForUpdate()->find($sale->id);
 
@@ -497,6 +530,8 @@ class SaleController extends Controller
      */
     public function print(Sale $sale)
     {
+        $this->authorize('view', $sale);
+
         try {
             $sale->load(['customer.city', 'details.item', 'details.itemUom.uom']);
 
