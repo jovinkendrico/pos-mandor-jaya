@@ -173,40 +173,26 @@ class BankController extends Controller
             $closingBalance = (float) $lastMovementInRange->balance;
         }
 
-        // Get all movements to calculate balance before for each transaction
-        $allMovements = (clone $query)
-            ->orderBy('movement_date', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
-
         // Get transactions with pagination
+        // Sort by ID DESC as requested (Latest created first)
         $transactions = $query
-            ->orderBy('movement_date', 'asc')
-            ->orderBy('id', 'asc')
+            ->orderBy('id', 'desc')
             ->paginate(50)
             ->withQueryString()
-            ->through(function ($movement) use ($allMovements, $openingBalance) {
-                // Calculate balance before this movement
-                $balanceBefore = $openingBalance;
-
-                // For opening balance (Bank reference), balance before should be 0
-                if ($movement->reference_type === 'Bank') {
-                    $balanceBefore = 0;
-                } else {
-                    // Find the index of current movement in all movements
-                    $currentIndex = $allMovements->search(function ($m) use ($movement) {
-                        return $m->id === $movement->id;
-                    });
-
-                    if ($currentIndex !== false && $currentIndex > 0) {
-                        // Get balance from previous movement in all movements
-                        $previousMovement = $allMovements[$currentIndex - 1];
-                        $balanceBefore = (float) $previousMovement->balance;
-                    } elseif ($currentIndex === 0) {
-                        // First movement in filtered results - use opening balance
-                        $balanceBefore = $openingBalance;
-                    }
-                }
+            ->through(function ($movement) {
+                
+                $balanceAfter = (float) $movement->balance;
+                $debit = (float) $movement->debit;
+                $credit = (float) $movement->credit;
+                
+                // Calculate balance before: Balance After - Debit + Credit
+                // This formula holds true for all standard transactions.
+                // For 'Bank' type (Initial Balance), balance is set directly to debit (or -credit).
+                // So expected balance_before is 0.
+                
+                $balanceBefore = $balanceAfter - $debit + $credit;
+                // Fix floating point precision issues if close to 0
+                if (abs($balanceBefore) < 0.001) $balanceBefore = 0;
 
                 // Get reference number based on reference type
                 $referenceNumber = '-';
@@ -236,23 +222,34 @@ class BankController extends Controller
                             $ref = \App\Models\PurchaseReturn::find($movement->reference_id);
                             $referenceNumber = $ref ? $ref->return_number : '-';
                             break;
-                        case 'Bank':
+                        case 'Bank': // Transfer between banks? or Opening Balance
+                            // Check if it's Transfer
+                            /* Actually Bank reference seems to be Opening Balance logic in postBankOpeningBalance */
                             $referenceNumber = 'Saldo Awal';
+                            break;
+                        case 'App\Models\Transfer': // Handle Full Class Name
+                        case 'Transfer':
+                            $ref = \App\Models\Transfer::find($movement->reference_id);
+                            $referenceNumber = $ref ? $ref->transfer_number : '-';
                             break;
                     }
                 }
 
+                // Handle polymorphic type string cleanup
+                $typeStr = $movement->reference_type;
+                if ($typeStr === 'App\Models\Transfer') $typeStr = 'Transfer';
+                
                 return [
                     'id' => $movement->id,
                     'date' => $movement->movement_date->format('Y-m-d'),
-                    'type' => $movement->reference_type ? strtolower(str_replace(['Sale', 'Purchase'], '', $movement->reference_type)) : 'other',
+                    'type' => $typeStr ? strtolower(str_replace(['Sale', 'Purchase', 'App\\Models\\'], '', $typeStr)) : 'other',
                     'reference_number' => $referenceNumber,
                     'reference_type' => $movement->reference_type,
                     'description' => $movement->description,
-                    'debit' => (float) $movement->debit,
-                    'credit' => (float) $movement->credit,
+                    'debit' => $debit,
+                    'credit' => $credit,
                     'balance_before' => $balanceBefore,
-                    'balance_after' => (float) $movement->balance,
+                    'balance_after' => $balanceAfter,
                 ];
             });
 
