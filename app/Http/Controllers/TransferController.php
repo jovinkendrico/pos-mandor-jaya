@@ -15,8 +15,17 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Services\CashMovementService;
+
 class TransferController extends Controller
 {
+    protected $cashMovementService;
+
+    public function __construct(CashMovementService $cashMovementService)
+    {
+        $this->cashMovementService = $cashMovementService;
+    }
+
     /**
      * Display a listing of transfers.
      */
@@ -85,14 +94,6 @@ class TransferController extends Controller
                 ]);
 
                 // 2. Create Cash Out (Source)
-                // Note: CashOut usually credits the Bank and debits an expense/target.
-                // Here, we create it for record keeping. If CashOut model has observers creating JEs, we might duplicate.
-                // Assuming standard implementation: we create it manually and linked to Transfer, 
-                // but we will Handle the JE centrally via Transfer to avoid confusion, 
-                // OR we let CashIn/CashOut create their JEs if they are designed to do so?
-                // The user said "tetap dibuat semua untuk cash out cash in journal entry detail".
-                // I will create the records.
-                
                 $cashOutNumber = CashOut::generateCashOutNumber();
                 $cashOut = CashOut::create([
                     'cash_out_number' => $cashOutNumber,
@@ -107,6 +108,7 @@ class TransferController extends Controller
                     'created_by' => $user->id,
                 ]);
 
+                // 3. Create Cash In (Destination)
                 $cashInNumber = CashIn::generateCashInNumber();
                 $cashIn = CashIn::create([
                     'cash_in_number' => $cashInNumber,
@@ -120,13 +122,31 @@ class TransferController extends Controller
                     'reference_id' => $transfer->id,
                     'created_by' => $user->id,
                 ]);
-
-                // 3. Create Journal Entry (Linked to Transfer)
-                // This single JE represents the move. 
-                // If CashOut/CashIn models have Observer that creates JE, check it!
-                // Since I cannot solve the observer issue blindly, I will assume I need to create the JE here as requested.
-                // The Single JE is the most correct representation of a Transfer.
                 
+                // 4. Record Cash Movements
+                // Source Bank (Credit/Out)
+                $this->cashMovementService->createMovement(
+                    $fromBank,
+                    Transfer::class,
+                    $transfer->id,
+                    $request->date,
+                    0,               // Debit
+                    $request->amount,// Credit
+                    $description
+                );
+
+                // Destination Bank (Debit/In)
+                $this->cashMovementService->createMovement(
+                    $toBank,
+                    Transfer::class,
+                    $transfer->id,
+                    $request->date,
+                    $request->amount,// Debit
+                    0,               // Credit
+                    $description
+                );
+
+                // 5. Create Journal Entry (Linked to Transfer)
                 $journalNumber = JournalEntry::generateJournalNumber();
                 $journal = JournalEntry::create([
                     'journal_number' => $journalNumber,
@@ -170,6 +190,16 @@ class TransferController extends Controller
     {
         try {
             DB::transaction(function () use ($transfer) {
+                // 0. Revert Cash Movements (Balances)
+                // We must find movements linked to this transfer
+                $movements = \App\Models\CashMovement::where('reference_type', Transfer::class)
+                    ->where('reference_id', $transfer->id)
+                    ->get();
+
+                foreach ($movements as $movement) {
+                    $this->cashMovementService->deleteMovement($movement);
+                }
+
                 // 1. Delete associated CashIn and CashOut
                 CashIn::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
