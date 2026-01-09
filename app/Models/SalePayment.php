@@ -78,17 +78,23 @@ class SalePayment extends Model
     }
 
     /**
-     * Calculate overpayment amount by comparing total payment vs total receivables
+     * Calculate overpayment amount
+     * Overpayment = total amount received from customer - sum of amounts allocated to invoices
      */
     public function calculateOverpayment(): float
     {
-        // Get total amount owed from all sales in this payment
-        $totalOwed = $this->items()->sum('amount');
-        
-        // Calculate overpayment (payment amount - amount owed)
-        $overpayment = (float) $this->total_amount - $totalOwed;
-        
-        return max(0, $overpayment); // Return 0 if negative (underpayment)
+        // Load items if not already loaded
+        if (!$this->relationLoaded('items')) {
+            $this->load('items');
+        }
+
+        // Total allocated to invoices
+        $totalAllocated = $this->items->sum('amount');
+
+        // Overpayment = total received - total allocated
+        // total_amount = total cash received from customer
+        // sum of items.amount = total allocated to invoices
+        return max(0, (float)$this->total_amount - $totalAllocated);
     }
 
     /**

@@ -77,6 +77,10 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                 new Date(sale_payment.payment_date),
             );
             setDataSalePayment(
+                'total_amount',
+                sale_payment.total_amount || 0,
+            );
+            setDataSalePayment(
                 'payment_method',
                 sale_payment.payment_method,
             );
@@ -152,6 +156,38 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                             />
                             <InputError
                                 message={errorsSalePayment.payment_date}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="total_amount">
+                                Total Pembayaran Diterima{' '}
+                                <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="total_amount"
+                                type="text"
+                                value={formatNumberWithSeparator(
+                                    dataSalePayment.total_amount || 0,
+                                )}
+                                onChange={(e) => {
+                                    const rawValue = e.target.value.replace(
+                                        /[^0-9]/g,
+                                        '',
+                                    );
+                                    setDataSalePayment(
+                                        'total_amount',
+                                        Number(rawValue),
+                                    );
+                                }}
+                                placeholder="Masukkan total uang yang diterima"
+                                className="input-box text-right"
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Total uang yang diterima dari customer
+                            </p>
+                            <InputError
+                                message={errorsSalePayment.total_amount}
                             />
                         </div>
 
@@ -500,6 +536,80 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                             <div className="text-2xl font-bold">
                                 {formatCurrency(totalAmount)}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Overpayment Summary */}
+                    <div className="mt-6 rounded-lg border-2 border-orange-200 bg-orange-50 p-4 dark:bg-orange-950/20">
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    Total Diterima:
+                                </span>
+                                <span className="font-semibold">
+                                    {formatCurrency(
+                                        dataSalePayment.total_amount || 0,
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    Total Dialokasikan:
+                                </span>
+                                <span className="font-semibold">
+                                    {formatCurrency(totalAmount)}
+                                </span>
+                            </div>
+                            <div className="h-px bg-orange-300" />
+                            <div className="flex justify-between">
+                                <span
+                                    className={
+                                        (dataSalePayment.total_amount || 0) -
+                                            totalAmount <
+                                            0
+                                            ? 'font-medium text-red-600'
+                                            : 'font-medium'
+                                    }
+                                >
+                                    {(dataSalePayment.total_amount || 0) -
+                                        totalAmount <
+                                        0
+                                        ? 'Kelebihan Alokasi:'
+                                        : 'Sisa/Overpayment:'}
+                                </span>
+                                <span
+                                    className={
+                                        (dataSalePayment.total_amount || 0) -
+                                            totalAmount <
+                                            0
+                                            ? 'text-lg font-bold text-red-600'
+                                            : 'text-lg font-bold text-green-600'
+                                    }
+                                >
+                                    {formatCurrency(
+                                        Math.abs(
+                                            (dataSalePayment.total_amount ||
+                                                0) - totalAmount,
+                                        ),
+                                    )}
+                                </span>
+                            </div>
+                            {(dataSalePayment.total_amount || 0) -
+                                totalAmount >
+                                0 && (
+                                    <p className="text-xs text-orange-700 dark:text-orange-400">
+                                        ⚠️ Kelebihan pembayaran akan dicatat
+                                        sebagai Utang Lain-lain
+                                    </p>
+                                )}
+                            {(dataSalePayment.total_amount || 0) -
+                                totalAmount <
+                                0 && (
+                                    <p className="text-xs text-red-600">
+                                        ❌ Total alokasi tidak boleh melebihi
+                                        total pembayaran diterima
+                                    </p>
+                                )}
                         </div>
                     </div>
                 </CardContent>

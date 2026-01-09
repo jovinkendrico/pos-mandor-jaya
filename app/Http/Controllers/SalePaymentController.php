@@ -208,14 +208,14 @@ class SalePaymentController extends Controller
     public function store(StoreSalePaymentRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            // Calculate total amount from items
-            $totalAmount = collect($request->items)->sum('amount');
-
+            // total_amount comes from user input (total cash received)
+            // NOT calculated from sum of items
+            
             // Create payment
             $payment = SalePayment::create([
                 'payment_number' => SalePayment::generatePaymentNumber(),
                 'payment_date' => $request->payment_date,
-                'total_amount' => $totalAmount,
+                'total_amount' => $request->total_amount, // Total received from customer
                 'bank_id' => $request->bank_id,
                 'payment_method' => $request->payment_method,
                 'reference_number' => $request->reference_number,
@@ -225,7 +225,7 @@ class SalePaymentController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
-            // Create payment items
+            // Create payment items (allocations to invoices)
             foreach ($request->items as $item) {
                 $payment->items()->create([
                     'sale_id' => $item['sale_id'],
@@ -331,13 +331,10 @@ class SalePaymentController extends Controller
                 ->with('error', 'Pembayaran yang sudah dikonfirmasi tidak dapat diedit.');
         }
 
-        // Calculate total amount from items
-        $totalAmount = collect($request->items)->sum('amount');
-
-        // Update payment
+        // Update payment (total_amount from user input)
         $salePayment->update([
             'payment_date' => $request->payment_date,
-            'total_amount' => $totalAmount,
+            'total_amount' => $request->total_amount, // Total received from customer
             'bank_id' => $request->bank_id,
             'payment_method' => $request->payment_method,
             'reference_number' => $request->reference_number,
