@@ -184,8 +184,8 @@ class JournalService
                 app(\App\Services\CashMovementService::class)->reverseMovement($cashMovement);
             }
 
-            // Update journal entry status
-            $journalEntry->update(['status' => 'cancelled']);
+            // Update journal entry status to reversed (not cancelled)
+            $journalEntry->update(['status' => 'reversed']);
 
             // Update cash in status
             $cashIn->update(['status' => 'cancelled']);
