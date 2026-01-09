@@ -13,7 +13,8 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { BreadcrumbItem, ITransfer, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Ban } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface PageProps {
     transfers: PaginatedData<ITransfer>;
@@ -35,6 +36,12 @@ const TransferIndex = (props: PageProps) => {
 
     const handleCreate = () => {
         router.visit('/transfers/create');
+    };
+
+    const handleCancel = (transfer: ITransfer) => {
+        if (confirm('Apakah Anda yakin ingin membatalkan transfer ini? Transaksi akan di-reverse dan status menjadi cancelled.')) {
+            router.post(`/transfers/${transfer.id}/cancel`);
+        }
     };
 
     return (
@@ -68,7 +75,7 @@ const TransferIndex = (props: PageProps) => {
                         {transfers.data.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={7}
+                                    colSpan={8}
                                     className="h-24 text-center"
                                 >
                                     Tidak ada data transfer.
@@ -82,9 +89,16 @@ const TransferIndex = (props: PageProps) => {
                                             {formatDate(transfer.transfer_date)}
                                         </TableCell>
                                         <TableCell>
-                                            <span className="font-medium">
-                                                {transfer.transfer_number}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">
+                                                    {transfer.transfer_number}
+                                                </span>
+                                                {transfer.status === 'cancelled' && (
+                                                    <Badge variant="destructive">
+                                                        Dibatalkan
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             {transfer.from_bank?.name || '-'}
@@ -102,17 +116,15 @@ const TransferIndex = (props: PageProps) => {
                                             {formatCurrency(transfer.amount)}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => {
-                                                    if (confirm('Apakah Anda yakin ingin menghapus transfer ini?')) {
-                                                        router.delete(`/transfers/${transfer.id}`);
-                                                    }
-                                                }}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            {transfer.status === 'posted' && (
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => handleCancel(transfer)}
+                                                >
+                                                    <Ban className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 );

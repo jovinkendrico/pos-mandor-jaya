@@ -622,6 +622,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'transfers'          => TransferController::class,
         'journal-entries'   => JournalEntryController::class,
     ]);
+
+    // Transfer cancellation route
+    Route::post('transfers/{transfer}/cancel', [TransferController::class, 'cancel'])
+        ->name('transfers.cancel');
+
 });
 
 require __DIR__ . '/settings.php';

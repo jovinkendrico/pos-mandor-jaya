@@ -184,19 +184,23 @@ class TransferController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Cancel the specified transfer (do not delete, just mark as cancelled).
      */
-    public function destroy(Transfer $transfer)
+    public function cancel(Transfer $transfer)
     {
+        // Only allow cancellation if transfer is posted
+        if ($transfer->status === 'cancelled') {
+            return redirect()->back()->with('error', 'Transfer sudah dibatalkan sebelumnya.');
+        }
+
         try {
             DB::transaction(function () use ($transfer) {
                 // 0. Revert Cash Movements (Balances) by creating counter-movements
-                // We must find movements linked to this transfer
                 $movements = \App\Models\CashMovement::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
                     ->get();
 
-                \Log::info('Transfer Deletion', [
+                \Log::info('Transfer Cancellation', [
                     'transfer_id' => $transfer->id,
                     'movements_found' => $movements->count(),
                     'reference_type' => Transfer::class
@@ -206,7 +210,7 @@ class TransferController extends Controller
                     $this->cashMovementService->reverseMovement($movement);
                 }
 
-                // 1. Update associated CashIn and CashOut status to cancelled then soft delete
+                // 1. Update associated CashIn and CashOut status to cancelled (DO NOT DELETE)
                 $cashIns = CashIn::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
                     ->get();
@@ -215,7 +219,6 @@ class TransferController extends Controller
                 
                 foreach ($cashIns as $cashIn) {
                     $cashIn->update(['status' => 'cancelled']);
-                    $cashIn->delete();
                 }
 
                 $cashOuts = CashOut::where('reference_type', Transfer::class)
@@ -226,10 +229,9 @@ class TransferController extends Controller
                 
                 foreach ($cashOuts as $cashOut) {
                     $cashOut->update(['status' => 'cancelled']);
-                    $cashOut->delete();
                 }
 
-                // 2. Update and delete associated Journal Entry
+                // 2. Update associated Journal Entry status to cancelled (DO NOT DELETE)
                 $journals = JournalEntry::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
                     ->get();
@@ -238,17 +240,19 @@ class TransferController extends Controller
                 
                 foreach ($journals as $journal) {
                     $journal->update(['status' => 'cancelled']);
-                    $journal->delete();
                 }
 
-                // 3. Update Transfer status and Delete
+                // 3. Update Transfer status to cancelled (DO NOT DELETE)
                 $transfer->update(['status' => 'cancelled']);
-                $transfer->delete();
             });
 
-            return redirect()->back()->with('success', 'Transfer berhasil dihapus.');
+            return redirect()->back()->with('success', 'Transfer berhasil dibatalkan.');
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => 'Gagal menghapus transfer: ' . $e->getMessage()]);
+            \Log::error('Transfer cancellation failed', [
+                'transfer_id' => $transfer->id,
+                'error' => $e->getMessage()
+            ]);
+            return back()->withErrors(['message' => 'Gagal membatalkan transfer: ' . $e->getMessage()]);
         }
     }
 }
