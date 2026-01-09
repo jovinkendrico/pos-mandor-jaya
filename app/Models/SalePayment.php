@@ -16,6 +16,8 @@ class SalePayment extends Model
         'payment_number',
         'payment_date',
         'total_amount',
+        'overpayment_amount',
+        'overpayment_status',
         'bank_id',
         'payment_method',
         'reference_number',
@@ -28,6 +30,7 @@ class SalePayment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'total_amount' => 'decimal:2',
+        'overpayment_amount' => 'decimal:2',
     ];
 
     /**
@@ -64,6 +67,36 @@ class SalePayment extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get the overpayment transactions for this payment.
+     */
+    public function overpaymentTransactions(): HasMany
+    {
+        return $this->hasMany(OverpaymentTransaction::class);
+    }
+
+    /**
+     * Calculate overpayment amount by comparing total payment vs total receivables
+     */
+    public function calculateOverpayment(): float
+    {
+        // Get total amount owed from all sales in this payment
+        $totalOwed = $this->items()->sum('amount');
+        
+        // Calculate overpayment (payment amount - amount owed)
+        $overpayment = (float) $this->total_amount - $totalOwed;
+        
+        return max(0, $overpayment); // Return 0 if negative (underpayment)
+    }
+
+    /**
+     * Check if this payment has overpayment
+     */
+    public function hasOverpayment(): bool
+    {
+        return $this->overpayment_amount > 0 && $this->overpayment_status !== 'none';
     }
 
     /**

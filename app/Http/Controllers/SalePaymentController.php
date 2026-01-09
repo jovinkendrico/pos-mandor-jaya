@@ -243,13 +243,27 @@ class SalePaymentController extends Controller
      */
     public function show(SalePayment $salePayment): Response
     {
-        $salePayment->load(['sales.customer', 'bank', 'items.sale.customer', 'creator', 'updater']);
+        $salePayment->load([
+            'sales.customer', 
+            'bank', 
+            'items.sale.customer', 
+            'creator', 
+            'updater',
+            'overpaymentTransactions.bank',
+            'overpaymentTransactions.creator'
+        ]);
 
         // Sort items by sale number
         $salePayment->setRelation('items', $salePayment->items->sortBy('sale.sale_number', SORT_NATURAL)->values());
 
+        // Get all active banks for overpayment refund selection
+        $banks = \App\Models\Bank::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'type']);
+
         return Inertia::render('transaction/sale-payment/show', [
             'sale_payment' => $salePayment,
+            'banks' => $banks,
         ]);
     }
 
@@ -373,13 +387,17 @@ class SalePaymentController extends Controller
         }
 
         DB::transaction(function () use ($salePayment) {
+            // Calculate overpayment before confirming
+            $overpaymentAmount = $salePayment->calculateOverpayment();
+            
             $salePayment->update([
                 'status' => 'confirmed',
+                'overpayment_amount' => $overpaymentAmount,
+                'overpayment_status' => $overpaymentAmount > 0 ? 'pending' : 'none',
                 'updated_by' => auth()->id(),
             ]);
 
             // Create cash in record if bank is selected
-            // This will post: Debit Bank, Credit Piutang Usaha
             if ($salePayment->bank_id) {
                 // Get receivable account (1201 - Piutang Usaha) for payment
                 $receivableAccount = ChartOfAccount::where('code', '1201')
@@ -402,14 +420,15 @@ class SalePaymentController extends Controller
                         try {
                             $cashInNumber = CashIn::generateCashInNumber();
 
+                            // CashIn records the full payment amount to bank
                             $cashIn = CashIn::create([
                                 'cash_in_number' => $cashInNumber,
                                 'cash_in_date' => $salePayment->payment_date,
                                 'bank_id' => $salePayment->bank_id,
-                                'chart_of_account_id' => $receivableAccount->id, // Piutang Usaha, bukan pendapatan
-                                'amount' => $salePayment->total_amount,
+                                'chart_of_account_id' => $receivableAccount->id,
+                                'amount' => $salePayment->total_amount, // Full amount including overpayment
                                 'description' => "Pembayaran Penjualan #{$salePayment->payment_number}",
-                                'status' => 'posted', // Auto post karena sudah confirmed
+                                'status' => 'posted',
                                 'reference_type' => 'SalePayment',
                                 'reference_id' => $salePayment->id,
                                 'created_by' => auth()->id(),
@@ -431,9 +450,15 @@ class SalePaymentController extends Controller
                         }
                     }
 
-                    // Post to journal (this will also update bank balance)
-                    // JournalService akan membuat: Debit Bank, Credit Piutang Usaha
+                    // Post to journal
+                    // This creates: Dr. Bank (full amount), Cr. Piutang Usaha (full amount)
                     app(\App\Services\JournalService::class)->postCashIn($cashIn);
+
+                    // If there's overpayment, adjust the journal entry
+                    // We need to reclassify overpayment from Piutang to Utang Lain-lain
+                    if ($overpaymentAmount > 0) {
+                        $this->recordOverpaymentLiability($salePayment, $overpaymentAmount);
+                    }
                 } else {
                     // If no receivable account found, still create cash movement
                     $bank = \App\Models\Bank::lockForUpdate()->find($salePayment->bank_id);
@@ -454,6 +479,88 @@ class SalePaymentController extends Controller
 
         return redirect()->route('sale-payments.show', $salePayment)
             ->with('success', 'Pembayaran berhasil dikonfirmasi.');
+    }
+
+    /**
+     * Record overpayment as liability (Utang Lain-lain)
+     */
+    private function recordOverpaymentLiability(SalePayment $salePayment, float $overpaymentAmount): void
+    {
+        // Get "Utang Lain-lain" account (2105)
+        $otherPayableAccount = ChartOfAccount::where('code', '2105')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$otherPayableAccount) {
+            // Try to find any other payable account
+            $otherPayableAccount = ChartOfAccount::where('type', 'liability')
+                ->where('is_active', true)
+                ->where('code', 'like', '2%')
+                ->orderBy('code', 'desc')
+                ->first();
+        }
+
+        if (!$otherPayableAccount) {
+            \Log::warning("Overpayment detected but no 'Utang Lain-lain' account found for SalePayment #{$salePayment->payment_number}");
+            return;
+        }
+
+        // Get receivable account to reverse the overpayment portion
+        $receivableAccount = ChartOfAccount::where('code', '1201')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$receivableAccount) {
+            $receivableAccount = ChartOfAccount::whereIn('type', ['asset', 'piutang'])
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->first();
+        }
+
+        if (!$receivableAccount) {
+            \Log::warning("Receivable account not found for overpayment adjustment");
+            return;
+        }
+
+        // Create journal entry for overpayment
+        // The CashIn already posted: Dr. Bank (receivable amount), Cr. Piutang Usaha (receivable amount)
+        // We need to adjust for the overpayment portion:
+        // Dr. Piutang Usaha (overpayment - to reverse the excess), Cr. Utang Lain-lain (overpayment)
+        // This is incorrect. Let me reconsider...
+        
+        // Actually, the logic should be:
+        // CashIn posts: Dr. Bank (full amount), Cr. Piutang Usaha (full amount)
+        // But we only want to credit Piutang for the receivable portion
+        // So we need: Dr. Piutang Usaha (overpayment), Cr. Utang Lain-lain (overpayment)
+        
+        $journalEntry = JournalEntry::create([
+            'journal_number' => JournalEntry::generateJournalNumber(),
+            'journal_date' => $salePayment->payment_date,
+            'description' => "Kelebihan Pembayaran dari #{$salePayment->payment_number}",
+            'reference_type' => 'SalePayment',
+            'reference_id' => $salePayment->id,
+            'status' => 'posted',
+            'created_by' => auth()->id(),
+            'updated_by' => auth()->id(),
+        ]);
+
+        // Debit: Piutang Usaha (to reverse overpayment portion)
+        JournalEntryDetail::create([
+            'journal_entry_id' => $journalEntry->id,
+            'chart_of_account_id' => $receivableAccount->id,
+            'debit' => $overpaymentAmount,
+            'credit' => 0,
+            'description' => "Penyesuaian kelebihan pembayaran",
+        ]);
+
+        // Credit: Utang Lain-lain
+        JournalEntryDetail::create([
+            'journal_entry_id' => $journalEntry->id,
+            'chart_of_account_id' => $otherPayableAccount->id,
+            'debit' => 0,
+            'credit' => $overpaymentAmount,
+            'description' => "Kelebihan pembayaran dari pelanggan",
+        ]);
     }
 
     /**

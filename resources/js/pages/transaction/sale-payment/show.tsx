@@ -8,13 +8,15 @@ import { SalePaymentStatus } from '@/constants/enum';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
 import { index } from '@/routes/sale-payments';
-import { BreadcrumbItem, ISalePayment } from '@/types';
+import { BreadcrumbItem, IBank, ISalePayment } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import OverpaymentSection from './components/OverpaymentSection';
 
 interface PageProps {
     sale_payment: ISalePayment;
+    banks: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -33,7 +35,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const SalePaymentShow = (props: PageProps) => {
-    const { sale_payment } = props;
+    const { sale_payment, banks } = props;
 
     const tableColumn = [
         'Kode',
@@ -215,6 +217,11 @@ const SalePaymentShow = (props: PageProps) => {
                 )}
             </div>
 
+            {/* Overpayment Section */}
+            <div className="mb-6">
+                <OverpaymentSection salePayment={sale_payment} banks={banks} />
+            </div>
+
             <Card className="content">
                 <CardHeader>
                     <CardTitle>Invoice Penjualan</CardTitle>
@@ -236,15 +243,15 @@ const SalePaymentShow = (props: PageProps) => {
                                     <TableCell className="flex w-full items-center justify-center text-center">
                                         {item.sale?.sale_date
                                             ? formatDatetoString(
-                                                  new Date(item.sale.sale_date),
-                                              )
+                                                new Date(item.sale.sale_date),
+                                            )
                                             : '-'}
                                     </TableCell>
                                     <TableCell className="flex w-full items-center justify-center text-center">
                                         {item.sale?.total_amount
                                             ? formatCurrency(
-                                                  item.sale.total_amount,
-                                              )
+                                                item.sale.total_amount,
+                                            )
                                             : '-'}
                                     </TableCell>
                                     <TableCell className="flex w-full items-center justify-center text-center">

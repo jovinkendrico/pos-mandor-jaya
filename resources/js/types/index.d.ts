@@ -705,6 +705,8 @@ export interface SalePayment {
     payment_number: string;
     payment_date: Date;
     total_amount: number;
+    overpayment_amount: number;
+    overpayment_status: 'none' | 'pending' | 'refunded' | 'converted_to_income';
     bank_id?: number;
     bank?: Bank;
     payment_method: 'cash' | 'transfer' | 'giro' | 'cek' | 'other';
@@ -713,6 +715,7 @@ export interface SalePayment {
     status: 'pending' | 'confirmed';
     sales?: Sale[];
     items?: SalePaymentItem[];
+    overpayment_transactions?: OverpaymentTransaction[];
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
@@ -729,6 +732,25 @@ export interface SalePaymentItem {
     [key: string]: unknown;
 }
 
+export interface OverpaymentTransaction {
+    id: number;
+    transaction_number: string;
+    sale_payment_id: number;
+    transaction_type: 'refund' | 'convert_to_income';
+    amount: number;
+    transaction_date: Date;
+    bank_id?: number;
+    bank?: Bank;
+    notes?: string;
+    journal_entry_id?: number;
+    created_by?: number;
+    creator?: User;
+    updated_by?: number;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
 export type ISalePaymentItem = Pick<
     SalePaymentItem,
     'id' | 'sale_id' | 'sale' | 'amount'
@@ -736,12 +758,28 @@ export type ISalePaymentItem = Pick<
 
 export type ISalePaymentFormItem = Omit<ISalePaymentItem, 'sale'>;
 
+export type IOverpaymentTransaction = Pick<
+    OverpaymentTransaction,
+    | 'id'
+    | 'transaction_number'
+    | 'transaction_type'
+    | 'amount'
+    | 'transaction_date'
+    | 'bank_id'
+    | 'notes'
+> & {
+    bank?: IBank;
+    creator?: User;
+};
+
 export type ISalePayment = Pick<
     SalePayment,
     | 'id'
     | 'payment_number'
     | 'payment_date'
     | 'total_amount'
+    | 'overpayment_amount'
+    | 'overpayment_status'
     | 'bank_id'
     | 'reference_number'
     | 'notes'
@@ -750,7 +788,10 @@ export type ISalePayment = Pick<
     sales?: ISale[];
     bank?: IBank;
     items: ISalePaymentItem[];
+    overpayment_transactions?: IOverpaymentTransaction[];
     payment_method: PaymentMethod;
+    creator?: User;
+    updater?: User;
 };
 
 export interface CashIn {

@@ -896,5 +896,160 @@ class JournalService
             }
         });
     }
+
+    /**
+     * Post overpayment refund to journal
+     * Dr. Utang Lain-lain, Cr. Bank
+     */
+    public function postOverpaymentRefund($transaction): void
+    {
+        DB::transaction(function () use ($transaction) {
+            $transaction->loadMissing(['salePayment', 'bank.chartOfAccount']);
+
+            // Get "Utang Lain-lain" account (2105)
+            $otherPayableAccount = ChartOfAccount::where('code', '2105')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$otherPayableAccount) {
+                $otherPayableAccount = ChartOfAccount::where('type', 'liability')
+                    ->where('is_active', true)
+                    ->where('code', 'like', '2%')
+                    ->orderBy('code', 'desc')
+                    ->first();
+            }
+
+            if (!$otherPayableAccount) {
+                throw new \Exception('Akun Utang Lain-lain tidak ditemukan. Pastikan akun 2105 sudah ada.');
+            }
+
+            if (!$transaction->bank || !$transaction->bank->chartOfAccount) {
+                throw new \Exception('Bank account tidak ditemukan untuk refund.');
+            }
+
+            // Create journal entry
+            $journalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date' => $transaction->transaction_date,
+                'reference_type' => 'OverpaymentTransaction',
+                'reference_id' => $transaction->id,
+                'description' => "Pengembalian Kelebihan Pembayaran #{$transaction->transaction_number}",
+                'status' => 'posted',
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Debit: Utang Lain-lain
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $otherPayableAccount->id,
+                'debit' => $transaction->amount,
+                'credit' => 0,
+                'description' => "Pengembalian kelebihan pembayaran",
+            ]);
+
+            // Credit: Bank
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $transaction->bank->chartOfAccount->id,
+                'debit' => 0,
+                'credit' => $transaction->amount,
+                'description' => "Pengembalian kelebihan pembayaran",
+            ]);
+
+            // Update bank balance (decrease)
+            app(\App\Services\CashMovementService::class)->createMovement(
+                $transaction->bank,
+                'OverpaymentRefund',
+                $transaction->id,
+                $transaction->transaction_date,
+                0,
+                (float) $transaction->amount,
+                "Pengembalian Kelebihan Pembayaran #{$transaction->transaction_number}"
+            );
+
+            // Update transaction with journal entry reference
+            $transaction->update(['journal_entry_id' => $journalEntry->id]);
+        });
+    }
+
+    /**
+     * Post overpayment to income conversion to journal
+     * Dr. Utang Lain-lain, Cr. Pendapatan Lain-lain
+     */
+    public function postOverpaymentToIncome($transaction): void
+    {
+        DB::transaction(function () use ($transaction) {
+            $transaction->loadMissing('salePayment');
+
+            // Get "Utang Lain-lain" account (2105)
+            $otherPayableAccount = ChartOfAccount::where('code', '2105')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$otherPayableAccount) {
+                $otherPayableAccount = ChartOfAccount::where('type', 'liability')
+                    ->where('is_active', true)
+                    ->where('code', 'like', '2%')
+                    ->orderBy('code', 'desc')
+                    ->first();
+            }
+
+            if (!$otherPayableAccount) {
+                throw new \Exception('Akun Utang Lain-lain tidak ditemukan. Pastikan akun 2105 sudah ada.');
+            }
+
+            // Get "Pendapatan Lain-lain" account (4103)
+            $otherIncomeAccount = ChartOfAccount::where('code', '4103')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$otherIncomeAccount) {
+                // Try to find any other income account
+                $otherIncomeAccount = ChartOfAccount::where('type', 'income')
+                    ->where('is_active', true)
+                    ->where('code', 'like', '4%')
+                    ->orderBy('code')
+                    ->first();
+            }
+
+            if (!$otherIncomeAccount) {
+                throw new \Exception('Akun Pendapatan Lain-lain tidak ditemukan. Pastikan akun 4103 sudah ada.');
+            }
+
+            // Create journal entry
+            $journalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date' => $transaction->transaction_date,
+                'reference_type' => 'OverpaymentTransaction',
+                'reference_id' => $transaction->id,
+                'description' => "Konversi Kelebihan Pembayaran ke Pendapatan #{$transaction->transaction_number}",
+                'status' => 'posted',
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Debit: Utang Lain-lain
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $otherPayableAccount->id,
+                'debit' => $transaction->amount,
+                'credit' => 0,
+                'description' => "Konversi kelebihan pembayaran ke pendapatan",
+            ]);
+
+            // Credit: Pendapatan Lain-lain
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $otherIncomeAccount->id,
+                'debit' => 0,
+                'credit' => $transaction->amount,
+                'description' => "Pendapatan dari kelebihan pembayaran pelanggan",
+            ]);
+
+            // Update transaction with journal entry reference
+            $transaction->update(['journal_entry_id' => $journalEntry->id]);
+        });
+    }
 }
 
