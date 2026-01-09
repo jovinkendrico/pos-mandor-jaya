@@ -49,6 +49,7 @@ use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\ImportItemController;
 use App\Http\Controllers\ImportCustomerController;
 use App\Http\Controllers\ImportSupplierController;
+use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
