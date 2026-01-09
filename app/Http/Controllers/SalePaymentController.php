@@ -9,6 +9,8 @@ use App\Models\SalePayment;
 use App\Models\Bank;
 use App\Models\CashIn;
 use App\Models\ChartOfAccount;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryDetail;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
