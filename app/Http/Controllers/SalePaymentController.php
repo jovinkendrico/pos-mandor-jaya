@@ -256,9 +256,8 @@ class SalePaymentController extends Controller
         // Sort items by sale number
         $salePayment->setRelation('items', $salePayment->items->sortBy('sale.sale_number', SORT_NATURAL)->values());
 
-        // Get all active banks for overpayment refund selection
-        $banks = \App\Models\Bank::where('is_active', true)
-            ->orderBy('name')
+        // Get all banks for overpayment refund selection
+        $banks = \App\Models\Bank::orderBy('name')
             ->get(['id', 'name', 'type']);
 
         return Inertia::render('transaction/sale-payment/show', [
