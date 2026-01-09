@@ -40,7 +40,15 @@ const TransferIndex = (props: PageProps) => {
 
     const handleCancel = (transfer: ITransfer) => {
         if (confirm('Apakah Anda yakin ingin membatalkan transfer ini? Transaksi akan di-reverse dan status menjadi cancelled.')) {
-            router.post(`/transfers/${transfer.id}/cancel`);
+            router.post(`/transfers/${transfer.id}/cancel`, {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Success message will be shown via flash message
+                },
+                onError: (errors) => {
+                    console.error('Cancel failed:', errors);
+                }
+            });
         }
     };
 

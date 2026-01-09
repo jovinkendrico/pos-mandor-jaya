@@ -186,7 +186,7 @@ class TransferController extends Controller
     /**
      * Cancel the specified transfer (do not delete, just mark as cancelled).
      */
-    public function cancel(Transfer $transfer)
+    public function cancel(Transfer $transfer): \Illuminate\Http\RedirectResponse
     {
         // Only allow cancellation if transfer is posted
         if ($transfer->status === 'cancelled') {
@@ -250,7 +250,8 @@ class TransferController extends Controller
         } catch (\Exception $e) {
             \Log::error('Transfer cancellation failed', [
                 'transfer_id' => $transfer->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return back()->withErrors(['message' => 'Gagal membatalkan transfer: ' . $e->getMessage()]);
         }
