@@ -190,31 +190,47 @@ class TransferController extends Controller
     {
         try {
             DB::transaction(function () use ($transfer) {
-                // 0. Revert Cash Movements (Balances)
+                // 0. Revert Cash Movements (Balances) by creating counter-movements
                 // We must find movements linked to this transfer
                 $movements = \App\Models\CashMovement::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
                     ->get();
 
                 foreach ($movements as $movement) {
-                    $this->cashMovementService->deleteMovement($movement);
+                    $this->cashMovementService->reverseMovement($movement);
                 }
 
-                // 1. Delete associated CashIn and CashOut
+                // 1. Update associated CashIn and CashOut status to cancelled then soft delete
+                CashIn::where('reference_type', Transfer::class)
+                    ->where('reference_id', $transfer->id)
+                    ->update(['status' => 'cancelled']);
+                
                 CashIn::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
                     ->delete();
 
                 CashOut::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
+                    ->update(['status' => 'cancelled']);
+                
+                CashOut::where('reference_type', Transfer::class)
+                    ->where('reference_id', $transfer->id)
                     ->delete();
 
-                // 2. Delete associated Journal Entry
+                // 2. Reverse associated Journal Entry (Status Reversed)
+                // We don't delete Journal Entry if we follow "Reversed" pattern, but TransferController logic was delete.
+                // If we want "Reversed", we should use JournalService::reverseJournalEntry if it existed.
+                // But here let's stick to what we have: update status then delete.
+                JournalEntry::where('reference_type', Transfer::class)
+                    ->where('reference_id', $transfer->id)
+                    ->update(['status' => 'cancelled']); // or 'reversed'
+
                 JournalEntry::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
                     ->delete();
 
-                // 3. Delete Transfer
+                // 3. Update Transfer status and Delete
+                $transfer->update(['status' => 'cancelled']);
                 $transfer->delete();
             });
 

@@ -92,6 +92,38 @@ class CashMovementService
     }
 
     /**
+     * Reverse a cash movement by creating a new opposing movement
+     * 
+     * @param CashMovement $movement
+     * @param \Carbon\Carbon|string|null $reversalDate
+     * @return CashMovement
+     */
+    public function reverseMovement(CashMovement $movement, $reversalDate = null): CashMovement
+    {
+        return DB::transaction(function () use ($movement, $reversalDate) {
+            $date = $reversalDate ?? now();
+            
+            // Create reversal record
+            // Debit becomes Credit, Credit becomes Debit
+            $reversal = CashMovement::create([
+                'bank_id' => $movement->bank_id,
+                'reference_type' => $movement->reference_type,
+                'reference_id' => $movement->reference_id,
+                'movement_date' => is_string($date) ? $date : $date->format('Y-m-d'),
+                'debit' => $movement->credit, 
+                'credit' => $movement->debit,
+                'balance' => 0, // Will be calculated
+                'description' => "Pembalikan: " . $movement->description,
+            ]);
+            
+            // Recalculate balances from the reversal date
+            $this->recalculateBalances($movement->bank, $date);
+            
+            return $reversal;
+        });
+    }
+
+    /**
      * Recalculate balances for all movements after a given date
      * 
      * @param Bank $bank

@@ -175,20 +175,20 @@ class JournalService
                 ]);
             }
 
-            // Delete cash movement and recalculate balances
+            // Reverse cash movement
             $cashMovement = \App\Models\CashMovement::where('reference_type', 'CashIn')
                 ->where('reference_id', $cashIn->id)
                 ->first();
 
             if ($cashMovement) {
-                app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
+                app(\App\Services\CashMovementService::class)->reverseMovement($cashMovement);
             }
 
             // Update journal entry status
-            $journalEntry->update(['status' => 'reversed']);
+            $journalEntry->update(['status' => 'cancelled']);
 
             // Update cash in status
-            $cashIn->update(['status' => 'draft']);
+            $cashIn->update(['status' => 'cancelled']);
         });
     }
 
@@ -229,20 +229,20 @@ class JournalService
                 ]);
             }
 
-            // Delete cash movement and recalculate balances
+            // Reverse cash movement
             $cashMovement = \App\Models\CashMovement::where('reference_type', 'CashOut')
                 ->where('reference_id', $cashOut->id)
                 ->first();
 
             if ($cashMovement) {
-                app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
+                app(\App\Services\CashMovementService::class)->reverseMovement($cashMovement);
             }
 
             // Update journal entry status
-            $journalEntry->update(['status' => 'reversed']);
+            $journalEntry->update(['status' => 'cancelled']);
 
             // Update cash out status
-            $cashOut->update(['status' => 'draft']);
+            $cashOut->update(['status' => 'cancelled']);
         });
     }
 
