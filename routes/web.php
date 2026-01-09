@@ -610,6 +610,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'chart-of-accounts' => ChartOfAccountController::class,
         'uoms'              => UomController::class,
         'items'             => ItemController::class,
+    ]);
+
+    // Stock Adjustment confirmation routes
+    Route::post('stock-adjustments/{stockAdjustment}/confirm', [StockAdjustmentController::class, 'confirm'])->name('stock-adjustments.confirm');
+    Route::post('stock-adjustments/{stockAdjustment}/unconfirm', [StockAdjustmentController::class, 'unconfirm'])->name('stock-adjustments.unconfirm');
+
+    // Transfer cancellation route (must be before resource routes)
+    Route::post('transfers/{transfer}/cancel', [TransferController::class, 'cancel'])
+        ->name('transfers.cancel');
+
+    Route::resources([
         'purchases'         => PurchaseController::class,
         'sales'             => SaleController::class,
         'purchase-returns'  => PurchaseReturnController::class,
@@ -622,10 +633,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'transfers'          => TransferController::class,
         'journal-entries'   => JournalEntryController::class,
     ]);
-
-    // Transfer cancellation route
-    Route::post('transfers/{transfer}/cancel', [TransferController::class, 'cancel'])
-        ->name('transfers.cancel');
 
 });
 
