@@ -162,4 +162,35 @@ class TransferController extends Controller
             return back()->withErrors(['message' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Transfer $transfer)
+    {
+        try {
+            DB::transaction(function () use ($transfer) {
+                // 1. Delete associated CashIn and CashOut
+                CashIn::where('reference_type', Transfer::class)
+                    ->where('reference_id', $transfer->id)
+                    ->delete();
+
+                CashOut::where('reference_type', Transfer::class)
+                    ->where('reference_id', $transfer->id)
+                    ->delete();
+
+                // 2. Delete associated Journal Entry
+                JournalEntry::where('reference_type', Transfer::class)
+                    ->where('reference_id', $transfer->id)
+                    ->delete();
+
+                // 3. Delete Transfer
+                $transfer->delete();
+            });
+
+            return redirect()->back()->with('success', 'Transfer berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => 'Gagal menghapus transfer: ' . $e->getMessage()]);
+        }
+    }
 }

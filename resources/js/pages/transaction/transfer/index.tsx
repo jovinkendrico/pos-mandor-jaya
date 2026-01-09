@@ -13,7 +13,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { BreadcrumbItem, ITransfer, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface PageProps {
     transfers: PaginatedData<ITransfer>;
@@ -61,6 +61,7 @@ const TransferIndex = (props: PageProps) => {
                             <TableHead>Deskripsi</TableHead>
                             <TableHead>Dibuat Oleh</TableHead>
                             <TableHead className="text-right">Jumlah</TableHead>
+                            <TableHead className="text-right">Aksi</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -99,6 +100,19 @@ const TransferIndex = (props: PageProps) => {
                                         </TableCell>
                                         <TableCell className="text-right font-bold">
                                             {formatCurrency(transfer.amount)}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => {
+                                                    if (confirm('Apakah Anda yakin ingin menghapus transfer ini?')) {
+                                                        router.delete(`/transfers/${transfer.id}`);
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 );
