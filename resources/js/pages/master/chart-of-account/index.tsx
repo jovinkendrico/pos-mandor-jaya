@@ -106,7 +106,7 @@ const ChartOfAccountIndex = (props: PageProps) => {
                 <Head title="Kode Perkiraan" />
                 <div className="flex justify-between">
                     <PageTitle title="Kode Perkiraan" />
-                    {hasPermission('coa.create') && (
+                    {hasPermission('chart-of-accounts.create') && (
                         <Button
                             onClick={() => {
                                 setSelectedChartOfAccount(undefined);

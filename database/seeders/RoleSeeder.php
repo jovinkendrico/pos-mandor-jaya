@@ -138,6 +138,26 @@ class RoleSeeder extends Seeder
             // Reports & Finance Views
             ['name' => 'reports.view', 'group' => 'reports'],
             ['name' => 'finance.view', 'group' => 'finance'],
+
+
+            // Users & Access Control
+            ['name' => 'users.index', 'group' => 'users'],
+            ['name' => 'users.show', 'group' => 'users'],
+            ['name' => 'users.create', 'group' => 'users'],
+            ['name' => 'users.edit', 'group' => 'users'],
+            ['name' => 'users.delete', 'group' => 'users'],
+
+            ['name' => 'roles.index', 'group' => 'users'],
+            ['name' => 'roles.show', 'group' => 'users'],
+            ['name' => 'roles.create', 'group' => 'users'],
+            ['name' => 'roles.edit', 'group' => 'users'],
+            ['name' => 'roles.delete', 'group' => 'users'],
+
+            ['name' => 'permissions.index', 'group' => 'users'],
+            ['name' => 'permissions.show', 'group' => 'users'],
+            ['name' => 'permissions.create', 'group' => 'users'],
+            ['name' => 'permissions.edit', 'group' => 'users'],
+            ['name' => 'permissions.delete', 'group' => 'users'],
         ];
 
         foreach ($permissions as $permission) {
