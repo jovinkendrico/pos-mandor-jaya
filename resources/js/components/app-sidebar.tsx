@@ -59,14 +59,17 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Customer',
                 href: customerIndex(),
+                permissions: ['customers.index'],
             },
             {
                 title: 'Supplier',
                 href: supplierIndex(),
+                permissions: ['suppliers.index'],
             },
             {
                 title: 'Bank/Cash',
                 href: bankIndex(),
+                permissions: ['banks.index'],
             },
             {
                 title: 'Kode Perkiraan',
@@ -76,18 +79,22 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Barang',
                 href: itemIndex(),
+                permissions: ['items.index'],
             },
             {
                 title: 'Kota',
                 href: cityIndex(),
+                permissions: ['cities.index'],
             },
             {
                 title: 'UOM',
                 href: uomIndex(),
+                permissions: ['uoms.index'],
             },
             {
                 title: 'Penyesuaian Stok',
                 href: stockAdjustmentIndex(),
+                permissions: ['stock-adjustments.index'],
             },
         ],
     },
@@ -99,18 +106,22 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Pembelian',
                 href: purchaseIndex(),
+                permissions: ['purchases.index'],
             },
             {
                 title: 'Penjualan',
                 href: saleIndex(),
+                permissions: ['sales.index'],
             },
             {
                 title: 'Retur Beli',
                 href: purchaseReturnIndex(),
+                permissions: ['purchase-returns.index'],
             },
             {
                 title: 'Retur Jual',
                 href: saleReturnIndex(),
+                permissions: ['sale-returns.index'],
             },
         ],
     },
@@ -122,22 +133,27 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Pembayaran Pembelian',
                 href: purchasePaymentIndex(),
+                permissions: ['purchase-payments.index'],
             },
             {
                 title: 'Pembayaran Penjualan',
                 href: salePaymentIndex(),
+                permissions: ['sale-payments.index'],
             },
             {
                 title: 'Tanda Terima Faktur',
                 href: paymentReceiptIndex(),
+                permissions: ['payment-receipt.index'],
             },
             {
                 title: 'Kas Masuk',
                 href: cashInIndex(),
+                permissions: ['cash-ins.index'],
             },
             {
                 title: 'Kas Keluar',
                 href: cashOutIndex(),
+                permissions: ['cash-outs.index'],
             },
         ],
     },
@@ -150,14 +166,17 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Jurnal',
                 href: journalEntryIndex(),
+                permissions: ['journal-entries.index'],
             },
             {
                 title: 'Laporan Laba Rugi',
                 href: '/profit-loss',
+                permissions: ['finance.view'],
             },
             {
                 title: 'Buku Besar',
                 href: '/general-ledger',
+                permissions: ['finance.view'],
             },
         ],
     },
@@ -266,14 +285,17 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Users',
                 href: userIndex(),
+                permissions: ['users.index'],
             },
             {
                 title: 'Roles',
                 href: roleIndex(),
+                permissions: ['roles.index'],
             },
             {
                 title: 'Permissions',
                 href: permissionIndex(),
+                permissions: ['permissions.index'],
             },
         ],
     },

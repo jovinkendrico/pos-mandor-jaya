@@ -49,6 +49,10 @@ class RoleSeeder extends Seeder
             ['name' => 'sale-payments.edit', 'group' => 'payments'],
             ['name' => 'sale-payments.delete', 'group' => 'payments'],
 
+            // Payment Receipts
+            ['name' => 'payment-receipt.index', 'group' => 'payments'],
+            ['name' => 'payment-receipt.print', 'group' => 'payments'],
+
             // Purchase Returns
             ['name' => 'purchase-returns.index', 'group' => 'returns'],
             ['name' => 'purchase-returns.show', 'group' => 'returns'],
@@ -209,6 +213,7 @@ class RoleSeeder extends Seeder
             // Payments
             'purchase-payments.index', 'purchase-payments.show', 'purchase-payments.create', 'purchase-payments.edit',
             'sale-payments.index', 'sale-payments.show', 'sale-payments.create', 'sale-payments.edit',
+            'payment-receipt.index', 'payment-receipt.print',
             // Returns
             'purchase-returns.index', 'purchase-returns.show', 'purchase-returns.create', 'purchase-returns.edit',
             'sale-returns.index', 'sale-returns.show', 'sale-returns.create', 'sale-returns.edit',
