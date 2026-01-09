@@ -1,4 +1,5 @@
 import PageTitle from '@/components/page-title';
+import { usePermission } from '@/hooks/use-permission';
 import {
     Card,
     CardContent,
@@ -42,6 +43,7 @@ const reports = [
         icon: TrendingUp,
         color: 'text-green-600',
         bgColor: 'bg-green-50',
+        permission: 'reports.view',
     },
     {
         id: 'purchase-report',
@@ -52,6 +54,7 @@ const reports = [
         icon: TrendingDown,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
+        permission: 'reports.view',
     },
     {
         id: 'receivable-aging',
@@ -62,6 +65,7 @@ const reports = [
         icon: DollarSign,
         color: 'text-purple-600',
         bgColor: 'bg-purple-50',
+        permission: 'reports.view',
     },
     {
         id: 'payable-aging',
@@ -72,6 +76,7 @@ const reports = [
         icon: CreditCard,
         color: 'text-orange-600',
         bgColor: 'bg-orange-50',
+        permission: 'reports.view',
     },
     {
         id: 'inventory-valuation',
@@ -82,6 +87,7 @@ const reports = [
         icon: Warehouse,
         color: 'text-indigo-600',
         bgColor: 'bg-indigo-50',
+        permission: 'reports.view',
     },
     {
         id: 'cash-flow',
@@ -91,6 +97,7 @@ const reports = [
         icon: ArrowLeftRight,
         color: 'text-cyan-600',
         bgColor: 'bg-cyan-50',
+        permission: 'reports.view',
     },
     {
         id: 'sale-by-customer',
@@ -100,6 +107,7 @@ const reports = [
         icon: Users,
         color: 'text-green-600',
         bgColor: 'bg-green-50',
+        permission: 'reports.view',
     },
     {
         id: 'sale-by-item',
@@ -109,6 +117,7 @@ const reports = [
         icon: Package,
         color: 'text-green-600',
         bgColor: 'bg-green-50',
+        permission: 'reports.view',
     },
     {
         id: 'purchase-by-supplier',
@@ -118,6 +127,7 @@ const reports = [
         icon: Building2,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
+        permission: 'reports.view',
     },
     {
         id: 'stock-min-max',
@@ -127,6 +137,7 @@ const reports = [
         icon: AlertTriangle,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
+        permission: 'reports.view',
     },
     {
         id: 'balance-sheet',
@@ -136,6 +147,7 @@ const reports = [
         icon: Scale,
         color: 'text-gray-600',
         bgColor: 'bg-gray-50',
+        permission: 'reports.view',
     },
     {
         id: 'sale-return',
@@ -146,6 +158,7 @@ const reports = [
         icon: Receipt,
         color: 'text-pink-600',
         bgColor: 'bg-pink-50',
+        permission: 'reports.view',
     },
     {
         id: 'purchase-return',
@@ -156,6 +169,7 @@ const reports = [
         icon: Receipt,
         color: 'text-pink-600',
         bgColor: 'bg-pink-50',
+        permission: 'reports.view',
     },
     {
         id: 'sale-payment',
@@ -166,6 +180,7 @@ const reports = [
         icon: CreditCard,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
+        permission: 'reports.view',
     },
     {
         id: 'purchase-payment',
@@ -176,6 +191,7 @@ const reports = [
         icon: CreditCard,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
+        permission: 'reports.view',
     },
     {
         id: 'cash-in-out',
@@ -186,6 +202,7 @@ const reports = [
         icon: ArrowLeftRight,
         color: 'text-teal-600',
         bgColor: 'bg-teal-50',
+        permission: 'reports.view',
     },
     {
         id: 'best-seller',
@@ -196,6 +213,7 @@ const reports = [
         icon: Trophy,
         color: 'text-yellow-600',
         bgColor: 'bg-yellow-50',
+        permission: 'reports.view',
     },
     {
         id: 'dead-stock',
@@ -206,6 +224,7 @@ const reports = [
         icon: AlertTriangle,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
+        permission: 'reports.view',
     },
     {
         id: 'stock-turnover',
@@ -216,6 +235,7 @@ const reports = [
         icon: Zap,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
+        permission: 'reports.view',
     },
     {
         id: 'margin-by-item',
@@ -226,6 +246,7 @@ const reports = [
         icon: Percent,
         color: 'text-purple-600',
         bgColor: 'bg-purple-50',
+        permission: 'reports.view',
     },
     {
         id: 'margin-by-customer',
@@ -236,6 +257,7 @@ const reports = [
         icon: Percent,
         color: 'text-indigo-600',
         bgColor: 'bg-indigo-50',
+        permission: 'reports.view',
     },
     {
         id: 'binder',
@@ -246,10 +268,13 @@ const reports = [
         icon: BookOpen,
         color: 'text-gray-600',
         bgColor: 'bg-gray-50',
+        permission: 'reports.binder',
     },
 ];
 
 const ReportsIndex = () => {
+    const { hasPermission } = usePermission();
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan" />
@@ -260,6 +285,8 @@ const ReportsIndex = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {reports.map((report) => {
                     const Icon = report.icon;
+                    if (!hasPermission(report.permission)) return null;
+
                     return (
                         <Link key={report.id} href={report.href}>
                             <Card className="content h-full cursor-pointer transition-shadow hover:shadow-lg">
