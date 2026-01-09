@@ -139,6 +139,7 @@ const CashInIndex = (props: PageProps) => {
                     { value: 'all', label: 'Semua Status' },
                     { value: 'draft', label: 'Draft' },
                     { value: 'posted', label: 'Posted' },
+                    { value: 'cancelled', label: 'Dibatalkan' },
                 ]}
                 additionalFilters={
                     <>
