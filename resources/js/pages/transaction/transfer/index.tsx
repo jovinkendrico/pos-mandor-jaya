@@ -15,6 +15,7 @@ import { BreadcrumbItem, ITransfer, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus, Ban } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface PageProps {
     transfers: PaginatedData<ITransfer>;
@@ -40,15 +41,19 @@ const TransferIndex = (props: PageProps) => {
 
     const handleCancel = (transfer: ITransfer) => {
         if (confirm('Apakah Anda yakin ingin membatalkan transfer ini? Transaksi akan di-reverse dan status menjadi cancelled.')) {
-            router.post(`/transfers/${transfer.id}/cancel`, {}, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Success message will be shown via flash message
+            router.post(
+                `/transfers/${transfer.id}/cancel`,
+                {},
+                {
+                    onSuccess: () => {
+                        toast.success('Transfer berhasil dibatalkan');
+                    },
+                    onError: (errors: Record<string, string>) => {
+                        const message = errors.message || 'Gagal membatalkan transfer';
+                        toast.error(message);
+                    },
                 },
-                onError: (errors) => {
-                    console.error('Cancel failed:', errors);
-                }
-            });
+            );
         }
     };
 
