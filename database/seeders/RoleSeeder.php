@@ -215,17 +215,7 @@ class RoleSeeder extends Seeder
         $users = User::all();
         foreach ($users as $user) {
             $user->syncRoles([]);
-        }
-
-        // 2. Assign specific roles
-        $superAdminUser = User::where('email', 'admin@mandorjaya.com')->first();
-        if ($superAdminUser) {
-            $superAdminUser->assignRole($superAdminRole);
-        }
-
-        $adminUser = User::where('email', 'kasir@mandorjaya.com')->first();
-        if ($adminUser) {
-            $adminUser->assignRole($adminRole);
+            $user->assignRole($superAdminRole);
         }
     }
 }
