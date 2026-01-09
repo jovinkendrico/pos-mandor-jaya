@@ -798,6 +798,7 @@ export interface CashOut {
     bank_id: number;
     bank?: Bank;
     chart_of_account_id: number;
+
     chart_of_account?: ChartOfAccount;
     amount: number;
     description?: string;
@@ -828,6 +829,36 @@ export type ICashOut = Pick<
     reference?: IPurchasePayment | ISalePayment | any;
     creator?: User;
     updater?: User;
+};
+
+export interface Transfer {
+    id: number;
+    transfer_number: string;
+    transfer_date: Date;
+    from_bank_id: number;
+    to_bank_id: number;
+    amount: number;
+    description: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export type ITransfer = Pick<
+    Transfer,
+    | 'id'
+    | 'transfer_number'
+    | 'transfer_date'
+    | 'from_bank_id'
+    | 'to_bank_id'
+    | 'amount'
+    | 'description'
+    | 'status'
+> & {
+    from_bank?: IBank;
+    to_bank?: IBank;
+    creator?: User;
+    journal_entry?: IJournalEntry;
 };
 
 export interface JournalEntryDetail {

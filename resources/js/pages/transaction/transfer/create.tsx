@@ -1,0 +1,157 @@
+import { DatePicker } from '@/components/date-picker';
+import InputError from '@/components/input-error';
+import PageTitle from '@/components/page-title';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Combobox } from '@/components/ui/combobox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/app-layout';
+import { formatNumber, formatNumberWithSeparator, parseStringtoDecimal } from '@/lib/utils';
+import { BreadcrumbItem, IBank } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft, Save } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
+
+interface PageProps {
+    banks: IBank[];
+}
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Transaksi',
+        href: '#',
+    },
+    {
+        title: 'Transfer Dana',
+        href: '/transfers',
+    },
+    {
+        title: 'Tambah',
+        href: '#',
+    },
+];
+
+const TransferCreate = (props: PageProps) => {
+    const { banks } = props;
+
+    // Convert banks to combobox options
+    const bankOptions = banks.map(bank => ({
+        label: `${bank.name} - ${bank.account_number || ''}`,
+        value: bank.id.toString()
+    }));
+
+    const { data, setData, post, processing, errors } = useForm({
+        date: new Date(),
+        from_bank_id: '',
+        to_bank_id: '',
+        amount: '', // String for input handling
+        description: '',
+    });
+
+    const [amountDisplay, setAmountDisplay] = useState('');
+
+    const handleSubmit: FormEventHandler = (e) => {
+        e.preventDefault();
+        post('/transfers');
+    };
+
+    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = e.target;
+        // Allow only numbers
+        const numericValue = value.replace(/[^0-9]/g, '');
+        const numberVal = Number(numericValue);
+
+        setData('amount', numericValue);
+        setAmountDisplay(formatNumberWithSeparator(numberVal));
+    };
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Tambah Transfer Dana" />
+
+            <div className="flex flex-row items-center gap-2 mb-6">
+                <Link href="/transfers">
+                    <ArrowLeft className="h-8 w-8" />
+                </Link>
+                <PageTitle title="Tambah Transfer Dana" />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
+                <Card>
+                    <CardContent className="pt-6 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Tanggal Transfer</Label>
+                                <DatePicker
+                                    value={data.date}
+                                    onChange={(date) => setData('date', date as Date)}
+                                />
+                                <InputError message={errors.date} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Dari Kas/Bank (Sumber)</Label>
+                                <Combobox
+                                    options={bankOptions}
+                                    value={data.from_bank_id}
+                                    onValueChange={(val) => setData('from_bank_id', val)}
+                                    placeholder="Pilih Sumber..."
+                                    searchPlaceholder="Cari Sumber..."
+                                />
+                                <InputError message={errors.from_bank_id} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Ke Kas/Bank (Tujuan)</Label>
+                                <Combobox
+                                    options={bankOptions}
+                                    value={data.to_bank_id}
+                                    onValueChange={(val) => setData('to_bank_id', val)}
+                                    placeholder="Pilih Tujuan..."
+                                    searchPlaceholder="Cari Tujuan..."
+                                />
+                                <InputError message={errors.to_bank_id} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="amount">Jumlah Transfer</Label>
+                            <Input
+                                id="amount"
+                                value={amountDisplay}
+                                onChange={handleAmountChange}
+                                placeholder="0"
+                                className="text-right font-mono text-lg"
+                            />
+                            <InputError message={errors.amount} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Keterangan</Label>
+                            <Textarea
+                                id="description"
+                                value={data.description}
+                                onChange={(e) => setData('description', e.target.value)}
+                                placeholder="Contoh: Setor tunai ke bank..."
+                            />
+                            <InputError message={errors.description} />
+                        </div>
+
+                        <div className="flex justify-end pt-4">
+                            <Button type="submit" disabled={processing} className="btn-primary">
+                                <Save className="mr-2 h-4 w-4" />
+                                Simpan Transfer
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </form>
+        </AppLayout>
+    );
+};
+
+export default TransferCreate;

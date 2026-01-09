@@ -155,6 +155,10 @@ const mainNavItems: NavItem[] = [
                 href: cashOutIndex(),
                 permissions: ['cash-outs.index'],
             },
+            {
+                title: 'Transfer Dana',
+                href: '/transfers',
+            },
         ],
     },
     {

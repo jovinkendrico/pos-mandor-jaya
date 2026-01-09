@@ -618,6 +618,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'stock-adjustments' => StockAdjustmentController::class,
         'cash-ins'          => CashInController::class,
         'cash-outs'          => CashOutController::class,
+        'transfers'          => TransferController::class,
         'journal-entries'   => JournalEntryController::class,
     ]);
 });
