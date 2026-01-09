@@ -787,6 +787,8 @@ export type ICashIn = Pick<
     bank?: IBank;
     auto_post?: boolean;
     chart_of_account?: IChartOfAccount;
+    creator?: User;
+    updater?: User;
 };
 
 export interface CashOut {

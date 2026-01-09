@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import EmptyData from '@/components/empty-data';
 import PageTitle from '@/components/page-title';
 import GroupedPermissionCard from '@/components/permissions/grouped-permission-card';
@@ -18,6 +19,7 @@ interface PageProps {
 
 const PermissionsIndex = (props: PageProps) => {
     const { permissions, ungroupedPermissions } = props;
+    const { hasPermission } = usePermission();
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [selectedPermission, setSelectedPermission] =
@@ -44,10 +46,12 @@ const PermissionsIndex = (props: PageProps) => {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <PageTitle title="Permissions" />
-                    <Button onClick={() => setIsFormModalOpen(true)}>
-                        <Plus />
-                        Tambah Permission
-                    </Button>
+                    {hasPermission('permissions.create') && (
+                        <Button onClick={() => setIsFormModalOpen(true)}>
+                            <Plus />
+                            Tambah Permission
+                        </Button>
+                    )}
                 </div>
 
                 {!hasPermissions ? (

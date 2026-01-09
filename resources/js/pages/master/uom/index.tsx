@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import UOMForm from '@/components/master/uom/uom-form';
 import UOMTable from '@/components/master/uom/uom-table';
 import PageTitle from '@/components/page-title';
@@ -53,6 +54,7 @@ const UOMPage = (props: UOMProps) => {
             date_to: '',
         },
     );
+    const { hasPermission } = usePermission();
 
     const {
         isOpen: isEditModalOpen,
@@ -83,16 +85,18 @@ const UOMPage = (props: UOMProps) => {
                 <Head title="UOM" />
                 <div className="flex justify-between">
                     <PageTitle title="UOM" />
-                    <Button
-                        onClick={() => {
-                            setSelectedUOM(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah UOM
-                    </Button>
+                    {hasPermission('uoms.create') && (
+                        <Button
+                            onClick={() => {
+                                setSelectedUOM(undefined);
+                                openEditModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah UOM
+                        </Button>
+                    )}
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}

@@ -45,9 +45,9 @@ const CityIndex = (props: CityPageProps) => {
     } = props;
 
     const { auth } = usePage<GlobalPageProps>().props;
-    const canCreate = auth.permissions.includes('master.create');
-    const canEdit = auth.permissions.includes('master.edit');
-    const canDelete = auth.permissions.includes('master.delete');
+    const canCreate = auth.permissions.includes('cities.create');
+    const canEdit = auth.permissions.includes('cities.edit');
+    const canDelete = auth.permissions.includes('cities.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,

@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import UserDeleteConfirmation from '@/components/users/user-delete-confirmation';
@@ -25,6 +26,7 @@ export default function UserIndex({ users, roles }: PageProps) {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const { hasPermission } = usePermission();
 
     const handleEdit = (user: User) => {
         setSelectedUser(user);
@@ -47,10 +49,12 @@ export default function UserIndex({ users, roles }: PageProps) {
                 <Head title="Users" />
                 <div className="flex justify-between">
                     <PageTitle title="Users" />
-                    <Button onClick={() => setIsFormModalOpen(true)}>
-                        <Plus />
-                        Tambah User
-                    </Button>
+                    {hasPermission('users.create') && (
+                        <Button onClick={() => setIsFormModalOpen(true)}>
+                            <Plus />
+                            Tambah User
+                        </Button>
+                    )}
                 </div>
                 <UserTable
                     users={users}

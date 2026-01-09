@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import EmptyData from '@/components/empty-data';
 import PageTitle from '@/components/page-title';
 import RoleDeleteConfirmation from '@/components/roles/rolde-delete-confimation';
@@ -17,6 +18,7 @@ interface RolesPageProps {
 const RolesIndex = ({ roles }: RolesPageProps) => {
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [isDeletingModalOpen, setIsDeleteModalOpen] = useState(false);
+    const { hasPermission } = usePermission();
 
     const handleCreate = () => {
         router.get(create().url);
@@ -36,10 +38,12 @@ const RolesIndex = ({ roles }: RolesPageProps) => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <PageTitle title="Roles" />
-                    <Button onClick={handleCreate}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Buat Role
-                    </Button>
+                    {hasPermission('roles.create') && (
+                        <Button onClick={handleCreate}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Buat Role
+                        </Button>
+                    )}
                 </div>
 
                 {!hasRoles ? (

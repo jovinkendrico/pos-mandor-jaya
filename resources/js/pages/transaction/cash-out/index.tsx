@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import PageTitle from '@/components/page-title';
 import CashOutTable from '@/components/transaction/cash-outs/cash-out-table';
 import FilterBar from '@/components/transaction/filter-bar';
@@ -71,6 +72,7 @@ const CashOutIndex = (props: PageProps) => {
         },
     } = props;
     const { flash } = usePage<InertiaPageProps>().props;
+    const { hasPermission } = usePermission();
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
@@ -116,10 +118,12 @@ const CashOutIndex = (props: PageProps) => {
             <Head title="Kas Keluar" />
             <div className="flex justify-between">
                 <PageTitle title="Kas Keluar" />
-                <Button onClick={handleCreate} className="btn-primary">
-                    <Plus />
-                    Tambah Kas Keluar
-                </Button>
+                {hasPermission('cash-outs.create') && (
+                    <Button onClick={handleCreate} className="btn-primary">
+                        <Plus />
+                        Tambah Kas Keluar
+                    </Button>
+                )}
             </div>
             <FilterBar
                 filters={{ ...allFilters, search: searchTerm }}

@@ -10,7 +10,7 @@ import { Info, Trash } from 'lucide-react';
 interface CashInTableProps {
     cashIns: ICashIn[];
     pageFrom: number;
-    onDelete: (cashIn: ICashIn) => void;
+    onDelete?: (cashIn: ICashIn) => void;
 }
 
 const CashInTable = (props: CashInTableProps) => {
@@ -83,14 +83,16 @@ const CashInTable = (props: CashInTableProps) => {
                                 <Info />
                             </Button>
                         </Link>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDelete(row)}
-                            className="btn-trash"
-                        >
-                            <Trash />
-                        </Button>
+                        {onDelete && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDelete(row)}
+                                className="btn-trash"
+                            >
+                                <Trash />
+                            </Button>
+                        )}
                     </TableCell>
                 </>
             )}

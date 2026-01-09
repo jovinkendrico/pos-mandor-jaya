@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import StockAdjustmentForm from '@/components/master/stock-adjustments/stock-adjustment-form';
 import StockAdjustmentTable from '@/components/master/stock-adjustments/stock-adjustment-table';
 import PageTitle from '@/components/page-title';
@@ -70,6 +71,7 @@ const StockAdjustmentIndex = (props: PageProps) => {
             sort_order: 'desc',
         },
     } = props;
+    const { hasPermission } = usePermission();
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
@@ -112,15 +114,17 @@ const StockAdjustmentIndex = (props: PageProps) => {
                 <Head title="Penyesuaian Stok" />
                 <div className="flex justify-between">
                     <PageTitle title="Penyesuaian Stok" />
-                    <Button
-                        onClick={() => {
-                            openFormModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Penyesuaian
-                    </Button>
+                    {hasPermission('stock-adjustments.create') && (
+                        <Button
+                            onClick={() => {
+                                openFormModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah Penyesuaian
+                        </Button>
+                    )}
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}

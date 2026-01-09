@@ -9,8 +9,8 @@ import { TableCell } from '../../ui/table';
 
 interface BankTableProps {
     banks: IBank[];
-    onEdit: (bank: IBank) => void;
-    onDelete: (bank: IBank) => void;
+    onEdit?: (bank: IBank) => void;
+    onDelete?: (bank: IBank) => void;
     pageFrom?: number;
 }
 
@@ -84,22 +84,26 @@ const BankTable = (props: BankTableProps) => {
                                 <TrendingUp />
                             </Button>
                         </Link>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onEdit(row)}
-                            className="btn-edit"
-                        >
-                            <Edit />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDelete(row)}
-                            className="btn-trash"
-                        >
-                            <Trash />
-                        </Button>
+                        {onEdit && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onEdit(row)}
+                                className="btn-edit"
+                            >
+                                <Edit />
+                            </Button>
+                        )}
+                        {onDelete && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDelete(row)}
+                                className="btn-trash"
+                            >
+                                <Trash />
+                            </Button>
+                        )}
                     </TableCell>
                 </>
             )}

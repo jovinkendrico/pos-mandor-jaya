@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import SaleReturnTable from '@/components/transaction/salereturns/salereturn-table';
@@ -63,6 +64,7 @@ export default function SaleReturnIndex({
         index,
         filters,
     );
+    const { hasPermission } = usePermission();
 
     const handleCreate = () => {
         router.visit(create().url);
@@ -86,10 +88,12 @@ export default function SaleReturnIndex({
             <Head title="Retur Jual" />
             <div className="flex justify-between">
                 <PageTitle title="Retur Penjualan" />
-                <Button onClick={handleCreate} className="btn-primary">
-                    <Plus />
-                    Tambah Retur Jual
-                </Button>
+                {hasPermission('sale-returns.create') && (
+                    <Button onClick={handleCreate} className="btn-primary">
+                        <Plus />
+                        Tambah Retur Jual
+                    </Button>
+                )}
             </div>
             <FilterBar
                 filters={{ ...allFilters, search: searchTerm }}

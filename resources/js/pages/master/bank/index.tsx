@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import BankForm from '@/components/master/banks/bank-form';
 import BankTable from '@/components/master/banks/bank-table';
 import PageTitle from '@/components/page-title';
@@ -66,6 +67,7 @@ const BankIndex = (props: PageProps) => {
             date_to: '',
         },
     );
+    const { hasPermission } = usePermission();
 
     const [selectedBank, setSelectedBank] = useState<IBank | undefined>(
         undefined,
@@ -98,16 +100,18 @@ const BankIndex = (props: PageProps) => {
                 <Head title="Bank/Cash" />
                 <div className="flex justify-between">
                     <PageTitle title="Bank/Cash" />
-                    <Button
-                        onClick={() => {
-                            setSelectedBank(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Bank/Cash
-                    </Button>
+                    {hasPermission('banks.create') && (
+                        <Button
+                            onClick={() => {
+                                setSelectedBank(undefined);
+                                openEditModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah Bank/Cash
+                        </Button>
+                    )}
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}
@@ -144,7 +148,7 @@ const BankIndex = (props: PageProps) => {
                 <div className="mt-4">
                     <BankTable
                         banks={banks.data}
-                        onEdit={handleEdit}
+                        onEdit={hasPermission('banks.edit') ? handleEdit : undefined}
                         onDelete={handleDelete}
                         pageFrom={banks.from}
                     />

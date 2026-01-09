@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/use-permission';
 import ChartOfAccountForm from '@/components/master/chart-of-accounts/chart-of-account-form';
 import ChartOfAccountTable from '@/components/master/chart-of-accounts/chart-of-account-table';
 import PageTitle from '@/components/page-title';
@@ -72,6 +73,7 @@ const ChartOfAccountIndex = (props: PageProps) => {
         index,
         filters,
     );
+    const { hasPermission } = usePermission();
 
     const [selectedChartOfAccount, setSelectedChartOfAccount] = useState<
         IChartOfAccount | undefined
@@ -104,16 +106,18 @@ const ChartOfAccountIndex = (props: PageProps) => {
                 <Head title="Kode Perkiraan" />
                 <div className="flex justify-between">
                     <PageTitle title="Kode Perkiraan" />
-                    <Button
-                        onClick={() => {
-                            setSelectedChartOfAccount(undefined);
-                            openEditModal();
-                        }}
-                        className="btn-primary"
-                    >
-                        <Plus />
-                        Tambah Kode Perkiraan
-                    </Button>
+                    {hasPermission('coa.create') && (
+                        <Button
+                            onClick={() => {
+                                setSelectedChartOfAccount(undefined);
+                                openEditModal();
+                            }}
+                            className="btn-primary"
+                        >
+                            <Plus />
+                            Tambah Kode Perkiraan
+                        </Button>
+                    )}
                 </div>
                 <FilterBar
                     filters={{ ...allFilters, search: searchTerm }}

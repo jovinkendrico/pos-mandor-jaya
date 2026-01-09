@@ -52,9 +52,9 @@ const CustomerIndex = (props: CustomerPageProps) => {
     } = props;
 
     const { auth } = usePage<GlobalPageProps>().props;
-    const canCreate = auth.permissions.includes('master.create');
-    const canEdit = auth.permissions.includes('master.edit');
-    const canDelete = auth.permissions.includes('master.delete');
+    const canCreate = auth.permissions.includes('customers.create');
+    const canEdit = auth.permissions.includes('customers.edit');
+    const canDelete = auth.permissions.includes('customers.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,

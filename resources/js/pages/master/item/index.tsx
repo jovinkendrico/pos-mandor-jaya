@@ -58,9 +58,9 @@ const ItemIndex = (props: ItemPageProps) => {
     } = props;
 
     const { auth } = usePage<GlobalPageProps>().props;
-    const canCreate = auth.permissions.includes('master.create');
-    const canEdit = auth.permissions.includes('master.edit');
-    const canDelete = auth.permissions.includes('master.delete');
+    const canCreate = auth.permissions.includes('items.create');
+    const canEdit = auth.permissions.includes('items.edit');
+    const canDelete = auth.permissions.includes('items.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,

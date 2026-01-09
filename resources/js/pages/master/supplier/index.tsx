@@ -52,9 +52,9 @@ const SupplierIndex = (props: SupplierPageProps) => {
     } = props;
 
     const { auth } = usePage<GlobalPageProps>().props;
-    const canCreate = auth.permissions.includes('master.create');
-    const canEdit = auth.permissions.includes('master.edit');
-    const canDelete = auth.permissions.includes('master.delete');
+    const canCreate = auth.permissions.includes('suppliers.create');
+    const canEdit = auth.permissions.includes('suppliers.edit');
+    const canDelete = auth.permissions.includes('suppliers.delete');
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
