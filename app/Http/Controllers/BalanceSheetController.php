@@ -241,6 +241,7 @@ class BalanceSheetController extends Controller
         $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $accountId)
             ->where('journal_entries.status', 'posted')
+            ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '<=', $asOfDate);
 
         $debit = (float) $query->sum('journal_entry_details.debit') ?? 0;
@@ -275,6 +276,7 @@ class BalanceSheetController extends Controller
             $totalIncome = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
                 ->whereIn('journal_entry_details.chart_of_account_id', $incomeAccounts)
                 ->where('journal_entries.status', 'posted')
+                ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
                 ->sum('journal_entry_details.credit') ?? 0;
@@ -286,6 +288,7 @@ class BalanceSheetController extends Controller
             $totalExpense = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
                 ->whereIn('journal_entry_details.chart_of_account_id', $expenseAccounts)
                 ->where('journal_entries.status', 'posted')
+                ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
                 ->sum('journal_entry_details.debit') ?? 0;
