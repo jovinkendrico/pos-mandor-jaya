@@ -110,8 +110,7 @@ class SalePayment extends Model
      */
     public static function generatePaymentNumber(): string
     {
-        $date = now()->format('Ymd');
-        $prefix = 'SP' . $date;
+        $prefix = 'SP';
 
         // Use lockForUpdate to prevent race conditions in concurrent requests
         // Include soft deleted records to continue sequence even if payment was deleted
@@ -121,8 +120,14 @@ class SalePayment extends Model
             ->orderBy('payment_number', 'desc')
             ->first();
 
-        $sequence = $lastPayment ? (int) substr($lastPayment->payment_number, -4) + 1 : 1;
+        if ($lastPayment) {
+            // Extract number after prefix (e.g., "SP123" -> 123)
+            $lastNumber = (int) substr($lastPayment->payment_number, strlen($prefix));
+            $sequence = $lastNumber + 1;
+        } else {
+            $sequence = 1;
+        }
 
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix . $sequence;
     }
 }
