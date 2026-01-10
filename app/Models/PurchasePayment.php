@@ -75,10 +75,11 @@ class PurchasePayment extends Model
 
         // Use lockForUpdate to prevent race conditions in concurrent requests
         // Include soft deleted records to continue sequence even if payment was deleted
+        // Use numeric sorting to get the highest number correctly (PP1, PP2, PP3, PP10...)
         $lastPayment = static::withTrashed()
             ->where('payment_number', 'like', $prefix . '%')
             ->lockForUpdate()
-            ->orderBy('payment_number', 'desc')
+            ->orderByRaw('CAST(SUBSTRING(payment_number, 3) AS UNSIGNED) DESC')
             ->first();
 
         if ($lastPayment) {
