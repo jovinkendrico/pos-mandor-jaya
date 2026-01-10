@@ -51,7 +51,7 @@ export function Combobox({
     searchPlaceholder = 'Search...',
     className,
     disabled = false,
-    maxDisplayItems = 5,
+    maxDisplayItems = 20,
     onAdd,
     addLabel = 'Add',
     searchUrl,
@@ -157,14 +157,14 @@ export function Combobox({
 
     const handleSelect = (selectedValue: string) => {
         const newValue = selectedValue === value ? '' : selectedValue;
-        
+
         // Find the selected option object
         let option: ComboboxOption | undefined;
         if (searchUrl && searchResults.length > 0) {
             option = searchResults.find((opt) => opt.value === selectedValue);
-        } 
+        }
         if (!option) {
-             option = options.find((opt) => opt.value === selectedValue);
+            option = options.find((opt) => opt.value === selectedValue);
         }
 
         onValueChange?.(newValue, option);
