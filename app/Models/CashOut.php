@@ -43,7 +43,9 @@ class CashOut extends Model
 
     public function reference(): MorphTo
     {
-        return $this->morphTo('reference');
+        // Use nullableMorphTo to handle cases where reference_type is 'Manual' or null
+        // This prevents "Class 'Manual' not found" error
+        return $this->nullableMorphTo('reference');
     }
 
     public function creator(): BelongsTo
