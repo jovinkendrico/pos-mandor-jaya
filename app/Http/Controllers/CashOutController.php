@@ -77,16 +77,15 @@ class CashOutController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'cash_out_date');
+        $sortBy = $request->get('sort_by', 'id');
         $sortOrder = $request->get('sort_order', 'desc');
 
-        $allowedSortFields = ['cash_out_date', 'cash_out_number', 'amount', 'status'];
+        $allowedSortFields = ['cash_out_date', 'cash_out_number', 'amount', 'status', 'id'];
         if (in_array($sortBy, $allowedSortFields)) {
             $query->orderBy($sortBy, $sortOrder);
         } else {
-            $query->orderBy('cash_out_date', 'desc');
+            $query->orderBy('id', 'desc');
         }
-        $query->orderBy('id', 'desc');
 
         $cashOuts = $query->paginate(10)->withQueryString();
 

@@ -73,16 +73,15 @@ class CashInController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'cash_in_date');
+        $sortBy = $request->get('sort_by', 'id');
         $sortOrder = $request->get('sort_order', 'desc');
 
-        $allowedSortFields = ['cash_in_date', 'cash_in_number', 'amount', 'status'];
+        $allowedSortFields = ['cash_in_date', 'cash_in_number', 'amount', 'status', 'id'];
         if (in_array($sortBy, $allowedSortFields)) {
             $query->orderBy($sortBy, $sortOrder);
         } else {
-            $query->orderBy('cash_in_date', 'desc');
+            $query->orderBy('id', 'desc');
         }
-        $query->orderBy('id', 'desc');
 
         $cashIns = $query->paginate(10)->withQueryString();
 
