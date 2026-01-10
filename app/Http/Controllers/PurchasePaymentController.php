@@ -70,16 +70,20 @@ class PurchasePaymentController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'payment_date');
+        $sortBy = $request->get('sort_by', 'id');
         $sortOrder = $request->get('sort_order', 'desc');
 
-        $allowedSortFields = ['payment_date', 'payment_number', 'total_amount', 'status'];
+        $allowedSortFields = ['payment_date', 'payment_number', 'total_amount', 'status', 'id'];
         if (in_array($sortBy, $allowedSortFields)) {
-            $query->orderBy($sortBy, $sortOrder);
+            if ($sortBy === 'payment_number') {
+                // Use natural sorting for payment numbers (PP1, PP2, PP3...)
+                $query->orderByRaw("CAST(SUBSTRING(payment_number, 3) AS UNSIGNED) {$sortOrder}");
+            } else {
+                $query->orderBy($sortBy, $sortOrder);
+            }
         } else {
-            $query->orderBy('payment_date', 'desc');
+            $query->orderBy('id', 'desc');
         }
-        $query->orderBy('id', 'desc');
 
         $payments = $query->paginate(10)->withQueryString();
 
