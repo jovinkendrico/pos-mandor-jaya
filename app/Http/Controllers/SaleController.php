@@ -679,11 +679,14 @@ class SaleController extends Controller
         }
 
         DB::transaction(function () use ($sale, $writeOffAccount, $piutangAccount) {
+            // Store remaining amount before creating payment (it will become 0 after payment)
+            $writeOffAmount = $sale->remaining_amount;
+
             // Create sale payment for remaining amount
             $payment = \App\Models\SalePayment::create([
                 'payment_number' => \App\Models\SalePayment::generatePaymentNumber(),
                 'payment_date' => now(),
-                'total_amount' => $sale->remaining_amount,
+                'total_amount' => $writeOffAmount,
                 'bank_id' => null, // No bank involved in write-off
                 'payment_method' => 'other',
                 'reference_number' => null,
@@ -696,7 +699,7 @@ class SaleController extends Controller
             // Create payment item
             $payment->items()->create([
                 'sale_id' => $sale->id,
-                'amount' => $sale->remaining_amount,
+                'amount' => $writeOffAmount,
             ]);
 
             // Post journal entry directly (skip CashIn since no cash movement)
@@ -714,7 +717,7 @@ class SaleController extends Controller
             \App\Models\JournalEntryDetail::create([
                 'journal_entry_id' => $journalEntry->id,
                 'chart_of_account_id' => $writeOffAccount->id,
-                'debit' => $sale->remaining_amount,
+                'debit' => $writeOffAmount,
                 'credit' => 0,
                 'description' => 'Selisih pembulatan penjualan',
             ]);
@@ -724,7 +727,7 @@ class SaleController extends Controller
                 'journal_entry_id' => $journalEntry->id,
                 'chart_of_account_id' => $piutangAccount->id,
                 'debit' => 0,
-                'credit' => $sale->remaining_amount,
+                'credit' => $writeOffAmount,
                 'description' => "Write-off Piutang #{$sale->sale_number}",
             ]);
         });

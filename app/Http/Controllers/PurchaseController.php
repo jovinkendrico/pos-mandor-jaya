@@ -612,11 +612,14 @@ class PurchaseController extends Controller
         }
 
         DB::transaction(function () use ($purchase, $writeOffAccount, $hutangAccount) {
+            // Store remaining amount before creating payment (it will become 0 after payment)
+            $writeOffAmount = $purchase->remaining_amount;
+
             // Create purchase payment for remaining amount
             $payment = \App\Models\PurchasePayment::create([
                 'payment_number' => \App\Models\PurchasePayment::generatePaymentNumber(),
                 'payment_date' => now(),
-                'total_amount' => $purchase->remaining_amount,
+                'total_amount' => $writeOffAmount,
                 'bank_id' => null, // No bank involved in write-off
                 'payment_method' => 'other',
                 'reference_number' => null,
@@ -629,7 +632,7 @@ class PurchaseController extends Controller
             // Create payment item
             $payment->items()->create([
                 'purchase_id' => $purchase->id,
-                'amount' => $purchase->remaining_amount,
+                'amount' => $writeOffAmount,
             ]);
 
             // Post journal entry directly (skip CashOut since no cash movement)
@@ -647,7 +650,7 @@ class PurchaseController extends Controller
             \App\Models\JournalEntryDetail::create([
                 'journal_entry_id' => $journalEntry->id,
                 'chart_of_account_id' => $hutangAccount->id,
-                'debit' => $purchase->remaining_amount,
+                'debit' => $writeOffAmount,
                 'credit' => 0,
                 'description' => "Write-off Hutang #{$purchase->purchase_number}",
             ]);
@@ -657,7 +660,7 @@ class PurchaseController extends Controller
                 'journal_entry_id' => $journalEntry->id,
                 'chart_of_account_id' => $writeOffAccount->id,
                 'debit' => 0,
-                'credit' => $purchase->remaining_amount,
+                'credit' => $writeOffAmount,
                 'description' => 'Selisih pembulatan pembelian',
             ]);
         });
