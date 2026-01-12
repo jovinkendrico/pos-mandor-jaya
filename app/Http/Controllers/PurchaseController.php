@@ -601,13 +601,23 @@ class PurchaseController extends Controller
                 ->with('error', 'Akun Selisih Pembulatan (6999) tidak ditemukan. Silakan hubungi administrator.');
         }
 
-        DB::transaction(function () use ($purchase, $writeOffAccount) {
+        // Get Hutang Usaha account (2101)
+        $hutangAccount = \App\Models\ChartOfAccount::where('code', '2101')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$hutangAccount) {
+            return redirect()->route('purchases.show', $purchase)
+                ->with('error', 'Akun Hutang Usaha (2101) tidak ditemukan. Silakan hubungi administrator.');
+        }
+
+        DB::transaction(function () use ($purchase, $writeOffAccount, $hutangAccount) {
             // Create purchase payment for remaining amount
             $payment = \App\Models\PurchasePayment::create([
                 'payment_number' => \App\Models\PurchasePayment::generatePaymentNumber(),
                 'payment_date' => now(),
                 'total_amount' => $purchase->remaining_amount,
-                'bank_id' => null,
+                'bank_id' => null, // No bank involved in write-off
                 'payment_method' => 'other',
                 'reference_number' => null,
                 'notes' => 'Write-off selisih pembulatan',
@@ -622,23 +632,34 @@ class PurchaseController extends Controller
                 'amount' => $purchase->remaining_amount,
             ]);
 
-            // Create cash out to write-off account (no bank involved)
-            $cashOut = \App\Models\CashOut::create([
-                'cash_out_number' => \App\Models\CashOut::generateCashOutNumber(),
-                'cash_out_date' => now(),
-                'bank_id' => null,
-                'chart_of_account_id' => $writeOffAccount->id,
-                'amount' => $purchase->remaining_amount,
-                'description' => "Write-off Pembelian #{$purchase->purchase_number}",
-                'status' => 'posted',
+            // Post journal entry directly (skip CashOut since no cash movement)
+            $journalEntry = \App\Models\JournalEntry::create([
+                'journal_number' => \App\Models\JournalEntry::generateJournalNumber(),
+                'journal_date' => now(),
                 'reference_type' => 'PurchasePayment',
                 'reference_id' => $payment->id,
-                'created_by' => auth()->id(),
-                'updated_by' => auth()->id(),
+                'description' => "Write-off Pembelian #{$purchase->purchase_number}",
+                'status' => 'posted',
             ]);
 
-            // Post to journal
-            app(\App\Services\JournalService::class)->postCashOut($cashOut);
+            // Journal entry details
+            // Debit: Hutang Usaha (reduce liability)
+            \App\Models\JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $hutangAccount->id,
+                'debit' => $purchase->remaining_amount,
+                'credit' => 0,
+                'description' => "Write-off Hutang #{$purchase->purchase_number}",
+            ]);
+
+            // Credit: Selisih Pembulatan (expense)
+            \App\Models\JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $writeOffAccount->id,
+                'debit' => 0,
+                'credit' => $purchase->remaining_amount,
+                'description' => 'Selisih pembulatan pembelian',
+            ]);
         });
 
         return redirect()->route('purchases.show', $purchase)

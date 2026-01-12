@@ -668,13 +668,23 @@ class SaleController extends Controller
                 ->with('error', 'Akun Selisih Pembulatan (4999) tidak ditemukan. Silakan hubungi administrator.');
         }
 
-        DB::transaction(function () use ($sale, $writeOffAccount) {
+        // Get Piutang Usaha account (1103)
+        $piutangAccount = \App\Models\ChartOfAccount::where('code', '1103')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$piutangAccount) {
+            return redirect()->route('sales.show', $sale)
+                ->with('error', 'Akun Piutang Usaha (1103) tidak ditemukan. Silakan hubungi administrator.');
+        }
+
+        DB::transaction(function () use ($sale, $writeOffAccount, $piutangAccount) {
             // Create sale payment for remaining amount
             $payment = \App\Models\SalePayment::create([
                 'payment_number' => \App\Models\SalePayment::generatePaymentNumber(),
                 'payment_date' => now(),
                 'total_amount' => $sale->remaining_amount,
-                'bank_id' => null,
+                'bank_id' => null, // No bank involved in write-off
                 'payment_method' => 'other',
                 'reference_number' => null,
                 'notes' => 'Write-off selisih pembulatan',
@@ -689,23 +699,34 @@ class SaleController extends Controller
                 'amount' => $sale->remaining_amount,
             ]);
 
-            // Create cash in to write-off account (no bank involved)
-            $cashIn = \App\Models\CashIn::create([
-                'cash_in_number' => \App\Models\CashIn::generateCashInNumber(),
-                'cash_in_date' => now(),
-                'bank_id' => null,
-                'chart_of_account_id' => $writeOffAccount->id,
-                'amount' => $sale->remaining_amount,
-                'description' => "Write-off Penjualan #{$sale->sale_number}",
-                'status' => 'posted',
+            // Post journal entry directly (skip CashIn since no cash movement)
+            $journalEntry = \App\Models\JournalEntry::create([
+                'journal_number' => \App\Models\JournalEntry::generateJournalNumber(),
+                'journal_date' => now(),
                 'reference_type' => 'SalePayment',
                 'reference_id' => $payment->id,
-                'created_by' => auth()->id(),
-                'updated_by' => auth()->id(),
+                'description' => "Write-off Penjualan #{$sale->sale_number}",
+                'status' => 'posted',
             ]);
 
-            // Post to journal
-            app(\App\Services\JournalService::class)->postCashIn($cashIn);
+            // Journal entry details
+            // Debit: Selisih Pembulatan (income)
+            \App\Models\JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $writeOffAccount->id,
+                'debit' => $sale->remaining_amount,
+                'credit' => 0,
+                'description' => 'Selisih pembulatan penjualan',
+            ]);
+
+            // Credit: Piutang Usaha (reduce asset)
+            \App\Models\JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $piutangAccount->id,
+                'debit' => 0,
+                'credit' => $sale->remaining_amount,
+                'description' => "Write-off Piutang #{$sale->sale_number}",
+            ]);
         });
 
         return redirect()->route('sales.show', $sale)
