@@ -183,7 +183,7 @@ const PurchaseShow = (props: PageProps) => {
                                 Batalkan Konfirmasi
                             </Button>
                         )}
-                        {(purchase.remaining_amount ?? 0) > 0 && (purchase.remaining_amount ?? 0) < 1000 && purchase.can?.edit && (
+                        {(purchase.remaining_amount ?? 0) > 0 && (purchase.remaining_amount ?? 0) < 1000 && (
                             <Button
                                 onClick={handleWriteOff}
                                 variant="outline"

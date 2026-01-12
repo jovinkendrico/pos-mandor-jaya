@@ -206,7 +206,7 @@ const SaleShow = (props: PageProps) => {
                                 Batalkan Konfirmasi
                             </Button>
                         )}
-                        {(sale.remaining_amount ?? 0) > 0 && (sale.remaining_amount ?? 0) < 1000 && sale.can?.edit && (
+                        {(sale.remaining_amount ?? 0) > 0 && (sale.remaining_amount ?? 0) < 1000 && (
                             <Button
                                 onClick={handleWriteOff}
                                 variant="outline"

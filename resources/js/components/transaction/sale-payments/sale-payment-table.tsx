@@ -64,17 +64,24 @@ const SalePaymentTable = ({
                         {row.bank?.name || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
-                        <Badge
-                            className={cn(
-                                row.status === SalePaymentStatus.PENDING
-                                    ? 'badge-yellow-light'
-                                    : 'badge-green-light',
+                        <div className="flex flex-col gap-1 items-center">
+                            <Badge
+                                className={cn(
+                                    row.status === SalePaymentStatus.PENDING
+                                        ? 'badge-yellow-light'
+                                        : 'badge-green-light',
+                                )}
+                            >
+                                {row.status === SalePaymentStatus.CONFIRMED
+                                    ? 'Confirmed'
+                                    : 'Pending'}
+                            </Badge>
+                            {row.overpayment_status === 'pending' && row.overpayment_amount > 0 && (
+                                <Badge className="badge-orange-light text-xs">
+                                    Lebih Bayar: {formatCurrency(row.overpayment_amount)}
+                                </Badge>
                             )}
-                        >
-                            {row.status === SalePaymentStatus.CONFIRMED
-                                ? 'Confirmed'
-                                : 'Pending'}
-                        </Badge>
+                        </div>
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {row.creator?.name || '-'}
