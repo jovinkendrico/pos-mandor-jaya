@@ -1,8 +1,9 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { ISupplier } from '@/types';
-import { Edit, Trash } from 'lucide-react';
+import { Edit, History, Trash } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { TableCell } from '../../ui/table';
+import { router } from '@inertiajs/react';
 
 interface SupplierTableProps {
     suppliers: ISupplier[];
@@ -47,6 +48,15 @@ const SupplierTable = (props: SupplierTableProps) => {
                         {row.contact || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => router.visit(`/purchases?supplier_id=${row.id}`)}
+                            className="btn-info"
+                            title="Lihat Riwayat Pembelian"
+                        >
+                            <History />
+                        </Button>
                         {onEdit && (
                             <Button
                                 variant="ghost"

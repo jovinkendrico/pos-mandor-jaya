@@ -1,8 +1,9 @@
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { Button } from '@/components/ui/button';
 import { ICustomer } from '@/types';
-import { Edit, Trash } from 'lucide-react';
+import { Edit, History, Trash } from 'lucide-react';
 import { TableCell } from '../../ui/table';
+import { router } from '@inertiajs/react';
 
 interface CustomerTableProps {
     customers: ICustomer[];
@@ -47,6 +48,15 @@ const CustomerTable = (props: CustomerTableProps) => {
                         {row.contact || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center gap-2 text-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => router.visit(`/sales?customer_id=${row.id}`)}
+                            className="btn-info"
+                            title="Lihat Riwayat Penjualan"
+                        >
+                            <History />
+                        </Button>
                         {onEdit && (
                             <Button
                                 variant="ghost"
