@@ -70,11 +70,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Purchase confirm/unconfirm routes (must be before resource)
     Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
     Route::post('purchases/{purchase}/unconfirm', [PurchaseController::class, 'unconfirm'])->name('purchases.unconfirm');
+    Route::post('purchases/{purchase}/write-off', [PurchaseController::class, 'writeOff'])->name('purchases.write-off');
     Route::get('purchases/{purchase}/print', [PurchaseController::class, 'print'])->name('purchases.print');
 
     // Sale confirm/unconfirm routes (must be before resource)
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/unconfirm', [SaleController::class, 'unconfirm'])->name('sales.unconfirm');
+    Route::post('sales/{sale}/write-off', [SaleController::class, 'writeOff'])->name('sales.write-off');
     Route::get('sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
 
     // Purchase Return confirm/unconfirm routes (must be before resource)

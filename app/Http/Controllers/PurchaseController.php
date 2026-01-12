@@ -566,4 +566,79 @@ class PurchaseController extends Controller
             ]);
         }
     }
+
+    /**
+     * Write off small remaining amount (< 1000) as rounding difference
+     */
+    public function writeOff(Purchase $purchase): RedirectResponse
+    {
+        $this->authorize('update', $purchase);
+
+        // Load remaining amount
+        $purchase->append(['total_paid', 'remaining_amount']);
+
+        // Validate remaining amount
+        if ($purchase->remaining_amount <= 0) {
+            return redirect()->route('purchases.show', $purchase)
+                ->with('error', 'Pembelian sudah lunas.');
+        }
+
+        if ($purchase->remaining_amount >= 1000) {
+            return redirect()->route('purchases.show', $purchase)
+                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 1.000). Sisa: Rp ' . number_format($purchase->remaining_amount, 0, ',', '.'));
+        }
+
+        // Get write-off account (6999 - Selisih Pembulatan Pembelian)
+        $writeOffAccount = \App\Models\ChartOfAccount::where('code', '6999')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$writeOffAccount) {
+            return redirect()->route('purchases.show', $purchase)
+                ->with('error', 'Akun Selisih Pembulatan (6999) tidak ditemukan. Silakan hubungi administrator.');
+        }
+
+        DB::transaction(function () use ($purchase, $writeOffAccount) {
+            // Create purchase payment for remaining amount
+            $payment = \App\Models\PurchasePayment::create([
+                'payment_number' => \App\Models\PurchasePayment::generatePaymentNumber(),
+                'payment_date' => now(),
+                'total_amount' => $purchase->remaining_amount,
+                'bank_id' => null,
+                'payment_method' => 'other',
+                'reference_number' => null,
+                'notes' => 'Write-off selisih pembulatan',
+                'status' => 'confirmed', // Auto-confirm
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Create payment item
+            $payment->items()->create([
+                'purchase_id' => $purchase->id,
+                'amount' => $purchase->remaining_amount,
+            ]);
+
+            // Create cash out to write-off account (no bank involved)
+            $cashOut = \App\Models\CashOut::create([
+                'cash_out_number' => \App\Models\CashOut::generateCashOutNumber(),
+                'cash_out_date' => now(),
+                'bank_id' => null,
+                'chart_of_account_id' => $writeOffAccount->id,
+                'amount' => $purchase->remaining_amount,
+                'description' => "Write-off Pembelian #{$purchase->purchase_number}",
+                'status' => 'posted',
+                'reference_type' => 'PurchasePayment',
+                'reference_id' => $payment->id,
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Post to journal
+            app(\App\Services\JournalService::class)->postCashOut($cashOut);
+        });
+
+        return redirect()->route('purchases.show', $purchase)
+            ->with('success', 'Selisih pembulatan berhasil di-write-off. Pembelian sekarang lunas.');
+    }
 }
