@@ -60,6 +60,33 @@ class SaleController extends Controller
             $query->whereDate('sale_date', '<=', $request->date_to);
         }
 
+        // Payment status filter (must be BEFORE pagination)
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            if ($request->payment_status === 'paid') {
+                // Lunas: total_paid >= total_amount
+                $query->whereRaw('(
+                    SELECT COALESCE(SUM(spi.amount), 0)
+                    FROM sale_payment_items spi
+                    JOIN sale_payments sp ON sp.id = spi.sale_payment_id
+                    WHERE spi.sale_id = sales.id
+                    AND sp.status = "confirmed"
+                    AND sp.deleted_at IS NULL
+                    AND spi.deleted_at IS NULL
+                ) >= sales.total_amount');
+            } else {
+                // Belum lunas: total_paid < total_amount
+                $query->whereRaw('(
+                    SELECT COALESCE(SUM(spi.amount), 0)
+                    FROM sale_payment_items spi
+                    JOIN sale_payments sp ON sp.id = spi.sale_payment_id
+                    WHERE spi.sale_id = sales.id
+                    AND sp.status = "confirmed"
+                    AND sp.deleted_at IS NULL
+                    AND spi.deleted_at IS NULL
+                ) < sales.total_amount');
+            }
+        }
+
         // Sorting
         $sortBy    = $request->get('sort_by', 'sale_number');
         $sortOrder = $request->get('sort_order', 'desc');
@@ -83,17 +110,6 @@ class SaleController extends Controller
 
         // Append computed attributes
         $sales->getCollection()->each->append(['total_paid', 'remaining_amount']);
-
-        // Payment status filter (applies post-append)
-        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
-            $filtered = $sales->getCollection()->filter(function ($sale) use ($request) {
-                return $request->payment_status === 'paid'
-                    ? $sale->remaining_amount <= 0
-                    : $sale->remaining_amount > 0;
-            });
-
-            $sales->setCollection($filtered->values());
-        }
 
         // Add permissions
         $sales->getCollection()->transform(function ($sale) {

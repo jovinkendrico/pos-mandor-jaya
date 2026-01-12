@@ -59,6 +59,33 @@ class PurchaseController extends Controller
             $query->whereDate('purchase_date', '<=', $request->date_to);
         }
 
+        // Payment status filter (must be BEFORE pagination)
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            if ($request->payment_status === 'paid') {
+                // Lunas: total_paid >= total_amount
+                $query->whereRaw('(
+                    SELECT COALESCE(SUM(ppi.amount), 0)
+                    FROM purchase_payment_items ppi
+                    JOIN purchase_payments pp ON pp.id = ppi.purchase_payment_id
+                    WHERE ppi.purchase_id = purchases.id
+                    AND pp.status = "confirmed"
+                    AND pp.deleted_at IS NULL
+                    AND ppi.deleted_at IS NULL
+                ) >= purchases.total_amount');
+            } else {
+                // Belum lunas: total_paid < total_amount
+                $query->whereRaw('(
+                    SELECT COALESCE(SUM(ppi.amount), 0)
+                    FROM purchase_payment_items ppi
+                    JOIN purchase_payments pp ON pp.id = ppi.purchase_payment_id
+                    WHERE ppi.purchase_id = purchases.id
+                    AND pp.status = "confirmed"
+                    AND pp.deleted_at IS NULL
+                    AND ppi.deleted_at IS NULL
+                ) < purchases.total_amount');
+            }
+        }
+
         // Sort
         $sortBy    = $request->get('sort_by', 'purchase_number');
         $sortOrder = $request->get('sort_order', 'desc');
@@ -82,18 +109,6 @@ class PurchaseController extends Controller
 
         // Append computed attributes (only for current page)
         $purchases->getCollection()->each->append(['total_paid', 'remaining_amount']);
-
-        // Filter by payment status AFTER append
-        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
-            $filtered = $purchases->getCollection()->filter(function ($purchase) use ($request) {
-                return $request->payment_status === 'paid'
-                    ? $purchase->remaining_amount <= 0
-                    : $purchase->remaining_amount > 0;
-            });
-
-            // Replace paginated collection with filtered version
-            $purchases->setCollection($filtered->values());
-        }
 
         // Add permissions
         $purchases->getCollection()->transform(function ($purchase) {
