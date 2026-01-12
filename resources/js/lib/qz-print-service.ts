@@ -333,9 +333,12 @@ class QZPrintService {
             '--------------- ----------------------- --------------- ----------------------------------\n'
         );
 
-        // Total row
+        // Total row - align with JUMLAH column
+        // NO(5) + TGL(15) + NO FAKTUR(25) = 45 chars before JUMLAH
+        const totalLabel = 'TOTAL FAKTUR ...';
         const totalValue = this.formatCurrency(data.total).padStart(15);
-        escp.push(`TOTAL FAKTUR ...                                        ${totalValue}\n`);
+        const paddingBeforeTotal = 45 - totalLabel.length;
+        escp.push(`${totalLabel}${' '.repeat(paddingBeforeTotal)}${totalValue}\n`);
         escp.push(
             '==========================================================================================\n',
         );
