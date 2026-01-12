@@ -52,6 +52,11 @@ class SaleController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Customer filter (for history button from customer master)
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+
         // Date range
         if ($request->filled('date_from')) {
             $query->whereDate('sale_date', '>=', $request->date_from);

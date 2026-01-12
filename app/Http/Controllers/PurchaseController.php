@@ -51,6 +51,11 @@ class PurchaseController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Supplier filter (for history button from supplier master)
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+
         // Date range
         if ($request->filled('date_from')) {
             $query->whereDate('purchase_date', '>=', $request->date_from);
