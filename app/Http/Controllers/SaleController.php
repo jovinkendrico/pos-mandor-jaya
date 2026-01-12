@@ -305,6 +305,9 @@ class SaleController extends Controller
 
         $sale->load(['customer.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
+        // Append computed attributes for payment tracking
+        $sale->append(['total_paid', 'remaining_amount']);
+
         $sale->can = [
             'edit'   => auth()->user() ? auth()->user()->can('update', $sale) : false,
             'delete' => auth()->user() ? auth()->user()->can('delete', $sale) : false,

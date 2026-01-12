@@ -313,6 +313,9 @@ class PurchaseController extends Controller
 
         $purchase->load(['supplier.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
+        // Append computed attributes for payment tracking
+        $purchase->append(['total_paid', 'remaining_amount']);
+
         $purchase->can = [
             'edit'   => auth()->user() ? auth()->user()->can('update', $purchase) : false,
             'delete' => auth()->user() ? auth()->user()->can('delete', $purchase) : false,
