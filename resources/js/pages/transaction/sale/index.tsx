@@ -3,7 +3,9 @@ import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import SaleTable from '@/components/transaction/sales/sale-table';
 import { Button } from '@/components/ui/button';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import { Label } from '@/components/ui/label';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
@@ -16,10 +18,12 @@ import { useState } from 'react';
 
 interface PageProps {
     sales: PaginatedData<ISale>;
+    customers?: { id: number; name: string }[];
     filters?: {
         search: string;
         status: string;
         payment_status: string;
+        customer_id: string;
         date_from: string;
         date_to: string;
         sort_by: string;
@@ -41,10 +45,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 const SaleIndex = (props: PageProps) => {
     const {
         sales,
+        customers = [],
         filters = {
             search: '',
             status: 'all',
             payment_status: 'all',
+            customer_id: '',
             date_from: '',
             date_to: '',
             sort_by: 'sale_number',
@@ -78,6 +84,14 @@ const SaleIndex = (props: PageProps) => {
         openDeleteModal();
     };
 
+    const customerComboboxOptions: ComboboxOption[] = [
+        { value: '', label: 'Semua Customer' },
+        ...customers.map((customer) => ({
+            value: customer.id.toString(),
+            label: customer.name,
+        })),
+    ];
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -100,6 +114,24 @@ const SaleIndex = (props: PageProps) => {
                         { value: 'total_amount', label: 'Total' },
                         { value: 'status', label: 'Status' },
                     ]}
+                    additionalFilters={
+                        <div className="w-[180px]">
+                            <Label htmlFor="customer_id">Customer</Label>
+                            <Combobox
+                                options={customerComboboxOptions}
+                                value={allFilters.customer_id || ''}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        customer_id: value || '',
+                                    })
+                                }
+                                placeholder="Semua Customer"
+                                searchPlaceholder="Cari customer..."
+                                className="combobox"
+                                maxDisplayItems={20}
+                            />
+                        </div>
+                    }
                 />
 
                 <div className="mt-4">

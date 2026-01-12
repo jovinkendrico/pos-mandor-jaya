@@ -124,12 +124,19 @@ class SaleController extends Controller
             return $sale;
         });
 
+        // Get customers for filter
+        $customers = \App\Models\Customer::select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('transaction/sale/index', [
-            'sales'   => $sales,
+            'sales'     => $sales,
+            'customers' => $customers,
             'filters' => [
                 'search'         => $request->get('search', ''),
                 'status'         => $request->get('status', 'all'),
                 'payment_status' => $request->get('payment_status', 'all'),
+                'customer_id'    => $request->get('customer_id', ''),
                 'date_from'      => $request->get('date_from', ''),
                 'date_to'        => $request->get('date_to', ''),
                 'sort_by'        => $sortBy,

@@ -123,12 +123,19 @@ class PurchaseController extends Controller
             return $purchase;
         });
 
+        // Get suppliers for filter
+        $suppliers = \App\Models\Supplier::select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('transaction/purchase/index', [
             'purchases' => $purchases,
+            'suppliers' => $suppliers,
             'filters'   => [
                 'search'         => $request->get('search', ''),
                 'status'         => $request->get('status', 'all'),
                 'payment_status' => $request->get('payment_status', 'all'),
+                'supplier_id'    => $request->get('supplier_id', ''),
                 'date_from'      => $request->get('date_from', ''),
                 'date_to'        => $request->get('date_to', ''),
                 'sort_by'        => $sortBy,

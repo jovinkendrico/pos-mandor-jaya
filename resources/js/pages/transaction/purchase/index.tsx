@@ -3,7 +3,9 @@ import PageTitle from '@/components/page-title';
 import FilterBar from '@/components/transaction/filter-bar';
 import PurchaseTable from '@/components/transaction/purchases/purchase-table';
 import { Button } from '@/components/ui/button';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import DeleteModalLayout from '@/components/ui/DeleteModalLayout/DeleteModalLayout';
+import { Label } from '@/components/ui/label';
 import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
@@ -22,10 +24,12 @@ import { toast } from 'sonner';
 
 interface PageProps {
     purchases: PaginatedData<IPurchase>;
+    suppliers?: { id: number; name: string }[];
     filters?: {
         search: string;
         status: string;
         payment_status: string;
+        supplier_id: string;
         date_from: string;
         date_to: string;
         sort_by: string;
@@ -47,10 +51,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 const PurchaseIndex = (props: PageProps) => {
     const {
         purchases,
+        suppliers = [],
         filters = {
             search: '',
             status: 'all',
             payment_status: 'all',
+            supplier_id: '',
             date_from: '',
             date_to: '',
             sort_by: 'purchase_number',
@@ -95,6 +101,14 @@ const PurchaseIndex = (props: PageProps) => {
         openDeleteModal();
     };
 
+    const supplierComboboxOptions: ComboboxOption[] = [
+        { value: '', label: 'Semua Supplier' },
+        ...suppliers.map((supplier) => ({
+            value: supplier.id.toString(),
+            label: supplier.name,
+        })),
+    ];
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -117,6 +131,24 @@ const PurchaseIndex = (props: PageProps) => {
                         { value: 'total_amount', label: 'Total' },
                         { value: 'status', label: 'Status' },
                     ]}
+                    additionalFilters={
+                        <div className="w-[180px]">
+                            <Label htmlFor="supplier_id">Supplier</Label>
+                            <Combobox
+                                options={supplierComboboxOptions}
+                                value={allFilters.supplier_id || ''}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        supplier_id: value || '',
+                                    })
+                                }
+                                placeholder="Semua Supplier"
+                                searchPlaceholder="Cari supplier..."
+                                className="combobox"
+                                maxDisplayItems={20}
+                            />
+                        </div>
+                    }
                 />
 
                 <div className="mt-4">
