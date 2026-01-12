@@ -306,41 +306,36 @@ class QZPrintService {
         escp.push('perincian sebagai berikut :\n');
         escp.push('\n');
 
-        // Table Header - Total width 90 chars
-        // Columns: No(4), TGL(12), NO FAKTUR(20), JUMLAH(15), JT.TEMPO(12), separators
+        // Table Header - Total width 90 chars without separators
         escp.push(
-            '--------------------------------------------------------------------------------------------\n',
+            '==========================================================================================\n',
         );
         escp.push(
-            '| No | Tgl. Faktur  | No Faktur            |        Jumlah   | Jt. Tempo    |\n',
+            ' NO.  TGL. FAKTUR    NO FAKTUR                  JUMLAH          JT.TEMPO\n',
         );
         escp.push(
-            '+----+--------------+----------------------+-----------------+--------------+\n',
+            '==========================================================================================\n',
         );
 
         // Table Body
         data.invoices.forEach((invoice, index) => {
-            const no = (index + 1).toString().padStart(2);
-            const date = invoice.date.substring(0, 12).padEnd(12);
-            const number = invoice.number.substring(0, 20).padEnd(20);
+            const no = `${index + 1}.`.padEnd(5);
+            const date = invoice.date.padEnd(15);
+            const number = invoice.number.padEnd(25);
             const amount = this.formatCurrency(invoice.amount).padStart(15);
-            const dueDate = invoice.due_date.substring(0, 12).padEnd(12);
+            const dueDate = invoice.due_date.padEnd(15);
 
-            escp.push(`| ${no} | ${date} | ${number} | ${amount} | ${dueDate} |\n`);
+            escp.push(`${no} ${date} ${number} ${amount}  ${dueDate}\n`);
         });
 
-        // Table Footer
-        escp.push(
-            '+----+--------------+----------------------+-----------------+--------------+\n',
-        );
+        escp.push('\n');
+        escp.push('--------------- ----------------------- --------------- ----------------\n');
 
         // Total row
-        const totalLabel = 'TOTAL FAKTUR ...';
         const totalValue = this.formatCurrency(data.total).padStart(15);
-        const totalPadding = 90 - 4 - totalLabel.length - totalValue.length - 3;
-        escp.push(`| ${totalLabel}${' '.repeat(totalPadding)}${totalValue} |\n`);
+        escp.push(`TOTAL FAKTUR ...                                        ${totalValue}\n`);
         escp.push(
-            '--------------------------------------------------------------------------------------------\n',
+            '==========================================================================================\n',
         );
         escp.push('\n');
 
