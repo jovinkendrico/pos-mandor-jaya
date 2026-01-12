@@ -70,7 +70,6 @@ class PurchaseController extends Controller
                     WHERE ppi.purchase_id = purchases.id
                     AND pp.status = "confirmed"
                     AND pp.deleted_at IS NULL
-                    AND ppi.deleted_at IS NULL
                 ) >= purchases.total_amount');
             } else {
                 // Belum lunas: total_paid < total_amount
@@ -81,7 +80,6 @@ class PurchaseController extends Controller
                     WHERE ppi.purchase_id = purchases.id
                     AND pp.status = "confirmed"
                     AND pp.deleted_at IS NULL
-                    AND ppi.deleted_at IS NULL
                 ) < purchases.total_amount');
             }
         }

@@ -71,7 +71,6 @@ class SaleController extends Controller
                     WHERE spi.sale_id = sales.id
                     AND sp.status = "confirmed"
                     AND sp.deleted_at IS NULL
-                    AND spi.deleted_at IS NULL
                 ) >= sales.total_amount');
             } else {
                 // Belum lunas: total_paid < total_amount
@@ -82,7 +81,6 @@ class SaleController extends Controller
                     WHERE spi.sale_id = sales.id
                     AND sp.status = "confirmed"
                     AND sp.deleted_at IS NULL
-                    AND spi.deleted_at IS NULL
                 ) < sales.total_amount');
             }
         }
