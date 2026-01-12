@@ -329,7 +329,9 @@ class QZPrintService {
         });
 
         escp.push('\n');
-        escp.push('--------------- ----------------------- --------------- ----------------\n');
+        escp.push(
+            '--------------- ----------------------- --------------- ----------------------------------\n'
+        );
 
         // Total row
         const totalValue = this.formatCurrency(data.total).padStart(15);
