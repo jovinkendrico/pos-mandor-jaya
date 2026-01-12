@@ -297,48 +297,81 @@ class QZPrintService {
             '\n',
         ];
 
-        // Header
-        escp.push('                    TANDA TERIMA FAKTUR                    ' + data.receipt_number + '\n');
+        // Header - centered within 90 chars
+        const headerText = 'TANDA TERIMA FAKTUR';
+        const headerPadding = Math.floor((90 - headerText.length - data.receipt_number.length - 4) / 2);
+        escp.push(' '.repeat(headerPadding) + headerText + '    ' + data.receipt_number + '\n');
         escp.push('\n');
         escp.push('Telah diterima dari MANDOR JAYA / Faktur Penjualan Asli, dengan\n');
         escp.push('perincian sebagai berikut :\n');
         escp.push('\n');
 
-        // Table Header
-        escp.push('================================================================================\n');
-        escp.push(' NO.  TGL. FAKTUR    NO FAKTUR              JUMLAH          JT.TEMPO\n');
-        escp.push('================================================================================\n');
+        // Table Header - Total width 90 chars
+        // Columns: No(4), TGL(12), NO FAKTUR(20), JUMLAH(15), JT.TEMPO(12), separators
+        escp.push(
+            '--------------------------------------------------------------------------------------------\n',
+        );
+        escp.push(
+            '| No | Tgl. Faktur  | No Faktur            |        Jumlah   | Jt. Tempo    |\n',
+        );
+        escp.push(
+            '+----+--------------+----------------------+-----------------+--------------+\n',
+        );
 
         // Table Body
         data.invoices.forEach((invoice, index) => {
-            const no = `${index + 1}.`.padEnd(5);
-            const date = invoice.date.padEnd(15);
-            const number = invoice.number.padEnd(20);
+            const no = (index + 1).toString().padStart(2);
+            const date = invoice.date.substring(0, 12).padEnd(12);
+            const number = invoice.number.substring(0, 20).padEnd(20);
             const amount = this.formatCurrency(invoice.amount).padStart(15);
-            const dueDate = invoice.due_date.padEnd(15);
-            escp.push(`${no} ${date} ${number} ${amount}  ${dueDate}\n`);
+            const dueDate = invoice.due_date.substring(0, 12).padEnd(12);
+
+            escp.push(`| ${no} | ${date} | ${number} | ${amount} | ${dueDate} |\n`);
         });
 
-        escp.push('\n');
-        escp.push('--------------- ----------------------- --------------- ----------------\n');
-        escp.push(`TOTAL FAKTUR ...                                        ${this.formatCurrency(data.total).padStart(15)}\n`);
-        escp.push('================================================================================\n');
+        // Table Footer
+        escp.push(
+            '+----+--------------+----------------------+-----------------+--------------+\n',
+        );
+
+        // Total row
+        const totalLabel = 'TOTAL FAKTUR ...';
+        const totalValue = this.formatCurrency(data.total).padStart(15);
+        const totalPadding = 90 - 4 - totalLabel.length - totalValue.length - 3;
+        escp.push(`| ${totalLabel}${' '.repeat(totalPadding)}${totalValue} |\n`);
+        escp.push(
+            '--------------------------------------------------------------------------------------------\n',
+        );
         escp.push('\n');
 
-        // Terbilang
+        // Terbilang - word wrap to fit 90 chars
         const terbilangText = this.terbilang(data.total).trim();
         const terbilangDisplay = terbilangText
             ? `Terbilang : ${terbilangText.charAt(0).toUpperCase() + terbilangText.slice(1)} Rupiah`
             : '';
-        escp.push(terbilangDisplay + '\n');
-        escp.push('\n\n\n');
 
-        // Footer
-        escp.push('                                                          Medan,\n');
+        // Word wrap terbilang
+        const maxLen = 88;
+        const words = terbilangDisplay.split(' ');
+        let currentLine = '';
+        words.forEach((word) => {
+            if ((currentLine + word).length > maxLen) {
+                escp.push(currentLine.trim() + '\n');
+                currentLine = word + ' ';
+            } else {
+                currentLine += word + ' ';
+            }
+        });
+        if (currentLine.trim().length > 0) {
+            escp.push(currentLine.trim() + '\n');
+        }
+        escp.push('\n\n');
+
+        // Footer - aligned similar to Sale format
+        escp.push('       Tanda Terima        Dikeluarkan           Diperiksa               Supir\n\n\n');
+        escp.push('      ______________      ______________        ______________        ______________\n');
         escp.push('\n');
-        escp.push('                                                     Hormat kami,\n');
-        escp.push('Tagih Tgl _____________________                  MAKMUR JAYA / 081370586286\n');
-        escp.push('\n\n\n');
+        escp.push('Tagih Tgl _____________________                                   MAKMUR JAYA / 081370586286\n');
 
         escp.push('\x0C'); // Form feed
 
