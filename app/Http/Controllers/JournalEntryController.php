@@ -15,7 +15,6 @@ class JournalEntryController extends Controller
     public function index(Request $request): Response
     {
         $query = JournalEntry::with(['details.chartOfAccount'])
-            ->orderBy('journal_date', 'desc')
             ->orderBy('id', 'desc');
 
         // Search
