@@ -218,4 +218,104 @@ class PaymentReceiptController extends Controller
             ]);
         }
     }
+
+    /**
+     * Print payment receipt in dot matrix format
+     */
+    public function printDotMatrix(Request $request)
+    {
+        try {
+            $saleIds = $request->input('sale_ids', []);
+
+            if (empty($saleIds)) {
+                return back()->withErrors(['message' => 'Pilih minimal satu faktur untuk dicetak.']);
+            }
+
+            // Get sales with customer and payment info
+            $sales = Sale::with('customer')
+                ->whereIn('id', $saleIds)
+                ->where('status', 'confirmed')
+                ->orderBy('sale_date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            if ($sales->isEmpty()) {
+                return back()->withErrors(['message' => 'Faktur tidak ditemukan.']);
+            }
+
+            // Group by customer
+            $groupedByCustomer = $sales->groupBy('customer_id');
+
+            $receipts = [];
+            foreach ($groupedByCustomer as $customerId => $customerSales) {
+                $customer = $customerSales->first()->customer;
+                $invoiceData = [];
+
+                $totalAmount = 0;
+                $totalPaid = 0;
+                $totalRemaining = 0;
+
+                foreach ($customerSales as $sale) {
+                    $totalPaidForSale = DB::table('sale_payment_items')
+                        ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
+                        ->where('sale_payment_items.sale_id', $sale->id)
+                        ->where('sale_payments.status', 'confirmed')
+                        ->sum('sale_payment_items.amount') ?? 0;
+
+                    $remainingAmount = max(0, $sale->total_amount - $totalPaidForSale);
+
+                    $invoiceData[] = [
+                        'sale_number' => $sale->sale_number,
+                        'sale_date' => $sale->sale_date ? $sale->sale_date->format('d/m/Y') : '-',
+                        'due_date' => $sale->due_date ? $sale->due_date->format('d/m/Y') : '-',
+                        'total_amount' => (float) $sale->total_amount,
+                        'total_paid' => (float) $totalPaidForSale,
+                        'remaining_amount' => (float) $remainingAmount,
+                        'is_overdue' => $sale->due_date && $sale->due_date < now()->toDateString(),
+                    ];
+
+                    $totalAmount += $sale->total_amount;
+                    $totalPaid += $totalPaidForSale;
+                    $totalRemaining += $remainingAmount;
+                }
+
+                $receipts[] = [
+                    'customer' => [
+                        'id' => $customer ? $customer->id : null,
+                        'name' => $customer ? $customer->name : 'No Customer',
+                        'address' => $customer ? $customer->address : null,
+                        'phone_number' => $customer ? $customer->phone_number : null,
+                    ],
+                    'invoices' => $invoiceData,
+                    'summary' => [
+                        'total_invoices' => count($invoiceData),
+                        'total_amount' => $totalAmount,
+                        'total_paid' => $totalPaid,
+                        'total_remaining' => $totalRemaining,
+                    ],
+                ];
+            }
+
+            // Generate PDF with dot matrix template
+            $pdf = Pdf::loadView('pdf.payment-receipt-dotmatrix', [
+                'title' => 'Tanda Terima Faktur',
+                'receipts' => $receipts,
+                'print_date' => now()->format('d F Y'),
+            ])->setPaper('a4', 'portrait');
+
+            $filename = 'tanda-terima-faktur-' . now()->format('YmdHis') . '.pdf';
+            return $pdf->download($filename);
+
+        } catch (\Exception $e) {
+            Log::error('PDF Print Payment Receipt Dot Matrix - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->withErrors([
+                'message' => 'Error generating PDF: ' . $e->getMessage(),
+            ]);
+        }
+    }
 }

@@ -97,7 +97,7 @@ const PurchasePaymentShow = ({ purchase_payment }: PageProps) => {
                             )}
                         >
                             {purchase_payment.status ===
-                            PurchasePaymentStatus.CONFIRMED
+                                PurchasePaymentStatus.CONFIRMED
                                 ? 'Confirmed'
                                 : 'Pending'}
                         </Badge>
@@ -106,34 +106,34 @@ const PurchasePaymentShow = ({ purchase_payment }: PageProps) => {
                 <div className="flex gap-2">
                     {purchase_payment.status ===
                         PurchasePaymentStatus.PENDING && (
-                        <>
-                            <Button
-                                onClick={handleEdit}
-                                variant="secondary"
-                                className="btn-secondary"
-                            >
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
-                            </Button>
-                            <Button
-                                onClick={handleConfirm}
-                                className="btn-primary"
-                            >
-                                <CheckCircle2 className="mr-2 h-4 w-4" />
-                                Konfirmasi
-                            </Button>
-                        </>
-                    )}
+                            <>
+                                <Button
+                                    onClick={handleEdit}
+                                    variant="secondary"
+                                    className="btn-secondary"
+                                >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit
+                                </Button>
+                                <Button
+                                    onClick={handleConfirm}
+                                    className="btn-primary"
+                                >
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                                    Konfirmasi
+                                </Button>
+                            </>
+                        )}
                     {purchase_payment.status ===
                         PurchasePaymentStatus.CONFIRMED && (
-                        <Button
-                            onClick={handleUnconfirm}
-                            className="btn-danger"
-                        >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Batalkan Konfirmasi
-                        </Button>
-                    )}
+                            <Button
+                                onClick={handleUnconfirm}
+                                className="btn-danger"
+                            >
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Batalkan Konfirmasi
+                            </Button>
+                        )}
                 </div>
             </div>
 
@@ -237,17 +237,17 @@ const PurchasePaymentShow = ({ purchase_payment }: PageProps) => {
                                     <TableCell className="flex w-full items-center justify-center text-center">
                                         {item.purchase?.purchase_date
                                             ? formatDatetoString(
-                                                  new Date(
-                                                      item.purchase.purchase_date,
-                                                  ),
-                                              )
+                                                new Date(
+                                                    item.purchase.purchase_date,
+                                                ),
+                                            )
                                             : '-'}
                                     </TableCell>
                                     <TableCell className="flex w-full items-center justify-center text-center">
                                         {item.purchase?.total_amount
                                             ? formatCurrency(
-                                                  item.purchase.total_amount,
-                                              )
+                                                item.purchase.total_amount,
+                                            )
                                             : '-'}
                                     </TableCell>
                                     <TableCell className="flex w-full items-center justify-center text-center">

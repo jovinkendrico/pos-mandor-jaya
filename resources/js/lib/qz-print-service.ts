@@ -22,6 +22,18 @@ export interface PrintData {
     notes?: string;
 }
 
+export interface PaymentReceiptData {
+    receipt_number: string;
+    customer_name: string;
+    invoices: Array<{
+        date: string;
+        number: string;
+        amount: number;
+        due_date: string;
+    }>;
+    total: number;
+}
+
 class QZPrintService {
     private connected = false;
 
@@ -270,6 +282,65 @@ class QZPrintService {
         );
 
         escp.push('\x0C');
+
+        await qz.print(config, escp);
+    }
+
+    async printPaymentReceipt(data: PaymentReceiptData, printerName: string) {
+        await this.connect();
+        const config = qz.configs.create(printerName);
+
+        let escp = [
+            '\x1B\x40', // Initialize
+            '\x1B\x43\x21', // Page length 33 lines
+            '\x1B\x4D\x01', // 12 CPI
+            '\n',
+        ];
+
+        // Header
+        escp.push('                    TANDA TERIMA FAKTUR                    ' + data.receipt_number + '\n');
+        escp.push('\n');
+        escp.push('Telah diterima dari MANDOR JAYA / Faktur Penjualan Asli, dengan\n');
+        escp.push('perincian sebagai berikut :\n');
+        escp.push('\n');
+
+        // Table Header
+        escp.push('================================================================================\n');
+        escp.push(' NO.  TGL. FAKTUR    NO FAKTUR              JUMLAH          JT.TEMPO\n');
+        escp.push('================================================================================\n');
+
+        // Table Body
+        data.invoices.forEach((invoice, index) => {
+            const no = `${index + 1}.`.padEnd(5);
+            const date = invoice.date.padEnd(15);
+            const number = invoice.number.padEnd(20);
+            const amount = this.formatCurrency(invoice.amount).padStart(15);
+            const dueDate = invoice.due_date.padEnd(15);
+            escp.push(`${no} ${date} ${number} ${amount}  ${dueDate}\n`);
+        });
+
+        escp.push('\n');
+        escp.push('--------------- ----------------------- --------------- ----------------\n');
+        escp.push(`TOTAL FAKTUR ...                                        ${this.formatCurrency(data.total).padStart(15)}\n`);
+        escp.push('================================================================================\n');
+        escp.push('\n');
+
+        // Terbilang
+        const terbilangText = this.terbilang(data.total).trim();
+        const terbilangDisplay = terbilangText
+            ? `Terbilang : ${terbilangText.charAt(0).toUpperCase() + terbilangText.slice(1)} Rupiah`
+            : '';
+        escp.push(terbilangDisplay + '\n');
+        escp.push('\n\n\n');
+
+        // Footer
+        escp.push('                                                          Medan,\n');
+        escp.push('\n');
+        escp.push('                                                     Hormat kami,\n');
+        escp.push('Tagih Tgl _____________________                  MAKMUR JAYA / 081370586286\n');
+        escp.push('\n\n\n');
+
+        escp.push('\x0C'); // Form feed
 
         await qz.print(config, escp);
     }

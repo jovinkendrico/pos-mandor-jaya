@@ -165,7 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Payment Receipt
     Route::get('payment-receipt', [PaymentReceiptController::class, 'index'])->name('payment-receipt.index');
-    Route::get('payment-receipt/print', [PaymentReceiptController::class, 'print'])->name('payment-receipt.print');
+    Route::get('payment-receipt/print', [PaymentReceiptController::class, 'printDotMatrix'])->name('payment-receipt.print');
 
     // Bank Cash Movement
     Route::get('banks/{bank}/cash-movement', [BankController::class, 'cashMovement'])->name('banks.cash-movement');

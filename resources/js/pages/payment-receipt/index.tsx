@@ -14,6 +14,8 @@ import { format } from 'date-fns';
 import { useState } from 'react';
 import { Search, Printer, AlertCircle, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { qzPrintService } from '@/lib/qz-print-service';
+import { toast } from 'sonner';
 
 interface Sale {
     id: number;
@@ -100,18 +102,54 @@ export default function PaymentReceiptIndex({ sales, customers, filters: initial
         }
     };
 
-    const handlePrint = () => {
+    const handlePrint = async () => {
         if (selectedSales.length === 0) {
-            alert('Pilih minimal satu faktur untuk dicetak.');
+            toast.error('Pilih minimal satu faktur untuk dicetak.');
             return;
         }
 
-        const params = new URLSearchParams();
-        selectedSales.forEach(id => {
-            params.append('sale_ids[]', id.toString());
-        });
+        try {
+            // Group selected sales by customer
+            const selectedSalesData = sales.filter(sale => selectedSales.includes(sale.id));
+            const groupedByCustomer = selectedSalesData.reduce((acc, sale) => {
+                const customerId = sale.customer_id || 0;
+                if (!acc[customerId]) {
+                    acc[customerId] = [];
+                }
+                acc[customerId].push(sale);
+                return acc;
+            }, {} as Record<number, Sale[]>);
 
-        window.open(`/payment-receipt/print?${params.toString()}`, '_blank');
+            // Print each customer's receipt
+            let receiptNumber = 1;
+            for (const customerSales of Object.values(groupedByCustomer)) {
+                const invoices = customerSales.map(sale => ({
+                    date: formatDatetoString(new Date(sale.sale_date)),
+                    number: sale.sale_number,
+                    amount: sale.remaining_amount,
+                    due_date: sale.due_date ? formatDatetoString(new Date(sale.due_date)) : '-',
+                }));
+
+                const total = customerSales.reduce((sum, sale) => sum + sale.remaining_amount, 0);
+
+                await qzPrintService.printPaymentReceipt(
+                    {
+                        receipt_number: `NO.TTA-${String(receiptNumber).padStart(4, '0')}`,
+                        customer_name: customerSales[0].customer_name,
+                        invoices,
+                        total,
+                    },
+                    'Dot Matrix Printer' // TODO: Allow user to select printer
+                );
+
+                receiptNumber++;
+            }
+
+            toast.success(`Berhasil mencetak ${Object.keys(groupedByCustomer).length} tanda terima.`);
+        } catch (error) {
+            console.error('Print error:', error);
+            toast.error(error instanceof Error ? error.message : 'Gagal mencetak. Pastikan QZ Tray sudah berjalan.');
+        }
     };
 
     const selectedTotal = sales
