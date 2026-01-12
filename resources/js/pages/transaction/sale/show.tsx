@@ -124,6 +124,22 @@ const SaleShow = (props: PageProps) => {
         router.visit(edit(sale.id).url);
     };
 
+    const handleWriteOff = () => {
+        if (confirm(`Write-off selisih pembulatan sebesar ${formatCurrency(sale.remaining_amount || 0)}?\n\nIni akan otomatis membuat pembayaran untuk sisa amount dan menutup invoice.`)) {
+            router.post(
+                `/sales/${sale.id}/write-off`,
+                {},
+                {
+                    onSuccess: () => toast.success('Selisih berhasil di-write-off'),
+                    onError: (errors: Record<string, string>) => {
+                        const message = errors.msg || Object.values(errors)[0] || 'Gagal write-off';
+                        toast.error(message);
+                    },
+                },
+            );
+        }
+    };
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -188,6 +204,15 @@ const SaleShow = (props: PageProps) => {
                             >
                                 <XCircle className="mr-2 h-4 w-4" />
                                 Batalkan Konfirmasi
+                            </Button>
+                        )}
+                        {(sale.remaining_amount ?? 0) > 0 && (sale.remaining_amount ?? 0) < 1000 && sale.can?.edit && (
+                            <Button
+                                onClick={handleWriteOff}
+                                variant="outline"
+                                className="border-orange-500 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-950"
+                            >
+                                Write-off {formatCurrency(sale.remaining_amount ?? 0)}
                             </Button>
                         )}
                     </div>
