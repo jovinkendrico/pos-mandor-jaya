@@ -102,10 +102,27 @@ export default function PaymentReceiptIndex({ sales, customers, filters: initial
         }
     };
 
-    const handlePrint = async () => {
+    const handlePrint = async (e: React.MouseEvent<HTMLButtonElement>) => {
         if (selectedSales.length === 0) {
             toast.error('Pilih minimal satu faktur untuk dicetak.');
             return;
+        }
+
+        // Get printer name from localStorage or prompt user
+        let printerName = localStorage.getItem('qz_printer_name');
+
+        // Allow user to change printer by holding Shift key
+        if (e.shiftKey) {
+            printerName = null;
+        }
+
+        if (!printerName) {
+            printerName = window.prompt(
+                'Masukkan Nama Printer Dot Matrix (cek di Control Panel):',
+                'EPSON LX-310 ESC/P (Copy 1)'
+            );
+            if (!printerName) return;
+            localStorage.setItem('qz_printer_name', printerName);
         }
 
         try {
@@ -139,7 +156,7 @@ export default function PaymentReceiptIndex({ sales, customers, filters: initial
                         invoices,
                         total,
                     },
-                    'Dot Matrix Printer' // TODO: Allow user to select printer
+                    printerName
                 );
 
                 receiptNumber++;
@@ -148,7 +165,13 @@ export default function PaymentReceiptIndex({ sales, customers, filters: initial
             toast.success(`Berhasil mencetak ${Object.keys(groupedByCustomer).length} tanda terima.`);
         } catch (error) {
             console.error('Print error:', error);
-            toast.error(error instanceof Error ? error.message : 'Gagal mencetak. Pastikan QZ Tray sudah berjalan.');
+            const errorMessage = error instanceof Error ? error.message : 'Gagal mencetak. Pastikan QZ Tray sudah berjalan.';
+            toast.error(errorMessage);
+
+            // Clear printer name on error to let user re-enter if it was wrong
+            if (errorMessage.includes('not find') || errorMessage.includes('tidak ditemukan')) {
+                localStorage.removeItem('qz_printer_name');
+            }
         }
     };
 
