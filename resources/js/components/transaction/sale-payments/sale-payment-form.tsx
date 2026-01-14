@@ -416,6 +416,20 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                                                         searchPlaceholder="Cari invoice..."
                                                         searchUrl="/sale-payments/search-sales"
                                                         className="combobox"
+                                                        filterOption={(opt) => {
+                                                            const isSelectedInOtherRow =
+                                                                dataSalePayment.items.some(
+                                                                    (
+                                                                        otherItem: ISalePaymentItem,
+                                                                        otherIdx: number,
+                                                                    ) =>
+                                                                        otherIdx !==
+                                                                        index &&
+                                                                        otherItem.sale_id?.toString() ===
+                                                                        opt.value,
+                                                                );
+                                                            return !isSelectedInOtherRow;
+                                                        }}
                                                     />
                                                     <InputError
                                                         message={

@@ -436,6 +436,20 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                                         searchPlaceholder="Cari invoice..."
                                                         searchUrl="/purchase-payments/search-purchases"
                                                         className="combobox"
+                                                        filterOption={(opt) => {
+                                                            const isSelectedInOtherRow =
+                                                                dataPurchasePayment.items.some(
+                                                                    (
+                                                                        otherItem: IPurchasePaymentItem,
+                                                                        otherIdx: number,
+                                                                    ) =>
+                                                                        otherIdx !==
+                                                                        index &&
+                                                                        otherItem.purchase_id?.toString() ===
+                                                                        opt.value,
+                                                                );
+                                                            return !isSelectedInOtherRow;
+                                                        }}
                                                     />
                                                     <InputError
                                                         message={

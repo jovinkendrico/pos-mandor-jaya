@@ -40,6 +40,7 @@ interface ComboboxProps {
     searchUrl?: string; // Optional: URL for backend search
     searchParam?: string; // Optional: Query parameter name for search
     debounceMs?: number; // Optional: Debounce delay for search
+    filterOption?: (option: ComboboxOption) => boolean; // Optional: Filter function
 }
 
 export function Combobox({
@@ -57,6 +58,7 @@ export function Combobox({
     searchUrl,
     searchParam = 'search',
     debounceMs = 300,
+    filterOption,
 }: ComboboxProps) {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
@@ -119,30 +121,47 @@ export function Combobox({
 
     // Filter options based on search
     const filteredOptions = React.useMemo(() => {
+        let baseOptions: ComboboxOption[] = [];
+
         // If backend search is enabled and there's a search value, use search results
         if (searchUrl && searchValue.trim()) {
-            return searchResults;
+            baseOptions = searchResults;
+        } else {
+            // Otherwise, use client-side filtering
+            if (!searchValue) {
+                baseOptions = options.slice(0, maxDisplayItems);
+            } else {
+                const searchLower = searchValue.toLowerCase();
+                baseOptions = options.filter((option) => {
+                    // Search in label
+                    if (option.label.toLowerCase().includes(searchLower)) {
+                        return true;
+                    }
+                    // Search in additional search terms
+                    if (option.searchTerms) {
+                        return option.searchTerms.some((term) =>
+                            term.toLowerCase().includes(searchLower),
+                        );
+                    }
+                    return false;
+                });
+            }
         }
 
-        // Otherwise, use client-side filtering
-        if (!searchValue) {
-            return options.slice(0, maxDisplayItems);
+        // Apply external filter if provided
+        if (filterOption) {
+            return baseOptions.filter(filterOption);
         }
-        const searchLower = searchValue.toLowerCase();
-        return options.filter((option) => {
-            // Search in label
-            if (option.label.toLowerCase().includes(searchLower)) {
-                return true;
-            }
-            // Search in additional search terms
-            if (option.searchTerms) {
-                return option.searchTerms.some((term) =>
-                    term.toLowerCase().includes(searchLower),
-                );
-            }
-            return false;
-        });
-    }, [options, searchValue, maxDisplayItems, searchUrl, searchResults]);
+
+        return baseOptions;
+    }, [
+        options,
+        searchValue,
+        maxDisplayItems,
+        searchUrl,
+        searchResults,
+        filterOption,
+    ]);
 
     // Get selected option from both options and search results
     const selectedOption = React.useMemo(() => {
