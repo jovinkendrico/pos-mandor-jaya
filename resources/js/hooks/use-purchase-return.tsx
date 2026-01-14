@@ -1,5 +1,5 @@
 import { RefundMethod, ReturnType } from '@/constants/enum';
-import { formatNumberWithSeparator, parseStringtoNumber } from '@/lib/utils';
+import { formatNumberWithSeparator, parseStringtoDecimal } from '@/lib/utils';
 import { store } from '@/routes/purchase-returns';
 import { IPurchaseDetail } from '@/types';
 import { useForm } from '@inertiajs/react';
@@ -18,7 +18,7 @@ const detailsSchema = Yup.object().shape({
         .min(1, 'UOM harus dipilih.'),
     quantity: Yup.number()
         .required('Jumlah barang harus diisi.')
-        .min(1, 'Jumlah barang minimal 1.'),
+        .min(0.01, 'Jumlah barang minimal 0.01'),
     price: Yup.number().required('Harga barang harus diisi.'),
     discount1_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
@@ -182,7 +182,7 @@ const usePurchaseReturn = () => {
             return;
         }
 
-        const rawValue = parseStringtoNumber(input);
+        const rawValue = parseStringtoDecimal(input);
 
         const validRawValue = isNaN(rawValue ?? 0) ? 0 : rawValue;
 

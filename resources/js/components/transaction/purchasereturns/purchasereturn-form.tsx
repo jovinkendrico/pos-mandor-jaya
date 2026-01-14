@@ -233,99 +233,99 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
 
                         {dataPurchaseReturn.return_type ===
                             ReturnType.STOCK_AND_REFUND && (
-                            <>
-                                <div className="space-y-2">
-                                    <Label htmlFor="refund_method">
-                                        Metode Refund{' '}
-                                        <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Select
-                                        value={
-                                            dataPurchaseReturn.refund_method ??
-                                            undefined
-                                        }
-                                        onValueChange={(value) => {
-                                            const method =
-                                                value ===
-                                                RefundMethod.CASH_REFUND
-                                                    ? RefundMethod.CASH_REFUND
-                                                    : RefundMethod.REDUCE_PAYABLE;
-                                            setDataPurchaseReturn(
-                                                'refund_bank_id',
-                                                null,
-                                            );
-                                            setDataPurchaseReturn(
-                                                'refund_method',
-                                                method,
-                                            );
-                                        }}
-                                    >
-                                        <SelectTrigger className="combobox">
-                                            <SelectValue placeholder="Pilih metode refund" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="reduce_payable">
-                                                Kurangi Hutang (Otomatis)
-                                            </SelectItem>
-                                            <SelectItem value="cash_refund">
-                                                Terima Uang (Cash Refund via
-                                                Bank)
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <InputError
-                                        message={
-                                            errorsPurchaseReturn.refund_method
-                                        }
-                                    />
-                                </div>
-
-                                {dataPurchaseReturn.refund_method ===
-                                    'cash_refund' && (
+                                <>
                                     <div className="space-y-2">
-                                        <Label htmlFor="refund_bank_id">
-                                            Bank untuk Refund{' '}
-                                            <span className="text-red-500">
-                                                *
-                                            </span>
+                                        <Label htmlFor="refund_method">
+                                            Metode Refund{' '}
+                                            <span className="text-red-500">*</span>
                                         </Label>
                                         <Select
                                             value={
-                                                dataPurchaseReturn.refund_bank_id?.toString() ||
+                                                dataPurchaseReturn.refund_method ??
                                                 undefined
                                             }
                                             onValueChange={(value) => {
+                                                const method =
+                                                    value ===
+                                                        RefundMethod.CASH_REFUND
+                                                        ? RefundMethod.CASH_REFUND
+                                                        : RefundMethod.REDUCE_PAYABLE;
                                                 setDataPurchaseReturn(
                                                     'refund_bank_id',
-                                                    Number(value),
+                                                    null,
+                                                );
+                                                setDataPurchaseReturn(
+                                                    'refund_method',
+                                                    method,
                                                 );
                                             }}
                                         >
                                             <SelectTrigger className="combobox">
-                                                <SelectValue placeholder="Pilih bank" />
+                                                <SelectValue placeholder="Pilih metode refund" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {banks &&
-                                                    banks.length > 0 &&
-                                                    banks.map((bank) => (
-                                                        <SelectItem
-                                                            key={bank.id}
-                                                            value={bank.id.toString()}
-                                                        >
-                                                            {bank.name}
-                                                        </SelectItem>
-                                                    ))}
+                                                <SelectItem value="reduce_payable">
+                                                    Kurangi Hutang (Otomatis)
+                                                </SelectItem>
+                                                <SelectItem value="cash_refund">
+                                                    Terima Uang (Cash Refund via
+                                                    Bank)
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <InputError
                                             message={
-                                                errorsPurchaseReturn.refund_bank_id
+                                                errorsPurchaseReturn.refund_method
                                             }
                                         />
                                     </div>
-                                )}
-                            </>
-                        )}
+
+                                    {dataPurchaseReturn.refund_method ===
+                                        'cash_refund' && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="refund_bank_id">
+                                                    Bank untuk Refund{' '}
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </Label>
+                                                <Select
+                                                    value={
+                                                        dataPurchaseReturn.refund_bank_id?.toString() ||
+                                                        undefined
+                                                    }
+                                                    onValueChange={(value) => {
+                                                        setDataPurchaseReturn(
+                                                            'refund_bank_id',
+                                                            Number(value),
+                                                        );
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="combobox">
+                                                        <SelectValue placeholder="Pilih bank" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {banks &&
+                                                            banks.length > 0 &&
+                                                            banks.map((bank) => (
+                                                                <SelectItem
+                                                                    key={bank.id}
+                                                                    value={bank.id.toString()}
+                                                                >
+                                                                    {bank.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <InputError
+                                                    message={
+                                                        errorsPurchaseReturn.refund_bank_id
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+                                </>
+                            )}
                     </div>
                 </CardContent>
             </Card>
@@ -377,12 +377,11 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                     {returnItems.map((item, index) => {
                                         const detail =
                                             selectedPurchase?.details[index];
-                                        const originalQuantity = formatNumber(
-                                            detail?.quantity ?? 0,
-                                        );
+                                        const originalQuantity =
+                                            detail?.quantity ?? 0;
                                         const returnedQty =
                                             returnedQuantities[
-                                                detail?.id || 0
+                                            detail?.id || 0
                                             ] || 0;
                                         const remainingQty =
                                             originalQuantity - returnedQty;
@@ -432,8 +431,8 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                             className="badge-yellow-light"
                                                         >
                                                             Sudah diretur:{' '}
-                                                            {formatNumber(
-                                                                returnedQty,
+                                                            {returnedQty.toLocaleString(
+                                                                'id-ID',
                                                             )}
                                                         </Badge>
                                                     )}
@@ -449,9 +448,9 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                 <TableCell className="text-center">
                                                     <div>
                                                         <div>
-                                                            {formatNumber(
+                                                            {(
                                                                 item.max_quantity ??
-                                                                    0,
+                                                                0
                                                             ).toLocaleString(
                                                                 'id-ID',
                                                             )}
@@ -495,7 +494,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                 <TableCell className="text-center text-red-600 dark:text-danger-500">
                                                     {formatNumber(
                                                         item.discount1_percent ??
-                                                            0,
+                                                        0,
                                                     ) > 0
                                                         ? `${item.discount1_percent}%`
                                                         : '-'}
@@ -503,7 +502,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                 <TableCell className="text-center text-red-600 dark:text-danger-500">
                                                     {formatNumber(
                                                         item.discount2_percent ??
-                                                            0,
+                                                        0,
                                                     ) > 0
                                                         ? `${item.discount2_percent}%`
                                                         : '-'}
