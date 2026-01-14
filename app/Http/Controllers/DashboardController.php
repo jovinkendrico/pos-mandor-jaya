@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Carbon\Carbon;
+use App\Models\ChartOfAccount;
+use App\Models\JournalEntryDetail;
 
 class DashboardController extends Controller
 {
@@ -49,26 +51,24 @@ class DashboardController extends Controller
 
         $today = Carbon::today();
 
-        // Sales Statistics (using total_after_discount for revenue, not total_amount)
-        $todaySales = Sale::whereDate('sale_date', $today)
-            ->where('status', 'confirmed')
-            ->sum('total_after_discount'); // Revenue without PPN
+        // Sales Statistics (Journal-based for consistency with P&L)
+        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan'])->pluck('id');
+        $hppAccounts = ChartOfAccount::where('code', '>=', '5100')->where('code', '<', '5200')->pluck('id');
+        $expenseAccounts = ChartOfAccount::whereIn('type', ['expense', 'biaya', 'pengeluaran'])->pluck('id');
+        $otherExpenseAccounts = $expenseAccounts->diff($hppAccounts);
 
-        $periodSales = Sale::whereBetween('sale_date', [$periodStart, $periodEnd])
-            ->where('status', 'confirmed')
-            ->sum('total_after_discount'); // Revenue without PPN
+        $todaySales = $this->getAccountingBalance($incomeAccounts, $today->format('Y-m-d'), $today->format('Y-m-d'), 'income');
+        $periodSales = $this->getAccountingBalance($incomeAccounts, $periodStart->format('Y-m-d'), $periodEnd->format('Y-m-d'), 'income');
+        $previousPeriodSales = $this->getAccountingBalance($incomeAccounts, $previousPeriodStart->format('Y-m-d'), $previousPeriodEnd->format('Y-m-d'), 'income');
 
-        $previousPeriodSales = Sale::whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd])
-            ->where('status', 'confirmed')
-            ->sum('total_after_discount'); // Revenue without PPN
+        // Profit Statistics (Net Profit = Income - HPP - Other Expenses)
+        $todayHPP = $this->getAccountingBalance($hppAccounts, $today->format('Y-m-d'), $today->format('Y-m-d'), 'expense');
+        $todayOtherExpense = $this->getAccountingBalance($otherExpenseAccounts, $today->format('Y-m-d'), $today->format('Y-m-d'), 'expense');
+        $todayProfit = ($todaySales - $todayHPP) - $todayOtherExpense;
 
-        $todayProfit = Sale::whereDate('sale_date', $today)
-            ->where('status', 'confirmed')
-            ->sum('total_profit');
-
-        $periodProfit = Sale::whereBetween('sale_date', [$periodStart, $periodEnd])
-            ->where('status', 'confirmed')
-            ->sum('total_profit');
+        $periodHPP = $this->getAccountingBalance($hppAccounts, $periodStart->format('Y-m-d'), $periodEnd->format('Y-m-d'), 'expense');
+        $periodOtherExpense = $this->getAccountingBalance($otherExpenseAccounts, $periodStart->format('Y-m-d'), $periodEnd->format('Y-m-d'), 'expense');
+        $periodProfit = ($periodSales - $periodHPP) - $periodOtherExpense;
 
         // Purchase Statistics
         $todayPurchases = Purchase::whereDate('purchase_date', $today)
@@ -589,6 +589,32 @@ class DashboardController extends Controller
             'topCustomers' => $topCustomers,
             'topSuppliers' => $topSuppliers,
         ]);
+    }
+
+    /**
+     * Get accounting balance from journal entries
+     */
+    private function getAccountingBalance($accountIds, string $dateFrom, string $dateTo, string $type = 'income'): float
+    {
+        if (empty($accountIds) || (is_countable($accountIds) && count($accountIds) === 0)) {
+            return 0;
+        }
+
+        $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+            ->whereIn('journal_entry_details.chart_of_account_id', $accountIds)
+            ->where('journal_entries.status', 'posted')
+            ->whereNull('journal_entries.deleted_at')
+            ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
+            ->whereDate('journal_entries.journal_date', '<=', $dateTo);
+
+        $debit = (float) $query->sum('journal_entry_details.debit');
+        $credit = (float) $query->sum('journal_entry_details.credit');
+
+        if ($type === 'income') {
+            return $credit - $debit;
+        } else {
+            return $debit - $credit;
+        }
     }
 }
 
