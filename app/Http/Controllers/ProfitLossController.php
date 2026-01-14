@@ -43,7 +43,7 @@ class ProfitLossController extends Controller
         $incomeDetails = [];
         foreach ($incomeAccounts as $account) {
             $income = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'income');
-            if ($income > 0) {
+            if ($income != 0) {
                 $incomeDetails[] = [
                     'code' => $account->code,
                     'name' => $account->name,
@@ -68,7 +68,7 @@ class ProfitLossController extends Controller
         $expenseDetails = [];
         foreach ($expenseAccounts as $account) {
             $expense = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'expense');
-            if ($expense > 0) {
+            if ($expense != 0) {
                 $expenseDetails[] = [
                     'code' => $account->code,
                     'name' => $account->name,
