@@ -270,28 +270,48 @@ class BalanceSheetController extends Controller
             ->where('is_active', true)
             ->pluck('id');
 
-        // Calculate total income
+        // Calculate total income (Credit - Debit)
         $totalIncome = 0;
         if ($incomeAccounts->isNotEmpty()) {
-            $totalIncome = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+            $incomeCredit = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
                 ->whereIn('journal_entry_details.chart_of_account_id', $incomeAccounts)
                 ->where('journal_entries.status', 'posted')
                 ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
                 ->sum('journal_entry_details.credit') ?? 0;
+
+            $incomeDebit = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+                ->whereIn('journal_entry_details.chart_of_account_id', $incomeAccounts)
+                ->where('journal_entries.status', 'posted')
+                ->whereNull('journal_entries.deleted_at')
+                ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
+                ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->sum('journal_entry_details.debit') ?? 0;
+
+            $totalIncome = $incomeCredit - $incomeDebit;
         }
 
-        // Calculate total expense
+        // Calculate total expense (Debit - Credit)
         $totalExpense = 0;
         if ($expenseAccounts->isNotEmpty()) {
-            $totalExpense = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+            $expenseDebit = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
                 ->whereIn('journal_entry_details.chart_of_account_id', $expenseAccounts)
                 ->where('journal_entries.status', 'posted')
                 ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
                 ->sum('journal_entry_details.debit') ?? 0;
+
+            $expenseCredit = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+                ->whereIn('journal_entry_details.chart_of_account_id', $expenseAccounts)
+                ->where('journal_entries.status', 'posted')
+                ->whereNull('journal_entries.deleted_at')
+                ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
+                ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->sum('journal_entry_details.credit') ?? 0;
+
+            $totalExpense = $expenseDebit - $expenseCredit;
         }
 
         return $totalIncome - $totalExpense;
