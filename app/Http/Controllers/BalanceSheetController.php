@@ -261,12 +261,12 @@ class BalanceSheetController extends Controller
     private function calculateNetProfit(string $dateFrom, string $dateTo): float
     {
         // Get all income accounts
-        $incomeAccounts = ChartOfAccount::where('type', 'income')
+        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan'])
             ->where('is_active', true)
             ->pluck('id');
 
         // Get all expense accounts
-        $expenseAccounts = ChartOfAccount::where('type', 'expense')
+        $expenseAccounts = ChartOfAccount::whereIn('type', ['expense', 'biaya', 'pengeluaran'])
             ->where('is_active', true)
             ->pluck('id');
 

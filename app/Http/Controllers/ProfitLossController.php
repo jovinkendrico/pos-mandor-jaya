@@ -54,13 +54,15 @@ class ProfitLossController extends Controller
         }
 
         // Calculate gross profit (Income - HPP)
-        $hppAccount = ChartOfAccount::where('code', '5101')
+        // Get all HPP accounts (5100-5199)
+        $hppAccounts = ChartOfAccount::where('code', '>=', '5100')
+            ->where('code', '<', '5200')
             ->where('is_active', true)
-            ->first();
+            ->get();
 
         $totalHPP = 0;
-        if ($hppAccount) {
-            $totalHPP = $this->getAccountBalance($hppAccount->id, $dateFrom, $dateTo, 'expense');
+        foreach ($hppAccounts as $account) {
+            $totalHPP += $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'expense');
         }
 
         // Calculate expense totals (HPP already excluded from query above)
