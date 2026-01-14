@@ -879,6 +879,7 @@ export interface Transfer {
     from_bank_id: number;
     to_bank_id: number;
     amount: number;
+    admin_fee: number;
     description: string;
     status: string;
     created_at: string;
@@ -893,6 +894,7 @@ export type ITransfer = Pick<
     | 'from_bank_id'
     | 'to_bank_id'
     | 'amount'
+    | 'admin_fee'
     | 'description'
     | 'status'
 > & {

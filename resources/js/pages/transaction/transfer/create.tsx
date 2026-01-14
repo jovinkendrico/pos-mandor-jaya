@@ -12,7 +12,8 @@ import { formatNumber, formatNumberWithSeparator, parseStringtoDecimal } from '@
 import { BreadcrumbItem, IBank } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
-import { FormEventHandler, useState } from 'react';
+import { FormEventHandler, useState, useMemo } from 'react';
+import { formatDatetoString } from '@/lib/utils';
 
 interface PageProps {
     banks: IBank[];
@@ -47,25 +48,50 @@ const TransferCreate = (props: PageProps) => {
         from_bank_id: '',
         to_bank_id: '',
         amount: '', // String for input handling
+        admin_fee: '', // String for input handling
         description: '',
     });
 
     const [amountDisplay, setAmountDisplay] = useState('');
+    const [adminFeeDisplay, setAdminFeeDisplay] = useState('');
 
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
-        post('/transfers');
+
+        // Fix date issue by formatting it to local string YYYY-MM-DD
+        const formattedData = {
+            ...data,
+            date: formatDatetoString(data.date),
+        };
+
+        post('/transfers', {
+            data: formattedData as any
+        });
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
-        // Allow only numbers
         const numericValue = value.replace(/[^0-9]/g, '');
         const numberVal = Number(numericValue);
 
         setData('amount', numericValue);
         setAmountDisplay(formatNumberWithSeparator(numberVal));
     };
+
+    const handleAdminFeeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = e.target;
+        const numericValue = value.replace(/[^0-9]/g, '');
+        const numberVal = Number(numericValue);
+
+        setData('admin_fee', numericValue);
+        setAdminFeeDisplay(formatNumberWithSeparator(numberVal));
+    };
+
+    const totalDeduction = useMemo(() => {
+        const amount = Number(data.amount) || 0;
+        const fee = Number(data.admin_fee) || 0;
+        return amount + fee;
+    }, [data.amount, data.admin_fee]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -118,17 +144,38 @@ const TransferCreate = (props: PageProps) => {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="amount">Jumlah Transfer</Label>
-                            <Input
-                                id="amount"
-                                value={amountDisplay}
-                                onChange={handleAmountChange}
-                                placeholder="0"
-                                className="text-right font-mono text-lg"
-                            />
-                            <InputError message={errors.amount} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="amount">Jumlah Transfer</Label>
+                                <Input
+                                    id="amount"
+                                    value={amountDisplay}
+                                    onChange={handleAmountChange}
+                                    placeholder="0"
+                                    className="text-right font-mono text-lg"
+                                />
+                                <InputError message={errors.amount} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="admin_fee">Biaya Admin</Label>
+                                <Input
+                                    id="admin_fee"
+                                    value={adminFeeDisplay}
+                                    onChange={handleAdminFeeChange}
+                                    placeholder="0"
+                                    className="text-right font-mono text-lg text-muted-foreground"
+                                />
+                                <InputError message={errors.admin_fee} />
+                            </div>
                         </div>
+
+                        {totalDeduction > 0 && (
+                            <div className="p-3 bg-muted rounded-md flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground font-medium text-black">Total Potong Rekening Sumber:</span>
+                                <span className="font-bold text-lg">{formatCurrency(totalDeduction)}</span>
+                            </div>
+                        )}
 
                         <div className="space-y-2">
                             <Label htmlFor="description">Keterangan</Label>

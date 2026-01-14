@@ -18,6 +18,7 @@ class Transfer extends Model
         'from_bank_id',
         'to_bank_id',
         'amount',
+        'admin_fee',
         'description',
         'status',
         'created_by',
@@ -27,6 +28,7 @@ class Transfer extends Model
     protected $casts = [
         'transfer_date' => 'date',
         'amount' => 'decimal:2',
+        'admin_fee' => 'decimal:2',
     ];
 
     public function fromBank(): BelongsTo

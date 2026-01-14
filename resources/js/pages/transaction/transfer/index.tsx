@@ -81,6 +81,8 @@ const TransferIndex = (props: PageProps) => {
                             <TableHead>Deskripsi</TableHead>
                             <TableHead>Dibuat Oleh</TableHead>
                             <TableHead className="text-right">Jumlah</TableHead>
+                            <TableHead className="text-right">Biaya Admin</TableHead>
+                            <TableHead className="text-right">Total Keluar</TableHead>
                             <TableHead className="text-right">Aksi</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -88,7 +90,7 @@ const TransferIndex = (props: PageProps) => {
                         {transfers.data.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={8}
+                                    colSpan={10}
                                     className="h-24 text-center"
                                 >
                                     Tidak ada data transfer.
@@ -96,6 +98,7 @@ const TransferIndex = (props: PageProps) => {
                             </TableRow>
                         ) : (
                             transfers.data.map((transfer) => {
+                                const totalOut = Number(transfer.amount) + Number(transfer.admin_fee || 0);
                                 return (
                                     <TableRow key={transfer.id}>
                                         <TableCell>
@@ -125,8 +128,14 @@ const TransferIndex = (props: PageProps) => {
                                         <TableCell>
                                             {transfer.creator?.name || '-'}
                                         </TableCell>
-                                        <TableCell className="text-right font-bold">
+                                        <TableCell className="text-right font-medium">
                                             {formatCurrency(transfer.amount)}
+                                        </TableCell>
+                                        <TableCell className="text-right text-muted-foreground">
+                                            {formatCurrency(transfer.admin_fee || 0)}
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold">
+                                            {formatCurrency(totalOut)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {transfer.status === 'posted' && (

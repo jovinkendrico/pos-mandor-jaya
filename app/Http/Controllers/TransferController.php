@@ -68,6 +68,7 @@ class TransferController extends Controller
             'from_bank_id' => 'required|exists:banks,id|different:to_bank_id',
             'to_bank_id' => 'required|exists:banks,id',
             'amount' => 'required|numeric|min:1',
+            'admin_fee' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
         ]);
 
@@ -81,6 +82,9 @@ class TransferController extends Controller
                 
                 $description = $request->description ?: "Transfer Dana dari {$fromBank->name} ke {$toBank->name}";
 
+                $adminFee = $request->admin_fee ?: 0;
+                $totalSourceAmount = $request->amount + $adminFee;
+
                 // 1. Create Transfer Header
                 $transfer = Transfer::create([
                     'transfer_number' => $transferNumber,
@@ -88,6 +92,7 @@ class TransferController extends Controller
                     'from_bank_id' => $request->from_bank_id,
                     'to_bank_id' => $request->to_bank_id,
                     'amount' => $request->amount,
+                    'admin_fee' => $adminFee,
                     'description' => $description,
                     'status' => 'posted',
                     'created_by' => $user->id,
@@ -100,8 +105,8 @@ class TransferController extends Controller
                     'cash_out_date' => $request->date,
                     'bank_id' => $request->from_bank_id, // Source Bank
                     'chart_of_account_id' => $toBank->chart_of_account_id, // Target Account (Destination Bank)
-                    'amount' => $request->amount,
-                    'description' => $description . " (Ref: $transferNumber)",
+                    'amount' => $totalSourceAmount,
+                    'description' => $description . ($adminFee > 0 ? " (Termasuk Biaya Admin " . number_format($adminFee) . ")" : "") . " (Ref: $transferNumber)",
                     'status' => 'posted', 
                     'reference_type' => Transfer::class,
                     'reference_id' => $transfer->id,
@@ -131,8 +136,8 @@ class TransferController extends Controller
                     $transfer->id,
                     $request->date,
                     0,               // Debit
-                    $request->amount,// Credit
-                    $description
+                    $totalSourceAmount,// Credit
+                    $description . ($adminFee > 0 ? " (Termasuk Biaya Admin " . number_format($adminFee) . ")" : "")
                 );
 
                 // Destination Bank (Debit/In)
@@ -163,8 +168,8 @@ class TransferController extends Controller
                     'journal_entry_id' => $journal->id,
                     'chart_of_account_id' => $fromBank->chart_of_account_id,
                     'debit' => 0,
-                    'credit' => $request->amount,
-                    'description' => 'Transfer Keluar ke ' . $toBank->name,
+                    'credit' => $totalSourceAmount,
+                    'description' => 'Transfer Keluar ke ' . $toBank->name . ($adminFee > 0 ? " + Biaya Admin" : ""),
                 ]);
 
                 // Debit Destination Bank (To)
@@ -175,6 +180,20 @@ class TransferController extends Controller
                     'credit' => 0,
                     'description' => 'Transfer Masuk dari ' . $fromBank->name,
                 ]);
+
+                // Debit Admin Fee Expense (If any)
+                if ($adminFee > 0) {
+                    $adminFeeAccount = ChartOfAccount::where('code', '6109')->first(); // Administrasi Bank
+                    if ($adminFeeAccount) {
+                        JournalEntryDetail::create([
+                            'journal_entry_id' => $journal->id,
+                            'chart_of_account_id' => $adminFeeAccount->id,
+                            'debit' => $adminFee,
+                            'credit' => 0,
+                            'description' => 'Biaya Admin Transfer: ' . $description,
+                        ]);
+                    }
+                }
             });
 
             return redirect()->route('transfers.index')->with('success', 'Transfer berhasil disimpan.');
