@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { formatNumber, formatNumberWithSeparator, parseStringtoDecimal } from '@/lib/utils';
+import { formatCurrency, formatNumber, formatNumberWithSeparator, parseStringtoDecimal } from '@/lib/utils';
 import { BreadcrumbItem, IBank } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
