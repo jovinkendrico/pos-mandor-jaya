@@ -1010,6 +1010,9 @@ class StockService
 
                 $item->increment('stock', $quantity);
                 $this->reconcileNegativeStock($item->id);
+                
+                // Recalculate affected sales when HPP is adjusted
+                $this->recalculateAffectedSales($item->id, $unitCost, 'increase');
             } else {
                 // Decrease stock - use FIFO consumption
                 $absQuantity     = abs($quantity);
@@ -1044,6 +1047,132 @@ class StockService
                 }
             }
         });
+    }
+
+    /**
+     * Recalculate affected sales when HPP is adjusted
+     */
+    private function recalculateAffectedSales(int $itemId, float $newUnitCost, string $adjustmentType): void
+    {
+        try {
+            // Get current weighted average HPP
+            $currentHpp = $this->getWeightedAverageHpp($itemId);
+            
+            // Find all confirmed sales with this item that have FIFO mappings
+            $affectedDetails = \App\Models\SaleDetail::whereHas('sale', function ($q) {
+                $q->where('status', 'confirmed');
+            })
+            ->where('item_id', $itemId)
+            ->whereHas('fifoMappings')
+            ->with(['sale', 'itemUom', 'fifoMappings.stockMovement'])
+            ->get();
+
+            if ($affectedDetails->isEmpty()) {
+                return;
+            }
+
+            Log::info('Recalculating affected sales after HPP adjustment', [
+                'item_id' => $itemId,
+                'new_unit_cost' => $newUnitCost,
+                'current_weighted_hpp' => $currentHpp,
+                'adjustment_type' => $adjustmentType,
+                'affected_sales_count' => $affectedDetails->count(),
+            ]);
+
+            foreach ($affectedDetails as $detail) {
+                $oldCost = (float) $detail->cost;
+                $oldProfit = (float) $detail->profit;
+
+                // Recalculate cost using current HPP from FIFO mappings
+                $newCost = 0;
+                foreach ($detail->fifoMappings as $mapping) {
+                    if ($mapping->stockMovement) {
+                        // Use current unit_cost from stock movement
+                        $currentUnitCost = (float) $mapping->stockMovement->unit_cost;
+                        $newCost += $mapping->quantity_consumed * $currentUnitCost;
+                    } else {
+                        // Estimated mapping
+                        $newCost += (float) $mapping->total_cost;
+                    }
+                }
+
+                $newProfit = (float) $detail->subtotal - $newCost;
+                $costDiff = $newCost - $oldCost;
+                $profitDiff = $newProfit - $oldProfit;
+
+                // Only update if there's a significant change
+                if (abs($profitDiff) > 0.01) {
+                    $detail->update([
+                        'cost' => $newCost,
+                        'profit' => $newProfit,
+                    ]);
+
+                    $sale = $detail->sale;
+                    $sale->increment('total_cost', $costDiff);
+                    $sale->increment('total_profit', $profitDiff);
+
+                    // Adjust journal entry
+                    if (abs($costDiff) > 0.01) {
+                        try {
+                            app(JournalService::class)->adjustSaleCogs($sale, $costDiff);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to adjust COGS journal after HPP adjustment', [
+                                'sale_id' => $sale->id,
+                                'sale_detail_id' => $detail->id,
+                                'cost_diff' => $costDiff,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    Log::info('Recalculated sale profit after HPP adjustment', [
+                        'sale_id' => $sale->id,
+                        'sale_number' => $sale->sale_number,
+                        'detail_id' => $detail->id,
+                        'item_id' => $itemId,
+                        'old_cost' => $oldCost,
+                        'new_cost' => $newCost,
+                        'cost_diff' => $costDiff,
+                        'old_profit' => $oldProfit,
+                        'new_profit' => $newProfit,
+                        'profit_diff' => $profitDiff,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to recalculate affected sales after HPP adjustment', [
+                'item_id' => $itemId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Don't throw - allow stock adjustment to complete even if profit recalculation fails
+        }
+    }
+
+    /**
+     * Get weighted average HPP for an item
+     */
+    private function getWeightedAverageHpp(int $itemId): float
+    {
+        $movements = StockMovement::where('item_id', $itemId)
+            ->where('remaining_quantity', '>', 0)
+            ->where('quantity', '>', 0)
+            ->get();
+
+        if ($movements->isEmpty()) {
+            $item = Item::find($itemId);
+            return $item ? (float) $item->modal_price : 0;
+        }
+
+        $totalValue = 0;
+        $totalQty = 0;
+
+        foreach ($movements as $movement) {
+            $totalValue += $movement->remaining_quantity * $movement->unit_cost;
+            $totalQty += $movement->remaining_quantity;
+        }
+
+        return $totalQty > 0 ? $totalValue / $totalQty : 0;
     }
     /**
      * Reconcile sales made with 0 stock (negative stock) when new stock arrives.
