@@ -12,7 +12,7 @@ import { formatCurrency, formatNumber, formatNumberWithSeparator, parseStringtoD
 import { BreadcrumbItem, IBank } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
-import { FormEventHandler, useState, useMemo } from 'react';
+import { FormEventHandler, useState, useMemo, useEffect } from 'react';
 import { formatDatetoString } from '@/lib/utils';
 
 interface PageProps {
@@ -43,7 +43,7 @@ const TransferCreate = (props: PageProps) => {
         value: bank.id.toString()
     }));
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         date: new Date(),
         from_bank_id: '',
         to_bank_id: '',
@@ -55,18 +55,20 @@ const TransferCreate = (props: PageProps) => {
     const [amountDisplay, setAmountDisplay] = useState('');
     const [adminFeeDisplay, setAdminFeeDisplay] = useState('');
 
+    transform((data) => ({
+        ...data,
+        date: data.date ? formatDatetoString(data.date) : data.date,
+    }));
+
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
+        post('/transfers');
+    };
 
-        // Fix date issue by formatting it to local string YYYY-MM-DD
-        const formattedData = {
-            ...data,
-            date: formatDatetoString(data.date),
-        };
-
-        post('/transfers', {
-            data: formattedData as any
-        });
+    const handleDateChange = (date: Date | undefined) => {
+        if (date) {
+            setData('date', date);
+        }
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,7 +114,7 @@ const TransferCreate = (props: PageProps) => {
                                 <Label htmlFor="date">Tanggal Transfer</Label>
                                 <DatePicker
                                     value={data.date}
-                                    onChange={(date) => setData('date', date as Date)}
+                                    onChange={handleDateChange}
                                 />
                                 <InputError message={errors.date} />
                             </div>
