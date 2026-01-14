@@ -12,9 +12,12 @@ import { BreadcrumbItem, IPurchasePayment } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import OverpaymentSection from './components/OverpaymentSection';
+import { IBank } from '@/types';
 
 interface PageProps {
     purchase_payment: IPurchasePayment;
+    banks: IBank[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,7 +35,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const PurchasePaymentShow = ({ purchase_payment }: PageProps) => {
+const PurchasePaymentShow = (props: PageProps) => {
+    const { purchase_payment, banks } = props;
     const tableColumn = [
         'Kode',
         'Supplier',
@@ -85,7 +89,7 @@ const PurchasePaymentShow = ({ purchase_payment }: PageProps) => {
                         <Link href={index().url}>
                             <ArrowLeft className="h-8 w-8" />
                         </Link>
-                        <PageTitle title="Tambah Pembayaran Pembelian" />
+                        <PageTitle title="Detail Pembayaran Pembelian" />
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                         <Badge
@@ -214,6 +218,11 @@ const PurchasePaymentShow = ({ purchase_payment }: PageProps) => {
                         </CardContent>
                     </Card>
                 )}
+            </div>
+
+            {/* Overpayment Section */}
+            <div className="mb-6">
+                <OverpaymentSection purchasePayment={purchase_payment} banks={banks} />
             </div>
 
             <Card className="content">

@@ -13,6 +13,7 @@ class OverpaymentTransaction extends Model
     protected $fillable = [
         'transaction_number',
         'sale_payment_id',
+        'purchase_payment_id',
         'transaction_type',
         'amount',
         'transaction_date',
@@ -34,6 +35,14 @@ class OverpaymentTransaction extends Model
     public function salePayment(): BelongsTo
     {
         return $this->belongsTo(SalePayment::class);
+    }
+
+    /**
+     * Get the purchase payment this transaction belongs to.
+     */
+    public function purchasePayment(): BelongsTo
+    {
+        return $this->belongsTo(PurchasePayment::class);
     }
 
     /**

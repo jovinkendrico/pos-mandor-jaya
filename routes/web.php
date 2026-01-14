@@ -102,6 +102,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Overpayment routes
     Route::post('sale-payments/{sale_payment}/overpayment/refund', [\App\Http\Controllers\OverpaymentController::class, 'refund'])->name('sale-payments.overpayment.refund');
     Route::post('sale-payments/{sale_payment}/overpayment/convert-to-income', [\App\Http\Controllers\OverpaymentController::class, 'convertToIncome'])->name('sale-payments.overpayment.convert-to-income');
+    
+    // Purchase overpayment routes
+    Route::post('purchase-payments/{purchase_payment}/overpayment/refund', [\App\Http\Controllers\OverpaymentController::class, 'refundPurchase'])->name('purchase-payments.overpayment.refund');
+    Route::post('purchase-payments/{purchase_payment}/overpayment/write-off', [\App\Http\Controllers\OverpaymentController::class, 'writeOffPurchase'])->name('purchase-payments.overpayment.write-off');
 
     // Cash In post/reverse routes (must be before resource)
     Route::post('cash-ins/{cash_in}/post', [CashInController::class, 'post'])->name('cash-ins.post');

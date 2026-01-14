@@ -79,6 +79,10 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                 new Date(purchase_payment.payment_date),
             );
             setDataPurchasePayment(
+                'total_amount',
+                purchase_payment.total_amount || 0,
+            );
+            setDataPurchasePayment(
                 'payment_method',
                 purchase_payment.payment_method,
             );
@@ -137,6 +141,8 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
         };
     }, [dataPurchasePayment.items, localPurchases]);
 
+    const overpaymentAmount = (dataPurchasePayment.total_amount || 0) - totalAmount;
+
     if (!isReady) {
         return <Skeleton className="h-full w-full" />;
     }
@@ -172,6 +178,38 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                             />
                             <InputError
                                 message={errorsPurchasePayment.payment_date}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="total_amount">
+                                Total Pembayaran Keluar{' '}
+                                <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="total_amount"
+                                type="text"
+                                value={formatNumberWithSeparator(
+                                    dataPurchasePayment.total_amount || 0,
+                                )}
+                                onChange={(e) => {
+                                    const rawValue = e.target.value.replace(
+                                        /[^0-9]/g,
+                                        '',
+                                    );
+                                    setDataPurchasePayment(
+                                        'total_amount',
+                                        Number(rawValue),
+                                    );
+                                }}
+                                placeholder="Masukkan total uang yang dibayarkan"
+                                className="input-box text-right"
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Total uang yang dibayarkan ke supplier
+                            </p>
+                            <InputError
+                                message={errorsPurchasePayment.total_amount}
                             />
                         </div>
 
@@ -526,6 +564,65 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                                     <span className="text-2xl font-bold">{formatCurrency(totalAmount)}</span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Overpayment Summary */}
+                    <div className="mt-6 rounded-lg border-2 border-orange-200 bg-orange-50 p-4 dark:bg-orange-950/20">
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    Total Dibayarkan:
+                                </span>
+                                <span className="font-semibold">
+                                    {formatCurrency(
+                                        dataPurchasePayment.total_amount || 0,
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    Total Dialokasikan:
+                                </span>
+                                <span className="font-semibold">
+                                    {formatCurrency(totalAmount)}
+                                </span>
+                            </div>
+                            <div className="h-px bg-orange-300" />
+                            <div className="flex justify-between">
+                                <span
+                                    className={
+                                        overpaymentAmount < 0
+                                            ? 'font-medium text-red-600'
+                                            : 'font-medium'
+                                    }
+                                >
+                                    {overpaymentAmount < 0
+                                        ? 'Kelebihan Alokasi:'
+                                        : 'Sisa/Overpayment:'}
+                                </span>
+                                <span
+                                    className={
+                                        overpaymentAmount < 0
+                                            ? 'text-lg font-bold text-red-600'
+                                            : 'text-lg font-bold text-green-600'
+                                    }
+                                >
+                                    {formatCurrency(Math.abs(overpaymentAmount))}
+                                </span>
+                            </div>
+                            {overpaymentAmount > 0 && (
+                                <p className="text-xs text-orange-700 dark:text-orange-400">
+                                    ⚠️ Kelebihan pembayaran akan dicatat
+                                    sebagai Uang Muka Pembelian
+                                </p>
+                            )}
+                            {overpaymentAmount < 0 && (
+                                <p className="text-xs text-red-600">
+                                    ❌ Total alokasi tidak boleh melebihi
+                                    total pembayaran dibayarkan
+                                </p>
+                            )}
                         </div>
                     </div>
                 </CardContent>

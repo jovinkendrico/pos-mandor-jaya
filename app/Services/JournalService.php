@@ -1051,5 +1051,161 @@ class JournalService
             $transaction->update(['journal_entry_id' => $journalEntry->id]);
         });
     }
+
+    /**
+     * Post purchase overpayment refund to journal (received from supplier)
+     * Dr. Bank, Cr. Uang Muka Pembelian
+     */
+    public function postPurchaseOverpaymentRefund($transaction): void
+    {
+        DB::transaction(function () use ($transaction) {
+            $transaction->loadMissing(['purchasePayment', 'bank.chartOfAccount']);
+
+            // Get "Uang Muka Pembelian" account (1401)
+            $advanceAccount = ChartOfAccount::where('code', '1401')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$advanceAccount) {
+                // Try to find any other asset account that might be used
+                $advanceAccount = ChartOfAccount::where('type', 'asset')
+                    ->where('is_active', true)
+                    ->where('code', 'like', '1%')
+                    ->orderBy('code', 'desc')
+                    ->first();
+            }
+
+            if (!$advanceAccount) {
+                throw new \Exception('Akun Uang Muka Pembelian tidak ditemukan. Pastikan akun 1401 sudah ada.');
+            }
+
+            if (!$transaction->bank || !$transaction->bank->chartOfAccount) {
+                throw new \Exception('Bank account tidak ditemukan untuk refund.');
+            }
+
+            // Create journal entry
+            $journalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date' => $transaction->transaction_date,
+                'reference_type' => 'OverpaymentTransaction',
+                'reference_id' => $transaction->id,
+                'description' => "Penerimaan Kembali Kelebihan Pembayaran #{$transaction->transaction_number}",
+                'status' => 'posted',
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Debit: Bank
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $transaction->bank->chartOfAccount->id,
+                'debit' => $transaction->amount,
+                'credit' => 0,
+                'description' => "Pengembalian kelebihan pembayaran dari supplier",
+            ]);
+
+            // Credit: Uang Muka Pembelian
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $advanceAccount->id,
+                'debit' => 0,
+                'credit' => $transaction->amount,
+                'description' => "Penerimaan kembali uang muka ",
+            ]);
+
+            // Update bank balance (increase)
+            app(\App\Services\CashMovementService::class)->createMovement(
+                $transaction->bank,
+                'OverpaymentRefund',
+                $transaction->id,
+                $transaction->transaction_date,
+                (float) $transaction->amount,
+                0,
+                "Pengembalian Kelebihan Pembayaran #{$transaction->transaction_number}"
+            );
+
+            // Update transaction with journal entry reference
+            $transaction->update(['journal_entry_id' => $journalEntry->id]);
+        });
+    }
+
+    /**
+     * Post purchase overpayment write-off to journal (loss)
+     * Dr. Beban Lain-lain, Cr. Uang Muka Pembelian
+     */
+    public function postPurchaseOverpaymentWriteOff($transaction): void
+    {
+        DB::transaction(function () use ($transaction) {
+            $transaction->loadMissing('purchasePayment');
+
+            // Get "Uang Muka Pembelian" account (1401)
+            $advanceAccount = ChartOfAccount::where('code', '1401')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$advanceAccount) {
+                $advanceAccount = ChartOfAccount::where('type', 'asset')
+                    ->where('is_active', true)
+                    ->where('code', 'like', '1%')
+                    ->orderBy('code', 'desc')
+                    ->first();
+            }
+
+            if (!$advanceAccount) {
+                throw new \Exception('Akun Uang Muka Pembelian tidak ditemukan. Pastikan akun 1401 sudah ada.');
+            }
+
+            // Get "Beban Lain-Lain" account (7103)
+            $expenseAccount = ChartOfAccount::where('code', '7103')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$expenseAccount) {
+                // Try to find any other expense account
+                $expenseAccount = ChartOfAccount::where('type', 'expense')
+                    ->where('is_active', true)
+                    ->where('code', 'like', '7%')
+                    ->orderBy('code', 'desc')
+                    ->first();
+            }
+
+            if (!$expenseAccount) {
+                throw new \Exception('Akun Beban Lain-Lain tidak ditemukan. Pastikan akun 7103 sudah ada.');
+            }
+
+            // Create journal entry
+            $journalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date' => $transaction->transaction_date,
+                'reference_type' => 'OverpaymentTransaction',
+                'reference_id' => $transaction->id,
+                'description' => "Penghapusan Kelebihan Pembayaran #{$transaction->transaction_number}",
+                'status' => 'posted',
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Debit: Beban Lain-Lain
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $expenseAccount->id,
+                'debit' => $transaction->amount,
+                'credit' => 0,
+                'description' => "Penghapusan kelebihan pembayaran (kerugian)",
+            ]);
+
+            // Credit: Uang Muka Pembelian
+            JournalEntryDetail::create([
+                'journal_entry_id' => $journalEntry->id,
+                'chart_of_account_id' => $advanceAccount->id,
+                'debit' => 0,
+                'credit' => $transaction->amount,
+                'description' => "Penghapusan uang muka yang tidak tertagih",
+            ]);
+
+            // Update transaction with journal entry reference
+            $transaction->update(['journal_entry_id' => $journalEntry->id]);
+        });
+    }
 }
 

@@ -24,6 +24,7 @@ class StorePurchasePaymentRequest extends FormRequest
     {
         return [
             'payment_date' => ['required', 'date'],
+            'total_amount' => ['required', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.purchase_id' => ['required', 'exists:purchases,id'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],

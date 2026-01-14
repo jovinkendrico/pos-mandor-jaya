@@ -9,6 +9,8 @@ use App\Models\PurchasePayment;
 use App\Models\Bank;
 use App\Models\CashOut;
 use App\Models\ChartOfAccount;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryDetail;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -214,14 +216,11 @@ class PurchasePaymentController extends Controller
     public function store(StorePurchasePaymentRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            // Calculate total amount from items
-            $totalAmount = collect($request->items)->sum('amount');
-
             // Create payment
             $payment = PurchasePayment::create([
                 'payment_number' => PurchasePayment::generatePaymentNumber(),
                 'payment_date' => $request->payment_date,
-                'total_amount' => $totalAmount,
+                'total_amount' => $request->total_amount, // Total paid to supplier from input
                 'bank_id' => $request->bank_id,
                 'payment_method' => $request->payment_method,
                 'reference_number' => $request->reference_number,
@@ -249,13 +248,26 @@ class PurchasePaymentController extends Controller
      */
     public function show(PurchasePayment $purchasePayment): Response
     {
-        $purchasePayment->load(['purchases.supplier', 'bank', 'items.purchase.supplier', 'creator', 'updater']);
+        $purchasePayment->load([
+            'purchases.supplier', 
+            'bank', 
+            'items.purchase.supplier', 
+            'creator', 
+            'updater',
+            'overpaymentTransactions.bank',
+            'overpaymentTransactions.creator'
+        ]);
 
         // Sort items by purchase number
         $purchasePayment->setRelation('items', $purchasePayment->items->sortBy('purchase.purchase_number', SORT_NATURAL)->values());
 
+        // Get all banks for overpayment refund selection
+        $banks = \App\Models\Bank::orderBy('name')
+            ->get(['id', 'name', 'type']);
+
         return Inertia::render('transaction/purchase-payment/show', [
             'purchase_payment' => $purchasePayment,
+            'banks' => $banks,
         ]);
     }
 
@@ -324,13 +336,10 @@ class PurchasePaymentController extends Controller
                 ->with('error', 'Pembayaran yang sudah dikonfirmasi tidak dapat diedit.');
         }
 
-        // Calculate total amount from items
-        $totalAmount = collect($request->items)->sum('amount');
-
         // Update payment
         $purchasePayment->update([
             'payment_date' => $request->payment_date,
-            'total_amount' => $totalAmount,
+            'total_amount' => $request->total_amount, // Total paid to supplier from input
             'bank_id' => $request->bank_id,
             'payment_method' => $request->payment_method,
             'reference_number' => $request->reference_number,
@@ -379,8 +388,13 @@ class PurchasePaymentController extends Controller
         }
 
         DB::transaction(function () use ($purchasePayment) {
+            // Calculate overpayment before confirming
+            $overpaymentAmount = $purchasePayment->calculateOverpayment();
+            
             $purchasePayment->update([
                 'status' => 'confirmed',
+                'overpayment_amount' => $overpaymentAmount,
+                'overpayment_status' => $overpaymentAmount > 0 ? 'pending' : 'none',
                 'updated_by' => auth()->id(),
             ]);
 
@@ -440,6 +454,12 @@ class PurchasePaymentController extends Controller
                     // Post to journal (this will also update bank balance)
                     // JournalService akan membuat: Debit Hutang Usaha, Credit Bank
                     app(\App\Services\JournalService::class)->postCashOut($cashOut);
+
+                    // If there's overpayment, adjust the journal entry
+                    // We need to reclassify overpayment from Hutang to Uang Muka Pembelian
+                    if ($overpaymentAmount > 0) {
+                        $this->recordOverpaymentAsset($purchasePayment, $overpaymentAmount);
+                    }
                 } else {
                     // If no payable account found, still create cash movement
                     $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
@@ -496,13 +516,105 @@ class PurchasePaymentController extends Controller
                 }
             }
 
+            // Reverse overpayment asset journal entry if exists
+            if ($purchasePayment->overpayment_amount > 0) {
+                $overpaymentJournal = JournalEntry::where('reference_type', 'PurchasePayment')
+                    ->where('reference_id', $purchasePayment->id)
+                    ->where('description', 'like', 'Kelebihan Pembayaran%')
+                    ->where('status', 'posted')
+                    ->first();
+
+                if ($overpaymentJournal) {
+                    // Mark as reversed
+                    $overpaymentJournal->update(['status' => 'reversed']);
+                }
+            }
+
             $purchasePayment->update([
                 'status' => 'pending',
+                'overpayment_amount' => 0,
+                'overpayment_status' => 'none',
                 'updated_by' => auth()->id(),
             ]);
         });
 
         return redirect()->route('purchase-payments.show', $purchasePayment)
             ->with('success', 'Konfirmasi pembayaran dibatalkan.');
+    }
+
+    /**
+     * Record overpayment as asset (Uang Muka Pembelian)
+     */
+    private function recordOverpaymentAsset(PurchasePayment $purchasePayment, float $overpaymentAmount): void
+    {
+        // Get "Uang Muka Pembelian" account (1401)
+        $advanceAccount = ChartOfAccount::where('code', '1401')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$advanceAccount) {
+            // Try to find any other asset/advance account
+            $advanceAccount = ChartOfAccount::where('type', 'asset')
+                ->where('is_active', true)
+                ->where('code', 'like', '14%')
+                ->orderBy('code')
+                ->first();
+        }
+
+        if (!$advanceAccount) {
+            \Log::warning("Overpayment detected but no 'Uang Muka Pembelian' account found for PurchasePayment #{$purchasePayment->payment_number}");
+            return;
+        }
+
+        // Get payable account to reverse the overpayment portion
+        $payableAccount = ChartOfAccount::where('code', '2101')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$payableAccount) {
+            $payableAccount = ChartOfAccount::whereIn('type', ['liability', 'hutang'])
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->first();
+        }
+
+        if (!$payableAccount) {
+            \Log::warning("Payable account not found for overpayment adjustment");
+            return;
+        }
+
+        // Create journal entry for overpayment
+        // The CashOut already posted: Dr. Hutang Usaha (full amount), Cr. Bank (full amount)
+        // We need to adjust for the overpayment portion:
+        // Dr. Uang Muka Pembelian (overpayment), Cr. Hutang Usaha (overpayment - to reverse the excess debit)
+        
+        $journalEntry = JournalEntry::create([
+            'journal_number' => JournalEntry::generateJournalNumber(),
+            'journal_date' => $purchasePayment->payment_date,
+            'description' => "Kelebihan Pembayaran ke Supplier #{$purchasePayment->payment_number}",
+            'reference_type' => 'PurchasePayment',
+            'reference_id' => $purchasePayment->id,
+            'status' => 'posted',
+            'created_by' => auth()->id(),
+            'updated_by' => auth()->id(),
+        ]);
+
+        // Debit: Uang Muka Pembelian
+        JournalEntryDetail::create([
+            'journal_entry_id' => $journalEntry->id,
+            'chart_of_account_id' => $advanceAccount->id,
+            'debit' => $overpaymentAmount,
+            'credit' => 0,
+            'description' => "Uang muka dari kelebihan pembayaran",
+        ]);
+
+        // Credit: Hutang Usaha (to reverse overpayment portion)
+        JournalEntryDetail::create([
+            'journal_entry_id' => $journalEntry->id,
+            'chart_of_account_id' => $payableAccount->id,
+            'debit' => 0,
+            'credit' => $overpaymentAmount,
+            'description' => "Penyesuaian kelebihan pembayaran ke supplier",
+        ]);
     }
 }

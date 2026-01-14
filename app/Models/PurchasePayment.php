@@ -16,6 +16,8 @@ class PurchasePayment extends Model
         'payment_number',
         'payment_date',
         'total_amount',
+        'overpayment_amount',
+        'overpayment_status',
         'bank_id',
         'payment_method',
         'reference_number',
@@ -28,6 +30,7 @@ class PurchasePayment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'total_amount' => 'decimal:2',
+        'overpayment_amount' => 'decimal:2',
     ];
 
     /**
@@ -64,6 +67,40 @@ class PurchasePayment extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get the overpayment transactions for this payment.
+     */
+    public function overpaymentTransactions(): HasMany
+    {
+        return $this->hasMany(OverpaymentTransaction::class, 'purchase_payment_id');
+    }
+
+    /**
+     * Calculate overpayment amount
+     * Overpayment = total amount paid to supplier - sum of amounts allocated to invoices
+     */
+    public function calculateOverpayment(): float
+    {
+        // Load items if not already loaded
+        if (!$this->relationLoaded('items')) {
+            $this->load('items');
+        }
+
+        // Total allocated to invoices
+        $totalAllocated = $this->items->sum('amount');
+
+        // Overpayment = total paid - total allocated
+        return max(0, (float)$this->total_amount - $totalAllocated);
+    }
+
+    /**
+     * Check if this payment has overpayment
+     */
+    public function hasOverpayment(): bool
+    {
+        return $this->overpayment_amount > 0 && $this->overpayment_status !== 'none';
     }
 
     /**

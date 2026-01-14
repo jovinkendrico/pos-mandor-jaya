@@ -21,6 +21,9 @@ const itemSchema = Yup.object().shape({
 
 const purchasePaymentSchema = Yup.object().shape({
     payment_date: Yup.date().required('Tanggal pembayaran harus diisi.'),
+    total_amount: Yup.number()
+        .required('Total pembayaran harus diisi.')
+        .min(0, 'Total pembayaran minimal 0.'),
     items: Yup.array().of(itemSchema).min(1, 'Minimal ada satu pembayaran.'),
     bank_id: Yup.number().nullable(),
     payment_method: Yup.mixed<PaymentMethod>()
@@ -48,6 +51,7 @@ const usePurchasePayments = (): any => {
         transform,
     } = useForm<any>({
         payment_date: new Date(),
+        total_amount: 0,
         items: [
             {
                 purchase_id: 0,
