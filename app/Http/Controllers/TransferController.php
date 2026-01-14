@@ -250,14 +250,39 @@ class TransferController extends Controller
                     $cashOut->update(['status' => 'cancelled']);
                 }
 
-                // 2. Update associated Journal Entry status to reversed (DO NOT DELETE)
+                // 2. Create Reversal Journal Entry
                 $journals = JournalEntry::where('reference_type', Transfer::class)
                     ->where('reference_id', $transfer->id)
+                    ->where('status', 'posted')
                     ->get();
                 
-                \Log::info('Journals found', ['count' => $journals->count()]);
+                \Log::info('Journals found for reversal', ['count' => $journals->count()]);
                 
                 foreach ($journals as $journal) {
+                    // Create reversal entry
+                    $reversalEntry = JournalEntry::create([
+                        'journal_number' => JournalEntry::generateJournalNumber(),
+                        'journal_date'   => now(),
+                        'reference_type' => Transfer::class,
+                        'reference_id'   => $transfer->id,
+                        'description'    => "Pembalikan: " . $journal->description,
+                        'status'         => 'reversed',
+                        'reversed_by'    => $journal->id,
+                        'created_by'     => auth()->id(),
+                    ]);
+
+                    // Reverse all details
+                    foreach ($journal->details as $detail) {
+                        JournalEntryDetail::create([
+                            'journal_entry_id'    => $reversalEntry->id,
+                            'chart_of_account_id' => $detail->chart_of_account_id,
+                            'debit'               => $detail->credit, // Swap debit and credit
+                            'credit'              => $detail->debit,
+                            'description'         => "Pembalikan: " . $detail->description,
+                        ]);
+                    }
+
+                    // Original journal marked as reversed
                     $journal->update(['status' => 'reversed']);
                 }
 
