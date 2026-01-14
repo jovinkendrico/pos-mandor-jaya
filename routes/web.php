@@ -82,10 +82,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Purchase Return confirm/unconfirm routes (must be before resource)
     Route::post('purchase-returns/{purchase_return}/confirm', [PurchaseReturnController::class, 'confirm'])->name('purchase-returns.confirm');
     Route::post('purchase-returns/{purchase_return}/unconfirm', [PurchaseReturnController::class, 'unconfirm'])->name('purchase-returns.unconfirm');
+    Route::post('purchase-returns/print-dot-matrix', [PurchaseReturnController::class, 'printDotMatrix'])->name('purchase-returns.print-dot-matrix');
 
     // Sale Return confirm/unconfirm routes (must be before resource)
     Route::post('sale-returns/{sale_return}/confirm', [SaleReturnController::class, 'confirm'])->name('sale-returns.confirm');
     Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
+    Route::post('sale-returns/print-dot-matrix', [SaleReturnController::class, 'printDotMatrix'])->name('sale-returns.print-dot-matrix');
 
     // Purchase Payment confirm/unconfirm routes (must be before resource)
     Route::get('purchase-payments/search-purchases', [PurchasePaymentController::class, 'searchPurchases'])->name('purchase-payments.search-purchases');

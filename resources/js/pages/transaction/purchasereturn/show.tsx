@@ -1,5 +1,6 @@
 import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
+import DotMatrixPrintButton from '@/components/DotMatrixPrintButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Modal from '@/components/ui/Modal/Modal';
@@ -12,6 +13,7 @@ import {
     formatCurrency,
     formatDatetoString,
     formatNumber,
+    formatNumberWithSeparator,
 } from '@/lib/utils';
 import { index } from '@/routes/purchase-returns';
 import { BreadcrumbItem, IPurchaseReturn } from '@/types';
@@ -127,6 +129,29 @@ const PurchaseReturnShow = (props: PageProps) => {
                         </div>
                     </div>
                     <div className="flex gap-2">
+                        <DotMatrixPrintButton
+                            data={{
+                                purchase_number: purchase_return.return_number,
+                                date: (() => {
+                                    const d = new Date(purchase_return.return_date);
+                                    const day = String(d.getDate()).padStart(2, '0');
+                                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                                    const year = d.getFullYear();
+                                    return `${day}-${month}-${year}`;
+                                })(),
+                                supplier_name: purchase_return.purchase.supplier?.name,
+                                supplier_city: purchase_return.purchase.supplier?.city?.name,
+                                supplier_phone: purchase_return.purchase.supplier?.phone_number,
+                                total: purchase_return.total_amount,
+                                details: purchase_return.details.map(d => ({
+                                    item_name: d.item?.name || '?',
+                                    uom: d.item_uom?.uom.name || '',
+                                    quantity: Number(d.quantity),
+                                    price: Number(d.price),
+                                    subtotal: Number(d.subtotal)
+                                }))
+                            }}
+                        />
                         {purchase_return.status === 'pending' && (
                             <>
                                 <Button
@@ -213,45 +238,45 @@ const PurchaseReturnShow = (props: PageProps) => {
                             {formatNumber(
                                 purchase_return.discount1_amount ?? 0,
                             ) > 0 && (
-                                <div className="flex justify-between text-red-600 dark:text-danger-400">
-                                    <span>Total Diskon 1:</span>
-                                    <span>
-                                        -
-                                        {formatCurrency(
-                                            purchase_return.discount1_amount ??
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>Total Diskon 1:</span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                purchase_return.discount1_amount ??
                                                 0,
-                                        )}
-                                    </span>
-                                </div>
-                            )}
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             {formatNumber(
                                 purchase_return.discount2_amount ?? 0,
                             ) > 0 && (
-                                <div className="flex justify-between text-red-600 dark:text-danger-400">
-                                    <span>Total Diskon 2:</span>
-                                    <span>
-                                        -
-                                        {formatCurrency(
-                                            purchase_return.discount2_amount ??
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>Total Diskon 2:</span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                purchase_return.discount2_amount ??
                                                 0,
-                                        )}
-                                    </span>
-                                </div>
-                            )}
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             {formatNumber(purchase_return.ppn_amount ?? 0) >
                                 0 && (
-                                <div className="flex justify-between text-blue-600 dark:text-primary-700">
-                                    <span>
-                                        PPN ({purchase_return.ppn_percent}%):
-                                    </span>
-                                    <span>
-                                        +
-                                        {formatCurrency(
-                                            purchase_return.ppn_amount ?? 0,
-                                        )}
-                                    </span>
-                                </div>
-                            )}
+                                    <div className="flex justify-between text-blue-600 dark:text-primary-700">
+                                        <span>
+                                            PPN ({purchase_return.ppn_percent}%):
+                                        </span>
+                                        <span>
+                                            +
+                                            {formatCurrency(
+                                                purchase_return.ppn_amount ?? 0,
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             <div className="flex justify-between border-t pt-2 text-lg font-bold">
                                 <span>TOTAL:</span>
                                 <span>
@@ -289,9 +314,9 @@ const PurchaseReturnShow = (props: PageProps) => {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
-                                            {formatNumber(
+                                            {formatNumberWithSeparator(
                                                 detail.quantity,
-                                            ).toLocaleString('id-ID')}
+                                            )}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
                                             {formatCurrency(detail.price)}

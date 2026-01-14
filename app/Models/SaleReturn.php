@@ -61,18 +61,19 @@ class SaleReturn extends Model
 
     public static function generateReturnNumber($returnDate = null): string
     {
-        $date = $returnDate ? date('Ymd', strtotime($returnDate)) : now()->format('Ymd');
-
         // Use lockForUpdate to prevent race conditions in concurrent requests
         // Include soft deleted records to continue sequence even if return was deleted
         $lastReturn = static::withTrashed()
-            ->whereDate('return_date', $returnDate ? date('Y-m-d', strtotime($returnDate)) : today())
             ->lockForUpdate()
             ->orderBy('id', 'desc')
             ->first();
 
-        $sequence = $lastReturn ? (int) substr($lastReturn->return_number, -4) + 1 : 1;
+        // Extract sequence number from last return number (e.g., "RJ123" -> 123)
+        $sequence = 1;
+        if ($lastReturn && preg_match('/^RJ(\d+)$/', $lastReturn->return_number, $matches)) {
+            $sequence = (int) $matches[1] + 1;
+        }
 
-        return 'RJ' . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return 'RJ' . $sequence;
     }
 }

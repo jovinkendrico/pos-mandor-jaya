@@ -268,6 +268,42 @@ class SaleReturnController extends Controller
     }
 
     /**
+     * Print sale return for dot matrix printer (QZ Print)
+     */
+    public function printDotMatrix(\Illuminate\Http\Request $request)
+    {
+        try {
+            $saleReturnId = $request->input('sale_return_id');
+
+            if (!$saleReturnId) {
+                return response()->json(['error' => 'Sale return ID is required'], 400);
+            }
+
+            $saleReturn = SaleReturn::with([
+                'sale.customer.city',
+                'details.item',
+                'details.itemUom.uom'
+            ])->findOrFail($saleReturnId);
+
+            // Return HTML view for QZ Print to process
+            return view('pdf.sale-return', [
+                'title' => 'RJ - ' . $saleReturn->return_number,
+                'saleReturn' => $saleReturn,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Print Dot Matrix Sale Return - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'error' => 'Error generating print: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(SaleReturn $saleReturn): RedirectResponse

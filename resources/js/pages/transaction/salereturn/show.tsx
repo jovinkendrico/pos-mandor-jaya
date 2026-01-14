@@ -1,5 +1,6 @@
 import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
+import DotMatrixPrintButton from '@/components/DotMatrixPrintButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Modal from '@/components/ui/Modal/Modal';
@@ -12,6 +13,7 @@ import {
     formatCurrency,
     formatDatetoString,
     formatNumber,
+    formatNumberWithSeparator,
 } from '@/lib/utils';
 import { index } from '@/routes/sale-returns';
 import { BreadcrumbItem, ISaleReturn } from '@/types';
@@ -145,6 +147,29 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                         </div>
                     </div>
                     <div className="flex gap-2">
+                        <DotMatrixPrintButton
+                            data={{
+                                sale_number: returnData.return_number,
+                                date: (() => {
+                                    const d = new Date(returnData.return_date);
+                                    const day = String(d.getDate()).padStart(2, '0');
+                                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                                    const year = d.getFullYear();
+                                    return `${day}-${month}-${year}`;
+                                })(),
+                                customer_name: returnData.sale.customer?.name,
+                                customer_city: returnData.sale.customer?.city?.name,
+                                customer_phone: returnData.sale.customer?.phone_number,
+                                total: returnData.total_amount,
+                                details: returnData.details.map(d => ({
+                                    item_name: d.item?.name || '?',
+                                    uom: d.item_uom?.uom.name || '',
+                                    quantity: Number(d.quantity),
+                                    price: Number(d.price),
+                                    subtotal: Number(d.subtotal)
+                                }))
+                            }}
+                        />
                         {returnData.status === 'pending' && (
                             <>
                                 <Button
@@ -236,28 +261,28 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                             </div>
                             {formatNumber(returnData.discount1_amount ?? 0) >
                                 0 && (
-                                <div className="flex justify-between text-red-600 dark:text-danger-400">
-                                    <span>Total Diskon 1:</span>
-                                    <span>
-                                        -
-                                        {formatCurrency(
-                                            returnData.discount1_amount ?? 0,
-                                        )}
-                                    </span>
-                                </div>
-                            )}
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>Total Diskon 1:</span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                returnData.discount1_amount ?? 0,
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             {formatNumber(returnData.discount2_amount ?? 0) >
                                 0 && (
-                                <div className="flex justify-between text-red-600 dark:text-danger-400">
-                                    <span>Total Diskon 2:</span>
-                                    <span>
-                                        -
-                                        {formatCurrency(
-                                            returnData.discount2_amount ?? 0,
-                                        )}
-                                    </span>
-                                </div>
-                            )}
+                                    <div className="flex justify-between text-red-600 dark:text-danger-400">
+                                        <span>Total Diskon 2:</span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                returnData.discount2_amount ?? 0,
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
                             {formatNumber(returnData.ppn_amount ?? 0) > 0 && (
                                 <div className="flex justify-between text-blue-600 dark:text-primary-700">
                                     <span>
@@ -326,9 +351,9 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
-                                            {formatNumber(
+                                            {formatNumberWithSeparator(
                                                 detail.quantity,
-                                            ).toLocaleString('id-ID')}
+                                            )}
                                         </TableCell>
                                         <TableCell className="flex w-full items-center justify-center text-center">
                                             {formatCurrency(detail.price)}
@@ -360,7 +385,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                                 <TableCell className="flex w-full items-center justify-center text-center font-medium text-green-600 dark:text-emerald-500">
                                                     {formatCurrency(
                                                         detail.profit_adjustment ||
-                                                            0,
+                                                        0,
                                                     )}
                                                 </TableCell>
                                             </>

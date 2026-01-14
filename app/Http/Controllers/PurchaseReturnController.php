@@ -264,6 +264,42 @@ class PurchaseReturnController extends Controller
     }
 
     /**
+     * Print purchase return for dot matrix printer (QZ Print)
+     */
+    public function printDotMatrix(\Illuminate\Http\Request $request)
+    {
+        try {
+            $purchaseReturnId = $request->input('purchase_return_id');
+
+            if (!$purchaseReturnId) {
+                return response()->json(['error' => 'Purchase return ID is required'], 400);
+            }
+
+            $purchaseReturn = PurchaseReturn::with([
+                'purchase.supplier.city',
+                'details.item',
+                'details.itemUom.uom'
+            ])->findOrFail($purchaseReturnId);
+
+            // Return HTML view for QZ Print to process
+            return view('pdf.purchase-return', [
+                'title' => 'RB - ' . $purchaseReturn->return_number,
+                'purchaseReturn' => $purchaseReturn,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Print Dot Matrix Purchase Return - Exception caught', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'error' => 'Error generating print: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(PurchaseReturn $purchaseReturn): RedirectResponse
