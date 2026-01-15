@@ -1,4 +1,4 @@
-import { formatCurrency, parseStringtoNumber } from '@/lib/utils';
+import { formatCurrency, formatDatetoString, parseStringtoNumber } from '@/lib/utils';
 import { store, update } from '@/routes/cash-ins';
 import { ICashIn } from '@/types';
 import { useForm } from '@inertiajs/react';
@@ -31,6 +31,7 @@ const useCashIn = () => {
         reset,
         setError,
         clearErrors,
+        transform,
     } = useForm({
         cash_in_date: new Date(),
         bank_id: 0,
@@ -39,6 +40,13 @@ const useCashIn = () => {
         description: '',
         auto_post: false,
     });
+
+    transform((data) => ({
+        ...data,
+        cash_in_date: data.cash_in_date
+            ? formatDatetoString(data.cash_in_date)
+            : data.cash_in_date,
+    }));
     const handleSubmit = async (cashIn?: ICashIn) => {
         clearErrors();
 

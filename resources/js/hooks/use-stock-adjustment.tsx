@@ -1,5 +1,6 @@
 import {
     formatCurrency,
+    formatDatetoString,
     formatNumberWithSeparator,
     parseStringtoNumber,
 } from '@/lib/utils';
@@ -22,7 +23,7 @@ const stockAdjustmentSchema = Yup.object().shape({
     notes: Yup.string().max(255, 'Maksimal 255 karakter.').nullable(),
 });
 
-const useStockAdjustment = (closeModal: () => void = () => {}) => {
+const useStockAdjustment = (closeModal: () => void = () => { }) => {
     const {
         data,
         setData,
@@ -32,6 +33,7 @@ const useStockAdjustment = (closeModal: () => void = () => {}) => {
         reset,
         setError,
         clearErrors,
+        transform,
     } = useForm({
         item_id: 0,
         quantity: 0,
@@ -39,6 +41,13 @@ const useStockAdjustment = (closeModal: () => void = () => {}) => {
         adjustment_date: new Date(),
         notes: '',
     });
+
+    transform((data) => ({
+        ...data,
+        adjustment_date: data.adjustment_date
+            ? formatDatetoString(data.adjustment_date)
+            : data.adjustment_date,
+    }));
 
     const handleSubmit = async (stock_adjustment?: IStockAdjustment) => {
         clearErrors();

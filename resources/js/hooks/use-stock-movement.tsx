@@ -1,4 +1,5 @@
 import { storeStockMovement, updateStockMovement } from '@/routes/items';
+import { formatDatetoString } from '@/lib/utils';
 import { IItemStockMovement } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ const useStockMovement = (closeModal: () => void) => {
         reset,
         setError,
         clearErrors,
+        transform,
     } = useForm({
         item_id: 0,
         remaining_quantity: 0,
@@ -33,6 +35,13 @@ const useStockMovement = (closeModal: () => void) => {
         movement_date: new Date(),
         notes: '',
     });
+
+    transform((data) => ({
+        ...data,
+        movement_date: data.movement_date
+            ? formatDatetoString(data.movement_date)
+            : data.movement_date,
+    }));
 
     const handleSubmit = async (
         item_id: number,
@@ -45,9 +54,9 @@ const useStockMovement = (closeModal: () => void) => {
             submit(
                 stock_movement
                     ? updateStockMovement({
-                          item: item_id,
-                          id: stock_movement?.id ?? 0,
-                      })
+                        item: item_id,
+                        id: stock_movement?.id ?? 0,
+                    })
                     : storeStockMovement(item_id),
                 {
                     onSuccess: () => {

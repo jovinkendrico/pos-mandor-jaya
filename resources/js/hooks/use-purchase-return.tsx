@@ -1,5 +1,5 @@
 import { RefundMethod, ReturnType } from '@/constants/enum';
-import { formatNumberWithSeparator, parseStringtoDecimal } from '@/lib/utils';
+import { formatDatetoString, formatNumberWithSeparator, parseStringtoDecimal } from '@/lib/utils';
 import { store } from '@/routes/purchase-returns';
 import { IPurchaseDetail } from '@/types';
 import { useForm } from '@inertiajs/react';
@@ -68,6 +68,7 @@ const usePurchaseReturn = () => {
         reset,
         setError,
         clearErrors,
+        transform,
     } = useForm({
         purchase_id: 0,
         return_date: new Date(),
@@ -87,6 +88,13 @@ const usePurchaseReturn = () => {
             },
         ] as IPurchaseDetail[],
     });
+
+    transform((data) => ({
+        ...data,
+        return_date: data.return_date
+            ? formatDatetoString(data.return_date)
+            : data.return_date,
+    }));
 
     const handleSubmit = async () => {
         clearErrors();
