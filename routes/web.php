@@ -632,6 +632,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('transfers/{transfer}/cancel', [TransferController::class, 'cancel'])
         ->name('transfers.cancel');
 
+    Route::post('journal-entries/{journal_entry}/reverse', [JournalEntryController::class, 'reverse'])
+        ->name('journal-entries.reverse');
+
     Route::resources([
         'purchases'         => PurchaseController::class,
         'sales'             => SaleController::class,

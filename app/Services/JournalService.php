@@ -1207,5 +1207,63 @@ class JournalService
             $transaction->update(['journal_entry_id' => $journalEntry->id]);
         });
     }
+
+    /**
+     * Reverse any generic journal entry
+     */
+    public function reverseJournalEntry(JournalEntry $journalEntry): JournalEntry
+    {
+        return DB::transaction(function () use ($journalEntry) {
+            if ($journalEntry->status !== 'posted') {
+                throw new \Exception('Hanya jurnal dengan status Posted yang dapat dibalik.');
+            }
+
+            // Create reversal entry
+            $reversalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date'   => now(),
+                'reference_type' => $journalEntry->reference_type,
+                'reference_id'   => $journalEntry->reference_id,
+                'description'    => "Pembalikan: " . ($journalEntry->description ?? $journalEntry->journal_number),
+                'status'         => 'reversed',
+                'reversed_by'    => $journalEntry->id,
+                'created_by'     => auth()->id(),
+            ]);
+
+            // Reverse all details
+            foreach ($journalEntry->details as $detail) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $reversalEntry->id,
+                    'chart_of_account_id' => $detail->chart_of_account_id,
+                    'debit'               => $detail->credit, // Swap debit and credit
+                    'credit'              => $detail->debit,
+                    'description'         => "Pembalikan: " . $detail->description,
+                ]);
+            }
+
+            // Optional: Handle specialized reversal logic for certain reference types
+            // For example, if it's a CashIn/CashOut/Transfer, we should also reverse the Cash Movement
+            if (in_array($journalEntry->reference_type, ['CashIn', 'CashOut', 'Transfer', \App\Models\Transfer::class])) {
+                $referenceType = $journalEntry->reference_type;
+                // Normalize reference type if it's a class string
+                if ($referenceType === \App\Models\Transfer::class) {
+                    $referenceType = 'Transfer';
+                }
+
+                $movements = \App\Models\CashMovement::where('reference_type', $journalEntry->reference_type)
+                    ->where('reference_id', $journalEntry->reference_id)
+                    ->get();
+                
+                foreach ($movements as $cashMovement) {
+                    app(\App\Services\CashMovementService::class)->reverseMovement($cashMovement);
+                }
+            }
+
+            // Update original journal entry status to reversed
+            $journalEntry->update(['status' => 'reversed']);
+
+            return $reversalEntry;
+        });
+    }
 }
 

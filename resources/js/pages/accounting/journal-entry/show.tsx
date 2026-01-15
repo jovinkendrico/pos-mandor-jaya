@@ -1,5 +1,5 @@
-import PageTitle from '@/components/page-title';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
@@ -8,8 +8,9 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDatetoString, formatNumber } from '@/lib/utils';
 import { index } from '@/routes/journal-entries';
 import { BreadcrumbItem, JournalEntry } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, RotateCcw } from 'lucide-react';
+import PageTitle from '@/components/page-title';
 
 interface PageProps {
     journalEntry: JournalEntry;
@@ -60,6 +61,16 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
         return typeMap[type] || type;
     };
 
+    const handleReverse = () => {
+        if (
+            confirm(
+                'Apakah Anda yakin ingin membalikkan jurnal ini? Tindakan ini akan membuat jurnal pembalik dengan nilai debit dan kredit yang ditukar.',
+            )
+        ) {
+            router.post(`/journal-entries/${journalEntry.id}/reverse`);
+        }
+    };
+
     const statusInfo = formatStatus(journalEntry.status);
 
     const tableColumn = ['Akun', 'Keterangan', 'Debit', 'Kredit'];
@@ -89,6 +100,16 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
                         title={`Jurnal #${journalEntry.journal_number}`}
                     />
                 </div>
+                {journalEntry.status === 'posted' && (
+                    <Button
+                        variant="destructive"
+                        onClick={handleReverse}
+                        className="flex items-center gap-2"
+                    >
+                        <RotateCcw className="h-4 w-4" />
+                        Reverse Jurnal
+                    </Button>
+                )}
             </div>
 
             <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -143,6 +164,19 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
                                 </p>
                             </div>
                         )}
+                        {journalEntry.reversedBy && (
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    Dibalik Oleh
+                                </p>
+                                <Link
+                                    href={`/journal-entries/${journalEntry.reversedBy.id}`}
+                                    className="font-medium text-blue-600 hover:underline"
+                                >
+                                    {journalEntry.reversedBy.journal_number}
+                                </Link>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -172,18 +206,17 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
                                 Selisih
                             </p>
                             <p
-                                className={`text-lg font-medium ${
-                                    Math.abs(difference) < 0.01
-                                        ? 'text-green-600'
-                                        : 'text-red-600'
-                                }`}
+                                className={`text-lg font-medium ${Math.abs(difference) < 0.01
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                    }`}
                             >
                                 {formatCurrency(difference)}
                             </p>
                         </div>
                     </CardContent>
                 </Card>
-            </div>
+            </div >
 
             <Card className="content">
                 <CardHeader>
@@ -220,7 +253,7 @@ const JournalEntryShow = ({ journalEntry }: PageProps) => {
                     </div>
                 </CardContent>
             </Card>
-        </AppLayout>
+        </AppLayout >
     );
 };
 

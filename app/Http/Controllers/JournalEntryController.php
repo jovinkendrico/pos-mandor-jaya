@@ -3,12 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\JournalEntry;
+use App\Services\JournalService;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
 
 class JournalEntryController extends Controller
 {
+    protected $journalService;
+
+    public function __construct(JournalService $journalService)
+    {
+        $this->journalService = $journalService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -84,5 +92,23 @@ class JournalEntryController extends Controller
         return Inertia::render('accounting/journal-entry/show', [
             'journalEntry' => $journalEntry,
         ]);
+    }
+
+    /**
+     * Reverse the specified journal entry.
+     */
+    public function reverse(JournalEntry $journalEntry): \Illuminate\Http\RedirectResponse
+    {
+        // Only allow reversing if journal is posted and not already reversed
+        if ($journalEntry->status !== 'posted') {
+            return redirect()->back()->with('error', 'Hanya jurnal dengan status Posted yang dapat dibalik.');
+        }
+
+        try {
+            $this->journalService->reverseJournalEntry($journalEntry);
+            return redirect()->back()->with('success', 'Jurnal berhasil dibalik.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => 'Gagal membalikkan jurnal: ' . $e->getMessage()]);
+        }
     }
 }
