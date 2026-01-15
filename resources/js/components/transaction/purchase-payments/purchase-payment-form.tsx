@@ -96,11 +96,15 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                 'status',
                 purchase_payment.status as PurchasePaymentStatus,
             );
-            const formattedAmount = purchase_payment.items.map((item) =>
-                item.amount ? formatNumberWithSeparator(item.amount) : '0',
+            const formattedAmount = (purchase_payment.items || []).map((item) =>
+                item.amount ? formatCurrency(Number(item.amount)) : 'Rp. 0',
             );
             setAmountDisplayValues(formattedAmount);
-            setDataPurchasePayment('items', purchase_payment.items);
+            setDataPurchasePayment('items', (purchase_payment.items || []).map(item => ({
+                ...item,
+                amount: Number(item.amount) || 0,
+                purchase_id: Number(item.purchase_id)
+            })));
             setIsReady(true);
         } else {
             resetpurchasePayment();
@@ -122,26 +126,27 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
         let remaining = 0;
 
         dataPurchasePayment.items.forEach((item: IPurchasePaymentItem) => {
-            amount += item.amount || 0;
+            const itemAmount = Number(item.amount) || 0;
+            amount += itemAmount;
 
             const purchase = localPurchases.find(
                 (p) => p.id === Number(item.purchase_id),
             );
 
             if (purchase) {
-                invoice += Number(purchase.total_amount);
-                remaining += (purchase.remaining_amount ?? (Number(purchase.total_amount) - (purchase.total_paid || 0)));
+                invoice += Number(purchase.total_amount) || 0;
+                remaining += Number(purchase.remaining_amount ?? (Number(purchase.total_amount) - (purchase.total_paid || 0))) || 0;
             }
         });
 
         return {
             totalAmount: amount,
             totalInvoiceAmount: invoice,
-            totalRemainingAmount: remaining
+            totalRemainingAmount: Math.max(0, remaining)
         };
     }, [dataPurchasePayment.items, localPurchases]);
 
-    const overpaymentAmount = (dataPurchasePayment.total_amount || 0) - totalAmount;
+    const overpaymentAmount = Number(dataPurchasePayment.total_amount || 0) - totalAmount;
 
     if (!isReady) {
         return <Skeleton className="h-full w-full" />;
@@ -574,8 +579,8 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                             </div>
                             <div className="border-t border-border pt-2">
                                 <div className="flex justify-end gap-8 items-center">
-                                    <span className="text-sm text-muted-foreground">Total Pembayaran:</span>
-                                    <span className="text-2xl font-bold">{formatCurrency(totalAmount)}</span>
+                                    <span className="text-sm text-muted-foreground mr-2">Total Pembayaran:</span>
+                                    <span className="text-2xl font-bold">{formatCurrency(Number(dataPurchasePayment.total_amount) || 0)}</span>
                                 </div>
                             </div>
                         </div>

@@ -94,11 +94,15 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
                 'status',
                 sale_payment.status as SalePaymentStatus,
             );
-            const formattedAmount = sale_payment.items.map((item) =>
-                item.amount ? formatNumberWithSeparator(item.amount) : '0',
+            const formattedAmount = (sale_payment.items || []).map((item) =>
+                item.amount ? formatCurrency(Number(item.amount)) : 'Rp. 0',
             );
             setAmountDisplayValues(formattedAmount);
-            setDataSalePayment('items', sale_payment.items);
+            setDataSalePayment('items', (sale_payment.items || []).map(item => ({
+                ...item,
+                amount: Number(item.amount) || 0,
+                sale_id: Number(item.sale_id)
+            })));
             setIsReady(true);
         } else {
             resetSalePayment();
@@ -116,10 +120,12 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
 
     const totalAmount = useMemo(() => {
         return dataSalePayment.items.reduce(
-            (sum: number, item: ISalePaymentItem) => sum + (item.amount || 0),
+            (sum: number, item: ISalePaymentItem) => sum + (Number(item.amount) || 0),
             0,
         );
     }, [dataSalePayment.items]);
+
+    const overpaymentAmount = Number(dataSalePayment.total_amount || 0) - totalAmount;
 
     if (!isReady) {
         return <Skeleton className="h-full w-full" />;
@@ -544,11 +550,11 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
 
                     <div className="mt-4 flex justify-end">
                         <div className="space-y-1 text-right">
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-sm text-muted-foreground mr-2">
                                 Total Pembayaran
                             </div>
                             <div className="text-2xl font-bold">
-                                {formatCurrency(totalAmount)}
+                                {formatCurrency(Number(dataSalePayment.total_amount) || 0)}
                             </div>
                         </div>
                     </div>
