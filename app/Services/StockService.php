@@ -346,6 +346,7 @@ class StockService
             ->where('quantity', '>', 0) // Only inbound movements
             ->orderBy('movement_date', 'asc')
             ->orderBy('id', 'asc')
+            ->lockForUpdate()
             ->get();
 
         foreach ($movements as $movement) {
@@ -964,23 +965,25 @@ class StockService
             return;
         }
 
-        $consumptionCost = $this->calculateFifoCost($item->id, $quantity, now());
-        $unitCost        = $quantity > 0 ? $consumptionCost / $quantity : 0;
+        DB::transaction(function () use ($item, $quantity, $context) {
+            $consumptionCost = $this->calculateFifoCost($item->id, $quantity, now());
+            $unitCost        = $quantity > 0 ? $consumptionCost / $quantity : 0;
 
-        $movementData = [
-            'item_id'            => $item->id,
-            'reference_type'     => $context['reference_type'] ?? 'Adjustment',
-            'reference_id'       => $context['reference_id'] ?? $item->id,
-            'quantity'           => -$quantity,
-            'unit_cost'          => $context['unit_cost'] ?? $unitCost,
-            'remaining_quantity' => 0,
-            'movement_date'      => $context['movement_date'] ?? now(),
-            'notes'              => $context['notes'] ?? 'Penyesuaian stok manual (OUT)',
-        ];
+            $movementData = [
+                'item_id'            => $item->id,
+                'reference_type'     => $context['reference_type'] ?? 'Adjustment',
+                'reference_id'       => $context['reference_id'] ?? $item->id,
+                'quantity'           => -$quantity,
+                'unit_cost'          => $context['unit_cost'] ?? $unitCost,
+                'remaining_quantity' => 0,
+                'movement_date'      => $context['movement_date'] ?? now(),
+                'notes'              => $context['notes'] ?? 'Penyesuaian stok manual (OUT)',
+            ];
 
-        StockMovement::create($movementData);
+            StockMovement::create($movementData);
 
-        $item->decrement('stock', $quantity);
+            $item->decrement('stock', $quantity);
+        });
     }
 
     /**
@@ -1182,128 +1185,128 @@ class StockService
     {
         // Find all estimated mappings for this item (ordered by oldest first)
         $estimatedMappings = FifoMapping::where('reference_type', 'Sale')
-        ->whereHas('saleDetail', function ($q) use ($itemId) {
-            $q->where('item_id', $itemId);
-        })
-        ->where('is_estimated', true)
-        ->orderBy('created_at', 'asc')
-        ->get();
+            ->whereHas('saleDetail', function ($q) use ($itemId) {
+                $q->where('item_id', $itemId);
+            })
+            ->where('is_estimated', true)
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         foreach ($estimatedMappings as $mapping) {
-            // Get available stock movements for this item
-            $availableMovements = StockMovement::where('item_id', $itemId)
-                ->where('remaining_quantity', '>', 0)
-                ->where('quantity', '>', 0)
-                ->orderBy('movement_date', 'asc')
-                ->orderBy('id', 'asc')
-                ->get();
+            DB::transaction(function () use ($mapping, $itemId) {
+                // Reload mapping inside transaction to be safe
+                $currentMapping = FifoMapping::find($mapping->id);
+                if (!$currentMapping || !$currentMapping->is_estimated) return;
 
-            if ($availableMovements->isEmpty()) break;
-
-            $qtyToReconcile = (float)$mapping->quantity_consumed;
-            
-            DB::transaction(function () use ($mapping, $availableMovements, &$qtyToReconcile) {
+                $remainingToReconcile = (float)$currentMapping->quantity_consumed;
+                $originalEstimatedTotalCost = (float)$currentMapping->total_cost;
+                $totalReconciledQty = 0;
                 $totalNewCost = 0;
-                $originalEstimatedCost = (float)$mapping->total_cost;
-                $remainingToReconcile = $qtyToReconcile;
 
-                foreach ($availableMovements as $movement) {
-                    if ($remainingToReconcile <= 0) break;
+                while ($remainingToReconcile > 0) {
+                    // Get the next available stock movement
+                    $movement = StockMovement::where('item_id', $itemId)
+                        ->where('remaining_quantity', '>', 0)
+                        ->where('quantity', '>', 0)
+                        ->orderBy('movement_date', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$movement) break;
 
                     $qtyFromThisMovement = min($remainingToReconcile, (float)$movement->remaining_quantity);
-                    $totalNewCost += $qtyFromThisMovement * (float)$movement->unit_cost;
+                    $costFromThisMovement = $qtyFromThisMovement * (float)$movement->unit_cost;
                     
                     // Consume from movement
                     $movement->decrement('remaining_quantity', $qtyFromThisMovement);
-                    $remainingToReconcile -= $qtyFromThisMovement;
+                    
+                    if ($qtyFromThisMovement >= $remainingToReconcile - 0.0001) {
+                        // This movement can fully satisfy the REST of the mapping
+                        $currentMapping->update([
+                            'stock_movement_id' => $movement->id,
+                            'is_estimated' => false,
+                            'unit_cost' => (float)$movement->unit_cost,
+                            'total_cost' => $remainingToReconcile * (float)$movement->unit_cost,
+                        ]);
+                        $totalNewCost += $costFromThisMovement;
+                        $totalReconciledQty += $remainingToReconcile;
+                        $remainingToReconcile = 0;
+                    } else {
+                        // Partial reconciliation by this movement - SPLIT MAPPING
+                        // 1. Create a fully reconciled mapping for the part we just took
+                        FifoMapping::create([
+                            'reference_type' => $currentMapping->reference_type,
+                            'reference_detail_id' => $currentMapping->reference_detail_id,
+                            'stock_movement_id' => $movement->id,
+                            'quantity_consumed' => $qtyFromThisMovement,
+                            'unit_cost' => (float)$movement->unit_cost,
+                            'total_cost' => $costFromThisMovement,
+                            'is_estimated' => false,
+                        ]);
 
-                    // If we fully reconciled this mapping or used up this movement...
-                    // In a perfect world, one mapping might be split across multiple movements.
-                    // But here we'll simplify: we update the existing mapping or split it if necessary.
+                        // 2. Reduce the current mapping's quantity (it remains estimated for the rest)
+                        $remainingToReconcile -= $qtyFromThisMovement;
+                        $currentMapping->update([
+                            'quantity_consumed' => $remainingToReconcile,
+                            // Recalculate estimated total_cost proportionally
+                            'total_cost' => ($remainingToReconcile / ($remainingToReconcile + $qtyFromThisMovement)) * $currentMapping->total_cost,
+                        ]);
+
+                        $totalNewCost += $costFromThisMovement;
+                        $totalReconciledQty += $qtyFromThisMovement;
+                    }
                 }
 
-                if ($remainingToReconcile < $qtyToReconcile) {
-                    // We reconciled at least some of it
-                    $reconciledQty = $qtyToReconcile - $remainingToReconcile;
-                    
-                    // Update original mapping status
-                    if ($remainingToReconcile <= 0) {
-                        // Fully reconciled
-                        $mapping->update([
-                            'is_estimated' => false,
-                            // We might want to link it to the last movement id or handle multiple mappings
-                            // For simplicity, we'll mark as reconciled and update costs
-                            'unit_cost' => $reconciledQty > 0 ? $totalNewCost / $reconciledQty : $mapping->unit_cost,
-                            'total_cost' => $totalNewCost,
-                        ]);
-                    } else {
-                        // Partially reconciled - split mapping
-                        $mapping->update([
-                            'quantity_consumed' => $remainingToReconcile,
-                            // total_cost remains as estimated for the remaining part
-                        ]);
-
-                        FifoMapping::create([
-                            'reference_type' => $mapping->reference_type,
-                            'reference_detail_id' => $mapping->reference_detail_id,
-                            'stock_movement_id' => null, // Multiple movements possible
-                            'quantity_consumed' => $reconciledQty,
-                            'unit_cost' => $totalNewCost / $reconciledQty,
-                            'total_cost' => $totalNewCost,
-                            'is_estimated' => false,
-                        ]);
-                    }
-
-                    // Update Sale Detail Profit & Cost
-                    // Use explicit find to avoid relationship issues with reference_type
-                    $detail = \App\Models\SaleDetail::find($mapping->reference_detail_id);
+                // If we reconciled some quantity, update the Sale Detail costs
+                if ($totalReconciledQty > 0) {
+                    $detail = \App\Models\SaleDetail::find($currentMapping->reference_detail_id);
                     if ($detail) {
-                        $costDifference = $totalNewCost - ($originalEstimatedCost * ($reconciledQty / $qtyToReconcile));
+                        // Proportion of the original estimated cost that we just reconciled
+                        $propOfOriginalCost = ($totalReconciledQty / ($totalReconciledQty + $remainingToReconcile)) * $originalEstimatedTotalCost;
+                        $costDifference = $totalNewCost - $propOfOriginalCost;
                         
-                        // 1. Update Cost (Increment by the actual cost of the reconciled part)
+                        // 1. Update Cost
                         $detail->increment('cost', $costDifference);
                         
-                        // 2. Check if this detail is now FULLY realized (Model B logic)
-                        $hasUnrealized = FifoMapping::where('reference_type', 'Sale')
-                            ->where('reference_detail_id', $detail->id)
+                        // 2. Check profit status
+                        $hasUnrealized = FifoMapping::where('reference_detail_id', $detail->id)
                             ->where('is_estimated', true)
                             ->exists();
 
-                        $oldProfit = $detail->profit;
-                        $newProfit = 0; // Default for unrealized
+                        $oldProfit = (float)$detail->profit;
+                        $newProfit = 0;
 
                         if (!$hasUnrealized) {
-                             // Fully Realized! Reveal the profit.
-                             // Calculate based on updated cost (Old Cost + Difference)
-                             $newProfit = $detail->subtotal - ($detail->cost + $costDifference);
-                             $detail->profit_status = 'realized';
+                            $newProfit = (float)$detail->subtotal - (float)$detail->cost;
+                            $detail->profit_status = 'realized';
                         } else {
-                             // Still partial unrealized? Keep profit hidden (0)
-                             $newProfit = 0;
-                             $detail->profit_status = 'unrealized';
+                            $newProfit = 0; // Keep 0 if still partially estimated
+                            $detail->profit_status = 'unrealized';
                         }
                         
                         $detail->profit = $newProfit;
                         $detail->save();
 
-                        // Update Sale Header Profit & Cost
+                        // 3. Update Sale Header
                         $sale = $detail->sale;
                         if ($sale) {
                             $sale->increment('total_cost', $costDifference);
-                            
                             $profitDiff = $newProfit - $oldProfit;
-                            if ($profitDiff != 0) {
+                            if (abs($profitDiff) > 0.01) {
                                 $sale->increment('total_profit', $profitDiff);
                             }
 
-                            // Update Journal (Adjustment) - Post the cost increase
-                             try {
-                                app(\App\Services\JournalService::class)->adjustSaleCogs($sale, $costDifference);
-                            } catch (\Exception $e) {
-                                Log::error('Failed to post COGS adjustment to journal', [
-                                    'sale_id' => $sale->id,
-                                    'error'   => $e->getMessage(),
-                                ]);
+                            // 4. Update Journal
+                            if (abs($costDifference) > 0.01) {
+                                try {
+                                    app(\App\Services\JournalService::class)->adjustSaleCogs($sale, $costDifference);
+                                } catch (\Exception $e) {
+                                    Log::error('Failed to post COGS adjustment to journal during reconciliation', [
+                                        'sale_id' => $sale->id,
+                                        'error' => $e->getMessage(),
+                                    ]);
+                                }
                             }
                         }
                     }
