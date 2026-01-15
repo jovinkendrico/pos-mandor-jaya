@@ -126,7 +126,7 @@ const PurchaseForm = (props: PurchaseFormProps) => {
 
     const itemComboboxOptions: AsyncComboboxOption[] = useMemo(() => {
         return allItems.map((item) => ({
-            label: `${item.code} - ${item.name}`,
+            label: `${item.code} - ${item.name} (Sisa: ${formatNumberWithSeparator(item.available_stock ?? item.stock)})`,
             value: item.id?.toString() || '',
             item: item,
         }));
@@ -546,6 +546,53 @@ const PurchaseForm = (props: PurchaseFormProps) => {
                                                     searchUrl="/items/search"
                                                     searchParam="term"
                                                 />
+                                                {detail.item_id &&
+                                                    (() => {
+                                                        const item = allItems.find(
+                                                            (i) =>
+                                                                i.id ===
+                                                                detail.item_id,
+                                                        );
+                                                        if (item) {
+                                                            return (
+                                                                <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                                                    <span title="Stok Fisik">
+                                                                        Stok:{' '}
+                                                                        {formatNumberWithSeparator(
+                                                                            item.stock,
+                                                                        )}
+                                                                    </span>
+                                                                    <span
+                                                                        className="text-orange-500"
+                                                                        title="Stok Tertahan (Pending)"
+                                                                    >
+                                                                        Hold:{' '}
+                                                                        {formatNumberWithSeparator(
+                                                                            item.pending_stock ??
+                                                                            0,
+                                                                        )}
+                                                                    </span>
+                                                                    <span
+                                                                        className={
+                                                                            item.available_stock &&
+                                                                                item.available_stock <
+                                                                                0
+                                                                                ? 'font-bold text-red-500'
+                                                                                : 'font-bold text-green-600'
+                                                                        }
+                                                                        title="Stok Tersedia"
+                                                                    >
+                                                                        Sisa:{' '}
+                                                                        {formatNumberWithSeparator(
+                                                                            item.available_stock ??
+                                                                            item.stock,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })()}
                                                 <InputError
                                                     message={
                                                         (

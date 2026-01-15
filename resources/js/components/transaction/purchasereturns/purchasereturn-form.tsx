@@ -26,8 +26,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { RefundMethod, ReturnType } from '@/constants/enum';
 import usePurchaseReturn from '@/hooks/use-purchase-return';
 import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
-import { cn, formatCurrency, formatNumber } from '@/lib/utils';
-import { IBank, IPurchase, IPurchaseDetail } from '@/types';
+import {
+    formatCurrency,
+    formatNumber,
+    formatNumberWithSeparator,
+} from '@/lib/utils';
+import { IBank, IItem, IPurchase, IPurchaseDetail } from '@/types';
 import { useEffect, useMemo, useState } from 'react';
 
 interface IPurchaseReturnViewModel extends IPurchaseDetail {
@@ -417,7 +421,47 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                     {detail?.item?.code}
                                                 </TableCell>
                                                 <TableCell className="text-center">
-                                                    {detail?.item?.name}
+                                                    <div>{detail?.item?.name}</div>
+                                                    {detail?.item && (
+                                                        <div className="mt-1 flex flex-wrap justify-center gap-2 text-[10px] text-muted-foreground">
+                                                            <span title="Stok Fisik">
+                                                                Stok:{' '}
+                                                                {formatNumberWithSeparator(
+                                                                    detail.item.stock,
+                                                                )}
+                                                            </span>
+                                                            <span
+                                                                className="text-orange-500"
+                                                                title="Stok Tertahan (Pending)"
+                                                            >
+                                                                Hold:{' '}
+                                                                {formatNumberWithSeparator(
+                                                                    detail.item.pending_stock ??
+                                                                    0,
+                                                                )}
+                                                            </span>
+                                                            <span
+                                                                className={
+                                                                    detail.item
+                                                                        .available_stock &&
+                                                                        detail.item
+                                                                            .available_stock <
+                                                                        0
+                                                                        ? 'font-bold text-red-500'
+                                                                        : 'font-bold text-green-600'
+                                                                }
+                                                                title="Stok Tersedia"
+                                                            >
+                                                                Sisa:{' '}
+                                                                {formatNumberWithSeparator(
+                                                                    detail.item
+                                                                        .available_stock ??
+                                                                    detail.item
+                                                                        .stock,
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     {isFullyReturned ? (
