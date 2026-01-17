@@ -650,7 +650,7 @@ class SaleController extends Controller
     }
 
     /**
-     * Write off small remaining amount (< 1000) as rounding difference
+     * Write off small remaining amount (< 100000) as rounding difference
      */
     public function writeOff(Sale $sale): RedirectResponse
     {
@@ -665,9 +665,9 @@ class SaleController extends Controller
                 ->with('error', 'Penjualan sudah lunas.');
         }
 
-        if ($sale->remaining_amount >= 1000) {
+        if ($sale->remaining_amount >= 100000) {
             return redirect()->route('sales.show', $sale)
-                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 1.000). Sisa: Rp ' . number_format($sale->remaining_amount, 0, ',', '.'));
+                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 100.000). Sisa: Rp ' . number_format($sale->remaining_amount, 0, ',', '.'));
         }
 
         // Get write-off account (4999 - Selisih Pembulatan Penjualan)

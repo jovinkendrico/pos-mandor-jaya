@@ -1243,14 +1243,19 @@ class JournalService
 
             // Optional: Handle specialized reversal logic for certain reference types
             // For example, if it's a CashIn/CashOut/Transfer, we should also reverse the Cash Movement
-            if (in_array($journalEntry->reference_type, ['CashIn', 'CashOut', 'Transfer', \App\Models\Transfer::class])) {
+            if (in_array($journalEntry->reference_type, ['CashIn', 'CashOut', 'Transfer', \App\Models\Transfer::class, 'OverpaymentTransaction'])) {
                 $referenceType = $journalEntry->reference_type;
                 // Normalize reference type if it's a class string
                 if ($referenceType === \App\Models\Transfer::class) {
                     $referenceType = 'Transfer';
                 }
 
-                $movements = \App\Models\CashMovement::where('reference_type', $journalEntry->reference_type)
+                $cmReferenceType = $referenceType;
+                if ($referenceType === 'OverpaymentTransaction') {
+                    $cmReferenceType = 'OverpaymentRefund';
+                }
+
+                $movements = \App\Models\CashMovement::where('reference_type', $cmReferenceType)
                     ->where('reference_id', $journalEntry->reference_id)
                     ->get();
                 
