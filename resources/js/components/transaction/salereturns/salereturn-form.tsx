@@ -33,11 +33,14 @@ import {
     formatNumberWithSeparator,
 } from '@/lib/utils';
 import { IBank, IItem, ISale, ISaleDetail } from '@/types';
-import { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface ISaleReturnViewModel extends ISaleDetail {
     selected: boolean;
     max_quantity: number;
+    sale_detail_id?: number;
 }
 
 interface SaleReturnFormProps {
@@ -53,6 +56,7 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
     const [quantityDisplayValues, setQuantityDisplayValues] = useState<
         string[]
     >([]);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
     const {
         data: dataSaleReturn,
@@ -65,12 +69,6 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
         handleQuantityChange,
     } = useSaleReturn();
 
-    const selectedSale = useMemo(() => {
-        if (!dataSaleReturn.sale_id) return undefined;
-        const b = sales.find((s) => s.id === dataSaleReturn.sale_id);
-        return b;
-    }, [dataSaleReturn, sales]);
-
     const saleComboboxOptions: ComboboxOption[] = useMemo(() => {
         return sales.map((sale) => ({
             label: `${sale.sale_number} - ${sale.customer?.name}`,
@@ -79,35 +77,58 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
     }, [sales]);
 
     useEffect(() => {
-        if (selectedSale) {
-            const initialReturnItems = selectedSale.details.map((detail) => {
-                const returnedQty = returnedQuantities[detail.id || 0] || 0;
-                const originalQuantity = detail.quantity || 0;
-                const remainingQty = originalQuantity - returnedQty;
+        const fetchSaleDetails = async () => {
+            if (!dataSaleReturn.sale_id) {
+                setReturnItems([]);
+                setDataSaleReturn('details', []);
+                setQuantityDisplayValues([]);
+                setDataSaleReturn('ppn_percent', 0);
+                return;
+            }
 
-                return {
-                    ...detail,
-                    selected: remainingQty > 0,
-                    max_quantity: remainingQty > 0 ? remainingQty : 0,
-                    quantity: remainingQty > 0 ? remainingQty : 0,
-                } as ISaleReturnViewModel;
-            });
-            setReturnItems(initialReturnItems);
+            setIsLoadingDetails(true);
+            try {
+                const response = await axios.get(
+                    `/sale-returns/sale-details/${dataSaleReturn.sale_id}`
+                );
+                const { sale, returnedQuantities: fetchedReturnedQuantities } =
+                    response.data;
 
-            setQuantityDisplayValues(
-                initialReturnItems.map((item) => item.quantity.toString()),
-            );
+                const initialReturnItems = sale.details.map(
+                    (detail: ISaleDetail) => {
+                        const returnedQty =
+                            fetchedReturnedQuantities[detail.id || 0] || 0;
+                        const originalQuantity = detail.quantity || 0;
+                        const remainingQty = originalQuantity - returnedQty;
 
-            setDataSaleReturn('details', initialReturnItems);
-            // Also set PPN from sale
-            setDataSaleReturn('ppn_percent', selectedSale.ppn_percent || 0);
-        } else {
-            setReturnItems([]);
-            setDataSaleReturn('details', []);
-            setQuantityDisplayValues([]);
-            setDataSaleReturn('ppn_percent', 0);
-        }
-    }, [selectedSale, returnedQuantities, setDataSaleReturn]);
+                        return {
+                            ...detail,
+                            selected: remainingQty > 0,
+                            max_quantity: remainingQty > 0 ? remainingQty : 0,
+                            quantity: remainingQty > 0 ? remainingQty : 0,
+                            sale_detail_id: detail.id,
+                        } as ISaleReturnViewModel;
+                    }
+                );
+
+                setReturnItems(initialReturnItems);
+                setQuantityDisplayValues(
+                    initialReturnItems.map((item: ISaleReturnViewModel) =>
+                        item.quantity.toString()
+                    )
+                );
+
+                setDataSaleReturn('details', initialReturnItems);
+                setDataSaleReturn('ppn_percent', sale.ppn_percent || 0);
+            } catch (error) {
+                console.error('Error fetching sale details:', error);
+            } finally {
+                setIsLoadingDetails(false);
+            }
+        };
+
+        fetchSaleDetails();
+    }, [dataSaleReturn.sale_id, setDataSaleReturn]);
 
     const handleToggleItem = (index: number) => {
         const newItems = [...returnItems];
@@ -335,226 +356,237 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
             {dataSaleReturn.sale_id && (
                 <Card className="content">
                     <CardHeader>
-                        <CardTitle>Pilih Barang yang akan Diretur</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>Pilih Barang yang akan Diretur</CardTitle>
+                            {isLoadingDetails && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Loading details...
+                                </div>
+                            )}
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="input-box overflow-x-auto rounded-lg">
-                            <Table className="content">
-                                <TableHeader>
-                                    <TableRow className="dark:border-b-2 dark:border-white/25">
-                                        <TableHead className="w-[50px] text-center">
-                                            Pilih
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            Kode
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            Nama Item
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            Kondisi Retur
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            UOM
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            Qty Awal
-                                        </TableHead>
-                                        <TableHead className="min-w-[90px] text-center">
-                                            Qty Retur
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            Harga
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            Disc 1
-                                        </TableHead>
-                                        <TableHead className="min-w-[100px] text-center">
-                                            Disc 2
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {returnItems.map((item, index) => {
-                                        const detail =
-                                            selectedSale?.details[index];
-                                        const originalQuantity = formatNumber(
-                                            detail?.quantity || 0,
-                                        );
-                                        const returnedQty =
-                                            returnedQuantities[
-                                            detail?.id || 0
-                                            ] || 0;
-                                        const remainingQty =
-                                            originalQuantity - returnedQty;
-                                        const isFullyReturned =
-                                            remainingQty <= 0;
+                        {isLoadingDetails ? (
+                            <div className="flex h-32 items-center justify-center">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <Table className="content">
+                                    <TableHeader>
+                                        <TableRow className="dark:border-b-2 dark:border-white/25">
+                                            <TableHead className="w-[50px] text-center">
+                                                Pilih
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                Kode
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                Nama Item
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                Kondisi Retur
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                UOM
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                Qty Awal
+                                            </TableHead>
+                                            <TableHead className="min-w-[90px] text-center">
+                                                Qty Retur
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                Harga
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                Disc 1
+                                            </TableHead>
+                                            <TableHead className="min-w-[100px] text-center">
+                                                Disc 2
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {returnItems.map((item, index) => {
+                                            const originalQuantity = formatNumber(
+                                                item.max_quantity +
+                                                (returnedQuantities[
+                                                    item.sale_detail_id || 0
+                                                ] || 0)
+                                            );
+                                            const returnedQty =
+                                                returnedQuantities[
+                                                item.sale_detail_id || 0
+                                                ] || 0;
+                                            const remainingQty =
+                                                originalQuantity - returnedQty;
+                                            const isFullyReturned =
+                                                remainingQty <= 0;
 
-                                        return (
-                                            <TableRow
-                                                key={index}
-                                                className={cn(
-                                                    'dark:border-b-2 dark:border-white/25',
-                                                    isFullyReturned
-                                                        ? 'opacity-50'
-                                                        : '',
-                                                )}
-                                            >
-                                                <TableCell className="text-center">
-                                                    <Checkbox
-                                                        checked={item.selected}
-                                                        onCheckedChange={() =>
-                                                            !isFullyReturned &&
-                                                            handleToggleItem(
-                                                                index,
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            isFullyReturned
-                                                        }
-                                                        className="cursor-pointer dark:border-white"
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="text-center font-mono">
-                                                    {detail?.item?.code}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <div>{detail?.item?.name}</div>
-                                                    {detail?.item && (
-                                                        <div className="mt-1 flex flex-wrap justify-center gap-2 text-[10px] text-muted-foreground">
-                                                            <span title="Stok Fisik">
-                                                                Stok:{' '}
-                                                                {formatNumberWithSeparator(
-                                                                    detail.item.stock,
-                                                                )}
-                                                            </span>
-                                                            <span
-                                                                className="text-orange-500"
-                                                                title="Stok Tertahan (Pending)"
-                                                            >
-                                                                Hold:{' '}
-                                                                {formatNumberWithSeparator(
-                                                                    detail.item.pending_stock ??
-                                                                    0,
-                                                                )}
-                                                            </span>
-                                                            <span
-                                                                className={
-                                                                    detail.item
-                                                                        .available_stock &&
-                                                                        detail.item
-                                                                            .available_stock <
-                                                                        0
-                                                                        ? 'font-bold text-red-500'
-                                                                        : 'font-bold text-green-600'
-                                                                }
-                                                                title="Stok Tersedia"
-                                                            >
-                                                                Sisa:{' '}
-                                                                {formatNumberWithSeparator(
-                                                                    detail.item
-                                                                        .available_stock ??
-                                                                    detail.item
-                                                                        .stock,
-                                                                )}
-                                                            </span>
-                                                        </div>
+                                            return (
+                                                <TableRow
+                                                    key={index}
+                                                    className={cn(
+                                                        'dark:border-b-2 dark:border-white/25',
+                                                        isFullyReturned
+                                                            ? 'opacity-50'
+                                                            : '',
                                                     )}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {isFullyReturned ? (
-                                                        <Badge className="badge-green-light">
-                                                            Sudah diretur
-                                                            sepenuhnya
+                                                >
+                                                    <TableCell className="text-center">
+                                                        <Checkbox
+                                                            checked={item.selected}
+                                                            onCheckedChange={() =>
+                                                                !isFullyReturned &&
+                                                                handleToggleItem(
+                                                                    index,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isFullyReturned
+                                                            }
+                                                            className="cursor-pointer dark:border-white"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="text-center font-mono">
+                                                        {item.item?.code}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <div>{item.item?.name}</div>
+                                                        {item.item && (
+                                                            <div className="mt-1 flex flex-wrap justify-center gap-2 text-[10px] text-muted-foreground">
+                                                                <span title="Stok Fisik">
+                                                                    Stok:{' '}
+                                                                    {formatNumberWithSeparator(
+                                                                        item.item?.stock || 0
+                                                                    )}
+                                                                </span>
+                                                                <span
+                                                                    className="text-orange-500"
+                                                                    title="Stok Tertahan (Pending)"
+                                                                >
+                                                                    Hold:{' '}
+                                                                    {formatNumberWithSeparator(
+                                                                        item.item?.pending_stock ??
+                                                                        0,
+                                                                    )}
+                                                                </span>
+                                                                <span
+                                                                    className={
+                                                                        item.item?.available_stock !== undefined &&
+                                                                            item.item.available_stock <
+                                                                            0
+                                                                            ? 'font-bold text-red-500'
+                                                                            : 'font-bold text-green-600'
+                                                                    }
+                                                                    title="Stok Tersedia"
+                                                                >
+                                                                    Sisa:{' '}
+                                                                    {formatNumberWithSeparator(
+                                                                        item.item?.available_stock ??
+                                                                        (item.item?.stock || 0)
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {isFullyReturned ? (
+                                                            <Badge className="badge-green-light">
+                                                                Sudah diretur
+                                                                sepenuhnya
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="badge-yellow-light"
+                                                            >
+                                                                Sudah diretur:{' '}
+                                                                {formatNumber(
+                                                                    returnedQty,
+                                                                )}
+                                                            </Badge>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <Badge variant="outline">
+                                                            {
+                                                                item.item_uom
+                                                                    ?.uom.name
+                                                            }
                                                         </Badge>
-                                                    ) : (
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="badge-yellow-light"
-                                                        >
-                                                            Sudah diretur:{' '}
-                                                            {formatNumber(
-                                                                returnedQty,
-                                                            )}
-                                                        </Badge>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant="outline">
-                                                        {
-                                                            detail?.item_uom
-                                                                ?.uom.name
-                                                        }
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <div>
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
                                                         <div>
-                                                            {formatNumber(
-                                                                item.max_quantity ??
-                                                                0,
-                                                            ).toLocaleString(
-                                                                'id-ID',
-                                                            )}
-                                                        </div>
-                                                        {returnedQty > 0 && (
-                                                            <div className="text-xs text-muted-foreground">
-                                                                dari{' '}
-                                                                {originalQuantity.toLocaleString(
+                                                            <div>
+                                                                {formatNumber(
+                                                                    item.max_quantity ??
+                                                                    0,
+                                                                ).toLocaleString(
                                                                     'id-ID',
                                                                 )}
                                                             </div>
+                                                            {returnedQty > 0 && (
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    dari{' '}
+                                                                    {originalQuantity.toLocaleString(
+                                                                        'id-ID',
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <Input
+                                                            type="text"
+                                                            value={item.quantity}
+                                                            onChange={(e) =>
+                                                                handleQuantityChange(
+                                                                    index,
+                                                                    e,
+                                                                    quantityDisplayValues,
+                                                                    setQuantityDisplayValues,
+                                                                )
+                                                            }
+                                                            className="input-box w-24 text-center"
+                                                            disabled={
+                                                                !item.selected ||
+                                                                isFullyReturned
+                                                            }
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {formatCurrency(
+                                                            formatNumber(
+                                                                item.price,
+                                                            ),
                                                         )}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Input
-                                                        type="text"
-                                                        value={item.quantity}
-                                                        onChange={(e) =>
-                                                            handleQuantityChange(
-                                                                index,
-                                                                e,
-                                                                quantityDisplayValues,
-                                                                setQuantityDisplayValues,
-                                                            )
-                                                        }
-                                                        className="input-box w-24 text-center"
-                                                        disabled={
-                                                            !item.selected ||
-                                                            isFullyReturned
-                                                        }
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {formatCurrency(
-                                                        formatNumber(
-                                                            item.price,
-                                                        ),
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-center text-red-600 dark:text-danger-500">
-                                                    {formatNumber(
-                                                        item.discount1_percent ??
-                                                        0,
-                                                    ) > 0
-                                                        ? `${item.discount1_percent}%`
-                                                        : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-center text-red-600 dark:text-danger-500">
-                                                    {formatNumber(
-                                                        item.discount2_percent ??
-                                                        0,
-                                                    ) > 0
-                                                        ? `${item.discount2_percent}%`
-                                                        : '-'}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-center text-red-600 dark:text-danger-500">
+                                                        {formatNumber(
+                                                            item.discount1_percent ??
+                                                            0,
+                                                        ) > 0
+                                                            ? `${item.discount1_percent}%`
+                                                            : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center text-red-600 dark:text-danger-500">
+                                                        {formatNumber(
+                                                            item.discount2_percent ??
+                                                            0,
+                                                        ) > 0
+                                                            ? `${item.discount2_percent}%`
+                                                            : '-'}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             )}

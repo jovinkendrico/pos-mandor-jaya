@@ -105,25 +105,15 @@ class PurchaseReturnController extends Controller
      */
     public function create(): Response
     {
-        // Get confirmed purchases only
-        $purchases = Purchase::with(['supplier', 'details.item', 'details.itemUom.uom'])
+        // Get confirmed purchases only - minimal data for dropdown
+        $purchases = Purchase::with(['supplier:id,name'])
             ->where('status', 'confirmed')
+            ->select('id', 'purchase_number', 'supplier_id', 'purchase_date')
             ->orderBy('purchase_date', 'desc')
             ->get();
 
-        // Get already returned quantities for each purchase detail
+        // Removed: moved to getPurchaseDetails JSON endpoint to avoid N+1 and large initial payload
         $returnedQuantities = [];
-        foreach ($purchases as $purchase) {
-            foreach ($purchase->details as $detail) {
-                $totalReturned = \App\Models\PurchaseReturnDetail::where('purchase_detail_id', $detail->id)
-                    ->whereHas('purchaseReturn', function ($query) {
-                        $query->where('status', 'confirmed');
-                    })
-                    ->sum('quantity');
-
-                $returnedQuantities[$detail->id] = (float) $totalReturned;
-            }
-        }
 
         // Get banks for refund selection
         $banks = \App\Models\Bank::orderBy('name')->get();
@@ -228,6 +218,30 @@ class PurchaseReturnController extends Controller
 
         return Inertia::render('transaction/purchasereturn/show', [
             'purchase_return' => $purchaseReturn,
+        ]);
+    }
+
+    /**
+     * Get purchase details via AJAX for return form
+     */
+    public function getPurchaseDetails(Purchase $purchase)
+    {
+        $purchase->load(['details.item', 'details.itemUom.uom']);
+
+        $returnedQuantities = [];
+        foreach ($purchase->details as $detail) {
+            $totalReturned = \App\Models\PurchaseReturnDetail::where('purchase_detail_id', $detail->id)
+                ->whereHas('purchaseReturn', function ($query) {
+                    $query->where('status', 'confirmed');
+                })
+                ->sum('quantity');
+
+            $returnedQuantities[$detail->id] = (float) $totalReturned;
+        }
+
+        return response()->json([
+            'purchase' => $purchase,
+            'returnedQuantities' => $returnedQuantities,
         ]);
     }
 

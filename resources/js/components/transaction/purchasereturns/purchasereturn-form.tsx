@@ -33,6 +33,8 @@ import {
     formatNumberWithSeparator,
 } from '@/lib/utils';
 import { IBank, IItem, IPurchase, IPurchaseDetail } from '@/types';
+import axios from 'axios';
+import { Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 interface IPurchaseReturnViewModel extends IPurchaseDetail {
@@ -47,7 +49,7 @@ interface PurchaseReturnFormProps {
 }
 
 const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
-    const { purchases, returnedQuantities = {}, banks = [] } = props;
+    const { purchases, banks = [] } = props;
 
     const [returnItems, setReturnItems] = useState<IPurchaseReturnViewModel[]>(
         [],
@@ -55,6 +57,14 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
     const [quantityDisplayValues, setQuantityDisplayValues] = useState<
         string[]
     >([]);
+
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [localSelectedPurchase, setLocalSelectedPurchase] = useState<
+        IPurchase | undefined
+    >(undefined);
+    const [localReturnedQuantities, setLocalReturnedQuantities] = useState<
+        Record<number, number>
+    >({});
 
     const {
         data: dataPurchaseReturn,
@@ -67,14 +77,6 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
         handleQuantityChange,
     } = usePurchaseReturn();
 
-    const selectedPurchase = useMemo(() => {
-        if (!dataPurchaseReturn.purchase_id) return undefined;
-        const a = purchases.find(
-            (p) => p.id === dataPurchaseReturn.purchase_id,
-        );
-        return a;
-    }, [dataPurchaseReturn, purchases]);
-
     const purchaseComboboxOptions: ComboboxOption[] = useMemo(() => {
         return purchases.map((purchase) => ({
             label: purchase.purchase_number,
@@ -83,34 +85,59 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
     }, [purchases]);
 
     useEffect(() => {
-        if (selectedPurchase) {
-            const initialReturnItems = selectedPurchase.details.map(
-                (detail) => {
-                    const returnedQty = returnedQuantities[detail.id || 0] || 0;
-                    const originalQuantity = detail.quantity || 0;
-                    const remainingQty = originalQuantity - returnedQty;
+        const fetchPurchaseDetails = async () => {
+            if (!dataPurchaseReturn.purchase_id) {
+                setLocalSelectedPurchase(undefined);
+                setLocalReturnedQuantities({});
+                setReturnItems([]);
+                setDataPurchaseReturn('details', []);
+                setQuantityDisplayValues([]);
+                return;
+            }
 
-                    return {
-                        ...detail,
-                        selected: remainingQty > 0,
-                        max_quantity: remainingQty > 0 ? remainingQty : 0,
-                        quantity: remainingQty > 0 ? remainingQty : 0,
-                    } as IPurchaseReturnViewModel;
-                },
-            );
-            setReturnItems(initialReturnItems);
+            setIsLoadingDetails(true);
+            try {
+                const response = await axios.get(
+                    `/purchase-returns/purchase-details/${dataPurchaseReturn.purchase_id}`,
+                );
+                const { purchase, returnedQuantities } = response.data;
 
-            setQuantityDisplayValues(
-                initialReturnItems.map((item) => item.quantity.toString()),
-            );
+                setLocalSelectedPurchase(purchase);
+                setLocalReturnedQuantities(returnedQuantities);
 
-            setDataPurchaseReturn('details', initialReturnItems);
-        } else {
-            setReturnItems([]);
-            setDataPurchaseReturn('details', []);
-            setQuantityDisplayValues([]);
-        }
-    }, [selectedPurchase, returnedQuantities, setDataPurchaseReturn]);
+                const initialReturnItems = purchase.details.map(
+                    (detail: IPurchaseDetail) => {
+                        const returnedQty =
+                            returnedQuantities[detail.id || 0] || 0;
+                        const originalQuantity = detail.quantity || 0;
+                        const remainingQty = originalQuantity - returnedQty;
+
+                        return {
+                            ...detail,
+                            selected: remainingQty > 0,
+                            max_quantity: remainingQty > 0 ? remainingQty : 0,
+                            quantity: remainingQty > 0 ? remainingQty : 0,
+                        } as IPurchaseReturnViewModel;
+                    },
+                );
+
+                setReturnItems(initialReturnItems);
+                setQuantityDisplayValues(
+                    initialReturnItems.map((item: IPurchaseReturnViewModel) =>
+                        item.quantity.toString(),
+                    ),
+                );
+
+                setDataPurchaseReturn('details', initialReturnItems);
+            } catch (error) {
+                console.error('Error fetching purchase details:', error);
+            } finally {
+                setIsLoadingDetails(false);
+            }
+        };
+
+        fetchPurchaseDetails();
+    }, [dataPurchaseReturn.purchase_id, setDataPurchaseReturn]);
 
     const handleToggleItem = (index: number) => {
         const newItems = [...returnItems];
@@ -339,9 +366,19 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
             {dataPurchaseReturn.purchase_id && (
                 <Card className="content">
                     <CardHeader>
-                        <CardTitle>Pilih Barang yang akan Diretur</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            Pilih Barang yang akan Diretur
+                            {isLoadingDetails && (
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            )}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative">
+                        {isLoadingDetails && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        )}
                         <div className="input-box overflow-x-auto rounded-lg">
                             <Table className="content">
                                 <TableHeader>
@@ -381,11 +418,11 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                 <TableBody>
                                     {returnItems.map((item, index) => {
                                         const detail =
-                                            selectedPurchase?.details[index];
+                                            localSelectedPurchase?.details[index];
                                         const originalQuantity =
                                             detail?.quantity ?? 0;
                                         const returnedQty =
-                                            returnedQuantities[
+                                            localReturnedQuantities[
                                             detail?.id || 0
                                             ] || 0;
                                         const remainingQty =
@@ -560,7 +597,8 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                         </div>
                     </CardContent>
                 </Card>
-            )}
+            )
+            }
 
             {/* Totals & Footer */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -660,7 +698,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                 type="submit"
                                 disabled={
                                     processingPurchaseReturn ||
-                                    !dataPurchaseReturn
+                                    !dataPurchaseReturn.purchase_id
                                 }
                                 className="btn-primary flex-1"
                             >

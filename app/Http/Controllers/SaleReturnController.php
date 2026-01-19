@@ -105,25 +105,15 @@ class SaleReturnController extends Controller
      */
     public function create(): Response
     {
-        // Get confirmed sales only
-        $sales = Sale::with(['customer', 'details.item', 'details.itemUom.uom'])
+        // Get confirmed sales only - minimal data for dropdown
+        $sales = Sale::with(['customer:id,name'])
             ->where('status', 'confirmed')
+            ->select('id', 'sale_number', 'customer_id', 'sale_date')
             ->orderBy('sale_date', 'desc')
             ->get();
 
-        // Get already returned quantities for each sale detail
+        // Removed: moved to getSaleDetails JSON endpoint to avoid N+1 and large initial payload
         $returnedQuantities = [];
-        foreach ($sales as $sale) {
-            foreach ($sale->details as $detail) {
-                $totalReturned = \App\Models\SaleReturnDetail::where('sale_detail_id', $detail->id)
-                    ->whereHas('saleReturn', function ($query) {
-                        $query->where('status', 'confirmed');
-                    })
-                    ->sum('quantity');
-
-                $returnedQuantities[$detail->id] = (float) $totalReturned;
-            }
-        }
 
         // Get banks for refund selection
         $banks = \App\Models\Bank::orderBy('name')->get();
@@ -232,6 +222,30 @@ class SaleReturnController extends Controller
 
         return Inertia::render('transaction/salereturn/show', [
             'return' => $saleReturn,
+        ]);
+    }
+
+    /**
+     * Get sale details via AJAX for return form
+     */
+    public function getSaleDetails(Sale $sale)
+    {
+        $sale->load(['details.item', 'details.itemUom.uom']);
+
+        $returnedQuantities = [];
+        foreach ($sale->details as $detail) {
+            $totalReturned = \App\Models\SaleReturnDetail::where('sale_detail_id', $detail->id)
+                ->whereHas('saleReturn', function ($query) {
+                    $query->where('status', 'confirmed');
+                })
+                ->sum('quantity');
+
+            $returnedQuantities[$detail->id] = (float) $totalReturned;
+        }
+
+        return response()->json([
+            'sale' => $sale,
+            'returnedQuantities' => $returnedQuantities,
         ]);
     }
 
