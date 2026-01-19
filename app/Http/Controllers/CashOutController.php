@@ -110,8 +110,8 @@ class CashOutController extends Controller
     public function create(): Response
     {
         $banks = Bank::orderBy('name')->get();
-        // Get accounts (type = 'expense', 'biaya', 'pengeluaran', 'liability', 'equity')
-        $expenseAccounts = ChartOfAccount::whereIn('type', ['expense', 'biaya', 'pengeluaran', 'liability', 'equity'])
+        // Get accounts (type = 'expense', 'biaya', 'pengeluaran', 'liability', 'equity', 'asset')
+        $expenseAccounts = ChartOfAccount::whereIn('type', ['expense', 'biaya', 'pengeluaran', 'liability', 'equity', 'asset'])
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
@@ -197,7 +197,7 @@ class CashOutController extends Controller
         }
 
         $banks = Bank::orderBy('name')->get();
-        $expenseAccounts = ChartOfAccount::whereIn('type', ['expense', 'biaya', 'pengeluaran', 'liability', 'equity'])
+        $expenseAccounts = ChartOfAccount::whereIn('type', ['expense', 'biaya', 'pengeluaran', 'liability', 'equity', 'asset'])
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
