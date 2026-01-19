@@ -255,10 +255,20 @@ class PurchaseReturnController extends Controller
                 ->with('error', 'Retur pembelian sudah dikonfirmasi.');
         }
 
-        $this->stockService->confirmPurchaseReturn($purchaseReturn);
+        try {
+            $this->stockService->confirmPurchaseReturn($purchaseReturn);
 
-        return redirect()->route('purchase-returns.show', $purchaseReturn)
-            ->with('success', 'Retur pembelian dikonfirmasi. Stock telah dikurangi.');
+            return redirect()->route('purchase-returns.show', $purchaseReturn)
+                ->with('success', 'Retur pembelian dikonfirmasi. Stock telah dikurangi.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Purchase Return Confirmation Error', [
+                'purchase_return_id' => $purchaseReturn->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->route('purchase-returns.show', $purchaseReturn)
+                ->with('error', 'Gagal Konfirmasi: ' . $e->getMessage());
+        }
     }
 
     /**

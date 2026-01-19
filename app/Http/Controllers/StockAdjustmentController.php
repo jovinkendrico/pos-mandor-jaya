@@ -162,23 +162,32 @@ class StockAdjustmentController extends Controller
      */
     public function store(StoreStockAdjustmentRequest $request): RedirectResponse
     {
-        DB::transaction(function () use ($request) {
-            $item = Item::findOrFail($request->item_id);
-            $quantity = (float) $request->quantity;
-            $unitCost = (float) ($request->unit_cost ?? 0);
-            $adjustmentDate = $request->adjustment_date ?? now();
+        try {
+            DB::transaction(function () use ($request) {
+                $item = Item::findOrFail($request->item_id);
+                $quantity = (float) $request->quantity;
+                $unitCost = (float) ($request->unit_cost ?? 0);
+                $adjustmentDate = $request->adjustment_date ?? now();
 
-            $this->stockService->adjustStock(
-                $item,
-                $quantity,
-                $unitCost,
-                $adjustmentDate,
-                $request->notes ?? ''
-            );
-        });
+                $this->stockService->adjustStock(
+                    $item,
+                    $quantity,
+                    $unitCost,
+                    $adjustmentDate,
+                    $request->notes ?? ''
+                );
+            });
 
-        return redirect()->route('stock-adjustments.index')
-            ->with('success', 'Penyesuaian stok berhasil ditambahkan.');
+            return redirect()->route('stock-adjustments.index')
+                ->with('success', 'Penyesuaian stok berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Stock Adjustment Error', [
+                'item_id' => $request->item_id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->withInput()->with('error', 'Gagal menyimpan penyesuaian stok: ' . $e->getMessage());
+        }
     }
 
     /**
