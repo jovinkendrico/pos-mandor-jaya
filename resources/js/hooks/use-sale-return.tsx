@@ -94,13 +94,21 @@ const useSaleReturn = () => {
         return_date: data.return_date
             ? formatDatetoString(data.return_date)
             : data.return_date,
+        details: data.details.filter((detail: any) => detail.selected),
     }));
 
     const handleSubmit = async () => {
         clearErrors();
 
+        const filteredData = {
+            ...data,
+            details: data.details.filter((detail: any) => detail.selected),
+        };
+
         try {
-            await saleReturnSchema.validate(data, { abortEarly: false });
+            await saleReturnSchema.validate(filteredData, {
+                abortEarly: false,
+            });
             submit(store(), {
                 onSuccess: () => {
                     reset();
