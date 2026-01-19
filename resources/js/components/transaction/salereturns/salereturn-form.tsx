@@ -134,6 +134,7 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
         const newItems = [...returnItems];
         newItems[index].selected = !newItems[index].selected;
         setReturnItems(newItems);
+        setDataSaleReturn('details', newItems);
     };
 
     const calculations = useMemo(() => {
@@ -144,8 +145,12 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
             getDiscount2Percent: (detail) => detail.discount2_percent || 0,
         };
 
+        const selectedItems = dataSaleReturn.details.filter(
+            (item: any) => item.selected
+        );
+
         return calculateTotals(
-            dataSaleReturn.details,
+            selectedItems,
             detailAccessors,
             dataSaleReturn.ppn_percent,
         );
