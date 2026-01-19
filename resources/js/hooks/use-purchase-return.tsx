@@ -19,7 +19,7 @@ const detailsSchema = Yup.object().shape({
     quantity: Yup.number()
         .required('Jumlah barang harus diisi.')
         .min(0.01, 'Jumlah barang minimal 0.01'),
-    price: Yup.number().required('Harga barang harus diisi.'),
+    price: Yup.number().required('Harga barang harus diisi.').min(0, 'Harga barang minimal 0.'),
     discount1_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
         .max(100, 'Diskon tidak boleh lebih dari 100.'),

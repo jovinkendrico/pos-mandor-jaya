@@ -44,7 +44,7 @@ export function parseCurrency(input: string): number | null {
     // Remove dots (thousand separators) and replace comma with dot (decimal separator)
     const normalized = cleaned.replace(/\./g, '').replace(',', '.');
 
-    if (!normalized) {
+    if (normalized === '') {
         return null;
     }
 
