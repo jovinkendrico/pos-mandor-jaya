@@ -75,14 +75,19 @@ const PurchaseShow = (props: PageProps) => {
             `/purchases/${purchase.id}/confirm`,
             {},
             {
-                onSuccess: () => {
-                    toast.success('Pembelian dikonfirmasi');
+                onSuccess: (page) => {
+                    const flash = page.props.flash as { error?: string; success?: string };
+                    if (flash.error) {
+                        toast.error(flash.error);
+                    } else if (flash.success) {
+                        toast.success(flash.success);
+                    }
                     closeConfirmModal();
                 },
                 onError: (errors: Record<string, string>) => {
-                    const message = errors.msg || 'Gagal konfirmasi pembelian';
-                    closeConfirmModal();
+                    const message = errors.error || errors.msg || errors.message || 'Gagal konfirmasi pembelian';
                     toast.error(message);
+                    closeConfirmModal();
                 },
             },
         );
@@ -93,8 +98,13 @@ const PurchaseShow = (props: PageProps) => {
             `/purchases/${purchase.id}/unconfirm`,
             {},
             {
-                onSuccess: () => {
-                    toast.success('Konfirmasi dibatalkan');
+                onSuccess: (page) => {
+                    const flash = page.props.flash as { error?: string; success?: string };
+                    if (flash.error) {
+                        toast.error(flash.error);
+                    } else if (flash.success) {
+                        toast.success(flash.success);
+                    }
                     closeConfirmModal();
                 },
                 onError: () => toast.error('Gagal membatalkan konfirmasi'),
