@@ -923,53 +923,36 @@ class JournalService
                 throw new \Exception('Akun Utang Lain-lain tidak ditemukan. Pastikan akun 2105 sudah ada.');
             }
 
-            if (!$transaction->bank || !$transaction->bank->chartOfAccount) {
+            if (!$transaction->bank) {
                 throw new \Exception('Bank account tidak ditemukan untuk refund.');
             }
 
-            // Create journal entry
-            $journalEntry = JournalEntry::create([
-                'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => $transaction->transaction_date,
-                'reference_type' => 'OverpaymentTransaction',
-                'reference_id' => $transaction->id,
-                'description' => "Pengembalian Kelebihan Pembayaran #{$transaction->transaction_number}",
-                'status' => 'posted',
-                'created_by' => auth()->id(),
-                'updated_by' => auth()->id(),
-            ]);
-
-            // Debit: Utang Lain-lain
-            JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+            // Create CashOut record
+            $cashOut = \App\Models\CashOut::create([
+                'cash_out_number' => \App\Models\CashOut::generateCashOutNumber(),
+                'cash_out_date'   => $transaction->transaction_date,
+                'bank_id'         => $transaction->bank_id,
                 'chart_of_account_id' => $otherPayableAccount->id,
-                'debit' => $transaction->amount,
-                'credit' => 0,
-                'description' => "Pengembalian kelebihan pembayaran",
+                'amount'          => $transaction->amount,
+                'description'     => "Pengembalian Kelebihan Pembayaran #{$transaction->transaction_number}",
+                'status'          => 'pending',
+                'reference_type'  => 'OverpaymentTransaction',
+                'reference_id'    => $transaction->id,
+                'created_by'      => auth()->id() ?? $transaction->created_by,
+                'updated_by'      => auth()->id() ?? $transaction->updated_by,
             ]);
 
-            // Credit: Bank
-            JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
-                'chart_of_account_id' => $transaction->bank->chartOfAccount->id,
-                'debit' => 0,
-                'credit' => $transaction->amount,
-                'description' => "Pengembalian kelebihan pembayaran",
-            ]);
+            // Post CashOut (this handles JournalEntry, CashMovement, and status update)
+            $this->postCashOut($cashOut);
 
-            // Update bank balance (decrease)
-            app(\App\Services\CashMovementService::class)->createMovement(
-                $transaction->bank,
-                'OverpaymentRefund',
-                $transaction->id,
-                $transaction->transaction_date,
-                0,
-                (float) $transaction->amount,
-                "Pengembalian Kelebihan Pembayaran #{$transaction->transaction_number}"
-            );
+            // Link transaction to the generated journal entry
+            $journalEntry = JournalEntry::where('reference_type', 'CashOut')
+                ->where('reference_id', $cashOut->id)
+                ->first();
 
-            // Update transaction with journal entry reference
-            $transaction->update(['journal_entry_id' => $journalEntry->id]);
+            if ($journalEntry) {
+                $transaction->update(['journal_entry_id' => $journalEntry->id]);
+            }
         });
     }
 
@@ -1079,53 +1062,36 @@ class JournalService
                 throw new \Exception('Akun Uang Muka Pembelian tidak ditemukan. Pastikan akun 1401 sudah ada.');
             }
 
-            if (!$transaction->bank || !$transaction->bank->chartOfAccount) {
+            if (!$transaction->bank) {
                 throw new \Exception('Bank account tidak ditemukan untuk refund.');
             }
 
-            // Create journal entry
-            $journalEntry = JournalEntry::create([
-                'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date' => $transaction->transaction_date,
-                'reference_type' => 'OverpaymentTransaction',
-                'reference_id' => $transaction->id,
-                'description' => "Penerimaan Kembali Kelebihan Pembayaran #{$transaction->transaction_number}",
-                'status' => 'posted',
-                'created_by' => auth()->id(),
-                'updated_by' => auth()->id(),
-            ]);
-
-            // Debit: Bank
-            JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
-                'chart_of_account_id' => $transaction->bank->chartOfAccount->id,
-                'debit' => $transaction->amount,
-                'credit' => 0,
-                'description' => "Pengembalian kelebihan pembayaran dari supplier",
-            ]);
-
-            // Credit: Uang Muka Pembelian
-            JournalEntryDetail::create([
-                'journal_entry_id' => $journalEntry->id,
+            // Create CashIn record
+            $cashIn = \App\Models\CashIn::create([
+                'cash_in_number' => \App\Models\CashIn::generateCashInNumber(),
+                'cash_in_date'   => $transaction->transaction_date,
+                'bank_id'         => $transaction->bank_id,
                 'chart_of_account_id' => $advanceAccount->id,
-                'debit' => 0,
-                'credit' => $transaction->amount,
-                'description' => "Penerimaan kembali uang muka ",
+                'amount'          => $transaction->amount,
+                'description'     => "Penerimaan Kembali Kelebihan Pembayaran #{$transaction->transaction_number}",
+                'status'          => 'pending',
+                'reference_type'  => 'OverpaymentTransaction',
+                'reference_id'    => $transaction->id,
+                'created_by'      => auth()->id() ?? $transaction->created_by,
+                'updated_by'      => auth()->id() ?? $transaction->updated_by,
             ]);
 
-            // Update bank balance (increase)
-            app(\App\Services\CashMovementService::class)->createMovement(
-                $transaction->bank,
-                'OverpaymentRefund',
-                $transaction->id,
-                $transaction->transaction_date,
-                (float) $transaction->amount,
-                0,
-                "Pengembalian Kelebihan Pembayaran #{$transaction->transaction_number}"
-            );
+            // Post CashIn (this handles JournalEntry, CashMovement, and status update)
+            $this->postCashIn($cashIn);
 
-            // Update transaction with journal entry reference
-            $transaction->update(['journal_entry_id' => $journalEntry->id]);
+            // Link transaction to the generated journal entry
+            $journalEntry = JournalEntry::where('reference_type', 'CashIn')
+                ->where('reference_id', $cashIn->id)
+                ->first();
+
+            if ($journalEntry) {
+                $transaction->update(['journal_entry_id' => $journalEntry->id]);
+            }
         });
     }
 
