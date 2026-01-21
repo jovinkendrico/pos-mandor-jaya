@@ -281,8 +281,13 @@ class JournalService
                 ->where('is_active', true)
                 ->first();
 
-            if (!$receivableAccount || !$incomeAccount || !$hppAccount || !$inventoryAccount) {
-                throw new \Exception('Chart of Account tidak ditemukan. Pastikan akun Piutang Usaha (1201), Pendapatan (4101), HPP (5101), dan Persediaan (1301) sudah ada.');
+            // Get Kas Besar account for Loans
+            $kasBesarAccount = ChartOfAccount::where('code', '1102') // Kas Besar
+                ->where('is_active', true)
+                ->first();
+
+            if (!$receivableAccount || !$incomeAccount || !$hppAccount || !$inventoryAccount || !$kasBesarAccount) {
+                throw new \Exception('Chart of Account tidak ditemukan. Pastikan akun Piutang Usaha (1201), Pendapatan (4101), HPP (5101), Persediaan (1301), dan Kas Besar (1102) sudah ada.');
             }
 
             $journalEntry = JournalEntry::create([
@@ -294,6 +299,17 @@ class JournalService
                 'status'         => 'posted',
             ]);
 
+            // Split items into Goods and Loans
+            $loanTotal = 0;
+            $goodsTotal = 0;
+            foreach ($sale->details as $detail) {
+                if ($detail->item_id == 1525) {
+                    $loanTotal += (float) $detail->subtotal;
+                } else {
+                    $goodsTotal += (float) $detail->subtotal;
+                }
+            }
+
             // Debit: Piutang Usaha (total amount termasuk PPN)
             JournalEntryDetail::create([
                 'journal_entry_id'    => $journalEntry->id,
@@ -303,15 +319,50 @@ class JournalService
                 'description'         => "Piutang dari Penjualan #{$sale->sale_number}",
             ]);
 
-            // Credit: Pendapatan Penjualan (hanya total setelah diskon, tanpa PPN)
-            $incomeAmount = (float) $sale->total_after_discount;
-            JournalEntryDetail::create([
-                'journal_entry_id'    => $journalEntry->id,
-                'chart_of_account_id' => $incomeAccount->id,
-                'debit'               => 0,
-                'credit'              => $incomeAmount,
-                'description'         => "Pendapatan dari Penjualan #{$sale->sale_number}",
-            ]);
+            // Credit: Pendapatan Penjualan (Hanya Goods)
+            // Note: If there is a header discount, it usually applies to Goods only in this context.
+            // We use proportional logic if header discounts are present, but for simplicity 
+            // and based on user requirements, let's use the subtotal split.
+            // However, $sale->total_after_discount might be less than ($goodsTotal + $loanTotal) 
+            // if there is a header discount.
+            
+            $headerDiscount = ($goodsTotal + $loanTotal) - (float)$sale->total_after_discount;
+            $finalGoodsIncome = $goodsTotal - $headerDiscount; // Apply discount to goods mainly
+            
+            if ($finalGoodsIncome > 0) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $incomeAccount->id,
+                    'debit'               => 0,
+                    'credit'              => $finalGoodsIncome,
+                    'description'         => "Pendapatan dari Penjualan #{$sale->sale_number}",
+                ]);
+            }
+
+            // Credit: Kas Besar (For Loans)
+            if ($loanTotal > 0) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $kasBesarAccount->id,
+                    'debit'               => 0,
+                    'credit'              => $loanTotal,
+                    'description'         => "Pinjaman Tunai di Penjualan #{$sale->sale_number}",
+                ]);
+
+                // Create Cash Movement for Kas Besar
+                $bank = \App\Models\Bank::find(1); // KAS BESAR
+                if ($bank) {
+                    app(\App\Services\CashMovementService::class)->createMovement(
+                        $bank,
+                        'Sale',
+                        $sale->id,
+                        $sale->sale_date,
+                        0,
+                        $loanTotal,
+                        "Pinjaman Tunai di Penjualan #{$sale->sale_number}"
+                    );
+                }
+            }
 
             // Credit: Pajak Keluaran (jika ada PPN)
             $ppnAmount = (float) ($sale->ppn_amount ?? 0);
@@ -386,6 +437,15 @@ class JournalService
 
             // Update journal entry status
             $journalEntry->update(['status' => 'reversed']);
+
+            // Reverse Cash Movement if exists (For Loans)
+            $movements = \App\Models\CashMovement::where('reference_type', 'Sale')
+                ->where('reference_id', $sale->id)
+                ->get();
+            
+            foreach ($movements as $movement) {
+                app(\App\Services\CashMovementService::class)->reverseMovement($movement, now());
+            }
         });
     }
 

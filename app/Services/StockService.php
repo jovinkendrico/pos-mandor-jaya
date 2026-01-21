@@ -202,6 +202,16 @@ class StockService
                     continue;
                 }
 
+                // Skip FIFO and stock for PINJAM TUNAI (ID 1525)
+                if ($detail->item_id == 1525) {
+                    $detail->update([
+                        'cost'   => 0,
+                        'profit' => $detail->subtotal, // All subtotal is profit for loans as cost is 0
+                        'profit_status' => 'realized',
+                    ]);
+                    continue;
+                }
+
                 // Calculate FIFO cost and get mappings
                 // This will THROW Exception if stock is insufficient (so we never confirm negative stock sales)
                 $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $sale->sale_date);
@@ -279,6 +289,15 @@ class StockService
             // Restore FIFO quantities using mappings (accurate restoration)
             foreach ($sale->details as $detail) {
                 if (!$detail->item || !$detail->itemUom) {
+                    continue;
+                }
+
+                // Skip PINJAM TUNAI (ID 1525)
+                if ($detail->item_id == 1525) {
+                    $detail->update([
+                        'cost'   => 0,
+                        'profit' => 0,
+                    ]);
                     continue;
                 }
 
