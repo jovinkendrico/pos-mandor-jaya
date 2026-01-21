@@ -23,6 +23,7 @@ class PurchasePayment extends Model
         'reference_number',
         'notes',
         'status',
+        'transfer_fee',
         'created_by',
         'updated_by',
     ];
@@ -30,6 +31,7 @@ class PurchasePayment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'total_amount' => 'decimal:2',
+        'transfer_fee' => 'decimal:2',
         'overpayment_amount' => 'decimal:2',
     ];
 

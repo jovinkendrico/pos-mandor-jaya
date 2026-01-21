@@ -654,6 +654,7 @@ export interface PurchasePayment {
     bank?: Bank;
     payment_method: 'cash' | 'transfer' | 'giro' | 'cek' | 'other';
     reference_number?: string;
+    transfer_fee?: number;
     notes?: string;
     status: 'pending' | 'confirmed';
     purchases?: Purchase[];
@@ -691,6 +692,7 @@ export type IPurchasePayment = Pick<
     | 'total_amount'
     | 'bank_id'
     | 'reference_number'
+    | 'transfer_fee'
     | 'notes'
     | 'status'
 > & {
@@ -698,6 +700,8 @@ export type IPurchasePayment = Pick<
     bank?: IBank;
     items: IPurchasePaymentItem[];
     payment_method: PaymentMethod;
+    creator?: User;
+    updater?: User;
 };
 
 export interface SalePayment {

@@ -31,6 +31,7 @@ class StorePurchasePaymentRequest extends FormRequest
             'bank_id' => ['nullable', 'exists:banks,id'],
             'payment_method' => ['required', 'in:cash,transfer,giro,cek,other'],
             'reference_number' => ['nullable', 'string', 'max:255'],
+            'transfer_fee' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
             'status' => ['nullable', 'in:pending,confirmed'],
         ];

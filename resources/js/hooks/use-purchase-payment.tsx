@@ -32,6 +32,9 @@ const purchasePaymentSchema = Yup.object().shape({
     reference_number: Yup.string()
         .max(255, 'Maksimal 255 karakter.')
         .nullable(),
+    transfer_fee: Yup.number()
+        .min(0, 'Biaya transfer minimal 0.')
+        .nullable(),
     notes: Yup.string().max(255, 'Maksimal 255 karakter.').nullable(),
     status: Yup.mixed<PurchasePaymentStatus>()
         .oneOf(PurchasePaymentStatusValues)
@@ -61,6 +64,7 @@ const usePurchasePayments = (): any => {
         bank_id: null,
         payment_method: PaymentMethod.CASH,
         reference_number: '',
+        transfer_fee: 0,
         notes: '',
         status: PurchasePaymentStatus.PENDING,
     });

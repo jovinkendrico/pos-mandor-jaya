@@ -183,10 +183,26 @@ const PurchasePaymentShow = (props: PageProps) => {
                         )}
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">
-                                Total:
+                                Total Pembayaran:
                             </span>
-                            <span className="text-lg font-bold">
+                            <span className="font-semibold text-red-600 dark:text-red-400">
                                 {formatCurrency(purchase_payment.total_amount)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                                Biaya Transfer:
+                            </span>
+                            <span className="font-semibold">
+                                {formatCurrency(purchase_payment.transfer_fee || 0)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between border-t border-border pt-2">
+                            <span className="text-muted-foreground font-bold">
+                                Total Bank:
+                            </span>
+                            <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                {formatCurrency(Number(purchase_payment.total_amount) + Number(purchase_payment.transfer_fee || 0))}
                             </span>
                         </div>
                         <div className="flex justify-between">

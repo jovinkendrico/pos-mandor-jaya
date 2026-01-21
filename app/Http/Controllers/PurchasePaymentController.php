@@ -224,6 +224,7 @@ class PurchasePaymentController extends Controller
                 'bank_id' => $request->bank_id,
                 'payment_method' => $request->payment_method,
                 'reference_number' => $request->reference_number,
+                'transfer_fee' => $request->transfer_fee ?? 0,
                 'notes' => $request->notes,
                 'status' => $request->status ?? 'pending',
                 'created_by' => auth()->id(),
@@ -343,6 +344,7 @@ class PurchasePaymentController extends Controller
             'bank_id' => $request->bank_id,
             'payment_method' => $request->payment_method,
             'reference_number' => $request->reference_number,
+            'transfer_fee' => $request->transfer_fee ?? 0,
             'notes' => $request->notes,
             'updated_by' => auth()->id(),
         ]);
@@ -414,46 +416,35 @@ class PurchasePaymentController extends Controller
                 }
 
                 if ($payableAccount) {
-                    // Generate cash out number with retry logic to handle race conditions
-                    $maxRetries = 5;
-                    $cashOut = null;
+                    // Create primary payment CashOut
+                    $this->createCashOut(
+                        $purchasePayment,
+                        $payableAccount->id,
+                        $purchasePayment->total_amount,
+                        "Pembayaran Pembelian #{$purchasePayment->payment_number}"
+                    );
 
-                    for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
-                        try {
-                            $cashOutNumber = CashOut::generateCashOutNumber();
+                    // Create transfer fee CashOut if exists
+                    if ($purchasePayment->transfer_fee > 0) {
+                        $feeAccount = ChartOfAccount::where('code', '6109')
+                            ->where('is_active', true)
+                            ->first();
 
-                            $cashOut = CashOut::create([
-                                'cash_out_number' => $cashOutNumber,
-                                'cash_out_date' => $purchasePayment->payment_date,
-                                'bank_id' => $purchasePayment->bank_id,
-                                'chart_of_account_id' => $payableAccount->id, // Hutang Usaha, bukan biaya
-                                'amount' => $purchasePayment->total_amount,
-                                'description' => "Pembayaran Pembelian #{$purchasePayment->payment_number}",
-                                'status' => 'posted', // Auto post karena sudah confirmed
-                                'reference_type' => 'PurchasePayment',
-                                'reference_id' => $purchasePayment->id,
-                                'created_by' => auth()->id(),
-                                'updated_by' => auth()->id(),
-                            ]);
+                        if (!$feeAccount) {
+                            $feeAccount = ChartOfAccount::where('name', 'like', '%Administrasi Bank%')
+                                ->where('is_active', true)
+                                ->first();
+                        }
 
-                            break; // Success, exit retry loop
-                        } catch (\Illuminate\Database\QueryException $e) {
-                            // Check if it's a unique constraint violation (SQLSTATE 23000)
-                            if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'cash_out_number') || str_contains($e->getMessage(), 'cash_outs_cash_out_number_unique'))) {
-                                if ($attempt === $maxRetries - 1) {
-                                    throw $e; // Re-throw on last attempt
-                                }
-                                // Wait a tiny bit before retrying (microseconds)
-                                usleep(10000 * ($attempt + 1)); // 10ms, 20ms, 30ms, etc.
-                                continue;
-                            }
-                            throw $e; // Re-throw if it's a different error
+                        if ($feeAccount) {
+                            $this->createCashOut(
+                                $purchasePayment,
+                                $feeAccount->id,
+                                $purchasePayment->transfer_fee,
+                                "Biaya Transfer Pembayaran Pembelian #{$purchasePayment->payment_number}"
+                            );
                         }
                     }
-
-                    // Post to journal (this will also update bank balance)
-                    // JournalService akan membuat: Debit Hutang Usaha, Credit Bank
-                    app(\App\Services\JournalService::class)->postCashOut($cashOut);
 
                     // If there's overpayment, adjust the journal entry
                     // We need to reclassify overpayment from Hutang to Uang Muka Pembelian
@@ -461,17 +452,18 @@ class PurchasePaymentController extends Controller
                         $this->recordOverpaymentAsset($purchasePayment, $overpaymentAmount);
                     }
                 } else {
-                    // If no payable account found, still create cash movement
+                    // If no payable account found, still create cash movement for total (payment + fee)
                     $bank = \App\Models\Bank::lockForUpdate()->find($purchasePayment->bank_id);
                     if ($bank) {
+                        $totalOut = (float) $purchasePayment->total_amount + (float) $purchasePayment->transfer_fee;
                         app(\App\Services\CashMovementService::class)->createMovement(
                             $bank,
                             'PurchasePayment',
                             $purchasePayment->id,
                             $purchasePayment->payment_date,
                             0,
-                            (float) $purchasePayment->total_amount,
-                            "Pembayaran Pembelian #{$purchasePayment->payment_number}"
+                            $totalOut,
+                            "Pembayaran Pembelian #{$purchasePayment->payment_number} (Inc Fee)"
                         );
                     }
                 }
@@ -493,24 +485,26 @@ class PurchasePaymentController extends Controller
         }
 
         DB::transaction(function () use ($purchasePayment) {
-            // Find and reverse cash out if exists
-            $cashOut = CashOut::where('reference_type', 'PurchasePayment')
+            // Find and reverse cash outs if exists
+            $cashOuts = CashOut::where('reference_type', 'PurchasePayment')
                 ->where('reference_id', $purchasePayment->id)
                 ->where('status', 'posted')
-                ->first();
+                ->get();
 
-            if ($cashOut) {
-                // Reverse cash out (this will also update bank balance)
-                app(\App\Services\JournalService::class)->reverseCashOut($cashOut);
-                $cashOut->delete(); // Soft delete
+            if ($cashOuts->count() > 0) {
+                foreach ($cashOuts as $cashOut) {
+                    // Reverse cash out (this will also update bank balance)
+                    app(\App\Services\JournalService::class)->reverseCashOut($cashOut);
+                    $cashOut->delete(); // Soft delete
+                }
             } else {
                 // If no cash out found, delete cash movement manually
                 if ($purchasePayment->bank_id) {
-                    $cashMovement = \App\Models\CashMovement::where('reference_type', 'PurchasePayment')
+                    $cashMovements = \App\Models\CashMovement::where('reference_type', 'PurchasePayment')
                         ->where('reference_id', $purchasePayment->id)
-                        ->first();
+                        ->get();
 
-                    if ($cashMovement) {
+                    foreach ($cashMovements as $cashMovement) {
                         app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
                     }
                 }
@@ -616,5 +610,47 @@ class PurchasePaymentController extends Controller
             'credit' => $overpaymentAmount,
             'description' => "Penyesuaian kelebihan pembayaran ke supplier",
         ]);
+    }
+    /**
+     * Helper to create CashOut and post to journal
+     */
+    private function createCashOut(PurchasePayment $purchasePayment, int $accountId, float $amount, string $description): void
+    {
+        // Generate cash out number with retry logic to handle race conditions
+        $maxRetries = 5;
+        $cashOut = null;
+
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            try {
+                $cashOutNumber = CashOut::generateCashOutNumber();
+
+                $cashOut = CashOut::create([
+                    'cash_out_number' => $cashOutNumber,
+                    'cash_out_date' => $purchasePayment->payment_date,
+                    'bank_id' => $purchasePayment->bank_id,
+                    'chart_of_account_id' => $accountId,
+                    'amount' => $amount,
+                    'description' => $description,
+                    'status' => 'posted',
+                    'reference_type' => 'PurchasePayment',
+                    'reference_id' => $purchasePayment->id,
+                    'created_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                ]);
+
+                break;
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->getCode() == 23000 && (str_contains($e->getMessage(), 'cash_out_number') || str_contains($e->getMessage(), 'cash_outs_cash_out_number_unique'))) {
+                    if ($attempt === $maxRetries - 1) {
+                        throw $e;
+                    }
+                    usleep(10000 * ($attempt + 1));
+                    continue;
+                }
+                throw $e;
+            }
+        }
+
+        app(\App\Services\JournalService::class)->postCashOut($cashOut);
     }
 }

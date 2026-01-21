@@ -91,6 +91,10 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                 'reference_number',
                 purchase_payment.reference_number ?? '',
             );
+            setDataPurchasePayment(
+                'transfer_fee',
+                purchase_payment.transfer_fee || 0,
+            );
             setDataPurchasePayment('notes', purchase_payment.notes ?? '');
             setDataPurchasePayment(
                 'status',
@@ -147,6 +151,7 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
     }, [dataPurchasePayment.items, localPurchases]);
 
     const overpaymentAmount = Number(dataPurchasePayment.total_amount || 0) - totalAmount;
+    const grandTotal = Number(dataPurchasePayment.total_amount || 0) + Number(dataPurchasePayment.transfer_fee || 0);
 
     if (!isReady) {
         return <Skeleton className="h-full w-full" />;
@@ -314,6 +319,35 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                             />
                             <InputError
                                 message={errorsPurchasePayment.reference_number}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="transfer_fee">Biaya Transfer</Label>
+                            <Input
+                                id="transfer_fee"
+                                type="text"
+                                value={formatNumberWithSeparator(
+                                    dataPurchasePayment.transfer_fee || 0,
+                                )}
+                                onChange={(e) => {
+                                    const rawValue = e.target.value.replace(
+                                        /[^0-9]/g,
+                                        '',
+                                    );
+                                    setDataPurchasePayment(
+                                        'transfer_fee',
+                                        Number(rawValue),
+                                    );
+                                }}
+                                placeholder="Masukkan biaya transfer"
+                                className="input-box text-right"
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Biaya admin bank (jika ada)
+                            </p>
+                            <InputError
+                                message={errorsPurchasePayment.transfer_fee}
                             />
                         </div>
                     </div>
@@ -579,8 +613,16 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                             </div>
                             <div className="border-t border-border pt-2">
                                 <div className="flex justify-end gap-8 items-center">
-                                    <span className="text-sm text-muted-foreground mr-2">Total Pembayaran:</span>
-                                    <span className="text-2xl font-bold">{formatCurrency(Number(dataPurchasePayment.total_amount) || 0)}</span>
+                                    <span className="text-sm text-muted-foreground mr-2 text-red-600 dark:text-red-400">Total Pembayaran:</span>
+                                    <span className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(Number(dataPurchasePayment.total_amount) || 0)}</span>
+                                </div>
+                                <div className="flex justify-end gap-8 items-center">
+                                    <span className="text-sm text-muted-foreground mr-2">Biaya Transfer:</span>
+                                    <span className="text-xl font-semibold">{formatCurrency(Number(dataPurchasePayment.transfer_fee) || 0)}</span>
+                                </div>
+                                <div className="flex justify-end gap-8 items-center border-t border-border mt-2 pt-2">
+                                    <span className="text-sm font-bold mr-2">Total Bank (Grand Total):</span>
+                                    <span className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">{formatCurrency(grandTotal)}</span>
                                 </div>
                             </div>
                         </div>
