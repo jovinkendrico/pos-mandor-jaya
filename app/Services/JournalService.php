@@ -299,11 +299,12 @@ class JournalService
                 'status'         => 'posted',
             ]);
 
-            // Split items into Goods and Loans
+            // Special Item IDs that represent loans/cash out instead of goods
+            $loanItemIds = [1525, 1673]; // 1525: PINJAM TUNAI, 1673: UANG JALAN
             $loanTotal = 0;
             $goodsTotal = 0;
             foreach ($sale->details as $detail) {
-                if ($detail->item_id == 1525) {
+                if (in_array($detail->item_id, $loanItemIds)) {
                     $loanTotal += (float) $detail->subtotal;
                 } else {
                     $goodsTotal += (float) $detail->subtotal;
@@ -346,7 +347,23 @@ class JournalService
                     'chart_of_account_id' => $kasBesarAccount->id,
                     'debit'               => 0,
                     'credit'              => $loanTotal,
-                    'description'         => "Pinjaman Tunai di Penjualan #{$sale->sale_number}",
+                    'description'         => "Pinjaman Tunai / Uang Jalan di Penjualan #{$sale->sale_number}",
+                ]);
+
+                // Create CashOut record for visibility in Kas Keluar menu
+                $cashOutNumber = \App\Models\CashOut::generateCashOutNumber();
+                $cashOut = \App\Models\CashOut::create([
+                    'cash_out_number' => $cashOutNumber,
+                    'cash_out_date' => $sale->sale_date,
+                    'bank_id' => 1, // KAS BESAR
+                    'chart_of_account_id' => $receivableAccount->id, // Debited to AR
+                    'amount' => $loanTotal,
+                    'description' => "Pinjaman Tunai / Uang Jalan di Penjualan #{$sale->sale_number}",
+                    'status' => 'posted',
+                    'reference_type' => 'Sale',
+                    'reference_id' => $sale->id,
+                    'created_by' => auth()->id() ?? 1,
+                    'updated_by' => auth()->id() ?? 1,
                 ]);
 
                 // Create Cash Movement for Kas Besar
@@ -354,12 +371,12 @@ class JournalService
                 if ($bank) {
                     app(\App\Services\CashMovementService::class)->createMovement(
                         $bank,
-                        'Sale',
-                        $sale->id,
+                        'CashOut', // Link to CashOut instead of Sale for better traceability
+                        $cashOut->id,
                         $sale->sale_date,
                         0,
                         $loanTotal,
-                        "Pinjaman Tunai di Penjualan #{$sale->sale_number}"
+                        "Kas Keluar #{$cashOut->cash_out_number} (Ref: Sale #{$sale->sale_number})"
                     );
                 }
             }
@@ -437,14 +454,30 @@ class JournalService
 
             // Update journal entry status
             $journalEntry->update(['status' => 'reversed']);
-
-            // Reverse Cash Movement if exists (For Loans)
-            $movements = \App\Models\CashMovement::where('reference_type', 'Sale')
+ 
+            // Reverse CashOut (For Loans)
+            $cashOuts = \App\Models\CashOut::where('reference_type', 'Sale')
                 ->where('reference_id', $sale->id)
                 ->get();
             
-            foreach ($movements as $movement) {
-                app(\App\Services\CashMovementService::class)->reverseMovement($movement, now());
+            foreach ($cashOuts as $co) {
+                // Find movements linked to this CashOut (standard behavior)
+                $movements = \App\Models\CashMovement::where('reference_type', 'CashOut')
+                    ->where('reference_id', $co->id)
+                    ->get();
+                foreach ($movements as $movement) {
+                    app(\App\Services\CashMovementService::class)->reverseMovement($movement, now());
+                }
+                $co->delete(); // Soft delete
+            }
+
+            // Cleanup any direct Sale movements (legacy/fallback)
+            $legacyMovements = \App\Models\CashMovement::where('reference_type', 'Sale')
+                ->where('reference_id', $sale->id)
+                ->get();
+            
+            foreach ($legacyMovements as $lMovement) {
+                app(\App\Services\CashMovementService::class)->reverseMovement($lMovement, now());
             }
         });
     }

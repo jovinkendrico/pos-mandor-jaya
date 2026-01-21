@@ -202,11 +202,11 @@ class StockService
                     continue;
                 }
 
-                // Skip FIFO and stock for PINJAM TUNAI (ID 1525)
-                if ($detail->item_id == 1525) {
+                // Skip FIFO and stock for PINJAM TUNAI (ID 1525) & UANG JALAN (ID 1673)
+                if (in_array($detail->item_id, [1525, 1673])) {
                     $detail->update([
                         'cost'   => 0,
-                        'profit' => $detail->subtotal, // All subtotal is profit for loans as cost is 0
+                        'profit' => 0, // Profit is 0 for loans
                         'profit_status' => 'realized',
                     ]);
                     continue;
@@ -255,8 +255,9 @@ class StockService
                 $detail->item->decrement('stock', $baseQuantity);
             }
 
-            // Calculate profit using total_after_discount (without PPN) - same as in Profit Loss Report
-            $revenue = (float) $sale->total_after_discount;
+            // Calculate profit using total_after_discount (without PPN) - exclude loans from revenue
+            $loanTotal = (float) $sale->details()->whereIn('item_id', [1525, 1673])->sum('subtotal');
+            $revenue = (float) $sale->total_after_discount - $loanTotal;
             
             $sale->update([
                 'status'       => 'confirmed',
@@ -292,8 +293,8 @@ class StockService
                     continue;
                 }
 
-                // Skip PINJAM TUNAI (ID 1525)
-                if ($detail->item_id == 1525) {
+                // Skip PINJAM TUNAI (ID 1525) & UANG JALAN (ID 1673)
+                if (in_array($detail->item_id, [1525, 1673])) {
                     $detail->update([
                         'cost'   => 0,
                         'profit' => 0,
