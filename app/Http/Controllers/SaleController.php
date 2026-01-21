@@ -680,8 +680,8 @@ class SaleController extends Controller
                 ->with('error', 'Akun Selisih Pembulatan (4999) tidak ditemukan. Silakan hubungi administrator.');
         }
 
-        // Get Piutang Usaha account (1103)
-        $piutangAccount = \App\Models\ChartOfAccount::where('code', '1103')
+        // Get Piutang Usaha account (1201)
+        $piutangAccount = \App\Models\ChartOfAccount::where('code', '1201')
             ->where('is_active', true)
             ->first();
 
