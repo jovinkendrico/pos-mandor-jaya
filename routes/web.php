@@ -649,6 +649,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'cash-outs'          => CashOutController::class,
         'transfers'          => TransferController::class,
         'journal-entries'   => JournalEntryController::class,
+        'activity-logs'     => \App\Http\Controllers\ActivityLogController::class,
     ]);
 
 });

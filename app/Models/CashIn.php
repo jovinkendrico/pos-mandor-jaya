@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Traits\Auditable;
+
 class CashIn extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, Auditable, SoftDeletes;
 
     protected $fillable = [
         'cash_in_number',

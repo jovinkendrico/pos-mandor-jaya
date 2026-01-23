@@ -62,6 +62,22 @@ export interface User {
     [key: string]: unknown;
 }
 
+export interface ActivityLog {
+    id: number;
+    user_id: number | null;
+    user?: User;
+    action: 'created' | 'updated' | 'deleted' | 'restored';
+    model_type: string;
+    model_id: number;
+    old_values: any;
+    new_values: any;
+    url: string | null;
+    ip_address: string | null;
+    user_agent: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Permission {
     id: number;
     name: string;

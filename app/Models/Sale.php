@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use App\Traits\Auditable;
 
 class Sale extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, Auditable;
 
     protected $fillable = [
         'sale_number',

@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
+use App\Traits\Auditable;
+
 class Transfer extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Auditable;
 
     protected $fillable = [
         'transfer_number',

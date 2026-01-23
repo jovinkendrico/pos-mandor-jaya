@@ -341,6 +341,11 @@ const mainNavItems: NavItem[] = [
                 href: permissionIndex(),
                 permissions: ['permissions.index'],
             },
+            {
+                title: 'Audit Logs',
+                href: '/activity-logs',
+                permissions: ['users.index'], // Reuse users.index permission for now
+            },
         ],
     },
 ];
