@@ -54,7 +54,7 @@ class PaymentReceiptController extends Controller
         $saleIds = $allSales->pluck('id')->toArray();
         $paymentTotals = [];
         if (!empty($saleIds)) {
-            $payments = DB::table('sale_payment_items')
+            $paymentTotals = DB::table('sale_payment_items')
                 ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
                 ->whereIn('sale_payment_items.sale_id', $saleIds)
                 ->where('sale_payments.status', 'confirmed')
@@ -146,6 +146,16 @@ class PaymentReceiptController extends Controller
             // Group by customer
             $groupedByCustomer = $sales->groupBy('customer_id');
 
+            // Get all payment totals for selected sales at once
+            $paymentTotals = DB::table('sale_payment_items')
+                ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
+                ->whereIn('sale_payment_items.sale_id', $saleIds)
+                ->where('sale_payments.status', 'confirmed')
+                ->select('sale_payment_items.sale_id', DB::raw('SUM(sale_payment_items.amount) as total_paid'))
+                ->groupBy('sale_payment_items.sale_id')
+                ->pluck('total_paid', 'sale_id')
+                ->toArray();
+
             $receipts = [];
             foreach ($groupedByCustomer as $customerId => $customerSales) {
                 $customer = $customerSales->first()->customer;
@@ -156,23 +166,18 @@ class PaymentReceiptController extends Controller
                 $totalRemaining = 0;
 
                 foreach ($customerSales as $sale) {
-                    $totalPaidForSale = DB::table('sale_payment_items')
-                        ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
-                        ->where('sale_payment_items.sale_id', $sale->id)
-                        ->where('sale_payments.status', 'confirmed')
-                        ->sum('sale_payment_items.amount') ?? 0;
-
+                    $totalPaidForSale = (float) ($paymentTotals[$sale->id] ?? 0);
                     $remainingAmount = max(0, $sale->total_amount - $totalPaidForSale);
 
-            $invoiceData[] = [
-                'sale_number' => $sale->sale_number,
-                'sale_date' => $sale->sale_date ? $sale->sale_date->format('d/m/Y') : '-',
-                'due_date' => $sale->due_date ? $sale->due_date->format('d/m/Y') : '-',
-                'total_amount' => (float) $sale->total_amount,
-                'total_paid' => (float) $totalPaidForSale,
-                'remaining_amount' => (float) $remainingAmount,
-                'is_overdue' => $sale->due_date && $sale->due_date < now()->toDateString(),
-            ];
+                    $invoiceData[] = [
+                        'sale_number' => $sale->sale_number,
+                        'sale_date' => $sale->sale_date ? $sale->sale_date->format('d/m/Y') : '-',
+                        'due_date' => $sale->due_date ? $sale->due_date->format('d/m/Y') : '-',
+                        'total_amount' => (float) $sale->total_amount,
+                        'total_paid' => (float) $totalPaidForSale,
+                        'remaining_amount' => (float) $remainingAmount,
+                        'is_overdue' => $sale->due_date && $sale->due_date < now()->toDateString(),
+                    ];
 
                     $totalAmount += $sale->total_amount;
                     $totalPaid += $totalPaidForSale;
@@ -246,6 +251,16 @@ class PaymentReceiptController extends Controller
             // Group by customer
             $groupedByCustomer = $sales->groupBy('customer_id');
 
+            // Get all payment totals for selected sales at once
+            $paymentTotals = DB::table('sale_payment_items')
+                ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
+                ->whereIn('sale_payment_items.sale_id', $saleIds)
+                ->where('sale_payments.status', 'confirmed')
+                ->select('sale_payment_items.sale_id', DB::raw('SUM(sale_payment_items.amount) as total_paid'))
+                ->groupBy('sale_payment_items.sale_id')
+                ->pluck('total_paid', 'sale_id')
+                ->toArray();
+
             $receipts = [];
             foreach ($groupedByCustomer as $customerId => $customerSales) {
                 $customer = $customerSales->first()->customer;
@@ -256,12 +271,7 @@ class PaymentReceiptController extends Controller
                 $totalRemaining = 0;
 
                 foreach ($customerSales as $sale) {
-                    $totalPaidForSale = DB::table('sale_payment_items')
-                        ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
-                        ->where('sale_payment_items.sale_id', $sale->id)
-                        ->where('sale_payments.status', 'confirmed')
-                        ->sum('sale_payment_items.amount') ?? 0;
-
+                    $totalPaidForSale = (float) ($paymentTotals[$sale->id] ?? 0);
                     $remainingAmount = max(0, $sale->total_amount - $totalPaidForSale);
 
                     $invoiceData[] = [
