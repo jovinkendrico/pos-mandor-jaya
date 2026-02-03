@@ -468,30 +468,45 @@ class PurchaseReturnController extends Controller
     {
         $excludeReturnId = $request->input('exclude_return_id');
 
+        // 1. Fetch confirmed/partially_paid purchases
         $purchases = \App\Models\Purchase::where('supplier_id', $supplier->id)
             ->whereIn('status', ['confirmed', 'partially_paid'])
-            ->where(function($query) use ($excludeReturnId) {
-                $query->where('remaining_amount', '>', 0);
-                if ($excludeReturnId) {
-                    $query->orWhereHas('returnAllocations', function($q) use ($excludeReturnId) {
-                        $q->where('purchase_return_id', $excludeReturnId);
-                    });
-                }
-            })
-            ->select('id', 'purchase_number', 'purchase_date', 'total_amount', 'remaining_amount')
             ->orderBy('purchase_date', 'asc')
             ->get();
 
+        // 2. Filter by remaining_amount and handle excludeReturnId
+        $results = $purchases->filter(function($p) {
+            return $p->remaining_amount > 0;
+        })->values();
+
         if ($excludeReturnId) {
-            $purchases->each(function($p) use ($excludeReturnId) {
-                $allocatedByThis = \DB::table('purchase_return_allocations')
-                    ->where('purchase_id', $p->id)
-                    ->where('purchase_return_id', $excludeReturnId)
-                    ->sum('amount');
-                $p->remaining_amount += $allocatedByThis;
-            });
+            $currentReturn = \App\Models\PurchaseReturn::find($excludeReturnId);
+            if ($currentReturn && $currentReturn->allocations) {
+                $allocations = is_array($currentReturn->allocations) 
+                    ? $currentReturn->allocations 
+                    : json_decode($currentReturn->allocations, true);
+                
+                foreach ($allocations as $allocation) {
+                    $purchaseId = $allocation['purchase_id'] ?? null;
+                    $amount = $allocation['amount'] ?? 0;
+                    
+                    if (!$purchaseId) continue;
+
+                    $existing = $results->where('id', $purchaseId)->first();
+                    if ($existing) {
+                        $existing->remaining_amount = (float) $existing->remaining_amount + (float) $amount;
+                    } else {
+                        // If not in the list (remaining was 0), fetch it and add it
+                        $p = \App\Models\Purchase::find($purchaseId);
+                        if ($p) {
+                            $p->remaining_amount = (float) $p->remaining_amount + (float) $amount;
+                            $results->push($p);
+                        }
+                    }
+                }
+            }
         }
 
-        return response()->json($purchases);
+        return response()->json($results->values());
     }
 }

@@ -670,7 +670,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
             }
 
             {/* Potong Bon (Invoice Allocation) */}
-            {dataPurchaseReturn.refund_method === 'reduce_payable' && outstandingPurchases.length > 0 && (
+            {dataPurchaseReturn.refund_method === 'reduce_payable' && (
                 <Card className="content">
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
@@ -690,60 +690,70 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="input-box overflow-x-auto rounded-lg">
-                            <Table className="content">
-                                <TableHeader>
-                                    <TableRow className="dark:border-b-2 dark:border-white/25">
-                                        <TableHead>No. Pembelian</TableHead>
-                                        <TableHead>Tanggal</TableHead>
-                                        <TableHead className="text-right">Total Invoice</TableHead>
-                                        <TableHead className="text-right">Sisa Hutang</TableHead>
-                                        <TableHead className="w-[200px] text-right">Alokasi Potong</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {outstandingPurchases.map((purchase) => {
-                                        const allocation = (dataPurchaseReturn.allocations || []).find((a: any) => a.purchase_id === purchase.id);
-                                        const allocationAmount = allocation ? allocation.amount : 0;
+                        {isLoadingOutstanding ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : outstandingPurchases.length > 0 ? (
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <Table className="content">
+                                    <TableHeader>
+                                        <TableRow className="dark:border-b-2 dark:border-white/25">
+                                            <TableHead>No. Pembelian</TableHead>
+                                            <TableHead>Tanggal</TableHead>
+                                            <TableHead className="text-right">Total Invoice</TableHead>
+                                            <TableHead className="text-right">Sisa Hutang</TableHead>
+                                            <TableHead className="w-[200px] text-right">Alokasi Potong</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {outstandingPurchases.map((purchase) => {
+                                            const allocation = (dataPurchaseReturn.allocations || []).find((a: any) => a.purchase_id === purchase.id);
+                                            const allocationAmount = allocation ? allocation.amount : 0;
 
-                                        return (
-                                            <TableRow key={purchase.id} className="dark:border-b-2 dark:border-white/25">
-                                                <TableCell>{purchase.purchase_number}</TableCell>
-                                                <TableCell>{new Date(purchase.purchase_date).toLocaleDateString('id-ID')}</TableCell>
-                                                <TableCell className="text-right">{formatCurrency(purchase.total_amount)}</TableCell>
-                                                <TableCell className="text-right font-medium text-orange-600">
-                                                    {formatCurrency(purchase.remaining_amount)}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleAutoAllocate(purchase.id, purchase.remaining_amount)}
-                                                            className="h-8 px-2 text-xs"
-                                                        >
-                                                            Pilih
-                                                        </Button>
-                                                        <Input
-                                                            type="number"
-                                                            value={allocationAmount || ''}
-                                                            onChange={(e) => handleAllocationChange(purchase.id, Math.max(0, Number(e.target.value)))}
-                                                            className="input-box w-32 text-right"
-                                                            max={purchase.remaining_amount}
-                                                        />
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        {(dataPurchaseReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) !== calculations.grandTotal && (
-                            <p className="mt-2 text-sm text-red-600">
-                                * Total alokasi harus sama dengan Total Retur ({formatCurrency(calculations.grandTotal)})
-                            </p>
+                                            return (
+                                                <TableRow key={purchase.id} className="dark:border-b-2 dark:border-white/25">
+                                                    <TableCell>{purchase.purchase_number}</TableCell>
+                                                    <TableCell>{new Date(purchase.purchase_date).toLocaleDateString('id-ID')}</TableCell>
+                                                    <TableCell className="text-right">{formatCurrency(purchase.total_amount)}</TableCell>
+                                                    <TableCell className="text-right font-medium text-orange-600">
+                                                        {formatCurrency(purchase.remaining_amount)}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleAutoAllocate(purchase.id, purchase.remaining_amount)}
+                                                                className="h-8 px-2 text-xs"
+                                                            >
+                                                                Pilih
+                                                            </Button>
+                                                            <Input
+                                                                type="number"
+                                                                value={allocationAmount || ''}
+                                                                onChange={(e) => handleAllocationChange(purchase.id, Math.max(0, Number(e.target.value)))}
+                                                                className="input-box w-32 text-right"
+                                                                max={purchase.remaining_amount}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                                {(dataPurchaseReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) !== calculations.grandTotal && (
+                                    <p className="mt-2 text-sm text-red-600">
+                                        * Total alokasi harus sama dengan Total Retur ({formatCurrency(calculations.grandTotal)})
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="py-8 text-center text-muted-foreground border rounded-lg bg-muted/20">
+                                Tidak ditemukan hutang lain yang dapat dipotong untuk supplier ini.
+                            </div>
                         )}
                     </CardContent>
                 </Card>

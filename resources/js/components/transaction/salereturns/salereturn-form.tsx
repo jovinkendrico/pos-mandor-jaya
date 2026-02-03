@@ -661,7 +661,7 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
             )}
 
             {/* Potong Bon (Invoice Allocation) */}
-            {dataSaleReturn.refund_method === 'reduce_receivable' && outstandingSales.length > 0 && (
+            {dataSaleReturn.refund_method === 'reduce_receivable' && (
                 <Card className="content">
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
@@ -681,60 +681,70 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="input-box overflow-x-auto rounded-lg">
-                            <Table className="content">
-                                <TableHeader>
-                                    <TableRow className="dark:border-b-2 dark:border-white/25">
-                                        <TableHead>No. Penjualan</TableHead>
-                                        <TableHead>Tanggal</TableHead>
-                                        <TableHead className="text-right">Total Invoice</TableHead>
-                                        <TableHead className="text-right">Sisa Piutang</TableHead>
-                                        <TableHead className="w-[200px] text-right">Alokasi Potong</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {outstandingSales.map((sale) => {
-                                        const allocation = (dataSaleReturn.allocations || []).find((a: any) => a.sale_id === sale.id);
-                                        const allocationAmount = allocation ? allocation.amount : 0;
+                        {isLoadingOutstanding ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : outstandingSales.length > 0 ? (
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <Table className="content">
+                                    <TableHeader>
+                                        <TableRow className="dark:border-b-2 dark:border-white/25">
+                                            <TableHead>No. Penjualan</TableHead>
+                                            <TableHead>Tanggal</TableHead>
+                                            <TableHead className="text-right">Total Invoice</TableHead>
+                                            <TableHead className="text-right">Sisa Piutang</TableHead>
+                                            <TableHead className="w-[200px] text-right">Alokasi Potong</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {outstandingSales.map((sale) => {
+                                            const allocation = (dataSaleReturn.allocations || []).find((a: any) => a.sale_id === sale.id);
+                                            const allocationAmount = allocation ? allocation.amount : 0;
 
-                                        return (
-                                            <TableRow key={sale.id} className="dark:border-b-2 dark:border-white/25">
-                                                <TableCell>{sale.sale_number}</TableCell>
-                                                <TableCell>{new Date(sale.sale_date).toLocaleDateString('id-ID')}</TableCell>
-                                                <TableCell className="text-right">{formatCurrency(sale.total_amount)}</TableCell>
-                                                <TableCell className="text-right font-medium text-orange-600">
-                                                    {formatCurrency(sale.remaining_amount)}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleAutoAllocate(sale.id, sale.remaining_amount)}
-                                                            className="h-8 px-2 text-xs"
-                                                        >
-                                                            Pilih
-                                                        </Button>
-                                                        <Input
-                                                            type="number"
-                                                            value={allocationAmount || ''}
-                                                            onChange={(e) => handleAllocationChange(sale.id, Math.max(0, Number(e.target.value)))}
-                                                            className="input-box w-32 text-right"
-                                                            max={sale.remaining_amount}
-                                                        />
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        {(dataSaleReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) !== calculations.grandTotal && (
-                            <p className="mt-2 text-sm text-red-600">
-                                * Total alokasi harus sama dengan Total Retur ({formatCurrency(calculations.grandTotal)})
-                            </p>
+                                            return (
+                                                <TableRow key={sale.id} className="dark:border-b-2 dark:border-white/25">
+                                                    <TableCell>{sale.sale_number}</TableCell>
+                                                    <TableCell>{new Date(sale.sale_date).toLocaleDateString('id-ID')}</TableCell>
+                                                    <TableCell className="text-right">{formatCurrency(sale.total_amount)}</TableCell>
+                                                    <TableCell className="text-right font-medium text-orange-600">
+                                                        {formatCurrency(sale.remaining_amount)}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleAutoAllocate(sale.id, sale.remaining_amount)}
+                                                                className="h-8 px-2 text-xs"
+                                                            >
+                                                                Pilih
+                                                            </Button>
+                                                            <Input
+                                                                type="number"
+                                                                value={allocationAmount || ''}
+                                                                onChange={(e) => handleAllocationChange(sale.id, Math.max(0, Number(e.target.value)))}
+                                                                className="input-box w-32 text-right"
+                                                                max={sale.remaining_amount}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                                {(dataSaleReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) !== calculations.grandTotal && (
+                                    <p className="mt-2 text-sm text-red-600">
+                                        * Total alokasi harus sama dengan Total Retur ({formatCurrency(calculations.grandTotal)})
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="py-8 text-center text-muted-foreground border rounded-lg bg-muted/20">
+                                Tidak ditemukan piutang lain yang dapat dipotong untuk customer ini.
+                            </div>
                         )}
                     </CardContent>
                 </Card>

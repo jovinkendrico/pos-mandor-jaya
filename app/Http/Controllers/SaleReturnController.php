@@ -474,30 +474,45 @@ class SaleReturnController extends Controller
     {
         $excludeReturnId = $request->input('exclude_return_id');
 
+        // 1. Fetch confirmed/partially_paid sales
         $sales = \App\Models\Sale::where('customer_id', $customer->id)
             ->whereIn('status', ['confirmed', 'partially_paid'])
-            ->where(function ($query) use ($excludeReturnId) {
-                $query->where('remaining_amount', '>', 0);
-                if ($excludeReturnId) {
-                    $query->orWhereHas('returnAllocations', function ($q) use ($excludeReturnId) {
-                        $q->where('sale_return_id', $excludeReturnId);
-                    });
-                }
-            })
-            ->select('id', 'sale_number', 'sale_date', 'total_amount', 'remaining_amount')
             ->orderBy('sale_date', 'asc')
             ->get();
 
+        // 2. Filter by remaining_amount and handle excludeReturnId
+        $results = $sales->filter(function ($s) {
+            return $s->remaining_amount > 0;
+        })->values();
+
         if ($excludeReturnId) {
-            $sales->each(function ($s) use ($excludeReturnId) {
-                $allocatedByThis = \DB::table('sale_return_allocations')
-                    ->where('sale_id', $s->id)
-                    ->where('sale_return_id', $excludeReturnId)
-                    ->sum('amount');
-                $s->remaining_amount += $allocatedByThis;
-            });
+            $currentReturn = \App\Models\SaleReturn::find($excludeReturnId);
+            if ($currentReturn && $currentReturn->allocations) {
+                $allocations = is_array($currentReturn->allocations)
+                    ? $currentReturn->allocations
+                    : json_decode($currentReturn->allocations, true);
+
+                foreach ($allocations as $allocation) {
+                    $saleId = $allocation['sale_id'] ?? null;
+                    $amount = $allocation['amount'] ?? 0;
+
+                    if (!$saleId) continue;
+
+                    $existing = $results->where('id', $saleId)->first();
+                    if ($existing) {
+                        $existing->remaining_amount = (float) $existing->remaining_amount + (float) $amount;
+                    } else {
+                        // If not in the list (remaining was 0), fetch it and add it
+                        $s = \App\Models\Sale::find($saleId);
+                        if ($s) {
+                            $s->remaining_amount = (float) $s->remaining_amount + (float) $amount;
+                            $results->push($s);
+                        }
+                    }
+                }
+            }
         }
 
-        return response()->json($sales);
+        return response()->json($results->values());
     }
 }
