@@ -6,6 +6,7 @@ import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
 import { IPurchaseReturn } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { CheckCircle2, Edit, Info, RotateCcw, Trash } from 'lucide-react';
+import { confirm as confirmRoute, unconfirm as unconfirmRoute, edit as editRoute } from '@/routes/purchase-returns';
 
 interface PurchaseReturnTableProps {
     purchase_returns: IPurchaseReturn[];
@@ -18,13 +19,13 @@ const PurchaseReturnTable = (props: PurchaseReturnTableProps) => {
 
     const handleConfirm = (id: number) => {
         if (confirm('Konfirmasi retur ini? Stok akan dikurangi.')) {
-            router.post(window.route('purchase-returns.confirm', { purchase_return: id }));
+            router.post(confirmRoute(id).url);
         }
     };
 
     const handleUnconfirm = (id: number) => {
         if (confirm('Batalkan konfirmasi retur ini? Stok akan dikembalikan.')) {
-            router.post(window.route('purchase-returns.unconfirm', { purchase_return: id }));
+            router.post(unconfirmRoute(id).url);
         }
     };
 
@@ -104,7 +105,7 @@ const PurchaseReturnTable = (props: PurchaseReturnTableProps) => {
                                 >
                                     <CheckCircle2 className="h-4 w-4" />
                                 </Button>
-                                <Link href={window.route('purchase-returns.edit', { purchase_return: row.id })}>
+                                <Link href={editRoute(row.id).url}>
                                     <Button
                                         variant="ghost"
                                         size="icon"

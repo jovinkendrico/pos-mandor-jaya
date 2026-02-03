@@ -4,6 +4,7 @@ import { ISale, IBank, BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { index as saleReturnIndex } from '@/routes/sale-returns';
 
 interface EditProps {
     saleReturn: any;
@@ -18,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Retur Jual',
-        href: window.route('sale-returns.index'),
+        href: saleReturnIndex().url,
     },
     {
         title: 'Edit Retur Jual',
@@ -35,7 +36,7 @@ export default function Edit({ saleReturn, sales, banks }: EditProps) {
 
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <Link href={window.route('sale-returns.index')}>
+                    <Link href={saleReturnIndex().url}>
                         <Button variant="ghost" size="icon">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>

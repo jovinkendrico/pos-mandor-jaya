@@ -6,6 +6,7 @@ import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
 import { ISaleReturn } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { CheckCircle2, Edit, Info, RotateCcw, Trash } from 'lucide-react';
+import { confirm as confirmRoute, unconfirm as unconfirmRoute, edit as editRoute } from '@/routes/sale-returns';
 
 interface SaleReturnTableProps {
     returns: ISaleReturn[];
@@ -20,13 +21,13 @@ export default function SaleReturnTable({
 }: SaleReturnTableProps) {
     const handleConfirm = (id: number) => {
         if (confirm('Konfirmasi retur ini? Stok dan profit akan disesuaikan.')) {
-            router.post(window.route('sale-returns.confirm', { sale_return: id }));
+            router.post(confirmRoute(id).url);
         }
     };
 
     const handleUnconfirm = (id: number) => {
         if (confirm('Batalkan konfirmasi retur ini? Stok akan dikurangi kembali.')) {
-            router.post(window.route('sale-returns.unconfirm', { sale_return: id }));
+            router.post(unconfirmRoute(id).url);
         }
     };
 
@@ -112,7 +113,7 @@ export default function SaleReturnTable({
                                 >
                                     <CheckCircle2 className="h-4 w-4" />
                                 </Button>
-                                <Link href={window.route('sale-returns.edit', { sale_return: row.id })}>
+                                <Link href={editRoute(row.id).url}>
                                     <Button
                                         variant="ghost"
                                         size="icon"

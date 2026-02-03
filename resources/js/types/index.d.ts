@@ -8,18 +8,6 @@ import {
 } from '@/constants/enum';
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
-import { Config, RouteParam, RouteParamsWithQueryOverload } from 'ziggy-js';
-
-declare global {
-    interface Window {
-        route: (
-            name: string,
-            params?: RouteParamsWithQueryOverload | RouteParam,
-            absolute?: boolean,
-            config?: Config,
-        ) => string;
-    }
-}
 
 export interface Auth {
     user: User;

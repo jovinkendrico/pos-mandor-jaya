@@ -4,6 +4,7 @@ import { IPurchase, IBank, BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { index as purchaseReturnIndex } from '@/routes/purchase-returns';
 
 interface EditProps {
     purchaseReturn: any;
@@ -18,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Retur Beli',
-        href: window.route('purchase-returns.index'),
+        href: purchaseReturnIndex().url,
     },
     {
         title: 'Edit Retur Beli',
@@ -35,7 +36,7 @@ export default function Edit({ purchaseReturn, purchases, banks }: EditProps) {
 
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <Link href={window.route('purchase-returns.index')}>
+                    <Link href={purchaseReturnIndex().url}>
                         <Button variant="ghost" size="icon">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>

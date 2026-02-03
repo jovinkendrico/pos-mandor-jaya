@@ -1,6 +1,6 @@
 import { RefundMethod, ReturnType } from '@/constants/enum';
 import { formatDatetoString, formatNumberWithSeparator, parseStringtoDecimal } from '@/lib/utils';
-import { store } from '@/routes/purchase-returns';
+import { store, update as updateRoute } from '@/routes/purchase-returns';
 import { IPurchaseDetail } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
@@ -114,11 +114,11 @@ const usePurchaseReturn = (initialData?: any) => {
             });
 
             const isUpdate = !!data.id;
-            const route = isUpdate
-                ? require('@/routes/purchase-returns').update({ purchase_return: data.id })
-                : require('@/routes/purchase-returns').store();
+            const submitRoute = isUpdate
+                ? updateRoute({ purchase_return: data.id })
+                : store();
 
-            submit(route, {
+            submit(submitRoute, {
                 onSuccess: () => {
                     if (!isUpdate) reset();
                     toast.success(isUpdate ? 'Return pembelian berhasil diupdate' : 'Return pembelian berhasil ditambahkan');
