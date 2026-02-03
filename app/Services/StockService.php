@@ -643,6 +643,16 @@ class StockService
                     // Note: No bank balance change - this is just reducing the payable
                 }
             }
+
+            // Create Journal Entry
+            try {
+                app(\App\Services\JournalService::class)->postPurchaseReturn($purchaseReturn);
+            } catch (\Exception $e) {
+                Log::error('Failed to post purchase return to journal', [
+                    'purchase_return_id' => $purchaseReturn->id,
+                    'error'              => $e->getMessage(),
+                ]);
+            }
         });
     }
 
@@ -706,6 +716,16 @@ class StockService
                     // Delete payment
                     $payment->delete();
                 }
+            }
+
+            // Reverse Journal Entry
+            try {
+                app(\App\Services\JournalService::class)->reverseReturnJournal('PurchaseReturn', $purchaseReturn->id);
+            } catch (\Exception $e) {
+                Log::error('Failed to reverse purchase return journal', [
+                    'purchase_return_id' => $purchaseReturn->id,
+                    'error'              => $e->getMessage(),
+                ]);
             }
 
             $purchaseReturn->update(['status' => 'pending']);
@@ -932,6 +952,16 @@ class StockService
                     // Note: No bank balance change - this is just reducing the receivable
                 }
             }
+
+            // Create Journal Entry
+            try {
+                app(\App\Services\JournalService::class)->postSaleReturn($saleReturn);
+            } catch (\Exception $e) {
+                Log::error('Failed to post sale return to journal', [
+                    'sale_return_id' => $saleReturn->id,
+                    'error'          => $e->getMessage(),
+                ]);
+            }
         });
     }
 
@@ -993,6 +1023,16 @@ class StockService
                     // Delete payment
                     $payment->delete();
                 }
+            }
+
+            // Reverse Journal Entry
+            try {
+                app(\App\Services\JournalService::class)->reverseReturnJournal('SaleReturn', $saleReturn->id);
+            } catch (\Exception $e) {
+                Log::error('Failed to reverse sale return journal', [
+                    'sale_return_id' => $saleReturn->id,
+                    'error'          => $e->getMessage(),
+                ]);
             }
 
             $saleReturn->update([

@@ -1329,5 +1329,236 @@ class JournalService
             return $reversalEntry;
         });
     }
+
+    /**
+     * Post purchase return to journal
+     * Debit: Hutang Usaha (if reduce_payable) or Kas/Bank (if cash_refund)
+     * Credit: Persediaan (at cost)
+     * Credit: Pajak Masukan (if PPN exists)
+     * Credit: Pendapatan Lain-lain (if refund amount > cost) OR Debit: Beban Lain-lain (if refund amount < cost)
+     */
+    public function postPurchaseReturn(\App\Models\PurchaseReturn $purchaseReturn): void
+    {
+        DB::transaction(function () use ($purchaseReturn) {
+            $purchaseReturn->loadMissing(['details.fifoMappings', 'purchase.supplier']);
+
+            // Get accounts
+            $payableAccount = ChartOfAccount::where('code', '2101')->where('is_active', true)->first();
+            $inventoryAccount = ChartOfAccount::where('code', '1301')->where('is_active', true)->first();
+            $taxAccount = ChartOfAccount::where('code', '1402')->where('is_active', true)->first(); // Pajak Masukan
+            if (!$taxAccount) {
+                $taxAccount = ChartOfAccount::where('code', '2102')->where('is_active', true)->first(); // Hutang Pajak
+            }
+            $otherIncomeAccount = ChartOfAccount::where('code', '4103')->where('is_active', true)->first(); // Pendapatan Lain-lain
+            $otherExpenseAccount = ChartOfAccount::where('code', '7103')->where('is_active', true)->first(); // Beban Lain-lain
+
+            if (!$payableAccount || !$inventoryAccount) {
+                throw new \Exception('Chart of Account tidak ditemukan (2101 atau 1301).');
+            }
+
+            $journalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date'   => $purchaseReturn->return_date,
+                'reference_type' => 'PurchaseReturn',
+                'reference_id'   => $purchaseReturn->id,
+                'description'    => "Retur Pembelian #{$purchaseReturn->return_number}",
+                'status'         => 'posted',
+            ]);
+
+            // 1. Debit: Cash/Bank or Hutang
+            $debitAccount = $payableAccount;
+            $debitDesc = "Pengurangan Hutang dari Retur #{$purchaseReturn->return_number}";
+
+            if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
+                $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
+                if ($bank && $bank->chart_of_account_id) {
+                    $debitAccount = ChartOfAccount::find($bank->chart_of_account_id);
+                    $debitDesc = "Penerimaan Refund Retur #{$purchaseReturn->return_number}";
+                }
+            }
+
+            JournalEntryDetail::create([
+                'journal_entry_id'    => $journalEntry->id,
+                'chart_of_account_id' => $debitAccount->id,
+                'debit'               => $purchaseReturn->total_amount,
+                'credit'              => 0,
+                'description'         => $debitDesc,
+            ]);
+
+            // 2. Credit: Persediaan (based on FIFO cost)
+            $totalCost = 0;
+            foreach ($purchaseReturn->details as $detail) {
+                $totalCost += $detail->fifoMappings->sum('total_cost');
+            }
+
+            JournalEntryDetail::create([
+                'journal_entry_id'    => $journalEntry->id,
+                'chart_of_account_id' => $inventoryAccount->id,
+                'debit'               => 0,
+                'credit'              => $totalCost,
+                'description'         => "Pengurangan Persediaan dari Retur #{$purchaseReturn->return_number}",
+            ]);
+
+            // 3. Credit: Pajak Masukan (if exists)
+            $ppnAmount = (float)$purchaseReturn->ppn_amount;
+            if ($ppnAmount > 0 && $taxAccount) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $taxAccount->id,
+                    'debit'               => 0,
+                    'credit'              => $ppnAmount,
+                    'description'         => "Pengurangan PPN Masukan dari Retur #{$purchaseReturn->return_number}",
+                ]);
+            }
+
+            // 4. Balancing (Profit/Loss from Return)
+            $refundAmountBeforeTax = (float)$purchaseReturn->total_amount - $ppnAmount;
+            $diff = $refundAmountBeforeTax - $totalCost;
+
+            if (abs($diff) > 0.01) {
+                if ($diff > 0) {
+                    // Credit: Pendapatan Lain-lain (Keuntungan Retur)
+                    if ($otherIncomeAccount) {
+                        JournalEntryDetail::create([
+                            'journal_entry_id'    => $journalEntry->id,
+                            'chart_of_account_id' => $otherIncomeAccount->id,
+                            'debit'               => 0,
+                            'credit'              => $diff,
+                            'description'         => "Keuntungan dari Selisih Harga Retur #{$purchaseReturn->return_number}",
+                        ]);
+                    }
+                } else {
+                    // Debit: Beban Lain-lain (Kerugian Retur)
+                    if ($otherExpenseAccount) {
+                        JournalEntryDetail::create([
+                            'journal_entry_id'    => $journalEntry->id,
+                            'chart_of_account_id' => $otherExpenseAccount->id,
+                            'debit'               => abs($diff),
+                            'credit'              => 0,
+                            'description'         => "Kerugian dari Selisih Harga Retur #{$purchaseReturn->return_number}",
+                        ]);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Post sale return to journal
+     * Debit: Pendapatan Penjualan (at price)
+     * Debit: Pajak Keluaran (if PPN exists)
+     * Credit: Piutang Usaha or Kas/Bank (at price)
+     * Debit: Persediaan (at restored cost)
+     * Credit: HPP (at restored cost)
+     */
+    public function postSaleReturn(\App\Models\SaleReturn $saleReturn): void
+    {
+        DB::transaction(function () use ($saleReturn) {
+            $saleReturn->loadMissing(['details.fifoMappings', 'sale.customer']);
+
+            // Get accounts
+            $receivableAccount = ChartOfAccount::where('code', '1201')->where('is_active', true)->first();
+            $incomeAccount = ChartOfAccount::where('code', '4101')->where('is_active', true)->first();
+            $taxAccount = ChartOfAccount::where('code', '2102')->where('is_active', true)->first(); // Hutang Pajak / PPN Keluaran
+            $inventoryAccount = ChartOfAccount::where('code', '1301')->where('is_active', true)->first();
+            $hppAccount = ChartOfAccount::where('code', '5101')->where('is_active', true)->first();
+
+            if (!$receivableAccount || !$incomeAccount || !$inventoryAccount || !$hppAccount) {
+                throw new \Exception('Chart of Account tidak lengkap (1201, 4101, 1301, 5101).');
+            }
+
+            $journalEntry = JournalEntry::create([
+                'journal_number' => JournalEntry::generateJournalNumber(),
+                'journal_date'   => $saleReturn->return_date,
+                'reference_type' => 'SaleReturn',
+                'reference_id'   => $saleReturn->id,
+                'description'    => "Retur Penjualan #{$saleReturn->return_number}",
+                'status'         => 'posted',
+            ]);
+
+            // 1. Debit: Pendapatan Penjualan (before PPN)
+            $ppnAmount = (float)$saleReturn->ppn_amount;
+            $incomeAmount = (float)$saleReturn->total_amount - $ppnAmount;
+
+            JournalEntryDetail::create([
+                'journal_entry_id'    => $journalEntry->id,
+                'chart_of_account_id' => $incomeAccount->id,
+                'debit'               => $incomeAmount,
+                'credit'              => 0,
+                'description'         => "Pengurangan Pendapatan dari Retur #{$saleReturn->return_number}",
+            ]);
+
+            // 2. Debit: Pajak Keluaran (if exists)
+            if ($ppnAmount > 0 && $taxAccount) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $taxAccount->id,
+                    'debit'               => $ppnAmount,
+                    'credit'              => 0,
+                    'description'         => "Pengurangan PPN Keluaran dari Retur #{$saleReturn->return_number}",
+                ]);
+            }
+
+            // 3. Credit: Piutang Usaha or Kas/Bank
+            $creditAccount = $receivableAccount;
+            $creditDesc = "Pengurangan Piutang dari Retur #{$saleReturn->return_number}";
+
+            if ($saleReturn->refund_method === 'cash_refund' && $saleReturn->refund_bank_id) {
+                $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
+                if ($bank && $bank->chart_of_account_id) {
+                    $creditAccount = ChartOfAccount::find($bank->chart_of_account_id);
+                    $creditDesc = "Pengembalian Uang Retur #{$saleReturn->return_number}";
+                }
+            }
+
+            JournalEntryDetail::create([
+                'journal_entry_id'    => $journalEntry->id,
+                'chart_of_account_id' => $creditAccount->id,
+                'debit'               => 0,
+                'credit'              => $saleReturn->total_amount,
+                'description'         => $creditDesc,
+            ]);
+
+            // 4. Debit: Persediaan (restored cost)
+            // 5. Credit: HPP (restored cost)
+            $totalRestoredCost = (float)$saleReturn->total_cost;
+            if ($totalRestoredCost > 0) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $inventoryAccount->id,
+                    'debit'               => $totalRestoredCost,
+                    'credit'              => 0,
+                    'description'         => "Penambahan Persediaan dari Retur #{$saleReturn->return_number}",
+                ]);
+
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $hppAccount->id,
+                    'debit'               => 0,
+                    'credit'              => $totalRestoredCost,
+                    'description'         => "Pengurangan HPP dari Retur #{$saleReturn->return_number}",
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Reverse return journal entry
+     */
+    public function reverseReturnJournal(string $type, int $id): void
+    {
+        DB::transaction(function () use ($type, $id) {
+            $journalEntry = JournalEntry::where('reference_type', $type)
+                ->where('reference_id', $id)
+                ->where('status', 'posted')
+                ->first();
+
+            if (!$journalEntry) {
+                return;
+            }
+
+            $this->reverseJournalEntry($journalEntry);
+        });
+    }
 }
 
