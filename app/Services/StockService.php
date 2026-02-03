@@ -573,40 +573,26 @@ class StockService
             // Handle refund based on refund_method
             if ($purchaseReturn->return_type === 'stock_and_refund' && $purchaseReturn->refund_method) {
                 if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
-                    // Create payment for cash refund (we receive money back via bank)
-                    $purchasePayment = \App\Models\PurchasePayment::create([
-                        'payment_number'   => \App\Models\PurchasePayment::generatePaymentNumber(),
-                        'payment_date'     => $purchaseReturn->return_date,
-                        'total_amount'     => $purchaseReturn->total_amount,
-                        'bank_id'          => $purchaseReturn->refund_bank_id,
-                        'payment_method'   => 'refund',
-                        'reference_number' => $purchaseReturn->return_number,
-                        'notes'            => "Cash Refund untuk Retur Pembelian #{$purchaseReturn->return_number}",
-                        'status'           => 'confirmed',
-                        'created_by'       => auth()->id(),
-                        'updated_by'       => auth()->id(),
-                    ]);
-
-                    // Link payment to purchase
-                    \App\Models\PurchasePaymentItem::create([
-                        'purchase_payment_id' => $purchasePayment->id,
-                        'purchase_id'         => $purchaseReturn->purchase_id,
+                    // Create CashIn record (we receive money back)
+                    // We use Hutang Usaha (2101) as the clearing account
+                    $payableAccount = \App\Models\ChartOfAccount::where('code', '2101')->where('is_active', true)->first();
+                    
+                    $cashIn = \App\Models\CashIn::create([
+                        'cash_in_number'      => \App\Models\CashIn::generateCashInNumber(),
+                        'cash_in_date'        => $purchaseReturn->return_date,
+                        'bank_id'             => $purchaseReturn->refund_bank_id,
+                        'chart_of_account_id' => $payableAccount ? $payableAccount->id : null,
                         'amount'              => $purchaseReturn->total_amount,
+                        'description'         => "Refund dari Retur Pembelian #{$purchaseReturn->return_number}",
+                        'status'              => 'posted',
+                        'reference_type'      => 'PurchaseReturn',
+                        'reference_id'        => $purchaseReturn->id,
+                        'created_by'          => auth()->id(),
+                        'updated_by'          => auth()->id(),
                     ]);
 
-                    // Create cash movement (we're receiving money)
-                    $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
-                    if ($bank) {
-                        app(\App\Services\CashMovementService::class)->createMovement(
-                            $bank,
-                            'PurchaseReturn',
-                            $purchaseReturn->id,
-                            $purchaseReturn->return_date,
-                            (float) $purchaseReturn->total_amount,
-                            0,
-                            "Refund Retur Pembelian #{$purchaseReturn->return_number}"
-                        );
-                    }
+                    // Post to journal
+                    app(\App\Services\JournalService::class)->postCashIn($cashIn);
                 } elseif ($purchaseReturn->refund_method === 'reduce_payable') {
                     // Create payment record to reduce payable (no bank transaction)
                     $purchasePayment = \App\Models\PurchasePayment::create([
@@ -700,21 +686,20 @@ class StockService
                     ->first();
 
                 if ($payment) {
-                    // If cash_refund, delete cash movement
-                    if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
-                        $cashMovement = \App\Models\CashMovement::where('reference_type', 'PurchaseReturn')
-                            ->where('reference_id', $purchaseReturn->id)
-                            ->first();
-
-                        if ($cashMovement) {
-                            app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
-                        }
-                    }
-
-                    // Delete payment items
                     $payment->items()->delete();
-                    // Delete payment
                     $payment->delete();
+                }
+            }
+
+            // Reverse/Delete CashIn if exists
+            if ($purchaseReturn->refund_method === 'cash_refund') {
+                $cashIn = \App\Models\CashIn::where('reference_type', 'PurchaseReturn')
+                    ->where('reference_id', $purchaseReturn->id)
+                    ->first();
+                
+                if ($cashIn) {
+                    app(\App\Services\JournalService::class)->reverseCashIn($cashIn);
+                    $cashIn->delete();
                 }
             }
 
@@ -880,40 +865,27 @@ class StockService
             // Handle refund based on refund_method
             if ($saleReturn->return_type === 'stock_and_refund' && $saleReturn->refund_method) {
                 if ($saleReturn->refund_method === 'cash_refund' && $saleReturn->refund_bank_id) {
-                    // Create payment for cash refund (money is returned via bank)
-                    $salePayment = \App\Models\SalePayment::create([
-                        'payment_number'   => \App\Models\SalePayment::generatePaymentNumber(),
-                        'payment_date'     => $saleReturn->return_date,
-                        'total_amount'     => $saleReturn->total_amount,
-                        'bank_id'          => $saleReturn->refund_bank_id,
-                        'payment_method'   => 'refund',
-                        'reference_number' => $saleReturn->return_number,
-                        'notes'            => "Cash Refund untuk Retur Penjualan #{$saleReturn->return_number}",
-                        'status'           => 'confirmed',
-                        'created_by'       => auth()->id(),
-                        'updated_by'       => auth()->id(),
+                    // Create CashOut record (we return money)
+                    // We use Piutang Usaha (1201) as the clearing account
+                    $receivableAccount = \App\Models\ChartOfAccount::where('code', '1201')->where('is_active', true)->first();
+
+                    $cashOut = \App\Models\CashOut::create([
+                        'cash_out_number'     => \App\Models\CashOut::generateCashOutNumber(),
+                        'cash_out_date'       => $saleReturn->return_date,
+                        'bank_id'             => $saleReturn->refund_bank_id,
+                        'chart_of_account_id' => $receivableAccount ? $receivableAccount->id : null,
+                        'amount'              => $saleReturn->total_amount,
+                        'description'         => "Pengembalian Dana Retur Penjualan #{$saleReturn->return_number}",
+                        'status'              => 'posted',
+                        'reference_type'      => 'SaleReturn',
+                        'reference_id'        => $saleReturn->id,
+                        'created_by'          => auth()->id(),
+                        'updated_by'          => auth()->id(),
                     ]);
 
-                    // Link payment to sale
-                    \App\Models\SalePaymentItem::create([
-                        'sale_payment_id' => $salePayment->id,
-                        'sale_id'         => $saleReturn->sale_id,
-                        'amount'          => $saleReturn->total_amount,
-                    ]);
+                    // Post to journal
+                    app(\App\Services\JournalService::class)->postCashOut($cashOut);
 
-                    // Create cash movement (we're paying out)
-                    $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
-                    if ($bank) {
-                        app(\App\Services\CashMovementService::class)->createMovement(
-                            $bank,
-                            'SaleReturn',
-                            $saleReturn->id,
-                            $saleReturn->return_date,
-                            0,
-                            (float) $saleReturn->total_amount,
-                            "Refund Retur Penjualan #{$saleReturn->return_number}"
-                        );
-                    }
                 } elseif ($saleReturn->refund_method === 'reduce_receivable') {
                     // Create payment record to reduce receivable (no bank transaction)
                     // This payment record will reduce the remaining_amount automatically
@@ -1009,19 +981,20 @@ class StockService
                     ->first();
 
                 if ($payment) {
-                    // Delete cash movement (reverse the decrement)
-                    $cashMovement = \App\Models\CashMovement::where('reference_type', 'SaleReturn')
-                        ->where('reference_id', $saleReturn->id)
-                        ->first();
-
-                    if ($cashMovement) {
-                        app(\App\Services\CashMovementService::class)->deleteMovement($cashMovement);
-                    }
-
-                    // Delete payment items
                     $payment->items()->delete();
-                    // Delete payment
                     $payment->delete();
+                }
+            }
+
+            // Reverse/Delete CashOut if exists
+            if ($saleReturn->refund_method === 'cash_refund') {
+                $cashOut = \App\Models\CashOut::where('reference_type', 'SaleReturn')
+                    ->where('reference_id', $saleReturn->id)
+                    ->first();
+                
+                if ($cashOut) {
+                    app(\App\Services\JournalService::class)->reverseCashOut($cashOut);
+                    $cashOut->delete();
                 }
             }
 

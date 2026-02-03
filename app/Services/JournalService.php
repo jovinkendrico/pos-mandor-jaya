@@ -1365,17 +1365,11 @@ class JournalService
                 'status'         => 'posted',
             ]);
 
-            // 1. Debit: Cash/Bank or Hutang
+            // 1. Debit: Hutang Usaha (Clearing Account)
+            // We always hit Hutang Usaha first. If it's a cash refund, 
+            // a separate CashIn will be created pointing to this account to clear it.
             $debitAccount = $payableAccount;
             $debitDesc = "Pengurangan Hutang dari Retur #{$purchaseReturn->return_number}";
-
-            if ($purchaseReturn->refund_method === 'cash_refund' && $purchaseReturn->refund_bank_id) {
-                $bank = \App\Models\Bank::find($purchaseReturn->refund_bank_id);
-                if ($bank && $bank->chart_of_account_id) {
-                    $debitAccount = ChartOfAccount::find($bank->chart_of_account_id);
-                    $debitDesc = "Penerimaan Refund Retur #{$purchaseReturn->return_number}";
-                }
-            }
 
             JournalEntryDetail::create([
                 'journal_entry_id'    => $journalEntry->id,
@@ -1499,17 +1493,11 @@ class JournalService
                 ]);
             }
 
-            // 3. Credit: Piutang Usaha or Kas/Bank
+            // 3. Credit: Piutang Usaha (Clearing Account)
+            // We always hit Piutang Usaha first. If it's a cash refund,
+            // a separate CashOut will be created pointing to this account to clear it.
             $creditAccount = $receivableAccount;
             $creditDesc = "Pengurangan Piutang dari Retur #{$saleReturn->return_number}";
-
-            if ($saleReturn->refund_method === 'cash_refund' && $saleReturn->refund_bank_id) {
-                $bank = \App\Models\Bank::find($saleReturn->refund_bank_id);
-                if ($bank && $bank->chart_of_account_id) {
-                    $creditAccount = ChartOfAccount::find($bank->chart_of_account_id);
-                    $creditDesc = "Pengembalian Uang Retur #{$saleReturn->return_number}";
-                }
-            }
 
             JournalEntryDetail::create([
                 'journal_entry_id'    => $journalEntry->id,
