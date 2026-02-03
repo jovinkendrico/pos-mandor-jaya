@@ -32,6 +32,7 @@ import {
     formatDatetoString,
     formatNumber,
     formatNumberWithSeparator,
+    parseStringtoDecimal,
     parseStringtoNumber,
 } from '@/lib/utils';
 import { IBank, IItem, ISale, ISaleDetail } from '@/types';
@@ -125,12 +126,14 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                 setReturnItems(initialReturnItems);
                 setQuantityDisplayValues(
                     initialReturnItems.map((item: ISaleReturnViewModel) =>
-                        item.quantity.toString()
-                    )
+                        item.quantity.toString(),
+                    ),
                 );
 
+                // ALWAYS update details to ensure they have the 'selected' property for calculations
+                setDataSaleReturn('details', initialReturnItems);
+
                 if (!dataSaleReturn.id) {
-                    setDataSaleReturn('details', initialReturnItems);
                     setDataSaleReturn('ppn_percent', sale.ppn_percent || 0);
                 }
 
@@ -194,9 +197,10 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
 
         // Sync local returnItems state for real-time UI
         const newItems = [...returnItems];
-        const rawValue = parseStringtoNumber(e.target.value);
+        const rawValue = parseStringtoDecimal(e.target.value);
         newItems[index].quantity = isNaN(rawValue ?? 0) ? 0 : (rawValue ?? 0);
         setReturnItems(newItems);
+        setDataSaleReturn('details', newItems);
     };
 
     const calculations = useMemo(() => {
@@ -356,7 +360,7 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="reduce_receivable">
-                                                    Kurangi Piutang (Otomatis)
+                                                    Kurangi Piutang (Potong Bon)
                                                 </SelectItem>
                                                 <SelectItem value="cash_refund">
                                                     Kembalikan Uang (Cash Refund via

@@ -32,6 +32,7 @@ import {
     formatDatetoString,
     formatNumber,
     formatNumberWithSeparator,
+    parseStringtoDecimal,
     parseStringtoNumber,
 } from '@/lib/utils';
 import { IBank, IItem, IPurchase, IPurchaseDetail } from '@/types';
@@ -139,9 +140,8 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                     ),
                 );
 
-                if (!dataPurchaseReturn.id) {
-                    setDataPurchaseReturn('details', initialReturnItems);
-                }
+                // ALWAYS update details to ensure they have the 'selected' property for calculations
+                setDataPurchaseReturn('details', initialReturnItems);
 
                 // Fetch outstanding purchases for "Potong Bon"
                 if (purchase.supplier_id) {
@@ -207,9 +207,10 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
 
         // Sync local returnItems state for real-time UI
         const newItems = [...returnItems];
-        const rawValue = parseStringtoNumber(e.target.value);
+        const rawValue = parseStringtoDecimal(e.target.value);
         newItems[index].quantity = isNaN(rawValue ?? 0) ? 0 : (rawValue ?? 0);
         setReturnItems(newItems);
+        setDataPurchaseReturn('details', newItems);
     };
 
     const calculations = useMemo(() => {
@@ -368,7 +369,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="reduce_payable">
-                                                    Kurangi Hutang (Otomatis)
+                                                    Kurangi Hutang (Potong Bon)
                                                 </SelectItem>
                                                 <SelectItem value="cash_refund">
                                                     Terima Uang (Cash Refund via
