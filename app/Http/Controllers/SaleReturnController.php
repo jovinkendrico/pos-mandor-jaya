@@ -222,7 +222,7 @@ class SaleReturnController extends Controller
         $saleReturn->load(['sale.customer', 'details.item', 'details.itemUom.uom']);
 
         return Inertia::render('transaction/salereturn/show', [
-            'return' => $saleReturn,
+            'saleReturn' => $saleReturn,
         ]);
     }
 
@@ -233,7 +233,7 @@ class SaleReturnController extends Controller
     {
         if ($saleReturn->status === 'confirmed') {
             return Inertia::render('transaction/salereturn/show', [
-                'return' => $saleReturn->load(['sale.customer', 'details.item', 'details.itemUom.uom']),
+                'saleReturn' => $saleReturn->load(['sale.customer', 'details.item', 'details.itemUom.uom']),
                 'error' => 'Retur yang sudah dikonfirmasi tidak dapat diedit. Batalkan konfirmasi terlebih dahulu.',
             ]);
         }
@@ -251,7 +251,7 @@ class SaleReturnController extends Controller
         $banks = \App\Models\Bank::orderBy('name')->get();
 
         return Inertia::render('transaction/salereturn/edit', [
-            'sale_return' => $saleReturn,
+            'saleReturn' => $saleReturn,
             'sales'       => $sales,
             'banks'       => $banks,
         ]);

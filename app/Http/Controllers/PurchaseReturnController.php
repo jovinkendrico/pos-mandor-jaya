@@ -218,7 +218,7 @@ class PurchaseReturnController extends Controller
         $purchaseReturn->load(['purchase.supplier', 'details.item', 'details.itemUom.uom']);
 
         return Inertia::render('transaction/purchasereturn/show', [
-            'purchase_return' => $purchaseReturn,
+            'purchaseReturn' => $purchaseReturn,
         ]);
     }
 
@@ -229,7 +229,7 @@ class PurchaseReturnController extends Controller
     {
         if ($purchaseReturn->status === 'confirmed') {
             return Inertia::render('transaction/purchasereturn/show', [
-                'purchase_return' => $purchaseReturn->load(['purchase.supplier', 'details.item', 'details.itemUom.uom']),
+                'purchaseReturn' => $purchaseReturn->load(['purchase.supplier', 'details.item', 'details.itemUom.uom']),
                 'error' => 'Retur yang sudah dikonfirmasi tidak dapat diedit. Batalkan konfirmasi terlebih dahulu.',
             ]);
         }
@@ -247,9 +247,9 @@ class PurchaseReturnController extends Controller
         $banks = \App\Models\Bank::orderBy('name')->get();
 
         return Inertia::render('transaction/purchasereturn/edit', [
-            'purchase_return' => $purchaseReturn,
-            'purchases'       => $purchases,
-            'banks'           => $banks,
+            'purchaseReturn' => $purchaseReturn,
+            'purchases'      => $purchases,
+            'banks'          => $banks,
         ]);
     }
 

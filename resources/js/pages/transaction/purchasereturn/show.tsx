@@ -22,7 +22,7 @@ import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
-    purchase_return: IPurchaseReturn;
+    purchaseReturn: IPurchaseReturn;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -41,7 +41,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const PurchaseReturnShow = (props: PageProps) => {
-    const { purchase_return } = props;
+    const { purchaseReturn } = props;
 
     const {
         isOpen: isConfirmModalOpen,
@@ -62,7 +62,7 @@ const PurchaseReturnShow = (props: PageProps) => {
 
     const handleConfirm = () => {
         router.post(
-            `/purchase-returns/${purchase_return.id}/confirm`,
+            `/purchase-returns/${purchaseReturn.id}/confirm`,
             {},
             {
                 onSuccess: (page) => {
@@ -85,7 +85,7 @@ const PurchaseReturnShow = (props: PageProps) => {
 
     const handleUnconfirm = () => {
         router.post(
-            `/purchase-returns/${purchase_return.id}/unconfirm`,
+            `/purchase-returns/${purchaseReturn.id}/unconfirm`,
             {},
             {
                 onSuccess: (page) => {
@@ -108,7 +108,7 @@ const PurchaseReturnShow = (props: PageProps) => {
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
-                <Head title={`Retur Beli ${purchase_return.return_number}`} />
+                <Head title={`Retur Beli ${purchaseReturn.return_number}`} />
 
                 <div className="mb-6 flex items-center justify-between">
                     <div>
@@ -117,23 +117,23 @@ const PurchaseReturnShow = (props: PageProps) => {
                                 <ArrowLeft className="h-8 w-8" />
                             </Link>
                             <PageTitle
-                                title={`Retur Beli ${purchase_return.return_number}`}
+                                title={`Retur Beli ${purchaseReturn.return_number}`}
                             />
                         </div>
                         <div className="mt-2 flex items-center gap-2">
                             <Badge
                                 variant={
-                                    purchase_return.status === 'confirmed'
+                                    purchaseReturn.status === 'confirmed'
                                         ? 'default'
                                         : 'secondary'
                                 }
                                 className={cn(
-                                    purchase_return.status === 'pending'
+                                    purchaseReturn.status === 'pending'
                                         ? 'badge-yellow-light'
                                         : 'badge-green-light',
                                 )}
                             >
-                                {purchase_return.status === 'confirmed'
+                                {purchaseReturn.status === 'confirmed'
                                     ? 'Confirmed'
                                     : 'Pending'}
                             </Badge>
@@ -142,19 +142,19 @@ const PurchaseReturnShow = (props: PageProps) => {
                     <div className="flex gap-2">
                         <DotMatrixPrintButton
                             data={{
-                                purchase_number: purchase_return.return_number,
+                                purchase_number: purchaseReturn.return_number,
                                 date: (() => {
-                                    const d = new Date(purchase_return.return_date);
+                                    const d = new Date(purchaseReturn.return_date);
                                     const day = String(d.getDate()).padStart(2, '0');
                                     const month = String(d.getMonth() + 1).padStart(2, '0');
                                     const year = d.getFullYear();
                                     return `${day}-${month}-${year}`;
                                 })(),
-                                supplier_name: purchase_return.purchase.supplier?.name,
-                                supplier_city: purchase_return.purchase.supplier?.city?.name,
-                                supplier_phone: purchase_return.purchase.supplier?.phone_number,
-                                total: purchase_return.total_amount,
-                                details: purchase_return.details.map(d => ({
+                                supplier_name: purchaseReturn.purchase.supplier?.name,
+                                supplier_city: purchaseReturn.purchase.supplier?.city?.name,
+                                supplier_phone: purchaseReturn.purchase.supplier?.phone_number,
+                                total: purchaseReturn.total_amount,
+                                details: purchaseReturn.details.map((d: any) => ({
                                     item_name: d.item?.name || '?',
                                     uom: d.item_uom?.uom.name || '',
                                     quantity: Number(d.quantity),
@@ -163,7 +163,7 @@ const PurchaseReturnShow = (props: PageProps) => {
                                 }))
                             }}
                         />
-                        {purchase_return.status === 'pending' && (
+                        {purchaseReturn.status === 'pending' && (
                             <>
                                 <Button
                                     onClick={openConfirmModal}
@@ -174,7 +174,7 @@ const PurchaseReturnShow = (props: PageProps) => {
                                 </Button>
                             </>
                         )}
-                        {purchase_return.status === 'confirmed' && (
+                        {purchaseReturn.status === 'confirmed' && (
                             <Button
                                 onClick={openConfirmModal}
                                 className="btn-danger"
@@ -198,7 +198,7 @@ const PurchaseReturnShow = (props: PageProps) => {
                                     No. Pembelian:
                                 </span>
                                 <span className="font-mono font-medium">
-                                    {purchase_return.purchase.purchase_number}
+                                    {purchaseReturn.purchase.purchase_number}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -206,7 +206,7 @@ const PurchaseReturnShow = (props: PageProps) => {
                                     Supplier:
                                 </span>
                                 <span className="font-medium">
-                                    {purchase_return.purchase.supplier?.name ||
+                                    {purchaseReturn.purchase.supplier?.name ||
                                         '-'}
                                 </span>
                             </div>
@@ -216,17 +216,17 @@ const PurchaseReturnShow = (props: PageProps) => {
                                 </span>
                                 <span className="font-medium">
                                     {formatDatetoString(
-                                        new Date(purchase_return.return_date),
+                                        new Date(purchaseReturn.return_date),
                                     )}
                                 </span>
                             </div>
-                            {purchase_return.reason && (
+                            {purchaseReturn.reason && (
                                 <div className="flex flex-col border-t pt-2">
                                     <span className="text-muted-foreground">
                                         Alasan:
                                     </span>
                                     <span className="mt-1 font-medium">
-                                        {purchase_return.reason}
+                                        {purchaseReturn.reason}
                                     </span>
                                 </div>
                             )}
@@ -243,47 +243,47 @@ const PurchaseReturnShow = (props: PageProps) => {
                                     Subtotal:
                                 </span>
                                 <span>
-                                    {formatCurrency(purchase_return.subtotal)}
+                                    {formatCurrency(purchaseReturn.subtotal)}
                                 </span>
                             </div>
                             {formatNumber(
-                                purchase_return.discount1_amount ?? 0,
+                                purchaseReturn.discount1_amount ?? 0,
                             ) > 0 && (
                                     <div className="flex justify-between text-red-600 dark:text-danger-400">
                                         <span>Total Diskon 1:</span>
                                         <span>
                                             -
                                             {formatCurrency(
-                                                purchase_return.discount1_amount ??
+                                                purchaseReturn.discount1_amount ??
                                                 0,
                                             )}
                                         </span>
                                     </div>
                                 )}
                             {formatNumber(
-                                purchase_return.discount2_amount ?? 0,
+                                purchaseReturn.discount2_amount ?? 0,
                             ) > 0 && (
                                     <div className="flex justify-between text-red-600 dark:text-danger-400">
                                         <span>Total Diskon 2:</span>
                                         <span>
                                             -
                                             {formatCurrency(
-                                                purchase_return.discount2_amount ??
+                                                purchaseReturn.discount2_amount ??
                                                 0,
                                             )}
                                         </span>
                                     </div>
                                 )}
-                            {formatNumber(purchase_return.ppn_amount ?? 0) >
+                            {formatNumber(purchaseReturn.ppn_amount ?? 0) >
                                 0 && (
                                     <div className="flex justify-between text-blue-600 dark:text-primary-700">
                                         <span>
-                                            PPN ({purchase_return.ppn_percent}%):
+                                            PPN ({purchaseReturn.ppn_percent}%):
                                         </span>
                                         <span>
                                             +
                                             {formatCurrency(
-                                                purchase_return.ppn_amount ?? 0,
+                                                purchaseReturn.ppn_amount ?? 0,
                                             )}
                                         </span>
                                     </div>
@@ -292,7 +292,7 @@ const PurchaseReturnShow = (props: PageProps) => {
                                 <span>TOTAL:</span>
                                 <span>
                                     {formatCurrency(
-                                        purchase_return.total_amount,
+                                        purchaseReturn.total_amount,
                                     )}
                                 </span>
                             </div>
@@ -309,9 +309,9 @@ const PurchaseReturnShow = (props: PageProps) => {
                         <div className="input-box overflow-x-auto rounded-lg">
                             <TableLayout
                                 tableColumn={tableColumn}
-                                tableRow={purchase_return.details}
+                                tableRow={purchaseReturn.details}
                                 pageFrom={1}
-                                renderRow={(detail) => (
+                                renderRow={(detail: any) => (
                                     <>
                                         <TableCell className="flex w-full items-center justify-center text-center font-mono">
                                             {detail.item?.code}
@@ -357,24 +357,24 @@ const PurchaseReturnShow = (props: PageProps) => {
                 </Card>
                 <Modal
                     titleDesc={
-                        purchase_return.status === 'pending'
+                        purchaseReturn.status === 'pending'
                             ? 'Konfirmasi Retur Pembelian?'
                             : 'Batalkan Konfirmasi?'
                     }
                     contentDesc={
-                        purchase_return.status === 'pending'
+                        purchaseReturn.status === 'pending'
                             ? 'Stock akan berkurang dan data tidak bisa diedit lagi.'
                             : 'Stock akan dikembalikan.'
                     }
                     submitText={
-                        purchase_return.status === 'pending'
+                        purchaseReturn.status === 'pending'
                             ? 'Konfirmasi'
                             : 'Batalkan Konfirmasi'
                     }
                     isModalOpen={isConfirmModalOpen}
                     onModalClose={closeConfirmModal}
                     handleSubmit={
-                        purchase_return.status === 'pending'
+                        purchaseReturn.status === 'pending'
                             ? handleConfirm
                             : handleUnconfirm
                     }

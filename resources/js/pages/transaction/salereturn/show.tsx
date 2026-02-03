@@ -22,7 +22,7 @@ import { ArrowLeft, CheckCircle2, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
-    return: ISaleReturn;
+    saleReturn: ISaleReturn;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -40,7 +40,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SaleReturnShow({ return: returnData }: PageProps) {
+export default function SaleReturnShow({ saleReturn }: PageProps) {
     const {
         isOpen: isConfirmModalOpen,
         openModal: openConfirmModal,
@@ -62,12 +62,12 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
         'Disc 1 (%)',
         'Disc 2 (%)',
         'Subtotal',
-        ...(returnData.status === 'confirmed' ? ['Cost', 'Profit Adj.'] : []),
+        ...(saleReturn.status === 'confirmed' ? ['Cost', 'Profit Adj.'] : []),
     ];
 
     const handleConfirm = () => {
         router.post(
-            `/sale-returns/${returnData.id}/confirm`,
+            `/sale-returns/${saleReturn.id}/confirm`,
             {},
             {
                 onSuccess: () => {
@@ -84,7 +84,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
 
     const handleUnconfirm = () => {
         router.post(
-            `/sale-returns/${returnData.id}/unconfirm`,
+            `/sale-returns/${saleReturn.id}/unconfirm`,
             {},
             {
                 onSuccess: () => {
@@ -100,7 +100,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
     };
 
     const handleDelete = () => {
-        router.delete(`/sale-returns/${returnData.id}`, {
+        router.delete(`/sale-returns/${saleReturn.id}`, {
             onSuccess: () => {
                 toast.success('Retur penjualan dihapus');
                 closeDeleteModal();
@@ -115,7 +115,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
-                <Head title={`Retur Jual ${returnData.return_number}`} />
+                <Head title={`Retur Jual ${saleReturn.return_number}`} />
 
                 <div className="mb-6 flex items-center justify-between">
                     <div>
@@ -124,23 +124,23 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                 <ArrowLeft className="h-8 w-8" />
                             </Link>
                             <PageTitle
-                                title={`Retur Jual ${returnData.return_number}`}
+                                title={`Retur Jual ${saleReturn.return_number}`}
                             />
                         </div>
                         <div className="mt-2 flex items-center gap-2">
                             <Badge
                                 variant={
-                                    returnData.status === 'confirmed'
+                                    saleReturn.status === 'confirmed'
                                         ? 'default'
                                         : 'secondary'
                                 }
                                 className={cn(
-                                    returnData.status === 'pending'
+                                    saleReturn.status === 'pending'
                                         ? 'badge-yellow-light'
                                         : 'badge-green-light',
                                 )}
                             >
-                                {returnData.status === 'confirmed'
+                                {saleReturn.status === 'confirmed'
                                     ? 'Confirmed'
                                     : 'Pending'}
                             </Badge>
@@ -149,19 +149,19 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                     <div className="flex gap-2">
                         <DotMatrixPrintButton
                             data={{
-                                sale_number: returnData.return_number,
+                                sale_number: saleReturn.return_number,
                                 date: (() => {
-                                    const d = new Date(returnData.return_date);
+                                    const d = new Date(saleReturn.return_date);
                                     const day = String(d.getDate()).padStart(2, '0');
                                     const month = String(d.getMonth() + 1).padStart(2, '0');
                                     const year = d.getFullYear();
                                     return `${day}-${month}-${year}`;
                                 })(),
-                                customer_name: returnData.sale.customer?.name,
-                                customer_city: returnData.sale.customer?.city?.name,
-                                customer_phone: returnData.sale.customer?.phone_number,
-                                total: returnData.total_amount,
-                                details: returnData.details.map(d => ({
+                                customer_name: saleReturn.sale.customer?.name,
+                                customer_city: saleReturn.sale.customer?.city?.name,
+                                customer_phone: saleReturn.sale.customer?.phone_number,
+                                total: saleReturn.total_amount,
+                                details: saleReturn.details.map((d: any) => ({
                                     item_name: d.item?.name || '?',
                                     uom: d.item_uom?.uom.name || '',
                                     quantity: Number(d.quantity),
@@ -170,7 +170,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                 }))
                             }}
                         />
-                        {returnData.status === 'pending' && (
+                        {saleReturn.status === 'pending' && (
                             <>
                                 <Button
                                     onClick={openDeleteModal}
@@ -188,7 +188,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                 </Button>
                             </>
                         )}
-                        {returnData.status === 'confirmed' && (
+                        {saleReturn.status === 'confirmed' && (
                             <Button
                                 onClick={openConfirmModal}
                                 className="btn-danger"
@@ -212,7 +212,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                     No. Penjualan:
                                 </span>
                                 <span className="font-mono font-medium">
-                                    {returnData.sale.sale_number}
+                                    {saleReturn.sale.sale_number}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -220,7 +220,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                     Customer:
                                 </span>
                                 <span className="font-medium">
-                                    {returnData.sale.customer?.name || '-'}
+                                    {saleReturn.sale.customer?.name || '-'}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -229,17 +229,17 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                 </span>
                                 <span className="font-medium">
                                     {formatDatetoString(
-                                        new Date(returnData.return_date),
+                                        new Date(saleReturn.return_date),
                                     )}
                                 </span>
                             </div>
-                            {returnData.reason && (
+                            {saleReturn.reason && (
                                 <div className="flex flex-col border-t pt-2">
                                     <span className="text-muted-foreground">
                                         Alasan:
                                     </span>
                                     <span className="mt-1 font-medium">
-                                        {returnData.reason}
+                                        {saleReturn.reason}
                                     </span>
                                 </div>
                             )}
@@ -256,42 +256,42 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                     Subtotal:
                                 </span>
                                 <span>
-                                    {formatCurrency(returnData.subtotal)}
+                                    {formatCurrency(saleReturn.subtotal)}
                                 </span>
                             </div>
-                            {formatNumber(returnData.discount1_amount ?? 0) >
+                            {formatNumber(saleReturn.discount1_amount ?? 0) >
                                 0 && (
                                     <div className="flex justify-between text-red-600 dark:text-danger-400">
                                         <span>Total Diskon 1:</span>
                                         <span>
                                             -
                                             {formatCurrency(
-                                                returnData.discount1_amount ?? 0,
+                                                saleReturn.discount1_amount ?? 0,
                                             )}
                                         </span>
                                     </div>
                                 )}
-                            {formatNumber(returnData.discount2_amount ?? 0) >
+                            {formatNumber(saleReturn.discount2_amount ?? 0) >
                                 0 && (
                                     <div className="flex justify-between text-red-600 dark:text-danger-400">
                                         <span>Total Diskon 2:</span>
                                         <span>
                                             -
                                             {formatCurrency(
-                                                returnData.discount2_amount ?? 0,
+                                                saleReturn.discount2_amount ?? 0,
                                             )}
                                         </span>
                                     </div>
                                 )}
-                            {formatNumber(returnData.ppn_amount ?? 0) > 0 && (
+                            {formatNumber(saleReturn.ppn_amount ?? 0) > 0 && (
                                 <div className="flex justify-between text-blue-600 dark:text-primary-700">
                                     <span>
-                                        PPN ({returnData.ppn_percent}%):
+                                        PPN ({saleReturn.ppn_percent}%):
                                     </span>
                                     <span>
                                         +
                                         {formatCurrency(
-                                            returnData.ppn_amount ?? 0,
+                                            saleReturn.ppn_amount ?? 0,
                                         )}
                                     </span>
                                 </div>
@@ -299,16 +299,16 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                             <div className="flex justify-between border-t pt-2 text-lg font-bold">
                                 <span>TOTAL:</span>
                                 <span>
-                                    {formatCurrency(returnData.total_amount)}
+                                    {formatCurrency(saleReturn.total_amount)}
                                 </span>
                             </div>
-                            {returnData.status === 'confirmed' && (
+                            {saleReturn.status === 'confirmed' && (
                                 <>
                                     <div className="flex justify-between border-t pt-2 text-red-600 dark:text-danger-500">
                                         <span>Total Cost:</span>
                                         <span className="font-medium">
                                             {formatCurrency(
-                                                returnData.total_cost,
+                                                saleReturn.total_cost,
                                             )}
                                         </span>
                                     </div>
@@ -316,7 +316,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                         <span>PROFIT ADJ.:</span>
                                         <span>
                                             {formatCurrency(
-                                                returnData.total_profit_adjustment,
+                                                saleReturn.total_profit_adjustment,
                                             )}
                                         </span>
                                     </div>
@@ -335,9 +335,9 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                         <div className="input-box overflow-x-auto rounded-lg">
                             <TableLayout
                                 tableColumn={tableColumn}
-                                tableRow={returnData.details}
+                                tableRow={saleReturn.details}
                                 pageFrom={1}
-                                renderRow={(detail) => (
+                                renderRow={(detail: any) => (
                                     <>
                                         <TableCell className="flex w-full items-center justify-center text-center font-mono">
                                             {detail.item?.code}
@@ -375,7 +375,7 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                                         <TableCell className="flex w-full items-center justify-center text-center">
                                             {formatCurrency(detail.subtotal)}
                                         </TableCell>
-                                        {returnData.status === 'confirmed' && (
+                                        {saleReturn.status === 'confirmed' && (
                                             <>
                                                 <TableCell className="flex w-full items-center justify-center text-center text-red-600 dark:text-danger-500">
                                                     {formatCurrency(
@@ -398,24 +398,24 @@ export default function SaleReturnShow({ return: returnData }: PageProps) {
                 </Card>
                 <Modal
                     titleDesc={
-                        returnData.status === 'pending'
+                        saleReturn.status === 'pending'
                             ? 'Konfirmasi Retur Penjualan?'
                             : 'Batalkan Konfirmasi?'
                     }
                     contentDesc={
-                        returnData.status === 'pending'
+                        saleReturn.status === 'pending'
                             ? 'Stock akan bertambah, profit akan di-adjust, dan data tidak bisa diedit lagi.'
                             : 'Stock akan dikurangi kembali.'
                     }
                     submitText={
-                        returnData.status === 'pending'
+                        saleReturn.status === 'pending'
                             ? 'Konfirmasi'
                             : 'Batalkan Konfirmasi'
                     }
                     isModalOpen={isConfirmModalOpen}
                     onModalClose={closeConfirmModal}
                     handleSubmit={
-                        returnData.status === 'pending'
+                        saleReturn.status === 'pending'
                             ? handleConfirm
                             : handleUnconfirm
                     }
