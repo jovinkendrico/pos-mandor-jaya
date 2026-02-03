@@ -470,14 +470,33 @@ class SaleReturnController extends Controller
     /**
      * Get outstanding sales for a customer for "Potong Bon"
      */
-    public function getOutstandingSales(\App\Models\Customer $customer)
+    public function getOutstandingSales(\App\Models\Customer $customer, \Illuminate\Http\Request $request)
     {
+        $excludeReturnId = $request->input('exclude_return_id');
+
         $sales = \App\Models\Sale::where('customer_id', $customer->id)
             ->whereIn('status', ['confirmed', 'partially_paid'])
-            ->where('remaining_amount', '>', 0)
+            ->where(function ($query) use ($excludeReturnId) {
+                $query->where('remaining_amount', '>', 0);
+                if ($excludeReturnId) {
+                    $query->orWhereHas('returnAllocations', function ($q) use ($excludeReturnId) {
+                        $q->where('sale_return_id', $excludeReturnId);
+                    });
+                }
+            })
             ->select('id', 'sale_number', 'sale_date', 'total_amount', 'remaining_amount')
             ->orderBy('sale_date', 'asc')
             ->get();
+
+        if ($excludeReturnId) {
+            $sales->each(function ($s) use ($excludeReturnId) {
+                $allocatedByThis = \DB::table('sale_return_allocations')
+                    ->where('sale_id', $s->id)
+                    ->where('sale_return_id', $excludeReturnId)
+                    ->sum('amount');
+                $s->remaining_amount += $allocatedByThis;
+            });
+        }
 
         return response()->json($sales);
     }

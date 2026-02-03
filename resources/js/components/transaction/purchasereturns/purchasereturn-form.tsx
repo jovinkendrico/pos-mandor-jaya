@@ -29,8 +29,10 @@ import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
 import {
     cn,
     formatCurrency,
+    formatDatetoString,
     formatNumber,
     formatNumberWithSeparator,
+    parseStringtoNumber,
 } from '@/lib/utils';
 import { IBank, IItem, IPurchase, IPurchaseDetail } from '@/types';
 import axios from 'axios';
@@ -144,15 +146,16 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                 // Fetch outstanding purchases for "Potong Bon"
                 if (purchase.supplier_id) {
                     setIsLoadingOutstanding(true);
-                    const outstandingRes = await axios.get(`/purchase-returns/outstanding/${purchase.supplier_id}`);
+                    const outstandingRes = await axios.get(`/purchase-returns/outstanding/${purchase.supplier_id}`, {
+                        params: { exclude_return_id: dataPurchaseReturn.id }
+                    });
                     setOutstandingPurchases(outstandingRes.data);
                     setIsLoadingOutstanding(false);
-
-                    // If this is a new return and we're reducing payable, pre-allocate to the current purchase
-                    if (!dataPurchaseReturn.id && dataPurchaseReturn.refund_method === RefundMethod.REDUCE_PAYABLE) {
-                        // This logic will be handled better in a separate useEffect or watcher
-                    }
+                }     // If this is a new return and we're reducing payable, pre-allocate to the current purchase
+                if (!dataPurchaseReturn.id && dataPurchaseReturn.refund_method === RefundMethod.REDUCE_PAYABLE) {
+                    // This logic will be handled better in a separate useEffect or watcher
                 }
+
             } catch (error) {
                 console.error('Error fetching purchase details:', error);
             } finally {
@@ -174,7 +177,22 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
             newAllocations.push({ purchase_id: purchaseId, amount });
         }
 
-        setDataPurchaseReturn('allocations', newAllocations);
+        // Filter out zero allocations to keep it clean, but keep ones with values
+        const filteredAllocations = newAllocations.filter(a => a.amount > 0 || a.purchase_id === purchaseId);
+
+        setDataPurchaseReturn('allocations', filteredAllocations);
+    };
+
+    const handleAutoAllocate = (purchaseId: number, maxAmount: number) => {
+        const currentTotalAllocated = (dataPurchaseReturn.allocations || []).reduce((sum: number, a: any) => {
+            if (a.purchase_id === purchaseId) return sum;
+            return sum + Number(a.amount);
+        }, 0);
+
+        const remainingToAllocate = Math.max(0, calculations.grandTotal - currentTotalAllocated);
+        const amountToFill = Math.min(remainingToAllocate, maxAmount);
+
+        handleAllocationChange(purchaseId, amountToFill);
     };
 
     const handleToggleItem = (index: number) => {
@@ -182,6 +200,16 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
         newItems[index].selected = !newItems[index].selected;
         setReturnItems(newItems);
         setDataPurchaseReturn('details', newItems);
+    };
+
+    const onQuantityChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        handleQuantityChange(index, e, quantityDisplayValues, setQuantityDisplayValues);
+
+        // Sync local returnItems state for real-time UI
+        const newItems = [...returnItems];
+        const rawValue = parseStringtoNumber(e.target.value);
+        newItems[index].quantity = isNaN(rawValue ?? 0) ? 0 : (rawValue ?? 0);
+        setReturnItems(newItems);
     };
 
     const calculations = useMemo(() => {
@@ -595,14 +623,11 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                         type="text"
                                                         value={item.quantity}
                                                         onChange={(e) =>
-                                                            handleQuantityChange(
+                                                            onQuantityChange(
                                                                 index,
-                                                                e,
-                                                                quantityDisplayValues,
-                                                                setQuantityDisplayValues,
+                                                                e
                                                             )
-                                                        }
-                                                        className="input-box w-24 text-center"
+                                                        } className="input-box w-24 text-center"
                                                         disabled={
                                                             !item.selected ||
                                                             isFullyReturned
@@ -689,13 +714,24 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                                                     {formatCurrency(purchase.remaining_amount)}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Input
-                                                        type="number"
-                                                        value={allocationAmount}
-                                                        onChange={(e) => handleAllocationChange(purchase.id, Number(e.target.value))}
-                                                        className="input-box ml-auto w-40 text-right"
-                                                        max={purchase.remaining_amount}
-                                                    />
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleAutoAllocate(purchase.id, purchase.remaining_amount)}
+                                                            className="h-8 px-2 text-xs"
+                                                        >
+                                                            Pilih
+                                                        </Button>
+                                                        <Input
+                                                            type="number"
+                                                            value={allocationAmount || ''}
+                                                            onChange={(e) => handleAllocationChange(purchase.id, Math.max(0, Number(e.target.value)))}
+                                                            className="input-box w-32 text-right"
+                                                            max={purchase.remaining_amount}
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         );

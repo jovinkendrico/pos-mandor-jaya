@@ -29,8 +29,10 @@ import { calculateTotals, ItemAccessors } from '@/lib/transaction-calculator';
 import {
     cn,
     formatCurrency,
+    formatDatetoString,
     formatNumber,
     formatNumberWithSeparator,
+    parseStringtoNumber,
 } from '@/lib/utils';
 import { IBank, IItem, ISale, ISaleDetail } from '@/types';
 import axios from 'axios';
@@ -135,7 +137,9 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                 // Fetch outstanding sales for "Potong Bon"
                 if (sale.customer_id) {
                     setIsLoadingOutstanding(true);
-                    const outstandingRes = await axios.get(`/sale-returns/outstanding/${sale.customer_id}`);
+                    const outstandingRes = await axios.get(`/sale-returns/outstanding/${sale.customer_id}`, {
+                        params: { exclude_return_id: dataSaleReturn.id }
+                    });
                     setOutstandingSales(outstandingRes.data);
                     setIsLoadingOutstanding(false);
                 }
@@ -160,7 +164,22 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
             newAllocations.push({ sale_id: saleId, amount });
         }
 
-        setDataSaleReturn('allocations', newAllocations);
+        // Filter out zero allocations
+        const filteredAllocations = newAllocations.filter(a => a.amount > 0 || a.sale_id === saleId);
+
+        setDataSaleReturn('allocations', filteredAllocations);
+    };
+
+    const handleAutoAllocate = (saleId: number, maxAmount: number) => {
+        const currentTotalAllocated = (dataSaleReturn.allocations || []).reduce((sum: number, a: any) => {
+            if (a.sale_id === saleId) return sum;
+            return sum + Number(a.amount);
+        }, 0);
+
+        const remainingToAllocate = Math.max(0, calculations.grandTotal - currentTotalAllocated);
+        const amountToFill = Math.min(remainingToAllocate, maxAmount);
+
+        handleAllocationChange(saleId, amountToFill);
     };
 
     const handleToggleItem = (index: number) => {
@@ -168,6 +187,16 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
         newItems[index].selected = !newItems[index].selected;
         setReturnItems(newItems);
         setDataSaleReturn('details', newItems);
+    };
+
+    const onQuantityChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        handleQuantityChange(index, e, quantityDisplayValues, setQuantityDisplayValues);
+
+        // Sync local returnItems state for real-time UI
+        const newItems = [...returnItems];
+        const rawValue = parseStringtoNumber(e.target.value);
+        newItems[index].quantity = isNaN(rawValue ?? 0) ? 0 : (rawValue ?? 0);
+        setReturnItems(newItems);
     };
 
     const calculations = useMemo(() => {
@@ -581,11 +610,9 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                                                             type="text"
                                                             value={item.quantity}
                                                             onChange={(e) =>
-                                                                handleQuantityChange(
+                                                                onQuantityChange(
                                                                     index,
-                                                                    e,
-                                                                    quantityDisplayValues,
-                                                                    setQuantityDisplayValues,
+                                                                    e
                                                                 )
                                                             }
                                                             className="input-box w-24 text-center"
@@ -675,13 +702,24 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                                                     {formatCurrency(sale.remaining_amount)}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Input
-                                                        type="number"
-                                                        value={allocationAmount}
-                                                        onChange={(e) => handleAllocationChange(sale.id, Number(e.target.value))}
-                                                        className="input-box ml-auto w-40 text-right"
-                                                        max={sale.remaining_amount}
-                                                    />
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleAutoAllocate(sale.id, sale.remaining_amount)}
+                                                            className="h-8 px-2 text-xs"
+                                                        >
+                                                            Pilih
+                                                        </Button>
+                                                        <Input
+                                                            type="number"
+                                                            value={allocationAmount || ''}
+                                                            onChange={(e) => handleAllocationChange(sale.id, Math.max(0, Number(e.target.value)))}
+                                                            className="input-box w-32 text-right"
+                                                            max={sale.remaining_amount}
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         );

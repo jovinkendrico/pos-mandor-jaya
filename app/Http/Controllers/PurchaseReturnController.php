@@ -464,14 +464,33 @@ class PurchaseReturnController extends Controller
     /**
      * Get outstanding purchases for a supplier for "Potong Bon"
      */
-    public function getOutstandingPurchases(\App\Models\Supplier $supplier)
+    public function getOutstandingPurchases(\App\Models\Supplier $supplier, \Illuminate\Http\Request $request)
     {
+        $excludeReturnId = $request->input('exclude_return_id');
+
         $purchases = \App\Models\Purchase::where('supplier_id', $supplier->id)
             ->whereIn('status', ['confirmed', 'partially_paid'])
-            ->where('remaining_amount', '>', 0)
+            ->where(function($query) use ($excludeReturnId) {
+                $query->where('remaining_amount', '>', 0);
+                if ($excludeReturnId) {
+                    $query->orWhereHas('returnAllocations', function($q) use ($excludeReturnId) {
+                        $q->where('purchase_return_id', $excludeReturnId);
+                    });
+                }
+            })
             ->select('id', 'purchase_number', 'purchase_date', 'total_amount', 'remaining_amount')
             ->orderBy('purchase_date', 'asc')
             ->get();
+
+        if ($excludeReturnId) {
+            $purchases->each(function($p) use ($excludeReturnId) {
+                $allocatedByThis = \DB::table('purchase_return_allocations')
+                    ->where('purchase_id', $p->id)
+                    ->where('purchase_return_id', $excludeReturnId)
+                    ->sum('amount');
+                $p->remaining_amount += $allocatedByThis;
+            });
+        }
 
         return response()->json($purchases);
     }
