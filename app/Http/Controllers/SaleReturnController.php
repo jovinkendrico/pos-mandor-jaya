@@ -221,8 +221,19 @@ class SaleReturnController extends Controller
     {
         $saleReturn->load(['sale.customer', 'details.item', 'details.itemUom.uom']);
 
+        // Load allocated sale details if any
+        $allocatedSales = [];
+        if ($saleReturn->allocations) {
+            $saleIds = collect($saleReturn->allocations)->pluck('sale_id')->filter()->unique();
+            $allocatedSales = \App\Models\Sale::whereIn('id', $saleIds)
+                ->select('id', 'sale_number', 'sale_date')
+                ->get()
+                ->keyBy('id');
+        }
+
         return Inertia::render('transaction/salereturn/show', [
-            'saleReturn' => $saleReturn,
+            'saleReturn'     => $saleReturn,
+            'allocatedSales' => $allocatedSales,
         ]);
     }
 

@@ -217,8 +217,19 @@ class PurchaseReturnController extends Controller
     {
         $purchaseReturn->load(['purchase.supplier', 'details.item', 'details.itemUom.uom']);
 
+        // Load allocated purchase details if any
+        $allocatedPurchases = [];
+        if ($purchaseReturn->allocations) {
+            $purchaseIds = collect($purchaseReturn->allocations)->pluck('purchase_id')->filter()->unique();
+            $allocatedPurchases = \App\Models\Purchase::whereIn('id', $purchaseIds)
+                ->select('id', 'purchase_number', 'purchase_date')
+                ->get()
+                ->keyBy('id');
+        }
+
         return Inertia::render('transaction/purchasereturn/show', [
-            'purchaseReturn' => $purchaseReturn,
+            'purchaseReturn'     => $purchaseReturn,
+            'allocatedPurchases' => $allocatedPurchases,
         ]);
     }
 

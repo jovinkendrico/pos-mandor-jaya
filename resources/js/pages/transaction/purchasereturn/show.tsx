@@ -22,7 +22,8 @@ import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
-    purchaseReturn: IPurchaseReturn;
+    purchaseReturn: IPurchaseReturn & { allocations?: any[] };
+    allocatedPurchases?: Record<number, any>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -41,7 +42,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const PurchaseReturnShow = (props: PageProps) => {
-    const { purchaseReturn } = props;
+    const { purchaseReturn, allocatedPurchases = {} } = props;
 
     const {
         isOpen: isConfirmModalOpen,
@@ -299,6 +300,54 @@ const PurchaseReturnShow = (props: PageProps) => {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Allocations Table (if Potong Bon) */}
+                {purchaseReturn.refund_method === 'reduce_payable' && purchaseReturn.allocations && purchaseReturn.allocations.length > 0 && (
+                    <Card className="content mb-6">
+                        <CardHeader>
+                            <CardTitle>Alokasi Potong Hutang (Potong Bon)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-muted/50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left">No. Pembelian</th>
+                                            <th className="px-4 py-2 text-left">Tanggal</th>
+                                            <th className="px-4 py-2 text-right">Jumlah Potong</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {purchaseReturn.allocations.map((allocation: any, index: number) => {
+                                            const purchase = allocatedPurchases[allocation.purchase_id];
+                                            return (
+                                                <tr key={index}>
+                                                    <td className="px-4 py-2 font-mono">
+                                                        {purchase?.purchase_number || `ID: ${allocation.purchase_id}`}
+                                                    </td>
+                                                    <td className="px-4 py-2">
+                                                        {purchase?.purchase_date ? new Date(purchase.purchase_date).toLocaleDateString('id-ID') : '-'}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-right font-medium">
+                                                        {formatCurrency(allocation.amount)}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                    <tfoot className="bg-muted/30 font-bold">
+                                        <tr>
+                                            <td colSpan={2} className="px-4 py-2 text-right border-t">TOTAL ALOKASI:</td>
+                                            <td className="px-4 py-2 text-right border-t text-primary">
+                                                {formatCurrency(purchaseReturn.allocations.reduce((sum: number, a: any) => sum + Number(a.amount), 0))}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Items Table */}
                 <Card className="content">

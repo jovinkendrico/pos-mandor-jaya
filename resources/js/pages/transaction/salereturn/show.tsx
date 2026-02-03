@@ -22,7 +22,8 @@ import { ArrowLeft, CheckCircle2, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
-    saleReturn: ISaleReturn;
+    saleReturn: ISaleReturn & { allocations?: any[] };
+    allocatedSales?: Record<number, any>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -40,7 +41,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function SaleReturnShow({ saleReturn }: PageProps) {
+export default function SaleReturnShow({ saleReturn, allocatedSales = {} }: PageProps) {
     const {
         isOpen: isConfirmModalOpen,
         openModal: openConfirmModal,
@@ -325,6 +326,54 @@ export default function SaleReturnShow({ saleReturn }: PageProps) {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Allocations Table (if Potong Bon) */}
+                {saleReturn.refund_method === 'reduce_receivable' && saleReturn.allocations && saleReturn.allocations.length > 0 && (
+                    <Card className="content mb-6">
+                        <CardHeader>
+                            <CardTitle>Alokasi Potong Piutang (Potong Bon)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-muted/50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left">No. Penjualan</th>
+                                            <th className="px-4 py-2 text-left">Tanggal</th>
+                                            <th className="px-4 py-2 text-right">Jumlah Potong</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {saleReturn.allocations.map((allocation: any, index: number) => {
+                                            const sale = allocatedSales[allocation.sale_id];
+                                            return (
+                                                <tr key={index}>
+                                                    <td className="px-4 py-2 font-mono">
+                                                        {sale?.sale_number || `ID: ${allocation.sale_id}`}
+                                                    </td>
+                                                    <td className="px-4 py-2">
+                                                        {sale?.sale_date ? new Date(sale.sale_date).toLocaleDateString('id-ID') : '-'}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-right font-medium">
+                                                        {formatCurrency(allocation.amount)}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                    <tfoot className="bg-muted/30 font-bold">
+                                        <tr>
+                                            <td colSpan={2} className="px-4 py-2 text-right border-t">TOTAL ALOKASI:</td>
+                                            <td className="px-4 py-2 text-right border-t text-primary">
+                                                {formatCurrency(saleReturn.allocations.reduce((sum: number, a: any) => sum + Number(a.amount), 0))}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Items Table */}
                 <Card className="content">
