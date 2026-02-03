@@ -47,6 +47,7 @@ interface SaleReturnFormProps {
     sales: ISale[];
     returnedQuantities?: { [key: number]: number };
     banks?: IBank[];
+    initialData?: any;
 }
 
 const SaleReturnForm = (props: SaleReturnFormProps) => {
@@ -57,6 +58,8 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
         string[]
     >([]);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [outstandingSales, setOutstandingSales] = useState<any[]>([]);
+    const [isLoadingOutstanding, setIsLoadingOutstanding] = useState(false);
 
     const {
         data: dataSaleReturn,
@@ -67,7 +70,7 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
         handleSubmit: handleSubmitSaleReturn,
         handleCancel: handleCancelSaleReturn,
         handleQuantityChange,
-    } = useSaleReturn();
+    } = useSaleReturn(props.initialData);
 
     const saleComboboxOptions: ComboboxOption[] = useMemo(() => {
         return sales.map((sale) => ({
@@ -83,6 +86,7 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                 setDataSaleReturn('details', []);
                 setQuantityDisplayValues([]);
                 setDataSaleReturn('ppn_percent', 0);
+                setOutstandingSales([]);
                 return;
             }
 
@@ -101,11 +105,16 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                         const originalQuantity = detail.quantity || 0;
                         const remainingQty = originalQuantity - returnedQty;
 
+                        // Use existing detail if in edit mode
+                        const existingDetail = dataSaleReturn.details.find(
+                            (d: any) => d.sale_detail_id === detail.id
+                        );
+
                         return {
                             ...detail,
-                            selected: remainingQty > 0,
-                            max_quantity: remainingQty > 0 ? remainingQty : 0,
-                            quantity: remainingQty > 0 ? remainingQty : 0,
+                            selected: !!existingDetail || remainingQty > 0,
+                            max_quantity: remainingQty > 0 ? (existingDetail ? remainingQty + (existingDetail.quantity || 0) : remainingQty) : (existingDetail ? existingDetail.quantity : 0),
+                            quantity: existingDetail ? existingDetail.quantity : (remainingQty > 0 ? remainingQty : 0),
                             sale_detail_id: detail.id,
                         } as ISaleReturnViewModel;
                     }
@@ -118,8 +127,18 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                     )
                 );
 
-                setDataSaleReturn('details', initialReturnItems);
-                setDataSaleReturn('ppn_percent', sale.ppn_percent || 0);
+                if (!dataSaleReturn.id) {
+                    setDataSaleReturn('details', initialReturnItems);
+                    setDataSaleReturn('ppn_percent', sale.ppn_percent || 0);
+                }
+
+                // Fetch outstanding sales for "Potong Bon"
+                if (sale.customer_id) {
+                    setIsLoadingOutstanding(true);
+                    const outstandingRes = await axios.get(`/sale-returns/outstanding/${sale.customer_id}`);
+                    setOutstandingSales(outstandingRes.data);
+                    setIsLoadingOutstanding(false);
+                }
             } catch (error) {
                 console.error('Error fetching sale details:', error);
             } finally {
@@ -128,7 +147,21 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
         };
 
         fetchSaleDetails();
-    }, [dataSaleReturn.sale_id, setDataSaleReturn]);
+    }, [dataSaleReturn.sale_id]);
+
+    // Handle allocation logic
+    const handleAllocationChange = (saleId: number, amount: number) => {
+        const newAllocations = [...(dataSaleReturn.allocations || [])];
+        const index = newAllocations.findIndex(a => a.sale_id === saleId);
+
+        if (index >= 0) {
+            newAllocations[index].amount = amount;
+        } else {
+            newAllocations.push({ sale_id: saleId, amount });
+        }
+
+        setDataSaleReturn('allocations', newAllocations);
+    };
 
     const handleToggleItem = (index: number) => {
         const newItems = [...returnItems];
@@ -591,6 +624,75 @@ const SaleReturnForm = (props: SaleReturnFormProps) => {
                                     </TableBody>
                                 </Table>
                             </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Potong Bon (Invoice Allocation) */}
+            {dataSaleReturn.refund_method === 'reduce_receivable' && outstandingSales.length > 0 && (
+                <Card className="content">
+                    <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                            <span>Alokasi Potong Piutang (Potong Bon)</span>
+                            <div className="text-sm font-normal">
+                                Total Dialokasikan: <span className={cn(
+                                    "font-bold",
+                                    (dataSaleReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) === calculations.grandTotal
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                )}>
+                                    {formatCurrency((dataSaleReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0))}
+                                </span>
+                                {' / '}
+                                <span className="font-bold">{formatCurrency(calculations.grandTotal)}</span>
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
+                                <TableHeader>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead>No. Penjualan</TableHead>
+                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead className="text-right">Total Invoice</TableHead>
+                                        <TableHead className="text-right">Sisa Piutang</TableHead>
+                                        <TableHead className="w-[200px] text-right">Alokasi Potong</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {outstandingSales.map((sale) => {
+                                        const allocation = (dataSaleReturn.allocations || []).find((a: any) => a.sale_id === sale.id);
+                                        const allocationAmount = allocation ? allocation.amount : 0;
+
+                                        return (
+                                            <TableRow key={sale.id} className="dark:border-b-2 dark:border-white/25">
+                                                <TableCell>{sale.sale_number}</TableCell>
+                                                <TableCell>{new Date(sale.sale_date).toLocaleDateString('id-ID')}</TableCell>
+                                                <TableCell className="text-right">{formatCurrency(sale.total_amount)}</TableCell>
+                                                <TableCell className="text-right font-medium text-orange-600">
+                                                    {formatCurrency(sale.remaining_amount)}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Input
+                                                        type="number"
+                                                        value={allocationAmount}
+                                                        onChange={(e) => handleAllocationChange(sale.id, Number(e.target.value))}
+                                                        className="input-box ml-auto w-40 text-right"
+                                                        max={sale.remaining_amount}
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        {(dataSaleReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) !== calculations.grandTotal && (
+                            <p className="mt-2 text-sm text-red-600">
+                                * Total alokasi harus sama dengan Total Retur ({formatCurrency(calculations.grandTotal)})
+                            </p>
                         )}
                     </CardContent>
                 </Card>

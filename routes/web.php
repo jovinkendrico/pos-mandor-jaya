@@ -79,17 +79,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sales/{sale}/write-off', [SaleController::class, 'writeOff'])->name('sales.write-off');
     Route::get('sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
 
-    // Purchase Return confirm/unconfirm routes (must be before resource)
+    Route::get('purchase-returns/purchase-details/{purchase}', [PurchaseReturnController::class, 'getPurchaseDetails'])->name('purchase-returns.purchase-details');
+    Route::get('purchase-returns/outstanding/{supplier}', [PurchaseReturnController::class, 'getOutstandingPurchases'])->name('purchase-returns.outstanding');
     Route::post('purchase-returns/{purchase_return}/confirm', [PurchaseReturnController::class, 'confirm'])->name('purchase-returns.confirm');
     Route::post('purchase-returns/{purchase_return}/unconfirm', [PurchaseReturnController::class, 'unconfirm'])->name('purchase-returns.unconfirm');
     Route::post('purchase-returns/print-dot-matrix', [PurchaseReturnController::class, 'printDotMatrix'])->name('purchase-returns.print-dot-matrix');
-    Route::get('purchase-returns/purchase-details/{purchase}', [PurchaseReturnController::class, 'getPurchaseDetails'])->name('purchase-returns.purchase-details');
+    Route::resource('purchase-returns', PurchaseReturnController::class);
 
-    // Sale Return confirm/unconfirm routes (must be before resource)
+    // Sale Returns
+    Route::get('sale-returns/sale-details/{sale}', [SaleReturnController::class, 'getSaleDetails'])->name('sale-returns.sale-details');
+    Route::get('sale-returns/outstanding/{customer}', [SaleReturnController::class, 'getOutstandingSales'])->name('sale-returns.outstanding');
     Route::post('sale-returns/{sale_return}/confirm', [SaleReturnController::class, 'confirm'])->name('sale-returns.confirm');
     Route::post('sale-returns/{sale_return}/unconfirm', [SaleReturnController::class, 'unconfirm'])->name('sale-returns.unconfirm');
     Route::post('sale-returns/print-dot-matrix', [SaleReturnController::class, 'printDotMatrix'])->name('sale-returns.print-dot-matrix');
-    Route::get('sale-returns/sale-details/{sale}', [SaleReturnController::class, 'getSaleDetails'])->name('sale-returns.sale-details');
+    Route::resource('sale-returns', SaleReturnController::class);
 
     // Purchase Payment confirm/unconfirm routes (must be before resource)
     Route::get('purchase-payments/search-purchases', [PurchasePaymentController::class, 'searchPurchases'])->name('purchase-payments.search-purchases');

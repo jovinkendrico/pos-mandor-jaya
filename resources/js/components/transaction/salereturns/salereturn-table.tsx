@@ -4,8 +4,8 @@ import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
 import { ISaleReturn } from '@/types';
-import { Link } from '@inertiajs/react';
-import { Info, Trash } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { CheckCircle2, Edit, Info, RotateCcw, Trash } from 'lucide-react';
 
 interface SaleReturnTableProps {
     returns: ISaleReturn[];
@@ -18,6 +18,18 @@ export default function SaleReturnTable({
     pageFrom,
     onDelete,
 }: SaleReturnTableProps) {
+    const handleConfirm = (id: number) => {
+        if (confirm('Konfirmasi retur ini? Stok dan profit akan disesuaikan.')) {
+            router.post(window.route('sale-returns.confirm', { sale_return: id }));
+        }
+    };
+
+    const handleUnconfirm = (id: number) => {
+        if (confirm('Batalkan konfirmasi retur ini? Stok akan dikurangi kembali.')) {
+            router.post(window.route('sale-returns.unconfirm', { sale_return: id }));
+        }
+    };
+
     const tableColumn = [
         'No. Retur',
         'No. Penjualan',
@@ -83,18 +95,56 @@ export default function SaleReturnTable({
                                 variant="ghost"
                                 size="icon"
                                 className="btn-info"
+                                title="Detail"
                             >
-                                <Info />
+                                <Info className="h-4 w-4" />
                             </Button>
                         </Link>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDelete(row)}
-                            className="btn-trash"
-                        >
-                            <Trash />
-                        </Button>
+
+                        {row.status === 'pending' && (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    onClick={() => handleConfirm(row.id)}
+                                    title="Konfirmasi"
+                                >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                                <Link href={window.route('sale-returns.edit', { sale_return: row.id })}>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        title="Edit"
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onDelete(row)}
+                                    className="btn-trash"
+                                    title="Hapus"
+                                >
+                                    <Trash className="h-4 w-4" />
+                                </Button>
+                            </>
+                        )}
+
+                        {row.status === 'confirmed' && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                onClick={() => handleUnconfirm(row.id)}
+                                title="Batal Konfirmasi"
+                            >
+                                <RotateCcw className="h-4 w-4" />
+                            </Button>
+                        )}
                     </TableCell>
                 </>
             )}

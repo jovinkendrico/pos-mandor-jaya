@@ -609,7 +609,6 @@ class StockService
                     }
                 } elseif ($purchaseReturn->refund_method === 'reduce_payable') {
                     // Create payment record to reduce payable (no bank transaction)
-                    // This payment record will reduce the remaining_amount automatically
                     $purchasePayment = \App\Models\PurchasePayment::create([
                         'payment_number'   => \App\Models\PurchasePayment::generatePaymentNumber(),
                         'payment_date'     => $purchaseReturn->return_date,
@@ -623,12 +622,24 @@ class StockService
                         'updated_by'       => auth()->id(),
                     ]);
 
-                    // Link payment to purchase
-                    \App\Models\PurchasePaymentItem::create([
-                        'purchase_payment_id' => $purchasePayment->id,
-                        'purchase_id'         => $purchaseReturn->purchase_id,
-                        'amount'              => $purchaseReturn->total_amount,
-                    ]);
+                    // If we have specific allocations, use them. Otherwise, use the parent purchase.
+                    if ($purchaseReturn->allocations && count($purchaseReturn->allocations) > 0) {
+                        foreach ($purchaseReturn->allocations as $allocation) {
+                            if ((float)$allocation['amount'] > 0) {
+                                \App\Models\PurchasePaymentItem::create([
+                                    'purchase_payment_id' => $purchasePayment->id,
+                                    'purchase_id'         => $allocation['purchase_id'],
+                                    'amount'              => $allocation['amount'],
+                                ]);
+                            }
+                        }
+                    } else {
+                        \App\Models\PurchasePaymentItem::create([
+                            'purchase_payment_id' => $purchasePayment->id,
+                            'purchase_id'         => $purchaseReturn->purchase_id,
+                            'amount'              => $purchaseReturn->total_amount,
+                        ]);
+                    }
                     // Note: No bank balance change - this is just reducing the payable
                 }
             }
@@ -899,12 +910,25 @@ class StockService
                         'updated_by'       => auth()->id(),
                     ]);
 
-                    // Link payment to sale
-                    \App\Models\SalePaymentItem::create([
-                        'sale_payment_id' => $salePayment->id,
-                        'sale_id'         => $saleReturn->sale_id,
-                        'amount'          => $saleReturn->total_amount,
-                    ]);
+                    // If we have specific allocations, use them. Otherwise, use the parent sale.
+                    if ($saleReturn->allocations && count($saleReturn->allocations) > 0) {
+                        foreach ($saleReturn->allocations as $allocation) {
+                            if ((float)$allocation['amount'] > 0) {
+                                \App\Models\SalePaymentItem::create([
+                                    'sale_payment_id' => $salePayment->id,
+                                    'sale_id'         => $allocation['sale_id'],
+                                    'amount'          => $allocation['amount'],
+                                ]);
+                            }
+                        }
+                    } else {
+                        // Link payment to sale
+                        \App\Models\SalePaymentItem::create([
+                            'sale_payment_id' => $salePayment->id,
+                            'sale_id'         => $saleReturn->sale_id,
+                            'amount'          => $saleReturn->total_amount,
+                        ]);
+                    }
                     // Note: No bank balance change - this is just reducing the receivable
                 }
             }

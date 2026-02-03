@@ -30,6 +30,7 @@ class PurchaseReturn extends Model
         'refund_bank_id',
         'refund_method',
         'reason',
+        'allocations',
     ];
 
     protected $casts = [
@@ -43,6 +44,7 @@ class PurchaseReturn extends Model
         'ppn_percent'          => 'decimal:2',
         'ppn_amount'           => 'decimal:2',
         'total_amount'         => 'decimal:2',
+        'allocations'          => 'array',
     ];
 
     public function purchase(): BelongsTo

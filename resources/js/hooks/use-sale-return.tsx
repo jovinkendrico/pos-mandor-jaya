@@ -58,7 +58,7 @@ const saleReturnSchema = Yup.object().shape({
     details: Yup.array().of(detailsSchema).min(1, 'Minimal ada satu barang.'),
 });
 
-const useSaleReturn = () => {
+const useSaleReturn = (initialData?: any) => {
     const {
         data,
         setData,
@@ -70,14 +70,16 @@ const useSaleReturn = () => {
         clearErrors,
         transform,
     } = useForm({
-        sale_id: 0,
-        return_date: new Date(),
-        return_type: ReturnType.STOCK_ONLY,
-        refund_bank_id: null as number | null,
-        refund_method: RefundMethod.REDUCE_RECEIVABLE as RefundMethod | null,
-        ppn_percent: 0,
-        reason: '',
-        details: [
+        id: initialData?.id ?? null,
+        sale_id: initialData?.sale_id ?? 0,
+        return_date: initialData?.return_date ? new Date(initialData.return_date) : new Date(),
+        return_type: initialData?.return_type ?? ReturnType.STOCK_ONLY,
+        refund_bank_id: initialData?.refund_bank_id ?? null,
+        refund_method: initialData?.refund_method ?? (RefundMethod.REDUCE_RECEIVABLE as RefundMethod | null),
+        ppn_percent: initialData?.ppn_percent ?? 0,
+        reason: initialData?.reason ?? '',
+        allocations: initialData?.allocations ?? [] as any[],
+        details: (initialData?.details ?? [
             {
                 item_id: 0,
                 item_uom_id: 0,
@@ -85,8 +87,9 @@ const useSaleReturn = () => {
                 price: 0,
                 discount1_percent: 0,
                 discount2_percent: 0,
+                selected: false,
             },
-        ] as ISaleDetail[],
+        ]) as ISaleDetail[],
     });
 
     transform((data) => ({
@@ -109,10 +112,16 @@ const useSaleReturn = () => {
             await saleReturnSchema.validate(filteredData, {
                 abortEarly: false,
             });
-            submit(store(), {
+
+            const isUpdate = !!data.id;
+            const route = isUpdate
+                ? require('@/routes/sale-returns').update({ sale_return: data.id })
+                : require('@/routes/sale-returns').store();
+
+            submit(route, {
                 onSuccess: () => {
-                    reset();
-                    toast.success(`Retur penjualan berhasil ditambahkan`);
+                    if (!isUpdate) reset();
+                    toast.success(isUpdate ? 'Retur penjualan berhasil diupdate' : 'Retur penjualan berhasil ditambahkan');
                 },
 
                 onError: () => {

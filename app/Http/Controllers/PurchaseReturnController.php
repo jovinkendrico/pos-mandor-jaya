@@ -198,6 +198,7 @@ class PurchaseReturnController extends Controller
                 'refund_bank_id'       => $request->refund_bank_id ?? null,
                 'refund_method'        => $request->refund_method ?? null,
                 'reason'               => $request->reason,
+                'allocations'          => $request->allocations,
             ]);
 
             foreach ($detailsData as $detailData) {
@@ -219,6 +220,127 @@ class PurchaseReturnController extends Controller
         return Inertia::render('transaction/purchasereturn/show', [
             'purchase_return' => $purchaseReturn,
         ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(PurchaseReturn $purchaseReturn): Response
+    {
+        if ($purchaseReturn->status === 'confirmed') {
+            return Inertia::render('transaction/purchasereturn/show', [
+                'purchase_return' => $purchaseReturn->load(['purchase.supplier', 'details.item', 'details.itemUom.uom']),
+                'error' => 'Retur yang sudah dikonfirmasi tidak dapat diedit. Batalkan konfirmasi terlebih dahulu.',
+            ]);
+        }
+
+        $purchaseReturn->load(['details.item', 'details.itemUom.uom']);
+
+        // Get confirmed purchases only
+        $purchases = Purchase::with(['supplier:id,name'])
+            ->where('status', 'confirmed')
+            ->select('id', 'purchase_number', 'supplier_id', 'purchase_date')
+            ->orderBy('purchase_date', 'desc')
+            ->get();
+
+        // Get banks for refund selection
+        $banks = \App\Models\Bank::orderBy('name')->get();
+
+        return Inertia::render('transaction/purchasereturn/edit', [
+            'purchase_return' => $purchaseReturn,
+            'purchases'       => $purchases,
+            'banks'           => $banks,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(StorePurchaseReturnRequest $request, PurchaseReturn $purchaseReturn): RedirectResponse
+    {
+        if ($purchaseReturn->status === 'confirmed') {
+            return redirect()->route('purchase-returns.show', $purchaseReturn)
+                ->with('error', 'Retur yang sudah dikonfirmasi tidak dapat diupdate.');
+        }
+
+        DB::transaction(function () use ($request, $purchaseReturn) {
+            // Calculate totals from items
+            $subtotal             = 0;
+            $totalDiscount1Amount = 0;
+            $totalDiscount2Amount = 0;
+            $detailsData          = [];
+
+            foreach ($request->details as $detail) {
+                $amount = $detail['quantity'] * $detail['price'];
+
+                $itemDiscount1Percent = $detail['discount1_percent'] ?? 0;
+                $itemDiscount1Amount  = ($amount * $itemDiscount1Percent) / 100;
+                $afterDiscount1       = $amount - $itemDiscount1Amount;
+
+                $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
+                $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
+                $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
+
+                $subtotal             += $amount;
+                $totalDiscount1Amount += $itemDiscount1Amount;
+                $totalDiscount2Amount += $itemDiscount2Amount;
+
+                $detailsData[] = [
+                    'purchase_detail_id' => $detail['purchase_detail_id'] ?? null,
+                    'item_id'            => $detail['item_id'],
+                    'item_uom_id'        => $detail['item_uom_id'],
+                    'quantity'           => $detail['quantity'],
+                    'price'              => $detail['price'],
+                    'discount1_percent'  => $itemDiscount1Percent,
+                    'discount1_amount'   => $itemDiscount1Amount,
+                    'discount2_percent'  => $itemDiscount2Percent,
+                    'discount2_amount'   => $itemDiscount2Amount,
+                    'subtotal'           => $itemSubtotal,
+                ];
+            }
+
+            $discount1Amount  = $totalDiscount1Amount;
+            $discount1Percent = $subtotal > 0 ? ($discount1Amount / $subtotal) * 100 : 0;
+
+            $afterDiscount1   = $subtotal - $discount1Amount;
+            $discount2Amount  = $totalDiscount2Amount;
+            $discount2Percent = $afterDiscount1 > 0 ? ($discount2Amount / $afterDiscount1) * 100 : 0;
+
+            $totalAfterDiscount = $afterDiscount1 - $discount2Amount;
+
+            $ppnPercent = $request->ppn_percent ?? 0;
+            $ppnAmount  = ($totalAfterDiscount * $ppnPercent) / 100;
+
+            $totalAmount = $totalAfterDiscount + $ppnAmount;
+
+            $purchaseReturn->update([
+                'purchase_id'          => $request->purchase_id,
+                'return_date'          => $request->return_date,
+                'subtotal'             => $subtotal,
+                'discount1_percent'    => $discount1Percent,
+                'discount1_amount'     => $discount1Amount,
+                'discount2_percent'    => $discount2Percent,
+                'discount2_amount'     => $discount2Amount,
+                'total_after_discount' => $totalAfterDiscount,
+                'ppn_percent'          => $ppnPercent,
+                'ppn_amount'           => $ppnAmount,
+                'total_amount'         => $totalAmount,
+                'return_type'          => $request->return_type ?? 'stock_only',
+                'refund_bank_id'       => $request->refund_bank_id ?? null,
+                'refund_method'        => $request->refund_method ?? null,
+                'reason'               => $request->reason,
+                'allocations'          => $request->allocations,
+            ]);
+
+            // Delete old details and create new ones
+            $purchaseReturn->details()->delete();
+            foreach ($detailsData as $detailData) {
+                $purchaseReturn->details()->create($detailData);
+            }
+        });
+
+        return redirect()->route('purchase-returns.show', $purchaseReturn)
+            ->with('success', 'Retur pembelian berhasil diupdate.');
     }
 
     /**
@@ -337,5 +459,20 @@ class PurchaseReturnController extends Controller
 
         return redirect()->route('purchase-returns.index')
             ->with('success', 'Retur pembelian berhasil dihapus.');
+    }
+
+    /**
+     * Get outstanding purchases for a supplier for "Potong Bon"
+     */
+    public function getOutstandingPurchases(\App\Models\Supplier $supplier)
+    {
+        $purchases = \App\Models\Purchase::where('supplier_id', $supplier->id)
+            ->whereIn('status', ['confirmed', 'partially_paid'])
+            ->where('remaining_amount', '>', 0)
+            ->select('id', 'purchase_number', 'purchase_date', 'total_amount', 'remaining_amount')
+            ->orderBy('purchase_date', 'asc')
+            ->get();
+
+        return response()->json($purchases);
     }
 }

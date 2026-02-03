@@ -32,6 +32,7 @@ class SaleReturn extends Model
         'refund_bank_id',
         'refund_method',
         'reason',
+        'allocations',
     ];
 
     protected $casts = [
@@ -47,6 +48,7 @@ class SaleReturn extends Model
         'total_amount'            => 'decimal:2',
         'total_cost'              => 'decimal:2',
         'total_profit_adjustment' => 'decimal:2',
+        'allocations'             => 'array',
     ];
 
     public function sale(): BelongsTo

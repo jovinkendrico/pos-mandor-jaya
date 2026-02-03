@@ -202,6 +202,7 @@ class SaleReturnController extends Controller
                 'refund_bank_id'          => $request->refund_bank_id ?? null,
                 'refund_method'           => $request->refund_method ?? null,
                 'reason'                  => $request->reason,
+                'allocations'             => $request->allocations,
             ]);
 
             foreach ($detailsData as $detailData) {
@@ -223,6 +224,129 @@ class SaleReturnController extends Controller
         return Inertia::render('transaction/salereturn/show', [
             'return' => $saleReturn,
         ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(SaleReturn $saleReturn): Response
+    {
+        if ($saleReturn->status === 'confirmed') {
+            return Inertia::render('transaction/salereturn/show', [
+                'return' => $saleReturn->load(['sale.customer', 'details.item', 'details.itemUom.uom']),
+                'error' => 'Retur yang sudah dikonfirmasi tidak dapat diedit. Batalkan konfirmasi terlebih dahulu.',
+            ]);
+        }
+
+        $saleReturn->load(['details.item', 'details.itemUom.uom']);
+
+        // Get confirmed sales only
+        $sales = Sale::with(['customer:id,name'])
+            ->where('status', 'confirmed')
+            ->select('id', 'sale_number', 'customer_id', 'sale_date')
+            ->orderBy('sale_date', 'desc')
+            ->get();
+
+        // Get banks for refund selection
+        $banks = \App\Models\Bank::orderBy('name')->get();
+
+        return Inertia::render('transaction/salereturn/edit', [
+            'sale_return' => $saleReturn,
+            'sales'       => $sales,
+            'banks'       => $banks,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(StoreSaleReturnRequest $request, SaleReturn $saleReturn): RedirectResponse
+    {
+        if ($saleReturn->status === 'confirmed') {
+            return redirect()->route('sale-returns.show', $saleReturn)
+                ->with('error', 'Retur yang sudah dikonfirmasi tidak dapat diupdate.');
+        }
+
+        DB::transaction(function () use ($request, $saleReturn) {
+            // Calculate totals from items
+            $subtotal             = 0;
+            $totalDiscount1Amount = 0;
+            $totalDiscount2Amount = 0;
+            $detailsData          = [];
+
+            foreach ($request->details as $detail) {
+                $amount = $detail['quantity'] * $detail['price'];
+
+                $itemDiscount1Percent = $detail['discount1_percent'] ?? 0;
+                $itemDiscount1Amount  = ($amount * $itemDiscount1Percent) / 100;
+                $afterDiscount1       = $amount - $itemDiscount1Amount;
+
+                $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
+                $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
+                $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
+
+                $subtotal             += $amount;
+                $totalDiscount1Amount += $itemDiscount1Amount;
+                $totalDiscount2Amount += $itemDiscount2Amount;
+
+                $detailsData[] = [
+                    'sale_detail_id'    => $detail['sale_detail_id'] ?? null,
+                    'item_id'           => $detail['item_id'],
+                    'item_uom_id'       => $detail['item_uom_id'],
+                    'quantity'          => $detail['quantity'],
+                    'price'             => $detail['price'],
+                    'discount1_percent' => $itemDiscount1Percent,
+                    'discount1_amount'  => $itemDiscount1Amount,
+                    'discount2_percent' => $itemDiscount2Percent,
+                    'discount2_amount'  => $itemDiscount2Amount,
+                    'subtotal'          => $itemSubtotal,
+                    'cost'              => 0,
+                    'profit_adjustment' => 0,
+                ];
+            }
+
+            $discount1Amount  = $totalDiscount1Amount;
+            $discount1Percent = $subtotal > 0 ? ($discount1Amount / $subtotal) * 100 : 0;
+
+            $afterDiscount1   = $subtotal - $discount1Amount;
+            $discount2Amount  = $totalDiscount2Amount;
+            $discount2Percent = $afterDiscount1 > 0 ? ($discount2Amount / $afterDiscount1) * 100 : 0;
+
+            $totalAfterDiscount = $afterDiscount1 - $discount2Amount;
+
+            $ppnPercent = $request->ppn_percent ?? 0;
+            $ppnAmount  = ($totalAfterDiscount * $ppnPercent) / 100;
+
+            $totalAmount = $totalAfterDiscount + $ppnAmount;
+
+            $saleReturn->update([
+                'sale_id'              => $request->sale_id,
+                'return_date'          => $request->return_date,
+                'subtotal'             => $subtotal,
+                'discount1_percent'    => $discount1Percent,
+                'discount1_amount'     => $discount1Amount,
+                'discount2_percent'    => $discount2Percent,
+                'discount2_amount'     => $discount2Amount,
+                'total_after_discount' => $totalAfterDiscount,
+                'ppn_percent'          => $ppnPercent,
+                'ppn_amount'           => $ppnAmount,
+                'total_amount'         => $totalAmount,
+                'return_type'          => $request->return_type ?? 'stock_only',
+                'refund_bank_id'       => $request->refund_bank_id ?? null,
+                'refund_method'        => $request->refund_method ?? null,
+                'reason'               => $request->reason,
+                'allocations'          => $request->allocations,
+            ]);
+
+            // Delete old details and create new ones
+            $saleReturn->details()->delete();
+            foreach ($detailsData as $detailData) {
+                $saleReturn->details()->create($detailData);
+            }
+        });
+
+        return redirect()->route('sale-returns.show', $saleReturn)
+            ->with('success', 'Retur penjualan berhasil diupdate.');
     }
 
     /**
@@ -341,5 +465,20 @@ class SaleReturnController extends Controller
 
         return redirect()->route('sale-returns.index')
             ->with('success', 'Retur penjualan berhasil dihapus.');
+    }
+
+    /**
+     * Get outstanding sales for a customer for "Potong Bon"
+     */
+    public function getOutstandingSales(\App\Models\Customer $customer)
+    {
+        $sales = \App\Models\Sale::where('customer_id', $customer->id)
+            ->whereIn('status', ['confirmed', 'partially_paid'])
+            ->where('remaining_amount', '>', 0)
+            ->select('id', 'sale_number', 'sale_date', 'total_amount', 'remaining_amount')
+            ->orderBy('sale_date', 'asc')
+            ->get();
+
+        return response()->json($sales);
     }
 }

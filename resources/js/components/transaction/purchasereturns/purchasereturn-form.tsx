@@ -46,6 +46,7 @@ interface PurchaseReturnFormProps {
     purchases: IPurchase[];
     returnedQuantities?: { [key: number]: number };
     banks?: IBank[];
+    initialData?: any;
 }
 
 const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
@@ -65,6 +66,8 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
     const [localReturnedQuantities, setLocalReturnedQuantities] = useState<
         Record<number, number>
     >({});
+    const [outstandingPurchases, setOutstandingPurchases] = useState<any[]>([]);
+    const [isLoadingOutstanding, setIsLoadingOutstanding] = useState(false);
 
     const {
         data: dataPurchaseReturn,
@@ -75,7 +78,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
         handleSubmit: handleSubmitPurchaseReturn,
         handleCancel: handleCancelPurchaseReturn,
         handleQuantityChange,
-    } = usePurchaseReturn();
+    } = usePurchaseReturn(props.initialData);
 
     const purchaseComboboxOptions: ComboboxOption[] = useMemo(() => {
         return purchases.map((purchase) => ({
@@ -92,6 +95,7 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                 setReturnItems([]);
                 setDataPurchaseReturn('details', []);
                 setQuantityDisplayValues([]);
+                setOutstandingPurchases([]);
                 return;
             }
 
@@ -112,11 +116,16 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                         const originalQuantity = detail.quantity || 0;
                         const remainingQty = originalQuantity - returnedQty;
 
+                        // Use existing detail if in edit mode
+                        const existingDetail = dataPurchaseReturn.details.find(
+                            (d: any) => d.purchase_detail_id === detail.id
+                        );
+
                         return {
                             ...detail,
-                            selected: remainingQty > 0,
-                            max_quantity: remainingQty > 0 ? remainingQty : 0,
-                            quantity: remainingQty > 0 ? remainingQty : 0,
+                            selected: !!existingDetail || remainingQty > 0,
+                            max_quantity: remainingQty > 0 ? (existingDetail ? remainingQty + (existingDetail.quantity || 0) : remainingQty) : (existingDetail ? existingDetail.quantity : 0),
+                            quantity: existingDetail ? existingDetail.quantity : (remainingQty > 0 ? remainingQty : 0),
                         } as IPurchaseReturnViewModel;
                     },
                 );
@@ -128,7 +137,22 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                     ),
                 );
 
-                setDataPurchaseReturn('details', initialReturnItems);
+                if (!dataPurchaseReturn.id) {
+                    setDataPurchaseReturn('details', initialReturnItems);
+                }
+
+                // Fetch outstanding purchases for "Potong Bon"
+                if (purchase.supplier_id) {
+                    setIsLoadingOutstanding(true);
+                    const outstandingRes = await axios.get(`/purchase-returns/outstanding/${purchase.supplier_id}`);
+                    setOutstandingPurchases(outstandingRes.data);
+                    setIsLoadingOutstanding(false);
+
+                    // If this is a new return and we're reducing payable, pre-allocate to the current purchase
+                    if (!dataPurchaseReturn.id && dataPurchaseReturn.refund_method === RefundMethod.REDUCE_PAYABLE) {
+                        // This logic will be handled better in a separate useEffect or watcher
+                    }
+                }
             } catch (error) {
                 console.error('Error fetching purchase details:', error);
             } finally {
@@ -137,7 +161,21 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
         };
 
         fetchPurchaseDetails();
-    }, [dataPurchaseReturn.purchase_id, setDataPurchaseReturn]);
+    }, [dataPurchaseReturn.purchase_id]);
+
+    // Handle allocation logic
+    const handleAllocationChange = (purchaseId: number, amount: number) => {
+        const newAllocations = [...(dataPurchaseReturn.allocations || [])];
+        const index = newAllocations.findIndex(a => a.purchase_id === purchaseId);
+
+        if (index >= 0) {
+            newAllocations[index].amount = amount;
+        } else {
+            newAllocations.push({ purchase_id: purchaseId, amount });
+        }
+
+        setDataPurchaseReturn('allocations', newAllocations);
+    };
 
     const handleToggleItem = (index: number) => {
         const newItems = [...returnItems];
@@ -604,6 +642,75 @@ const PurchaseReturnForm = (props: PurchaseReturnFormProps) => {
                 </Card>
             )
             }
+
+            {/* Potong Bon (Invoice Allocation) */}
+            {dataPurchaseReturn.refund_method === 'reduce_payable' && outstandingPurchases.length > 0 && (
+                <Card className="content">
+                    <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                            <span>Alokasi Potong Hutang (Potong Bon)</span>
+                            <div className="text-sm font-normal">
+                                Total Dialokasikan: <span className={cn(
+                                    "font-bold",
+                                    (dataPurchaseReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) === calculations.grandTotal
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                )}>
+                                    {formatCurrency((dataPurchaseReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0))}
+                                </span>
+                                {' / '}
+                                <span className="font-bold">{formatCurrency(calculations.grandTotal)}</span>
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
+                                <TableHeader>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead>No. Pembelian</TableHead>
+                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead className="text-right">Total Invoice</TableHead>
+                                        <TableHead className="text-right">Sisa Hutang</TableHead>
+                                        <TableHead className="w-[200px] text-right">Alokasi Potong</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {outstandingPurchases.map((purchase) => {
+                                        const allocation = (dataPurchaseReturn.allocations || []).find((a: any) => a.purchase_id === purchase.id);
+                                        const allocationAmount = allocation ? allocation.amount : 0;
+
+                                        return (
+                                            <TableRow key={purchase.id} className="dark:border-b-2 dark:border-white/25">
+                                                <TableCell>{purchase.purchase_number}</TableCell>
+                                                <TableCell>{new Date(purchase.purchase_date).toLocaleDateString('id-ID')}</TableCell>
+                                                <TableCell className="text-right">{formatCurrency(purchase.total_amount)}</TableCell>
+                                                <TableCell className="text-right font-medium text-orange-600">
+                                                    {formatCurrency(purchase.remaining_amount)}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Input
+                                                        type="number"
+                                                        value={allocationAmount}
+                                                        onChange={(e) => handleAllocationChange(purchase.id, Number(e.target.value))}
+                                                        className="input-box ml-auto w-40 text-right"
+                                                        max={purchase.remaining_amount}
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        {(dataPurchaseReturn.allocations || []).reduce((sum: number, a: any) => sum + Number(a.amount), 0) !== calculations.grandTotal && (
+                            <p className="mt-2 text-sm text-red-600">
+                                * Total alokasi harus sama dengan Total Retur ({formatCurrency(calculations.grandTotal)})
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Totals & Footer */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
