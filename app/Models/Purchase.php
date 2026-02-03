@@ -13,7 +13,7 @@ use App\Traits\Auditable;
 
 class Purchase extends Model
 {
-    use HasFactory, Auditable, SoftDeletes;
+    use HasFactory, Auditable, SoftDeletes, \App\Traits\HasBranchScope;
 
     protected $fillable = [
         'purchase_number',
@@ -123,23 +123,23 @@ class Purchase extends Model
      */
     public static function generatePurchaseNumber($purchaseDate = null): string
     {
-        // Find the last purchase that starts with 'MB'
-        // Use lockForUpdate to prevent race conditions
-        $lastPurchase = static::withTrashed()
-            ->where('purchase_number', 'LIKE', 'MB%')
+        $branchCode = auth()->user()->branch->code ?? 'PST';
+        $prefix = 'MB/' . $branchCode . '/';
+
+        $lastPurchase = static::withoutGlobalScope('branch')
+            ->where('purchase_number', 'LIKE', $prefix . '%')
             ->lockForUpdate()
-            ->orderByRaw('CAST(SUBSTRING(purchase_number, 3) AS UNSIGNED) DESC')
+            ->orderByRaw('CAST(SUBSTRING(purchase_number, LENGTH(?)+1) AS UNSIGNED) DESC', [$prefix])
             ->first();
 
         if ($lastPurchase) {
-            // Get the numeric part after 'MB'
-            $lastNumber = (int) substr($lastPurchase->purchase_number, 2);
+            $lastNumber = (int) substr($lastPurchase->purchase_number, strlen($prefix));
             $sequence   = $lastNumber + 1;
         } else {
             $sequence = 1;
         }
 
-        return 'MB' . $sequence;
+        return $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
     }
 
     public function scopeFilter($query, array $filters)

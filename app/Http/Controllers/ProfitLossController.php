@@ -108,6 +108,10 @@ class ProfitLossController extends Controller
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo);
 
+        if (auth()->check() && auth()->user()->branch_id) {
+            $query->where('journal_entries.branch_id', auth()->user()->branch_id);
+        }
+
         $debit = (float) $query->sum('journal_entry_details.debit') ?? 0;
         $credit = (float) $query->sum('journal_entry_details.credit') ?? 0;
 

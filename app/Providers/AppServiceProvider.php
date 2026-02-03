@@ -23,5 +23,9 @@ class AppServiceProvider extends ServiceProvider
             'PurchasePayment' => \App\Models\PurchasePayment::class,
             'SalePayment' => \App\Models\SalePayment::class,
         ]);
+
+        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+            return $user->hasRole('Super Admin') ? true : null;
+        });
     }
 }

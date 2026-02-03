@@ -12,7 +12,7 @@ use App\Traits\Auditable;
 
 class CashOut extends Model
 {
-    use HasFactory, Auditable, SoftDeletes;
+    use HasFactory, Auditable, SoftDeletes, \App\Traits\HasBranchScope;
 
     protected $fillable = [
         'cash_out_number',
@@ -67,11 +67,12 @@ class CashOut extends Model
      */
     public static function generateCashOutNumber(): string
     {
+        $branchCode = auth()->user()->branch->code ?? 'PST';
         $date = now()->format('Ymd');
-        $prefix = 'CO' . $date;
+        $prefix = 'CO/' . $branchCode . '/' . $date;
 
         // Use lockForUpdate to prevent race conditions
-        $lastCashOut = static::withTrashed()
+        $lastCashOut = static::withoutGlobalScope('branch')
             ->where('cash_out_number', 'like', $prefix . '%')
             ->lockForUpdate()
             ->orderBy('cash_out_number', 'desc')

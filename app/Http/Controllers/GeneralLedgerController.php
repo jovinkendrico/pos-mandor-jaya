@@ -92,6 +92,9 @@ class GeneralLedgerController extends Controller
             ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+            ->when(auth()->check() && auth()->user()->branch_id, function($q) {
+                $q->where('journal_entries.branch_id', auth()->user()->branch_id);
+            })
             ->orderBy('journal_entries.journal_date')
             ->orderBy('journal_entries.id')
             ->select('journal_entry_details.*', 'journal_entries.journal_number', 'journal_entries.journal_date', 'journal_entries.description as journal_description')
@@ -144,7 +147,10 @@ class GeneralLedgerController extends Controller
             ->where('journal_entry_details.chart_of_account_id', $accountId)
             ->where('journal_entries.status', 'posted')
             ->whereNull('journal_entries.deleted_at')
-            ->whereDate('journal_entries.journal_date', '<', $dateFrom);
+            ->whereDate('journal_entries.journal_date', '<', $dateFrom)
+            ->when(auth()->check() && auth()->user()->branch_id, fn($q) => $q->where('journal_entries.branch_id', auth()->user()->branch_id));
+
+
 
         $debit = (float) $query->sum('journal_entry_details.debit') ?? 0;
         $credit = (float) $query->sum('journal_entry_details.credit') ?? 0;
@@ -190,6 +196,10 @@ class GeneralLedgerController extends Controller
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo);
 
+        if (auth()->check() && auth()->user()->branch_id) {
+            $query->where('journal_entries.branch_id', auth()->user()->branch_id);
+        }
+
         if ($type === 'debit') {
             return (float) $query->sum('journal_entry_details.debit') ?? 0;
         } elseif ($type === 'credit') {
@@ -206,12 +216,17 @@ class GeneralLedgerController extends Controller
      */
     private function hasTransactions(int $accountId, string $dateFrom, string $dateTo): bool
     {
-        return JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+        $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $accountId)
             ->where('journal_entries.status', 'posted')
             ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
-            ->whereDate('journal_entries.journal_date', '<=', $dateTo)
-            ->exists();
+            ->whereDate('journal_entries.journal_date', '<=', $dateTo);
+
+        if (auth()->check() && auth()->user()->branch_id) {
+            $query->where('journal_entries.branch_id', auth()->user()->branch_id);
+        }
+
+        return $query->exists();
     }
 }

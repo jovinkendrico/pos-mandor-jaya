@@ -91,9 +91,14 @@ class CashFlowController extends Controller
         }
 
         // Daily cash flow summary
-        $dailyCashFlow = DB::table('cash_movements')
-            ->whereBetween('movement_date', [$dateFrom, $dateTo])
-            ->selectRaw('
+        $dailyQuery = DB::table('cash_movements')
+            ->whereBetween('movement_date', [$dateFrom, $dateTo]);
+
+        if (auth()->check() && auth()->user()->branch_id) {
+            $dailyQuery->where('branch_id', auth()->user()->branch_id);
+        }
+
+        $dailyCashFlow = $dailyQuery->selectRaw('
                 DATE(movement_date) as date,
                 SUM(CASE WHEN reference_type IN ("CashIn", "Bank") THEN debit ELSE 0 END) as cash_in,
                 SUM(CASE WHEN reference_type = "CashOut" THEN credit ELSE 0 END) as cash_out

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class CashMovement extends Model
 {
+    use \App\Traits\HasBranchScope;
     protected $fillable = [
         'bank_id',
         'reference_type',

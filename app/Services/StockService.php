@@ -7,6 +7,7 @@ use App\Models\ItemUom;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\StockMovement;
+use App\Models\ItemStock;
 use App\Models\FifoMapping;
 use App\Services\JournalService;
 use Illuminate\Support\Facades\DB;
@@ -46,10 +47,17 @@ class StockService
                     'unit_cost'          => $unitCost,
                     'remaining_quantity' => $baseQuantity,
                     'movement_date'      => $purchase->purchase_date,
+                    'movement_date'      => $purchase->purchase_date,
                     'notes'              => "Purchase #{$purchase->purchase_number}",
+                    'branch_id'          => $purchase->branch_id,
                 ]);
 
-                $detail->item->increment('stock', $baseQuantity);
+                $itemStock = ItemStock::firstOrCreate(
+                    ['branch_id' => $purchase->branch_id, 'item_id' => $detail->item_id],
+                    ['quantity' => 0]
+                );
+                $itemStock->increment('quantity', $baseQuantity);
+
                 $this->reconcileNegativeStock($detail->item_id);
             }
 
@@ -156,7 +164,12 @@ class StockService
                 // 2. Standard Stock Reversal
                 $item = $movement->item;
                 if ($item) {
-                    $item->decrement('stock', $movement->quantity);
+                    $itemStock = ItemStock::where('branch_id', $purchase->branch_id)
+                        ->where('item_id', $movement->item_id)
+                        ->first();
+                    if ($itemStock) {
+                        $itemStock->decrement('quantity', $movement->quantity);
+                    }
                 }
                 $movement->delete();
             }
@@ -214,7 +227,7 @@ class StockService
 
                 // Calculate FIFO cost and get mappings
                 // This will THROW Exception if stock is insufficient (so we never confirm negative stock sales)
-                $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $sale->sale_date);
+                $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $sale->sale_date, $sale->branch_id);
                 $cost       = $fifoResult['total_cost'];
                 $mappings   = $fifoResult['mappings'];
 
@@ -250,9 +263,15 @@ class StockService
                     'remaining_quantity' => 0,
                     'movement_date'      => $sale->sale_date,
                     'notes'              => "Sale #{$sale->sale_number}",
+                    'branch_id'          => $sale->branch_id,
                 ]);
 
-                $detail->item->decrement('stock', $baseQuantity);
+                $itemStock = ItemStock::where('branch_id', $sale->branch_id)
+                    ->where('item_id', $detail->item_id)
+                    ->first();
+                if ($itemStock) {
+                    $itemStock->decrement('quantity', $baseQuantity);
+                }
             }
 
             // Calculate profit using total_after_discount (without PPN) - exclude loans from revenue
@@ -315,7 +334,12 @@ class StockService
 
                 $baseQuantity = $this->convertToBaseUom((float) $detail->quantity, $detail->itemUom);
                 if ($baseQuantity > 0) {
-                    $detail->item->increment('stock', $baseQuantity);
+                    $itemStock = ItemStock::where('branch_id', $sale->branch_id)
+                        ->where('item_id', $detail->item_id)
+                        ->first();
+                    if ($itemStock) {
+                        $itemStock->increment('quantity', $baseQuantity);
+                    }
                 }
 
                 $detail->update([
@@ -352,7 +376,7 @@ class StockService
     /**
      * Calculate FIFO cost and return mappings for audit trail
      */
-    private function calculateFifoCostWithMappings(int $itemId, float $quantity, $date): array
+    private function calculateFifoCostWithMappings(int $itemId, float $quantity, $date, ?int $branchId = null): array
     {
         $remainingQty = $quantity;
         $totalCost    = 0;
@@ -362,6 +386,7 @@ class StockService
         // NOTE: We REMOVED the date check (movement_date <= $date) to allow "backdated" sales to consume "future" stock.
         // This supports the workflow: Process ALL Purchases first (fill pool) -> Process ALL Sales.
         $movements = StockMovement::where('item_id', $itemId)
+            ->when($branchId, fn($q) => $q->withoutGlobalScope('branch')->where('branch_id', $branchId)) // Explicit scope if branchId provided
             ->where('remaining_quantity', '>', 0)
             ->where('quantity', '>', 0) // Only inbound movements
             ->orderBy('movement_date', 'asc')
@@ -537,7 +562,7 @@ class StockService
                 }
 
                 // Calculate FIFO cost and get mappings (consume from oldest stock)
-                $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $purchaseReturn->return_date);
+                $fifoResult = $this->calculateFifoCostWithMappings($detail->item_id, $baseQuantity, $purchaseReturn->return_date, $purchaseReturn->branch_id);
                 $mappings   = $fifoResult['mappings'];
 
                 // Create FIFO mappings for audit trail
@@ -563,9 +588,15 @@ class StockService
                     'remaining_quantity' => 0,
                     'movement_date'      => $purchaseReturn->return_date,
                     'notes'              => "Purchase Return #{$purchaseReturn->return_number}",
+                    'branch_id'          => $purchaseReturn->branch_id,
                 ]);
 
-                $detail->item->decrement('stock', $baseQuantity);
+                $itemStock = ItemStock::where('branch_id', $purchaseReturn->branch_id)
+                    ->where('item_id', $detail->item_id)
+                    ->first();
+                if ($itemStock) {
+                    $itemStock->decrement('quantity', $baseQuantity);
+                }
             }
 
             $purchaseReturn->update(['status' => 'confirmed']);
@@ -662,7 +693,12 @@ class StockService
 
                 $baseQuantity = $this->convertToBaseUom((float) $detail->quantity, $detail->itemUom);
                 if ($baseQuantity > 0) {
-                    $detail->item->increment('stock', $baseQuantity);
+                    $itemStock = ItemStock::where('branch_id', $purchaseReturn->branch_id)
+                        ->where('item_id', $detail->item_id)
+                        ->first();
+                    if ($itemStock) {
+                        $itemStock->increment('quantity', $baseQuantity);
+                    }
                 }
             }
 
@@ -756,6 +792,7 @@ class StockService
                             'remaining_quantity' => $qtyToRestore,
                             'movement_date'      => $saleReturn->return_date,
                             'notes'              => "Sale Return #{$saleReturn->return_number} - Restored from Sale",
+                            'branch_id'          => $saleReturn->branch_id,
                         ]);
 
                         // Create FIFO mapping for audit trail
@@ -787,6 +824,7 @@ class StockService
                             'remaining_quantity' => $remainingQty,
                             'movement_date'      => $saleReturn->return_date,
                             'notes'              => "Sale Return #{$saleReturn->return_number} - Partial return (avg cost)",
+                            'branch_id'          => $saleReturn->branch_id,
                         ]);
 
                         FifoMapping::create([

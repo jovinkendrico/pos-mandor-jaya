@@ -138,6 +138,13 @@ class RoleSeeder extends Seeder
             ['name' => 'chart-of-accounts.show', 'group' => 'master'],
             ['name' => 'chart-of-accounts.create', 'group' => 'master'],
             ['name' => 'chart-of-accounts.edit', 'group' => 'master'],
+            
+            // Branches
+            ['name' => 'branches.index', 'group' => 'master'],
+            ['name' => 'branches.show', 'group' => 'master'],
+            ['name' => 'branches.create', 'group' => 'master'],
+            ['name' => 'branches.edit', 'group' => 'master'],
+            ['name' => 'branches.delete', 'group' => 'master'],
 
             // Reports & Finance Views
             ['name' => 'reports.view', 'group' => 'reports'],

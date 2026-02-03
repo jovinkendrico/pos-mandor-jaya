@@ -12,7 +12,7 @@ use App\Traits\Auditable;
 
 class Transfer extends Model
 {
-    use SoftDeletes, Auditable;
+    use SoftDeletes, Auditable, \App\Traits\HasBranchScope;
 
     protected $fillable = [
         'transfer_number',
@@ -55,11 +55,12 @@ class Transfer extends Model
 
     public static function generateTransferNumber(): string
     {
+        $branchCode = auth()->user()->branch->code ?? 'PST';
         $date = now()->format('Ymd');
-        $prefix = 'TRF-' . $date . '-';
+        $prefix = 'TRF/' . $branchCode . '/' . $date . '-';
 
         return DB::transaction(function () use ($prefix) {
-            $last = DB::table('transfers')
+            $last = static::withoutGlobalScope('branch')
                 ->where('transfer_number', 'like', $prefix . '%')
                 ->lockForUpdate()
                 ->orderBy('transfer_number', 'desc')

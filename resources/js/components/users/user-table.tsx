@@ -17,6 +17,7 @@ export default function UserTable({ users, onEdit, onDelete }: PageProps) {
                     <TableHead className="text-center">#</TableHead>
                     <TableHead>Nama</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead className="text-center">Cabang</TableHead>
                     <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
             </TableHeader>
@@ -26,6 +27,9 @@ export default function UserTable({ users, onEdit, onDelete }: PageProps) {
                         <TableCell className="text-center">{index + 1}</TableCell>
                         <TableCell>{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
+                        <TableCell className="text-center">
+                            {user.branch ? user.branch.name : '-'}
+                        </TableCell>
                         <TableCell className="text-center">
                             <Button variant="ghost" size="icon" onClick={() => onEdit(user)}>
                                 <Edit />

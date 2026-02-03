@@ -15,6 +15,19 @@ export interface Auth {
     roles: string[];
 }
 
+export interface Branch {
+    id: number;
+    code: string;
+    name: string;
+    address: string | null;
+    phone: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export type IBranch = Pick<Branch, 'id' | 'code' | 'name' | 'address' | 'phone' | 'is_active'>;
+
 export interface BreadcrumbItem {
     title: string;
     href: string;
@@ -58,7 +71,9 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
-    roles?: Role[]; // Add roles property
+    roles?: Role[];
+    branch_id?: number | null;
+    branch?: IBranch; // Add branch relation
     [key: string]: unknown;
 }
 

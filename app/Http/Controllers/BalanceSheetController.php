@@ -244,6 +244,10 @@ class BalanceSheetController extends Controller
             ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '<=', $asOfDate);
 
+        if (auth()->check() && auth()->user()->branch_id) {
+            $query->where('journal_entries.branch_id', auth()->user()->branch_id);
+        }
+
         $debit = (float) $query->sum('journal_entry_details.debit') ?? 0;
         $credit = (float) $query->sum('journal_entry_details.credit') ?? 0;
 
@@ -279,6 +283,8 @@ class BalanceSheetController extends Controller
                 ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->when(auth()->check() && auth()->user()->branch_id, fn($q) => $q->where('journal_entries.branch_id', auth()->user()->branch_id))
                 ->sum('journal_entry_details.credit') ?? 0;
 
             $incomeDebit = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
@@ -287,6 +293,8 @@ class BalanceSheetController extends Controller
                 ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->when(auth()->check() && auth()->user()->branch_id, fn($q) => $q->where('journal_entries.branch_id', auth()->user()->branch_id))
                 ->sum('journal_entry_details.debit') ?? 0;
 
             $totalIncome = $incomeCredit - $incomeDebit;
@@ -301,6 +309,8 @@ class BalanceSheetController extends Controller
                 ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->when(auth()->check() && auth()->user()->branch_id, fn($q) => $q->where('journal_entries.branch_id', auth()->user()->branch_id))
                 ->sum('journal_entry_details.debit') ?? 0;
 
             $expenseCredit = (float) JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
@@ -309,6 +319,8 @@ class BalanceSheetController extends Controller
                 ->whereNull('journal_entries.deleted_at')
                 ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
                 ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->whereDate('journal_entries.journal_date', '<=', $dateTo)
+                ->when(auth()->check() && auth()->user()->branch_id, fn($q) => $q->where('journal_entries.branch_id', auth()->user()->branch_id))
                 ->sum('journal_entry_details.credit') ?? 0;
 
             $totalExpense = $expenseDebit - $expenseCredit;

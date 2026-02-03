@@ -622,6 +622,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'suppliers'         => SupplierController::class,
         'banks'             => BankController::class,
         'chart-of-accounts' => ChartOfAccountController::class,
+        'branches'          => \App\Http\Controllers\BranchController::class,
         'uoms'              => UomController::class,
         'items'             => ItemController::class,
     ]);

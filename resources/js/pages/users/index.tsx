@@ -13,6 +13,7 @@ import { useState } from 'react';
 interface PageProps {
     users: User[];
     roles: Role[];
+    branches: any[]; // Ideally IBranch[], using any for speed or IBranch if imported
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -22,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function UserIndex({ users, roles }: PageProps) {
+export default function UserIndex({ users, roles, branches }: PageProps) {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -66,6 +67,7 @@ export default function UserIndex({ users, roles }: PageProps) {
                     onOpenChange={handleFormClose}
                     user={selectedUser}
                     roles={roles}
+                    branches={branches}
                 />
                 <UserDeleteConfirmation
                     isModalOpen={isDeleteModalOpen}

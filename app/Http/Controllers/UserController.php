@@ -20,11 +20,12 @@ class UserController extends Controller
     public function index()
     {
         // Eager load roles for each user
-        $users = User::with('roles')->get();
+        $users = User::with(['roles', 'branch'])->get(); // Eager load branch
         
         return Inertia::render("users/index", [
             "users" => $users,
             "roles" => Role::all(),
+            "branches" => \App\Models\Branch::where('is_active', true)->get(),
         ]);
     }
 
@@ -38,6 +39,13 @@ class UserController extends Controller
         try {
             // Create the user
             $userData = $request->validated();
+            
+            // Allow branch assignment if permitted (assuming only Super Admin or Head Office uses this)
+            // Ideally should validate user has permission to assign branches.
+            if ($request->has('branch_id')) {
+                $userData['branch_id'] = $request->branch_id;
+            }
+
             unset($userData['roles']);
             $user = User::create($userData);
             
@@ -82,6 +90,11 @@ class UserController extends Controller
             $validatedData = $request->validated();
             
             $userData = $request->only(['name', 'email']);
+            
+            if ($request->has('branch_id')) {
+                $userData['branch_id'] = $request->branch_id;
+            }
+
             $user->update($userData);
             
             if ($request->filled('password')) {

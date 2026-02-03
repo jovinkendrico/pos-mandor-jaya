@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SaleReturn extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Traits\HasBranchScope;
 
     protected $fillable = [
         'return_number',
@@ -61,19 +61,23 @@ class SaleReturn extends Model
 
     public static function generateReturnNumber($returnDate = null): string
     {
+        $branchCode = auth()->user()->branch->code ?? 'PST';
+        $prefix = 'RJ/' . $branchCode . '/';
+
         // Use lockForUpdate to prevent race conditions in concurrent requests
         // Include soft deleted records to continue sequence even if return was deleted
-        $lastReturn = static::withTrashed()
+        $lastReturn = static::withoutGlobalScope('branch')
+            ->where('return_number', 'LIKE', $prefix . '%')
             ->lockForUpdate()
-            ->orderBy('id', 'desc')
+            ->orderByRaw('CAST(SUBSTRING(return_number, LENGTH(?)+1) AS UNSIGNED) DESC', [$prefix])
             ->first();
 
-        // Extract sequence number from last return number (e.g., "RJ123" -> 123)
+        // Extract sequence number
         $sequence = 1;
-        if ($lastReturn && preg_match('/^RJ(\d+)$/', $lastReturn->return_number, $matches)) {
-            $sequence = (int) $matches[1] + 1;
+        if ($lastReturn) {
+            $sequence = (int) substr($lastReturn->return_number, strlen($prefix)) + 1;
         }
 
-        return 'RJ' . $sequence;
+        return $prefix . $sequence;
     }
 }

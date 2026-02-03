@@ -13,7 +13,7 @@ use App\Traits\Auditable;
 
 class Sale extends Model
 {
-    use HasFactory, SoftDeletes, Auditable;
+    use HasFactory, SoftDeletes, Auditable, \App\Traits\HasBranchScope;
 
     protected $fillable = [
         'sale_number',
@@ -119,23 +119,24 @@ class Sale extends Model
      */
     public static function generateSaleNumber($saleDate = null): string
     {
-        // Find the last sale that starts with 'MJ'
-        // Use lockForUpdate to prevent race conditions
-        $lastSale = static::withTrashed()
-            ->where('sale_number', 'LIKE', 'MJ%')
+        $branchCode = auth()->user()->branch->code ?? 'PST';
+        $prefix = 'MJ/' . $branchCode . '/';
+
+        // Find the last sale that starts with this prefix
+        $lastSale = static::withoutGlobalScope('branch')
+            ->where('sale_number', 'LIKE', $prefix . '%')
             ->lockForUpdate()
-            ->orderByRaw('CAST(SUBSTRING(sale_number, 3) AS UNSIGNED) DESC')
+            ->orderByRaw('CAST(SUBSTRING(sale_number, LENGTH(?)+1) AS UNSIGNED) DESC', [$prefix])
             ->first();
 
         if ($lastSale) {
-            // Get the numeric part after 'MJ'
-            $lastNumber = (int) substr($lastSale->sale_number, 2);
+            $lastNumber = (int) substr($lastSale->sale_number, strlen($prefix));
             $sequence   = $lastNumber + 1;
         } else {
             $sequence = 1;
         }
 
-        return 'MJ' . $sequence;
+        return $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
     }
 
     public function scopeFilter($query, array $filters)

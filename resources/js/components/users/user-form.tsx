@@ -8,6 +8,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Role, User } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
@@ -21,6 +28,7 @@ interface UserFormProps {
     roles: Role[];
     isModalOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
+    branches: any[]; // Accept branches prop
 }
 
 export default function UserForm({
@@ -28,6 +36,7 @@ export default function UserForm({
     isModalOpen,
     onOpenChange,
     roles,
+    branches,
 }: UserFormProps) {
     const form = useForm({
         name: '',
@@ -35,6 +44,7 @@ export default function UserForm({
         password: '',
         password_confirmation: '',
         roles: [] as number[], // Store role IDs
+        branch_id: '' as string | number, // Store branch ID
     });
 
     useEffect(() => {
@@ -52,6 +62,7 @@ export default function UserForm({
                 password: '',
                 password_confirmation: '',
                 roles: userRoleIds,
+                branch_id: user.branch_id ? String(user.branch_id) : '',
             });
         } else {
             form.reset();
@@ -116,6 +127,28 @@ export default function UserForm({
                     className="flex flex-col space-y-2"
                 >
                     <div className="flex flex-col space-y-4 pb-4">
+                        <div>
+                            <Label htmlFor="branch_id">Cabang</Label>
+                            <Select
+                                value={String(form.data.branch_id)}
+                                onValueChange={(value) => form.setData('branch_id', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Cabang" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {branches.map((branch) => (
+                                        <SelectItem key={branch.id} value={String(branch.id)}>
+                                            {branch.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {form.errors.branch_id && (
+                                <InputError message={form.errors.branch_id} />
+                            )}
+                        </div>
+
                         <div>
                             <Label htmlFor="name" required>
                                 Nama

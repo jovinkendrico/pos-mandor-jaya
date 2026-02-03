@@ -57,6 +57,11 @@ const mainNavItems: NavItem[] = [
         icon: Database,
         children: [
             {
+                title: 'Cabang / Branch',
+                href: '/branches',
+                permissions: ['branches.index'], // Assuming we will add this permission or use a generic one
+            },
+            {
                 title: 'Customer',
                 href: customerIndex(),
                 permissions: ['customers.index'],

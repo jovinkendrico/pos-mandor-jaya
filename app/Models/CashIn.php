@@ -12,7 +12,7 @@ use App\Traits\Auditable;
 
 class CashIn extends Model
 {
-    use HasFactory, Auditable, SoftDeletes;
+    use HasFactory, Auditable, SoftDeletes, \App\Traits\HasBranchScope;
 
     protected $fillable = [
         'cash_in_number',
@@ -67,11 +67,12 @@ class CashIn extends Model
      */
     public static function generateCashInNumber(): string
     {
+        $branchCode = auth()->user()->branch->code ?? 'PST';
         $date = now()->format('Ymd');
-        $prefix = 'CI' . $date;
+        $prefix = 'CI/' . $branchCode . '/' . $date;
 
         // Use lockForUpdate to prevent race conditions
-        $lastCashIn = static::withTrashed()
+        $lastCashIn = static::withoutGlobalScope('branch')
             ->where('cash_in_number', 'like', $prefix . '%')
             ->lockForUpdate()
             ->orderBy('cash_in_number', 'desc')

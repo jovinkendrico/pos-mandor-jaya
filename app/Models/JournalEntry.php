@@ -13,7 +13,7 @@ use App\Traits\Auditable;
 
 class JournalEntry extends Model
 {
-    use SoftDeletes, Auditable;
+    use SoftDeletes, Auditable, \App\Traits\HasBranchScope;
 
     protected $fillable = [
         'journal_number',
@@ -53,20 +53,20 @@ class JournalEntry extends Model
      */
     public static function generateJournalNumber(): string
     {
+        $branchCode = auth()->user()->branch->code ?? 'PST';
         $date = now()->format('Ymd'); // YYYYMMDD format
-        $prefix = 'JRN-' . $date . '-';
+        $prefix = 'JRN/' . $branchCode . '/' . $date . '-';
 
         // Use a transaction with proper locking to prevent race conditions
         return DB::transaction(function () use ($prefix) {
             // Lock all rows with the same prefix to prevent concurrent access
-            $lastJournal = DB::table('journal_entries')
+            $lastJournal = static::withoutGlobalScope('branch')
                 ->where('journal_number', 'like', $prefix . '%')
                 ->lockForUpdate()
                 ->orderBy('journal_number', 'desc')
                 ->value('journal_number');
 
-            // Extract sequence number from format JRN-YYYYMMDD-XXXXX
-            // Handle both old 4-digit and new 5-digit formats
+            // Extract sequence number
             if ($lastJournal) {
                 // Get the part after the last dash
                 $parts = explode('-', $lastJournal);
@@ -77,34 +77,7 @@ class JournalEntry extends Model
             }
 
             // Always use 5 digits for sequence number (XXXXX)
-            $journalNumber = $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
-
-            // Double check if number already exists (shouldn't happen with proper locking, but just in case)
-            $exists = DB::table('journal_entries')
-                ->where('journal_number', $journalNumber)
-                ->lockForUpdate()
-                ->exists();
-
-            if ($exists) {
-                // If it exists, find the actual last number again
-                $actualLast = DB::table('journal_entries')
-                    ->where('journal_number', 'like', $prefix . '%')
-                    ->lockForUpdate()
-                    ->orderBy('journal_number', 'desc')
-                    ->value('journal_number');
-
-                if ($actualLast) {
-                    $parts = explode('-', $actualLast);
-                    $lastSequence = end($parts);
-                    $sequence = (int) $lastSequence + 1;
-                } else {
-                    $sequence = 1;
-                }
-
-                $journalNumber = $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
-            }
-
-            return $journalNumber;
+            return $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
         }, 5); // Retry up to 5 times if deadlock occurs
     }
 
