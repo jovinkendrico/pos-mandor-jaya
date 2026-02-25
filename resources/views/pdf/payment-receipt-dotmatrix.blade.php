@@ -109,7 +109,7 @@
         </div>
 
         <div class="company-info">
-            Telah diterima dari MANDOR JAYA / Faktur Penjualan Asli, dengan<br>
+            Telah diterima dari {{ config('app.name') }} / Faktur Penjualan Asli, dengan<br>
             perincian sebagai berikut :
         </div>
 

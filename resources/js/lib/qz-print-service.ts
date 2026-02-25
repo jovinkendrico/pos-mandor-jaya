@@ -20,6 +20,7 @@ export interface PrintData {
     }>;
     total: number;
     notes?: string;
+    company_name?: string;
 }
 
 export interface PaymentReceiptData {
@@ -32,6 +33,7 @@ export interface PaymentReceiptData {
         due_date: string;
     }>;
     total: number;
+    company_name?: string;
 }
 
 class QZPrintService {
@@ -300,9 +302,10 @@ class QZPrintService {
         // Header - centered within 90 chars
         const headerText = 'TANDA TERIMA FAKTUR';
         const headerPadding = Math.floor((90 - headerText.length - data.receipt_number.length - 4) / 2);
+        const companyName = data.company_name?.toUpperCase() || 'MANDOR JAYA';
         escp.push(' '.repeat(headerPadding) + headerText + '    ' + data.receipt_number + '\n');
         escp.push('\n');
-        escp.push('Telah diterima dari MANDOR JAYA / Faktur Penjualan Asli, dengan\n');
+        escp.push(`Telah diterima dari ${companyName} / Faktur Penjualan Asli, dengan\n`);
         escp.push('perincian sebagai berikut :\n');
         escp.push('\n');
 

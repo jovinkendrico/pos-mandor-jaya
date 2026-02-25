@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import PageTitle from '@/components/page-title';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { Search, Printer, AlertCircle, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { qzPrintService } from '@/lib/qz-print-service';
 import { toast } from 'sonner';
+import { SharedData } from '@/types';
 
 interface Sale {
     id: number;
@@ -102,6 +103,8 @@ export default function PaymentReceiptIndex({ sales, customers, filters: initial
         }
     };
 
+    const { name: companyName } = usePage<SharedData>().props;
+
     const handlePrint = async (e: React.MouseEvent<HTMLButtonElement>) => {
         if (selectedSales.length === 0) {
             toast.error('Pilih minimal satu faktur untuk dicetak.');
@@ -155,6 +158,7 @@ export default function PaymentReceiptIndex({ sales, customers, filters: initial
                         customer_name: customerSales[0].customer_name,
                         invoices,
                         total,
+                        company_name: companyName,
                     },
                     printerName
                 );

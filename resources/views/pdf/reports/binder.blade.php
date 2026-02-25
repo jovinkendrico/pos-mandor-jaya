@@ -26,7 +26,7 @@
             <tr style="border: none;">
                 <td style="border: none; width: 70%;">
                     <h2 style="margin: 0;">LAPORAN BINDER</h2>
-                    <p style="margin: 0;">Mandor Jaya</p>
+                    <p style="margin: 0;">{{ config('app.name') }}</p>
                 </td>
                 <td style="border: none; text-align: right;">
                     <p style="margin: 0;">Periode:
