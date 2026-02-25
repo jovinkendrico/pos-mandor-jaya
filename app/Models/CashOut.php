@@ -21,6 +21,7 @@ class CashOut extends Model
         'chart_of_account_id',
         'amount',
         'description',
+        'attachment',
         'status',
         'reference_type',
         'reference_id',
@@ -32,6 +33,13 @@ class CashOut extends Model
         'cash_out_date' => 'date',
         'amount' => 'decimal:2',
     ];
+
+    protected $appends = ['attachment_url'];
+
+    public function getAttachmentUrlAttribute(): ?string
+    {
+        return $this->attachment ? asset('storage/' . $this->attachment) : null;
+    }
 
     public function bank(): BelongsTo
     {

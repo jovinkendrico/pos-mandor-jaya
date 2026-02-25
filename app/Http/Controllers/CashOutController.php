@@ -13,6 +13,7 @@ use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CashOutController extends Controller
 {
@@ -136,6 +137,8 @@ class CashOutController extends Controller
                 try {
                     $cashOutNumber = CashOut::generateCashOutNumber();
 
+                    $attachmentPath = $this->handleAttachment($request);
+
                     $cashOut = CashOut::create([
                         'cash_out_number' => $cashOutNumber,
                         'cash_out_date' => $request->cash_out_date,
@@ -143,6 +146,7 @@ class CashOutController extends Controller
                         'chart_of_account_id' => $request->chart_of_account_id,
                         'amount' => $request->amount,
                         'description' => $request->description,
+                        'attachment' => $attachmentPath,
                         'status' => $request->auto_post ? 'posted' : 'draft',
                         'reference_type' => 'Manual',
                         'created_by' => auth()->id(),
@@ -220,12 +224,15 @@ class CashOutController extends Controller
         }
 
         DB::transaction(function () use ($request, $cashOut) {
+            $attachmentPath = $this->handleAttachment($request, $cashOut->attachment);
+
             $updateData = array(
                 'cash_out_date' => $request->cash_out_date,
                 'bank_id' => $request->bank_id,
                 'chart_of_account_id' => $request->chart_of_account_id,
                 'amount' => $request->amount,
                 'description' => $request->description,
+                'attachment' => $attachmentPath,
                 'updated_by' => auth()->id(),
             );
             $cashOut->update($updateData);
@@ -294,5 +301,74 @@ class CashOutController extends Controller
             return redirect()->route('cash-outs.show', $cashOut)
                 ->with('error', 'Gagal reverse: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Handle attachment upload and compression
+     */
+    private function handleAttachment(Request $request, ?string $oldPath = null): ?string
+    {
+        if (!$request->hasFile('attachment')) {
+            return $oldPath;
+        }
+
+        $file = $request->file('attachment');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('attachments/cash-out', $fileName, 'public');
+
+        // Compression logic using GD
+        $fullPath = storage_path('app/public/' . $path);
+
+        try {
+            $info = getimagesize($fullPath);
+            if ($info) {
+                $mime = $info['mime'];
+                switch ($mime) {
+                    case 'image/jpeg':
+                        $image = imagecreatefromjpeg($fullPath);
+                        if ($image) {
+                            // Resize if too large (max width/height 1200px)
+                            $width = imagesx($image);
+                            $height = imagesy($image);
+                            $maxSize = 1200;
+                            
+                            if ($width > $maxSize || $height > $maxSize) {
+                                if ($width > $height) {
+                                    $newWidth = $maxSize;
+                                    $newHeight = floor($height * ($maxSize / $width));
+                                } else {
+                                    $newHeight = $maxSize;
+                                    $newWidth = floor($width * ($maxSize / $height));
+                                }
+                                $tmp = imagecreatetruecolor($newWidth, $newHeight);
+                                imagecopyresampled($tmp, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                imagedestroy($image);
+                                $image = $tmp;
+                            }
+                            
+                            imagejpeg($image, $fullPath, 60); // 60% quality
+                            imagedestroy($image);
+                        }
+                        break;
+                    case 'image/png':
+                        $image = imagecreatefrompng($fullPath);
+                        if ($image) {
+                            imagealphablending($image, false);
+                            imagesavealpha($image, true);
+                            imagepng($image, $fullPath, 6); // 0-9 compression level
+                            imagedestroy($image);
+                        }
+                        break;
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error or ignore if GD fails
+        }
+
+        if ($oldPath && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return $path;
     }
 }

@@ -219,6 +219,46 @@ const CashOutShow = (props: PageProps) => {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {cashOut.attachment_url && (
+                        <Card className="content">
+                            <CardHeader>
+                                <CardTitle>Bukti Bon</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex flex-col items-center justify-center p-4">
+                                <a
+                                    href={cashOut.attachment_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="relative block w-full overflow-hidden rounded-lg border bg-muted transition-all hover:opacity-90"
+                                >
+                                    <img
+                                        src={cashOut.attachment_url}
+                                        alt="Bukti Bon"
+                                        className="h-auto max-h-[400px] w-full object-contain"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-all hover:opacity-100">
+                                        <span className="rounded-full bg-white px-4 py-2 text-sm font-medium text-black shadow-lg">
+                                            Lihat Ukuran Penuh
+                                        </span>
+                                    </div>
+                                </a>
+                                <Button
+                                    asChild
+                                    variant="link"
+                                    className="mt-4"
+                                >
+                                    <a
+                                        href={cashOut.attachment_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Buka Gambar di Tab Baru
+                                    </a>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 <Modal
@@ -239,7 +279,7 @@ const CashOutShow = (props: PageProps) => {
                         cashOut.status === 'draft' ? handlePost : handleReverse
                     }
                 />
-            </AppLayout>
+            </AppLayout >
         </>
     );
 };

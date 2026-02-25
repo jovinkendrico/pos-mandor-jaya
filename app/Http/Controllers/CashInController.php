@@ -13,6 +13,7 @@ use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CashInController extends Controller
 {
@@ -136,12 +137,15 @@ class CashInController extends Controller
                 try {
                     $cashInNumber = CashIn::generateCashInNumber();
 
+                    $attachmentPath = $this->handleAttachment($request);
+
                     $cashIn = CashIn::create([
                         'cash_in_number' => $cashInNumber,
                         'cash_in_date' => $request->cash_in_date,
                         'bank_id' => $request->bank_id,
                         'chart_of_account_id' => $request->chart_of_account_id,
                         'amount' => $request->amount,
+                        'attachment' => $attachmentPath,
                         'description' => $request->description,
                         'status' => $request->auto_post ? 'posted' : 'draft',
                         'reference_type' => 'Manual',
@@ -220,11 +224,14 @@ class CashInController extends Controller
         }
 
         DB::transaction(function () use ($request, $cashIn) {
+            $attachmentPath = $this->handleAttachment($request, $cashIn->attachment);
+
             $updateData = array(
                 'cash_in_date' => $request->cash_in_date,
                 'bank_id' => $request->bank_id,
                 'chart_of_account_id' => $request->chart_of_account_id,
                 'amount' => $request->amount,
+                'attachment' => $attachmentPath,
                 'description' => $request->description,
                 'updated_by' => auth()->id(),
             );
@@ -295,5 +302,73 @@ class CashInController extends Controller
             return redirect()->route('cash-ins.show', $cashIn)
                 ->with('error', 'Gagal reverse: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Handle attachment upload and compression
+     */
+    private function handleAttachment(Request $request, $oldPath = null): ?string
+    {
+        if (!$request->hasFile('attachment')) {
+            return $oldPath;
+        }
+
+        $file = $request->file('attachment');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('attachments/cash-in', $fileName, 'public');
+
+        // Compression logic using GD (as a second layer of defense)
+        $fullPath = storage_path('app/public/' . $path);
+
+        try {
+            $info = getimagesize($fullPath);
+            if ($info) {
+                $mime = $info['mime'];
+                switch ($mime) {
+                    case 'image/jpeg':
+                        $image = imagecreatefromjpeg($fullPath);
+                        if ($image) {
+                            $width = imagesx($image);
+                            $height = imagesy($image);
+                            $maxSize = 1200;
+                            
+                            if ($width > $maxSize || $height > $maxSize) {
+                                if ($width > $height) {
+                                    $newWidth = $maxSize;
+                                    $newHeight = (int) ($height * ($maxSize / $width));
+                                } else {
+                                    $newHeight = $maxSize;
+                                    $newWidth = (int) ($width * ($maxSize / $height));
+                                }
+                                $newImage = imagecreatetruecolor($newWidth, $newHeight);
+                                imagecopyresampled($newImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                imagedestroy($image);
+                                $image = $newImage;
+                            }
+                            
+                            imagejpeg($image, $fullPath, 60);
+                            imagedestroy($image);
+                        }
+                        break;
+                    case 'image/png':
+                        $image = imagecreatefrompng($fullPath);
+                        if ($image) {
+                            imagealphablending($image, false);
+                            imagesavealpha($image, true);
+                            imagepng($image, $fullPath, 6);
+                            imagedestroy($image);
+                        }
+                        break;
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore compression errors
+        }
+
+        if ($oldPath && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return $path;
     }
 }

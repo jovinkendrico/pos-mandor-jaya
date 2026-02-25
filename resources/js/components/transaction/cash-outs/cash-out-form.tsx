@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import useCashOut from '@/hooks/use-cash-out';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, compressImage } from '@/lib/utils';
 import { IBank, ICashOut, IChartOfAccount } from '@/types';
 import { useEffect, useState } from 'react';
 
@@ -60,6 +60,7 @@ const CashOutForm = (props: CashOutFormProps) => {
             setDataCashOut('chart_of_account_id', cashOut.chart_of_account_id);
             setDataCashOut('amount', cashOut.amount);
             setDataCashOut('description', cashOut.description ?? '');
+            setDataCashOut('attachment', cashOut.attachment ?? null);
             setDataCashOut('auto_post', cashOut.auto_post ?? false);
             setIsReady(true);
         } else {
@@ -178,6 +179,56 @@ const CashOutForm = (props: CashOutFormProps) => {
                         <InputError message={errorsCashOut.description} />
                     </div>
 
+                    <div className="space-y-2">
+                        <Label htmlFor="attachment">Upload Bukti Bon (Gambar/Foto)</Label>
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start">
+                            <div className="flex-1 space-y-2">
+                                <Input
+                                    id="attachment"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files ? e.target.files[0] : null;
+                                        if (file && file.type.startsWith('image/')) {
+                                            try {
+                                                const compressed = await compressImage(file);
+                                                setDataCashOut('attachment', compressed);
+                                            } catch (error) {
+                                                console.error('Compression failed', error);
+                                                setDataCashOut('attachment', file);
+                                            }
+                                        } else {
+                                            setDataCashOut('attachment', file);
+                                        }
+                                    }}
+                                    className="input-box"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Format: JPG, PNG. Maksimal 2MB. Gambar akan otomatis dikompres.
+                                </p>
+                                <InputError message={errorsCashOut.attachment} />
+                            </div>
+
+                            {(dataCashOut.attachment || cashOut?.attachment_url) && (
+                                <div className="relative h-24 w-24 overflow-hidden rounded-md border bg-muted">
+                                    {dataCashOut.attachment instanceof File ? (
+                                        <img
+                                            src={URL.createObjectURL(dataCashOut.attachment)}
+                                            alt="Preview"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : cashOut?.attachment_url ? (
+                                        <img
+                                            src={cashOut.attachment_url}
+                                            alt="Existing"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : null}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {!cashOut && (
                         <div className="flex items-center space-x-2">
                             <Checkbox
@@ -211,8 +262,8 @@ const CashOutForm = (props: CashOutFormProps) => {
                             {processingCashOut
                                 ? 'Menyimpan...'
                                 : cashOut
-                                  ? 'Perbarui'
-                                  : 'Simpan'}
+                                    ? 'Perbarui'
+                                    : 'Simpan'}
                         </Button>
                     </div>
                 </CardContent>

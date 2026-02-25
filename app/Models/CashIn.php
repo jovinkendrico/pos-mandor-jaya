@@ -20,6 +20,7 @@ class CashIn extends Model
         'bank_id',
         'chart_of_account_id',
         'amount',
+        'attachment',
         'description',
         'status',
         'reference_type',
@@ -28,10 +29,17 @@ class CashIn extends Model
         'updated_by',
     ];
 
+    protected $appends = ['attachment_url'];
+
     protected $casts = [
         'cash_in_date' => 'date',
         'amount' => 'decimal:2',
     ];
+
+    public function getAttachmentUrlAttribute(): ?string
+    {
+        return $this->attachment ? asset('storage/' . $this->attachment) : null;
+    }
 
     public function bank(): BelongsTo
     {

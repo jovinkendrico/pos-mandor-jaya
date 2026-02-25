@@ -824,6 +824,8 @@ export interface CashIn {
     chart_of_account?: ChartOfAccount;
     amount: number;
     description?: string;
+    attachment?: string;
+    attachment_url?: string;
     status: CashInStatus;
     reference_type?: string;
     reference_id?: number;
@@ -841,6 +843,8 @@ export type ICashIn = Pick<
     | 'chart_of_account_id'
     | 'amount'
     | 'description'
+    | 'attachment'
+    | 'attachment_url'
     | 'status'
     | 'reference_type'
     | 'reference_id'
@@ -863,6 +867,8 @@ export interface CashOut {
     chart_of_account?: ChartOfAccount;
     amount: number;
     description?: string;
+    attachment?: string;
+    attachment_url?: string;
     status: CashOutStatus;
     reference_type?: string;
     reference_id?: number;
@@ -880,6 +886,8 @@ export type ICashOut = Pick<
     | 'chart_of_account_id'
     | 'amount'
     | 'description'
+    | 'attachment'
+    | 'attachment_url'
     | 'status'
     | 'reference_type'
     | 'reference_id'

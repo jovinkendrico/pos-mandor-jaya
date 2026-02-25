@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import useCashIn from '@/hooks/use-cash-in';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, compressImage } from '@/lib/utils';
 import { IBank, ICashIn, IChartOfAccount } from '@/types';
 import { useEffect, useState } from 'react';
 
@@ -60,6 +60,7 @@ const CashInForm = (props: CashInFormProps) => {
             setDataCashIn('chart_of_account_id', cashIn.chart_of_account_id);
             setDataCashIn('amount', cashIn.amount);
             setDataCashIn('description', cashIn.description ?? '');
+            setDataCashIn('attachment', cashIn.attachment ?? null);
             setDataCashIn('auto_post', cashIn.auto_post ?? false);
             setIsReady(true);
         } else {
@@ -174,6 +175,56 @@ const CashInForm = (props: CashInFormProps) => {
                         <InputError message={errorsCashIn.description} />
                     </div>
 
+                    <div className="space-y-2">
+                        <Label htmlFor="attachment">Upload Bukti Bon (Gambar/Foto)</Label>
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start">
+                            <div className="flex-1 space-y-2">
+                                <Input
+                                    id="attachment"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files ? e.target.files[0] : null;
+                                        if (file && file.type.startsWith('image/')) {
+                                            try {
+                                                const compressed = await compressImage(file);
+                                                setDataCashIn('attachment', compressed);
+                                            } catch (error) {
+                                                console.error('Compression failed', error);
+                                                setDataCashIn('attachment', file);
+                                            }
+                                        } else {
+                                            setDataCashIn('attachment', file);
+                                        }
+                                    }}
+                                    className="input-box"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Format: JPG, PNG. Maksimal 2MB. Gambar akan otomatis dikompres.
+                                </p>
+                                <InputError message={errorsCashIn.attachment} />
+                            </div>
+
+                            {(dataCashIn.attachment || cashIn?.attachment_url) && (
+                                <div className="relative h-24 w-24 overflow-hidden rounded-md border bg-muted">
+                                    {dataCashIn.attachment instanceof File ? (
+                                        <img
+                                            src={URL.createObjectURL(dataCashIn.attachment)}
+                                            alt="Preview"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : cashIn?.attachment_url ? (
+                                        <img
+                                            src={cashIn.attachment_url}
+                                            alt="Existing"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : null}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {!cashIn && (
                         <div className="flex items-center space-x-2">
                             <Checkbox
@@ -207,8 +258,8 @@ const CashInForm = (props: CashInFormProps) => {
                             {processingCashIn
                                 ? 'Menyimpan...'
                                 : cashIn
-                                  ? 'Perbarui'
-                                  : 'Simpan'}
+                                    ? 'Perbarui'
+                                    : 'Simpan'}
                         </Button>
                     </div>
                 </CardContent>

@@ -1,7 +1,7 @@
 import { formatCurrency, formatDatetoString, parseStringtoNumber } from '@/lib/utils';
 import { store, update } from '@/routes/cash-ins';
 import { ICashIn } from '@/types';
-import { useForm } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
@@ -38,6 +38,7 @@ const useCashIn = () => {
         chart_of_account_id: 0,
         amount: 0,
         description: '',
+        attachment: null as File | string | null,
         auto_post: false,
     });
 
@@ -52,20 +53,31 @@ const useCashIn = () => {
 
         try {
             await cashInSchema.validate(data, { abortEarly: false });
-            submit(cashIn ? update(cashIn.id) : store(), {
-                onSuccess: () => {
-                    reset();
-                    toast.success(
-                        cashIn
-                            ? `Pembelian berhasil diupdate`
-                            : `Pembelian berhasil ditambahkan`,
-                    );
-                },
 
-                onError: () => {
-                    toast.error('Terjadi kesalahan, periksa input Anda.');
-                },
-            });
+            if (cashIn) {
+                // For updates with files, we must use POST with _method: 'PUT'
+                router.post(update(cashIn.id).url, {
+                    ...data,
+                    _method: 'put',
+                }, {
+                    onSuccess: () => {
+                        toast.success('Kas masuk berhasil diperbarui');
+                    },
+                    onError: () => {
+                        toast.error('Terjadi kesalahan, periksa input Anda.');
+                    },
+                });
+            } else {
+                submit(store(), {
+                    onSuccess: () => {
+                        reset();
+                        toast.success('Kas masuk berhasil ditambahkan');
+                    },
+                    onError: () => {
+                        toast.error('Terjadi kesalahan, periksa input Anda.');
+                    },
+                });
+            }
         } catch (err) {
             if (err instanceof Yup.ValidationError) {
                 const yupErrors: Record<string, string> = {};
