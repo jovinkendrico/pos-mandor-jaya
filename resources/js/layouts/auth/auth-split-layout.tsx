@@ -13,7 +13,7 @@ export default function AuthSplitLayout({
     title,
     description,
 }: PropsWithChildren<AuthLayoutProps>) {
-    const { quote } = usePage<SharedData>().props;
+    const { quote, name } = usePage<SharedData>().props;
 
     return (
         <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -23,7 +23,7 @@ export default function AuthSplitLayout({
                     href={home()}
                     className="relative z-20 flex items-center text-lg font-medium"
                 >
-                    <span className="text-xl font-semibold">Mandor Jaya</span>
+                    <span className="text-xl font-semibold">{name}</span>
                 </Link>
                 {quote && (
                     <div className="relative z-20 mt-auto">
@@ -45,7 +45,7 @@ export default function AuthSplitLayout({
                         className="relative z-20 flex items-center justify-center lg:hidden"
                     >
                         <span className="text-xl font-semibold">
-                            Mandor Jaya
+                            {name}
                         </span>
                     </Link>
                     <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">

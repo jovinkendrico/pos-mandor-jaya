@@ -80,7 +80,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     Navigation Menu
                                 </SheetTitle>
                                 <SheetHeader className="flex justify-start text-left">
-                                    <span className="text-lg font-semibold">Mandor Jaya</span>
+                                    <span className="text-lg font-semibold">{page.props.name}</span>
                                 </SheetHeader>
                                 <div className="flex h-full flex-1 flex-col space-y-4 p-4">
                                     <div className="flex h-full flex-col justify-between text-sm">
@@ -108,7 +108,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     key={item.title}
                                                     href={
                                                         typeof item.href ===
-                                                        'string'
+                                                            'string'
                                                             ? item.href
                                                             : item.href.url
                                                     }
@@ -154,11 +154,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             className={cn(
                                                 navigationMenuTriggerStyle(),
                                                 page.url ===
-                                                    (typeof item.href ===
+                                                (typeof item.href ===
                                                     'string'
-                                                        ? item.href
-                                                        : item.href.url) &&
-                                                    activeItemStyles,
+                                                    ? item.href
+                                                    : item.href.url) &&
+                                                activeItemStyles,
                                                 'h-9 cursor-pointer px-3',
                                             )}
                                         >
@@ -199,7 +199,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 <a
                                                     href={
                                                         typeof item.href ===
-                                                        'string'
+                                                            'string'
                                                             ? item.href
                                                             : item.href.url
                                                     }

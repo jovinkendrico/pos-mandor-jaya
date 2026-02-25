@@ -1,5 +1,6 @@
 import { home } from '@/routes';
-import { Link } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 
 interface AuthLayoutProps {
@@ -13,6 +14,8 @@ export default function AuthSimpleLayout({
     title,
     description,
 }: PropsWithChildren<AuthLayoutProps>) {
+    const { name } = usePage<SharedData>().props;
+
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
             <div className="w-full max-w-sm">
@@ -22,7 +25,7 @@ export default function AuthSimpleLayout({
                             href={home()}
                             className="flex flex-col items-center gap-2 font-medium"
                         >
-                            <span className="text-xl font-semibold">Mandor Jaya</span>
+                            <span className="text-xl font-semibold">{name}</span>
                             <span className="sr-only">{title}</span>
                         </Link>
 
