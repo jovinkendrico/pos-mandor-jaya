@@ -34,19 +34,24 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function () {
+            // Seed essential data only
             $this->seedUsers();
             $this->call(RoleSeeder::class);
+            $this->call(ChartOfAccountSeeder::class);
+
+            /* 
+            // Demo/Dummy data - commented out as per request
             $this->seedUoms();
             $this->seedCities();
             $this->seedCustomers();
             $this->seedSuppliers();
             $this->seedBanks();
-            $this->call(ChartOfAccountSeeder::class);
             $this->seedItems();
             $this->seedPurchases();
             $this->seedSales();
             $this->seedPurchaseReturns();
             $this->seedSaleReturns();
+            */
         });
     }
 
