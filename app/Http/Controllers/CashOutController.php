@@ -116,10 +116,15 @@ class CashOutController extends Controller
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
+            
+        $vehicles = \App\Models\Vehicle::where('is_active', true)
+            ->orderBy('police_number')
+            ->get();
 
         return Inertia::render('transaction/cash-out/create', [
             'banks' => $banks,
             'expenseAccounts' => $expenseAccounts,
+            'vehicles' => $vehicles,
         ]);
     }
 
@@ -149,6 +154,7 @@ class CashOutController extends Controller
                         'attachment' => $attachmentPath,
                         'status' => $request->auto_post ? 'posted' : 'draft',
                         'reference_type' => 'Manual',
+                        'vehicle_id' => $request->vehicle_id,
                         'created_by' => auth()->id(),
                         'updated_by' => auth()->id(),
                     ]);
@@ -205,11 +211,16 @@ class CashOutController extends Controller
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
+            
+        $vehicles = \App\Models\Vehicle::where('is_active', true)
+            ->orderBy('police_number')
+            ->get();
 
         return Inertia::render('transaction/cash-out/edit', [
             'cashOut' => $cashOut,
             'banks' => $banks,
             'expenseAccounts' => $expenseAccounts,
+            'vehicles' => $vehicles,
         ]);
     }
 
@@ -233,6 +244,7 @@ class CashOutController extends Controller
                 'amount' => $request->amount,
                 'description' => $request->description,
                 'attachment' => $attachmentPath,
+                'vehicle_id' => $request->vehicle_id,
                 'updated_by' => auth()->id(),
             );
             $cashOut->update($updateData);

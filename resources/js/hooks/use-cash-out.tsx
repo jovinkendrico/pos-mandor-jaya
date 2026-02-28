@@ -40,6 +40,7 @@ const useCashOut = () => {
         description: '',
         attachment: null as File | string | null,
         auto_post: false,
+        vehicle_id: null as number | null | '',
     });
 
     transform((data) => ({

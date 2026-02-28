@@ -13,6 +13,7 @@ class JournalEntryDetail extends Model
         'debit',
         'credit',
         'description',
+        'vehicle_id',
     ];
 
     protected $casts = [
@@ -28,5 +29,10 @@ class JournalEntryDetail extends Model
     public function chartOfAccount(): BelongsTo
     {
         return $this->belongsTo(ChartOfAccount::class);
+    }
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
     }
 }

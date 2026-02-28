@@ -10,17 +10,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import useCashOut from '@/hooks/use-cash-out';
 import { formatCurrency, compressImage } from '@/lib/utils';
-import { IBank, ICashOut, IChartOfAccount } from '@/types';
+import { IBank, ICashOut, IChartOfAccount, IVehicle } from '@/types';
 import { useEffect, useState } from 'react';
 
 interface CashOutFormProps {
     cashOut?: ICashOut;
     banks: IBank[];
     expenseAccounts: IChartOfAccount[];
+    vehicles: IVehicle[];
 }
 
 const CashOutForm = (props: CashOutFormProps) => {
-    const { cashOut, banks, expenseAccounts } = props;
+    const { cashOut, banks, expenseAccounts, vehicles } = props;
 
     const [isReady, setIsReady] = useState(false);
     const [displayAmount, setDisplayAmount] = useState('');
@@ -53,6 +54,11 @@ const CashOutForm = (props: CashOutFormProps) => {
         label: `${account.code} - ${account.name}`,
     }));
 
+    const vehicleOptions = vehicles.map((vehicle) => ({
+        value: vehicle.id.toString(),
+        label: `${vehicle.police_number} - ${vehicle.name || vehicle.driver || ''}`,
+    }));
+
     useEffect(() => {
         if (cashOut) {
             setDataCashOut('cash_out_date', cashOut.cash_out_date);
@@ -62,6 +68,7 @@ const CashOutForm = (props: CashOutFormProps) => {
             setDataCashOut('description', cashOut.description ?? '');
             setDataCashOut('attachment', cashOut.attachment ?? null);
             setDataCashOut('auto_post', cashOut.auto_post ?? false);
+            setDataCashOut('vehicle_id', cashOut.vehicle_id ? cashOut.vehicle_id.toString() : '');
             setIsReady(true);
         } else {
             resetCashOut();
@@ -122,7 +129,7 @@ const CashOutForm = (props: CashOutFormProps) => {
 
                         <div className="space-y-2">
                             <Label htmlFor="chart_of_account_id">
-                                Akun Pengeluaran *
+                                Akun Pengeluaran <span className="text-red-500">*</span>
                             </Label>
                             <Combobox
                                 options={accountOptions}
@@ -140,6 +147,24 @@ const CashOutForm = (props: CashOutFormProps) => {
                             <InputError
                                 message={errorsCashOut.chart_of_account_id}
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="vehicle_id">Kendaraan (Opsional)</Label>
+                            <Combobox
+                                options={vehicleOptions}
+                                value={dataCashOut.vehicle_id ? dataCashOut.vehicle_id.toString() : ''}
+                                onValueChange={(value) =>
+                                    setDataCashOut(
+                                        'vehicle_id',
+                                        value ? Number(value) : null,
+                                    )
+                                }
+                                placeholder="Pilih Kendaraan"
+                                searchPlaceholder="Cari Kendaraan..."
+                                className="combobox"
+                            />
+                            <InputError message={errorsCashOut.vehicle_id} />
                         </div>
 
                         <div className="space-y-2">

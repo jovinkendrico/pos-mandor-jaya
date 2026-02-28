@@ -2,13 +2,14 @@ import PageTitle from '@/components/page-title';
 import CashOutForm from '@/components/transaction/cash-outs/cash-out-form';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/cash-outs';
-import { BreadcrumbItem, IBank, ICashOut, IChartOfAccount } from '@/types';
+import { BreadcrumbItem, IBank, ICashOut, IChartOfAccount, IVehicle } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
     banks: IBank[];
     expenseAccounts: IChartOfAccount[];
+    vehicles: IVehicle[];
     cashOut?: ICashOut;
 }
 
@@ -28,7 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const CashOutCreate = (props: PageProps) => {
-    const { banks, expenseAccounts, cashOut } = props;
+    const { banks, expenseAccounts, cashOut, vehicles } = props;
 
     return (
         <>
@@ -44,6 +45,7 @@ const CashOutCreate = (props: PageProps) => {
                     banks={banks}
                     expenseAccounts={expenseAccounts}
                     cashOut={cashOut}
+                    vehicles={vehicles}
                 />
             </AppLayout>
         </>

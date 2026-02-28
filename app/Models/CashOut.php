@@ -25,6 +25,7 @@ class CashOut extends Model
         'status',
         'reference_type',
         'reference_id',
+        'vehicle_id',
         'created_by',
         'updated_by',
     ];
@@ -44,6 +45,11 @@ class CashOut extends Model
     public function bank(): BelongsTo
     {
         return $this->belongsTo(Bank::class);
+    }
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function chartOfAccount(): BelongsTo

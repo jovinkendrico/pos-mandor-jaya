@@ -138,6 +138,28 @@ export type ICustomer = Pick<
     city?: ICity;
 };
 
+export interface Vehicle {
+    id: number;
+    police_number: string;
+    name?: string;
+    driver?: string;
+    is_active: boolean;
+    description?: string;
+    created_at: string;
+    updated_at: string;
+    [key: string]: unknown;
+}
+
+export type IVehicle = Pick<
+    Vehicle,
+    | 'id'
+    | 'police_number'
+    | 'name'
+    | 'driver'
+    | 'is_active'
+    | 'description'
+>;
+
 export interface Supplier {
     id: number;
     name: string;

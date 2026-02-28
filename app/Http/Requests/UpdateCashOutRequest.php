@@ -30,6 +30,7 @@ class UpdateCashOutRequest extends FormRequest
             'description' => 'nullable|string|max:500',
             'auto_post' => 'nullable|boolean',
             'attachment' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+            'vehicle_id' => 'nullable|exists:vehicles,id',
         ];
     }
 }

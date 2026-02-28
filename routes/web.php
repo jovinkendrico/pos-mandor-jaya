@@ -4,6 +4,7 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PermissionController;
@@ -64,6 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Autocomplete API
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    Route::get('/vehicles/search', [VehicleController::class, 'search'])->name('vehicles.search');
     Route::get('/suppliers/search', [SupplierController::class, 'search'])->name('suppliers.search');
     Route::get('/items/search', [ItemController::class, 'searchItems'])->name('items.search');
 
@@ -622,6 +624,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'permissions'       => PermissionController::class,
         'cities'            => CityController::class,
         'customers'         => CustomerController::class,
+        'vehicles'          => VehicleController::class,
         'suppliers'         => SupplierController::class,
         'banks'             => BankController::class,
         'chart-of-accounts' => ChartOfAccountController::class,

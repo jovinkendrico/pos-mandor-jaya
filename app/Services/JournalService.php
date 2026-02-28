@@ -111,6 +111,7 @@ class JournalService
                 'debit'               => $cashOut->amount,
                 'credit'              => 0,
                 'description'         => "Kas Keluar #{$cashOut->cash_out_number}",
+                'vehicle_id'          => $cashOut->vehicle_id,
             ]);
 
             // Credit: Bank/Cash Account

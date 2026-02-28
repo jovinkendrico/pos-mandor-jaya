@@ -17,6 +17,7 @@ import { index as cashOutIndex } from '@/routes/cash-outs';
 import { index as chartOfAccountIndex } from '@/routes/chart-of-accounts';
 import { index as cityIndex } from '@/routes/cities';
 import { index as customerIndex } from '@/routes/customers';
+import { index as vehicleIndex } from '@/routes/vehicles';
 import { index as itemIndex } from '@/routes/items';
 import { index as journalEntryIndex } from '@/routes/journal-entries';
 import { index as paymentReceiptIndex } from '@/routes/payment-receipt';
@@ -60,6 +61,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Customer',
                 href: customerIndex(),
                 permissions: ['customers.index'],
+            },
+            {
+                title: 'Kendaraan',
+                href: vehicleIndex(),
+                permissions: ['vehicles.index'],
             },
             {
                 title: 'Supplier',
