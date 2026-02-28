@@ -671,6 +671,7 @@ export interface ChartOfAccount {
     parent?: ChartOfAccount;
     description?: string;
     is_active: boolean;
+    parent?: IChartOfAccount;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;

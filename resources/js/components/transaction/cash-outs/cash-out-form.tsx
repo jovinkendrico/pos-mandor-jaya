@@ -49,10 +49,13 @@ const CashOutForm = (props: CashOutFormProps) => {
         label: `${bank.name} (${formatCurrency(bank.balance)})`,
     }));
 
-    const accountOptions = expenseAccounts.map((account) => ({
-        value: account.id.toString(),
-        label: `${account.code} - ${account.name}`,
-    }));
+    const accountOptions = expenseAccounts.map((account) => {
+        const parentName = account.parent ? `[${account.parent.name}] ` : '';
+        return {
+            value: account.id.toString(),
+            label: `${parentName}${account.code} - ${account.name}`,
+        };
+    });
 
     const vehicleOptions = vehicles.map((vehicle) => ({
         value: vehicle.id.toString(),
