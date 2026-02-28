@@ -8,7 +8,7 @@ import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
-import { destroy as destroyVehicle, index } from '@/routes/vehicles';
+import { destroy as destroyVehicle, index } from '@/routes/vehicles/index';
 import { BreadcrumbItem, IVehicle, PageProps as GlobalPageProps, PaginatedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
