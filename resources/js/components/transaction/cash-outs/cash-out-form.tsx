@@ -146,7 +146,7 @@ const CashOutForm = (props: CashOutFormProps) => {
                                 placeholder="Pilih Akun Pengeluaran"
                                 searchPlaceholder="Cari Akun..."
                                 className="combobox"
-                                maxDisplayItems={100}
+                                maxDisplayItems={200}
                             />
                             <InputError
                                 message={errorsCashOut.chart_of_account_id}
