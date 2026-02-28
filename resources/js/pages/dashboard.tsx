@@ -466,14 +466,14 @@ export default function Dashboard({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+                                <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-7">
                                     <Button
                                         variant="outline"
                                         className="input-box flex h-20 cursor-pointer flex-col items-center justify-center gap-1.5 hover:bg-accent dark:hover:bg-primary-800/10"
                                         onClick={() => router.visit(createSale().url)}
                                     >
                                         <ShoppingCart className="!h-7 !w-7 text-blue-600 dark:text-blue-500" />
-                                        <span className="text-xl">Penjualan</span>
+                                        <span className="text-xs lg:text-sm xl:text-base">Penjualan</span>
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -483,7 +483,7 @@ export default function Dashboard({
                                         }
                                     >
                                         <Package className="!h-7 !w-7 text-yellow-600 dark:text-yellow-300" />
-                                        <span className="text-xs lg:text-xl">
+                                        <span className="text-xs lg:text-sm xl:text-base">
                                             Pembelian
                                         </span>
                                     </Button>
@@ -495,7 +495,7 @@ export default function Dashboard({
                                         }
                                     >
                                         <CreditCard className="!h-7 !w-7 text-green-600 dark:text-emerald-500" />
-                                        <span className="text-xs lg:text-xl">
+                                        <span className="text-xs lg:text-sm xl:text-base">
                                             Bayar Jual
                                         </span>
                                     </Button>
@@ -507,7 +507,7 @@ export default function Dashboard({
                                         }
                                     >
                                         <CreditCard className="!h-7 !w-7 text-red-600 dark:text-danger-500" />
-                                        <span className="text-xs lg:text-xl">
+                                        <span className="text-xs lg:text-sm xl:text-base">
                                             Bayar Beli
                                         </span>
                                     </Button>
@@ -519,7 +519,7 @@ export default function Dashboard({
                                         }
                                     >
                                         <ArrowLeftRight className="!h-7 !w-7 text-purple-600 dark:text-purple-500" />
-                                        <span className="text-xs lg:text-xl">
+                                        <span className="text-xs lg:text-sm xl:text-base">
                                             Retur Jual
                                         </span>
                                     </Button>
@@ -531,8 +531,20 @@ export default function Dashboard({
                                         }
                                     >
                                         <ArrowLeftRight className="!h-7 !w-7 text-orange-600 dark:text-amber-500" />
-                                        <span className="text-xs lg:text-xl">
+                                        <span className="text-xs lg:text-sm xl:text-base">
                                             Retur Beli
+                                        </span>
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="input-box flex h-20 cursor-pointer flex-col items-center justify-center gap-1.5 hover:bg-accent dark:hover:bg-primary-800/10"
+                                        onClick={() =>
+                                            router.visit('/cash-outs/create')
+                                        }
+                                    >
+                                        <ArrowUpRight className="!h-7 !w-7 text-red-500 dark:text-red-400" />
+                                        <span className="text-xs lg:text-sm xl:text-base">
+                                            Kas Keluar
                                         </span>
                                     </Button>
                                 </div>
