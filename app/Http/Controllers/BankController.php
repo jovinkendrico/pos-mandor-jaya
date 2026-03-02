@@ -174,9 +174,8 @@ class BankController extends Controller
         }
 
         // Get transactions with pagination
-        // Sort by Date DESC and ID DESC to show latest first
+        // Sort by ID DESC as requested (Latest created first)
         $transactions = $query
-            ->orderBy('movement_date', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(50)
             ->withQueryString()
@@ -228,20 +227,14 @@ class BankController extends Controller
                     }
                 }
 
-                // Map type to frontend slugs
-                $typeSlug = 'other';
-                $refType = $movement->reference_type;
-                if (str_contains($refType, 'CashIn')) $typeSlug = 'cash_in';
-                elseif (str_contains($refType, 'CashOut')) $typeSlug = 'cash_out';
-                elseif (str_contains($refType, 'Payment')) $typeSlug = 'payment';
-                elseif (str_contains($refType, 'Transfer')) $typeSlug = 'transfer';
-                elseif (str_contains($refType, 'Return')) $typeSlug = 'return';
-                elseif ($refType === 'Bank') $typeSlug = 'bank';
+                // Handle polymorphic type string cleanup
+                $typeStr = $movement->reference_type;
+                if ($typeStr === 'App\Models\Transfer') $typeStr = 'Transfer';
                 
                 return [
                     'id' => $movement->id,
                     'date' => $movement->movement_date->format('Y-m-d'),
-                    'type' => $typeSlug,
+                    'type' => $typeStr ? strtolower(str_replace(['Sale', 'Purchase', 'App\\Models\\'], '', $typeStr)) : 'other',
                     'reference_number' => $referenceNumber,
                     'reference_type' => $movement->reference_type,
                     'description' => $movement->description,
