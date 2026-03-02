@@ -23,7 +23,7 @@ import { ArrowLeft } from 'lucide-react';
 interface CashMovementTransaction {
     id: number;
     date: string;
-    type: 'cash_in' | 'cash_out' | 'payment' | 'transfer' | 'return' | 'bank' | 'other';
+    type: 'cash_in' | 'cash_out' | 'sale_payment' | 'purchase_payment';
     reference_number: string;
     reference_type: string | null;
     description: string;
@@ -88,14 +88,6 @@ const CashMovementPage = (props: PageProps) => {
                 return 'Kas Masuk';
             case 'cash_out':
                 return 'Kas Keluar';
-            case 'payment':
-                return 'Pembayaran';
-            case 'transfer':
-                return 'Transfer';
-            case 'return':
-                return 'Retur';
-            case 'bank':
-                return 'Saldo/Bank';
             default:
                 return type;
         }
@@ -107,12 +99,6 @@ const CashMovementPage = (props: PageProps) => {
                 return 'default';
             case 'cash_out':
                 return 'destructive';
-            case 'payment':
-                return 'outline';
-            case 'transfer':
-                return 'secondary';
-            case 'bank':
-                return 'default';
             default:
                 return 'secondary';
         }
