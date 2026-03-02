@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Auditable;
@@ -17,6 +18,7 @@ class Item extends Model
         'name',
         'stock',
         'initial_stock',
+        'revenue_account_id',
         'description',
     ];
 
@@ -28,6 +30,11 @@ class Item extends Model
     public function itemUoms(): HasMany
     {
         return $this->hasMany(ItemUom::class);
+    }
+
+    public function revenueAccount(): BelongsTo
+    {
+        return $this->belongsTo(ChartOfAccount::class, 'revenue_account_id');
     }
 
     public function stockMovements(): HasMany

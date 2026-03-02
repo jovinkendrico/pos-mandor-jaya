@@ -63,6 +63,8 @@ const SaleShow = (props: PageProps) => {
         'Harga',
         'Disc 1 (%)',
         'Disc 2 (%)',
+        'PPh (%)',
+        'Biaya PKS',
         'Subtotal',
         'Cost',
         'Profit',
@@ -407,6 +409,24 @@ const SaleShow = (props: PageProps) => {
                                     </span>
                                 </div>
                             )}
+                            {formatNumber(sale.pph_amount ?? 0) > 0 && (
+                                <div className="flex justify-between text-orange-600">
+                                    <span>PPh:</span>
+                                    <span>
+                                        -
+                                        {formatCurrency(sale.pph_amount ?? 0)}
+                                    </span>
+                                </div>
+                            )}
+                            {formatNumber(sale.biaya_pks_amount ?? 0) > 0 && (
+                                <div className="flex justify-between text-purple-600">
+                                    <span>Biaya PKS:</span>
+                                    <span>
+                                        -
+                                        {formatCurrency(sale.biaya_pks_amount ?? 0)}
+                                    </span>
+                                </div>
+                            )}
                             <div className="flex justify-between border-t pt-2 text-lg font-bold">
                                 <span>TOTAL:</span>
                                 <span>{formatCurrency(sale.total_amount)}</span>
@@ -478,6 +498,22 @@ const SaleShow = (props: PageProps) => {
                                                     0,
                                                 ) > 0
                                                     ? `${detail.discount2_percent}%`
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center text-orange-600">
+                                                {formatNumber(
+                                                    detail.pph_percent ??
+                                                    0,
+                                                ) > 0
+                                                    ? `${detail.pph_percent}%`
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell className="flex w-full items-center justify-center text-center text-purple-600">
+                                                {formatNumber(
+                                                    detail.biaya_pks_per_qty ??
+                                                    0,
+                                                ) > 0
+                                                    ? `${formatCurrency(detail.biaya_pks_per_qty)}`
                                                     : '-'}
                                             </TableCell>
                                             <TableCell className="flex w-full items-center justify-center text-center">

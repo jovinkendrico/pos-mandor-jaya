@@ -19,6 +19,10 @@ class SaleDetail extends Model
         'discount2_percent',
         'discount2_amount',
         'subtotal',
+        'pph_percent',
+        'pph_amount',
+        'biaya_pks_per_qty',
+        'biaya_pks_amount',
         'cost',
         'profit',
     ];
@@ -31,6 +35,10 @@ class SaleDetail extends Model
         'discount2_percent' => 'decimal:2',
         'discount2_amount' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'pph_percent' => 'decimal:2',
+        'pph_amount' => 'decimal:2',
+        'biaya_pks_per_qty' => 'decimal:2',
+        'biaya_pks_amount' => 'decimal:2',
         'cost' => 'decimal:2',
         'profit' => 'decimal:2',
     ];

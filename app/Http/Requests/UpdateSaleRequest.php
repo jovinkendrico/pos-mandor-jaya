@@ -35,6 +35,8 @@ class UpdateSaleRequest extends FormRequest
                 $details[$index]['price'] = $this->normalizeDecimal($detail['price'] ?? null);
                 $details[$index]['discount1_percent'] = $this->normalizeDecimal($detail['discount1_percent'] ?? null);
                 $details[$index]['discount2_percent'] = $this->normalizeDecimal($detail['discount2_percent'] ?? null);
+                $details[$index]['pph_percent'] = $this->normalizeDecimal($detail['pph_percent'] ?? null);
+                $details[$index]['biaya_pks_per_qty'] = $this->normalizeDecimal($detail['biaya_pks_per_qty'] ?? null);
             }
             $this->merge(['details' => $details]);
         }
@@ -85,6 +87,8 @@ class UpdateSaleRequest extends FormRequest
             'details.*.price' => ['required', 'numeric', 'min:0'],
             'details.*.discount1_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'details.*.discount2_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'details.*.pph_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'details.*.biaya_pks_per_qty' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

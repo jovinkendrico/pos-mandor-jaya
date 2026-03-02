@@ -54,6 +54,8 @@ const SaleForm = (props: SaleFormProps) => {
         string[]
     >([]);
     const [priceDisplayValues, setPriceDisplayValues] = useState<string[]>([]);
+    const [pphPercentDisplayValues, setPphPercentDisplayValues] = useState<string[]>([]);
+    const [biayaPksDisplayValues, setBiayaPksDisplayValues] = useState<string[]>([]);
 
     useEffect(() => {
         const fetchCityData = async () => {
@@ -78,6 +80,7 @@ const SaleForm = (props: SaleFormProps) => {
         handleChangeItem,
         handleQuantityChange,
         handlePriceChange,
+        handleBiayaPksChange,
     } = useSale();
 
     const [localItems, setLocalItems] = useState<IItem[]>(items);
@@ -154,10 +157,12 @@ const SaleForm = (props: SaleFormProps) => {
             getPrice: (detail) => detail.price || 0,
             getDiscount1Percent: (detail) => detail.discount1_percent || 0,
             getDiscount2Percent: (detail) => detail.discount2_percent || 0,
+            getPphPercent: (detail) => detail.pph_percent || 0,
+            getBiayaPksPerQty: (detail) => detail.biaya_pks_per_qty || 0,
         };
 
         return calculateTotals(
-            dataSale.details,
+            dataSale.details as ISaleDetail[],
             detailAccessors,
             dataSale.ppn_percent,
         );
@@ -196,13 +201,23 @@ const SaleForm = (props: SaleFormProps) => {
             const formattedPrices = sale.details.map((detail) =>
                 detail.price ? formatNumberWithSeparator(detail.price) : '0',
             );
+            const formattedPph = sale.details.map((detail) =>
+                detail.pph_percent ? formatNumber(detail.pph_percent).toString() : '0',
+            );
+            const formattedBiayaPks = sale.details.map((detail) =>
+                detail.biaya_pks_per_qty ? formatCurrency(detail.biaya_pks_per_qty) : '0',
+            );
             setQuantityDisplayValues(formattedQuantity);
             setPriceDisplayValues(formattedPrices);
+            setPphPercentDisplayValues(formattedPph);
+            setBiayaPksDisplayValues(formattedBiayaPks);
             setIsReady(true);
         } else {
             resetSale();
             setQuantityDisplayValues([]);
             setPriceDisplayValues([]);
+            setPphPercentDisplayValues([]);
+            setBiayaPksDisplayValues([]);
             setIsReady(true);
         }
     }, [sale, setDataSale, resetSale]);
@@ -219,6 +234,16 @@ const SaleForm = (props: SaleFormProps) => {
             return newArr;
         });
         setPriceDisplayValues((prev) => {
+            const newArr = [...prev];
+            newArr.splice(index, 1);
+            return newArr;
+        });
+        setPphPercentDisplayValues((prev) => {
+            const newArr = [...prev];
+            newArr.splice(index, 1);
+            return newArr;
+        });
+        setBiayaPksDisplayValues((prev) => {
             const newArr = [...prev];
             newArr.splice(index, 1);
             return newArr;
@@ -447,6 +472,12 @@ const SaleForm = (props: SaleFormProps) => {
                                     <TableHead className="min-w-[80px] text-center">
                                         Disc 2 (%)
                                     </TableHead>
+                                    <TableHead className="min-w-[80px] text-center">
+                                        PPh (%)
+                                    </TableHead>
+                                    <TableHead className="min-w-[150px] text-center">
+                                        Biaya PKS
+                                    </TableHead>
                                     <TableHead className="min-w-[200px] text-center">
                                         Subtotal
                                     </TableHead>
@@ -454,7 +485,7 @@ const SaleForm = (props: SaleFormProps) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {dataSale.details.map((detail, index) => {
+                                {dataSale.details.map((detail: ISaleDetail, index: number) => {
                                     const uomOptions =
                                         getItemUomComboboxOptions(
                                             Number(detail.item_id),
@@ -782,10 +813,69 @@ const SaleForm = (props: SaleFormProps) => {
                                                     }
                                                 />
                                             </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="text"
+                                                    value={
+                                                        pphPercentDisplayValues[index] ?? '0'
+                                                    }
+                                                    onChange={(e) => {
+                                                        const val = formatDiscount(e.target.value);
+                                                        handleChangeItem(index, 'pph_percent', val as any);
+                                                        setPphPercentDisplayValues(prev => {
+                                                            const newArr = [...prev];
+                                                            newArr[index] = typeof val === 'number' ? formatDiscountDisplay(val) : val;
+                                                            return newArr;
+                                                        });
+                                                    }}
+                                                    className="input-box text-right"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsSale as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                        `details[${index}].pph_percent`
+                                                        ]
+                                                    }
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="text"
+                                                    value={
+                                                        biayaPksDisplayValues[index] ?? '0'
+                                                    }
+                                                    onChange={(e) => {
+                                                        handleBiayaPksChange(
+                                                            index,
+                                                            e,
+                                                            biayaPksDisplayValues,
+                                                            setBiayaPksDisplayValues,
+                                                        );
+                                                    }}
+                                                    className="input-box text-right"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        (
+                                                            errorsSale as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[
+                                                        `details[${index}].biaya_pks_per_qty`
+                                                        ]
+                                                    }
+                                                />
+                                            </TableCell>
                                             <TableCell className="text-right font-medium">
                                                 {formatCurrency(
                                                     calculations.items[index]
-                                                        ?.netAmount || 0,
+                                                        ?.finalItemAmount || 0,
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -897,6 +987,22 @@ const SaleForm = (props: SaleFormProps) => {
                                 <span>PPN ({dataSale.ppn_percent}%):</span>
                                 <span>
                                     +{formatCurrency(calculations.ppnAmount)}
+                                </span>
+                            </div>
+                        )}
+                        {calculations.totalPphAmount > 0 && (
+                            <div className="flex justify-between text-sm text-orange-600 dark:text-orange-500">
+                                <span>Total PPh (Potong):</span>
+                                <span>
+                                    -{formatCurrency(calculations.totalPphAmount)}
+                                </span>
+                            </div>
+                        )}
+                        {calculations.totalBiayaPksAmount > 0 && (
+                            <div className="flex justify-between text-sm text-purple-600 dark:text-purple-500">
+                                <span>Total Biaya PKS:</span>
+                                <span>
+                                    -{formatCurrency(calculations.totalBiayaPksAmount)}
                                 </span>
                             </div>
                         )}

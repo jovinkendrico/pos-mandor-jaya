@@ -28,6 +28,11 @@ const detailsSchema = Yup.object().shape({
     discount2_percent: Yup.number()
         .min(0, 'Diskon tidak boleh negatif.')
         .max(100, 'Diskon tidak boleh lebih dari 100.'),
+    pph_percent: Yup.number()
+        .min(0, 'PPh tidak boleh negatif.')
+        .max(100, 'PPh tidak boleh lebih dari 100.'),
+    biaya_pks_per_qty: Yup.number()
+        .min(0, 'Biaya PKS tidak boleh negatif.'),
 });
 
 const saleSchema = Yup.object().shape({
@@ -60,7 +65,7 @@ const useSale = () => {
         setError,
         clearErrors,
         transform,
-    } = useForm({
+    } = useForm<any>({
         customer_id: 0,
         sale_date: new Date(),
         due_date: null as unknown as null | Date,
@@ -76,6 +81,10 @@ const useSale = () => {
                 price: 0,
                 discount1_percent: 0,
                 discount2_percent: 0,
+                pph_percent: 0,
+                pph_amount: 0,
+                biaya_pks_per_qty: 0,
+                biaya_pks_amount: 0,
             },
         ] as ISaleDetail[],
     });
@@ -142,6 +151,8 @@ const useSale = () => {
         handleChangeItem(0, 'price', 0);
         handleChangeItem(0, 'discount1_percent', 0);
         handleChangeItem(0, 'discount2_percent', 0);
+        handleChangeItem(0, 'pph_percent', 0);
+        handleChangeItem(0, 'biaya_pks_per_qty', 0);
         reset();
     };
 
@@ -155,6 +166,10 @@ const useSale = () => {
                 price: 0,
                 discount1_percent: 0,
                 discount2_percent: 0,
+                pph_percent: 0,
+                pph_amount: 0,
+                biaya_pks_per_qty: 0,
+                biaya_pks_amount: 0,
             },
         ]);
     };
@@ -196,6 +211,12 @@ const useSale = () => {
                     break;
                 case 'discount2_percent':
                     detailToUpdate.discount2_percent = value as number;
+                    break;
+                case 'pph_percent':
+                    detailToUpdate.pph_percent = value as number;
+                    break;
+                case 'biaya_pks_per_qty':
+                    detailToUpdate.biaya_pks_per_qty = value as number;
                     break;
                 default:
                     break;
@@ -258,6 +279,33 @@ const useSale = () => {
             ...priceDisplayValues.slice(index + 1),
         ]);
     };
+
+    const handleBiayaPksChange = (
+        index: number,
+        e: ChangeEvent<HTMLInputElement>,
+        biayaPksDisplayValues: string[],
+        setBiayaPksDisplayValues: Dispatch<SetStateAction<string[]>>,
+    ) => {
+        const input = e.target.value;
+        if (input.endsWith(',')) {
+            setBiayaPksDisplayValues([
+                ...biayaPksDisplayValues.slice(0, index),
+                input,
+                ...biayaPksDisplayValues.slice(index + 1),
+            ]);
+            return;
+        }
+
+        const rawValue = parseCurrency(input);
+
+        handleChangeItem(index, 'biaya_pks_per_qty', rawValue);
+        setBiayaPksDisplayValues([
+            ...biayaPksDisplayValues.slice(0, index),
+            formatCurrency(rawValue ?? 0),
+            ...biayaPksDisplayValues.slice(index + 1),
+        ]);
+    };
+
     return {
         data,
         setData,
@@ -273,6 +321,7 @@ const useSale = () => {
         handleChangeItem,
         handleQuantityChange,
         handlePriceChange,
+        handleBiayaPksChange,
     };
 };
 

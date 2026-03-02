@@ -259,6 +259,7 @@ export interface Item {
     pending_stock?: number;
     pending_purchase_stock?: number;
     available_stock?: number;
+    revenue_account_id?: number;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
@@ -273,9 +274,11 @@ export type IItem = Pick<
     | 'description'
     | 'code'
     | 'modal_price'
+    | 'revenue_account_id'
 > & {
     item_uoms: IItemUOM[];
     stock_movements: IItemStockMovement[];
+    revenue_account?: IChartOfAccount;
     pending_stock?: number;
     pending_purchase_stock?: number;
     available_stock?: number;
@@ -450,6 +453,8 @@ export interface Sale {
     total_after_discount?: number;
     ppn_percent?: number;
     ppn_amount?: number;
+    pph_amount?: number;
+    biaya_pks_amount?: number;
     total_amount: number;
     total_paid?: number;
     remaining_amount?: number;
@@ -475,6 +480,8 @@ export type ISale = Pick<
     | 'total_after_discount'
     | 'ppn_percent'
     | 'ppn_amount'
+    | 'pph_amount'
+    | 'biaya_pks_amount'
     | 'total_amount'
     | 'total_paid'
     | 'remaining_amount'
@@ -511,6 +518,10 @@ export interface SaleDetail {
     profit?: number;
     profit_adjustment?: number;
     profit_status?: 'realized' | 'unrealized';
+    pph_percent?: number;
+    pph_amount?: number;
+    biaya_pks_per_qty?: number;
+    biaya_pks_amount?: number;
 }
 
 export type ISaleDetail = Pick<
@@ -524,6 +535,10 @@ export type ISaleDetail = Pick<
     | 'price'
     | 'discount1_percent'
     | 'discount2_percent'
+    | 'pph_percent'
+    | 'pph_amount'
+    | 'biaya_pks_per_qty'
+    | 'biaya_pks_amount'
     | 'subtotal'
     | 'cost'
     | 'profit'
@@ -681,7 +696,7 @@ export type IChartOfAccount = Pick<
     ChartOfAccount,
     'id' | 'code' | 'name' | 'type' | 'parent_id' | 'description' | 'is_active'
 > & {
-    parent?: IChartOfAccount;
+    parent?: any;
 };
 
 export interface PurchasePayment {

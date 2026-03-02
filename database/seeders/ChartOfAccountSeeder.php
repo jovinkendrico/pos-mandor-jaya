@@ -89,6 +89,7 @@ class ChartOfAccountSeeder extends Seeder
 
         ChartOfAccount::firstOrCreate(['code' => '1401'], ['name' => 'Uang Muka Pembelian', 'type' => 'asset', 'parent_id' => $uangMukaParent->id, 'description' => 'Uang muka untuk pembelian', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '1402'], ['name' => 'Pajak dibayar dimuka', 'type' => 'asset', 'parent_id' => $uangMukaParent->id, 'description' => 'Pajak yang sudah dibayar di muka', 'is_active' => true]);
+        ChartOfAccount::firstOrCreate(['code' => '1403'], ['name' => 'Uang Muka PPh 22/23', 'type' => 'asset', 'parent_id' => $uangMukaParent->id, 'description' => 'Pajak PPh yang dipotong customer', 'is_active' => true]);
 
         $asetTetapParent = ChartOfAccount::firstOrCreate(
             ['code' => '1500'],
@@ -168,6 +169,8 @@ class ChartOfAccountSeeder extends Seeder
         ChartOfAccount::firstOrCreate(['code' => '4101'], ['name' => 'Penjualan Barang Dagangan', 'type' => 'income', 'parent_id' => $pendapatanParent->id, 'description' => 'Pendapatan dari penjualan barang', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '4102'], ['name' => 'Pendapatan Jasa Pengiriman', 'type' => 'income', 'parent_id' => $pendapatanParent->id, 'description' => 'Pendapatan dari jasa pengiriman', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '4103'], ['name' => 'Pendapatan Lain-Lain', 'type' => 'income', 'parent_id' => $pendapatanParent->id, 'description' => 'Pendapatan lain-lain', 'is_active' => true]);
+        ChartOfAccount::firstOrCreate(['code' => '4104'], ['name' => 'Penjualan Sawit', 'type' => 'income', 'parent_id' => $pendapatanParent->id, 'description' => 'Pendapatan dari penjualan sawit', 'is_active' => true]);
+        ChartOfAccount::firstOrCreate(['code' => '4105'], ['name' => 'Penjualan Brondolan', 'type' => 'income', 'parent_id' => $pendapatanParent->id, 'description' => 'Pendapatan dari penjualan brondolan', 'is_active' => true]);
 
         // HPP (5xxx)
         $hppParent = ChartOfAccount::firstOrCreate(
@@ -208,6 +211,7 @@ class ChartOfAccountSeeder extends Seeder
         ChartOfAccount::firstOrCreate(['code' => '6108'], ['name' => 'Penyusutan', 'type' => 'expense', 'parent_id' => $bebanOperasionalParent->id, 'description' => 'Biaya penyusutan aset', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '6109'], ['name' => 'Administrasi Bank', 'type' => 'expense', 'parent_id' => $bebanOperasionalParent->id, 'description' => 'Biaya administrasi bank', 'is_active' => true]);
         ChartOfAccount::firstOrCreate(['code' => '6110'], ['name' => 'Beban Promosi', 'type' => 'expense', 'parent_id' => $bebanOperasionalParent->id, 'description' => 'Biaya promosi dan iklan', 'is_active' => true]);
+        ChartOfAccount::firstOrCreate(['code' => '6111'], ['name' => 'Biaya PKS', 'type' => 'expense', 'parent_id' => $bebanOperasionalParent->id, 'description' => 'Biaya PKS / Uang Jalan', 'is_active' => true]);
 
         // BEBAN NON OPERASIONAL (7xxx)
         $bebanNonOperasionalParent = ChartOfAccount::firstOrCreate(

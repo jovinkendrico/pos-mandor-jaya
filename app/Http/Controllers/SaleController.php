@@ -192,6 +192,8 @@ class SaleController extends Controller
             $subtotal             = 0;
             $totalDiscount1Amount = 0;
             $totalDiscount2Amount = 0;
+            $totalPphAmount       = 0;
+            $totalBiayaPksAmount  = 0;
             $detailsData          = [];
 
             foreach ($request->details as $detail) {
@@ -206,11 +208,21 @@ class SaleController extends Controller
                 // Discount 2 per item
                 $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
-                $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
+                $itemNetto            = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal             += $amount; // Sum all amounts before discount
+                // PPh & Biaya PKS
+                $pphPercent = $detail['pph_percent'] ?? 0;
+                $pphAmount  = ($itemNetto * $pphPercent) / 100;
+                $biayaPksPerQty = $detail['biaya_pks_per_qty'] ?? 0;
+                $biayaPksAmount = $detail['quantity'] * $biayaPksPerQty;
+
+                $itemSubtotal = $itemNetto - $pphAmount - $biayaPksAmount;
+
+                $subtotal             += $amount;
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
+                $totalPphAmount       += $pphAmount;
+                $totalBiayaPksAmount  += $biayaPksAmount;
 
                 $detailsData[] = [
                     'item_id'           => $detail['item_id'],
@@ -221,6 +233,10 @@ class SaleController extends Controller
                     'discount1_amount'  => $itemDiscount1Amount,
                     'discount2_percent' => $itemDiscount2Percent,
                     'discount2_amount'  => $itemDiscount2Amount,
+                    'pph_percent'       => $pphPercent,
+                    'pph_amount'        => $pphAmount,
+                    'biaya_pks_per_qty' => $biayaPksPerQty,
+                    'biaya_pks_amount'  => $biayaPksAmount,
                     'subtotal'          => $itemSubtotal,
                     'cost'              => 0,
                     'profit'            => 0,
@@ -270,7 +286,9 @@ class SaleController extends Controller
                         'total_after_discount' => $totalAfterDiscount,
                         'ppn_percent'          => $ppnPercent,
                         'ppn_amount'           => $ppnAmount,
-                        'total_amount'         => $totalAmount,
+                        'pph_amount'           => $totalPphAmount,
+                        'biaya_pks_amount'     => $totalBiayaPksAmount,
+                        'total_amount'         => $totalAmount - $totalPphAmount - $totalBiayaPksAmount,
                         'total_cost'           => 0, // Will be calculated on confirm
                         'total_profit'         => 0, // Will be calculated on confirm
                         'status'               => 'pending',
@@ -396,6 +414,8 @@ class SaleController extends Controller
             $subtotal             = 0;
             $totalDiscount1Amount = 0;
             $totalDiscount2Amount = 0;
+            $totalPphAmount       = 0;
+            $totalBiayaPksAmount  = 0;
             $detailsData          = [];
 
             foreach ($request->details as $detail) {
@@ -410,11 +430,21 @@ class SaleController extends Controller
                 // Discount 2 per item
                 $itemDiscount2Percent = $detail['discount2_percent'] ?? 0;
                 $itemDiscount2Amount  = ($afterDiscount1 * $itemDiscount2Percent) / 100;
-                $itemSubtotal         = $afterDiscount1 - $itemDiscount2Amount;
+                $itemNetto            = $afterDiscount1 - $itemDiscount2Amount;
 
-                $subtotal             += $amount; // Sum all amounts before discount
+                // PPh & Biaya PKS
+                $pphPercent = $detail['pph_percent'] ?? 0;
+                $pphAmount  = ($itemNetto * $pphPercent) / 100;
+                $biayaPksPerQty = $detail['biaya_pks_per_qty'] ?? 0;
+                $biayaPksAmount = $detail['quantity'] * $biayaPksPerQty;
+
+                $itemSubtotal = $itemNetto - $pphAmount - $biayaPksAmount;
+
+                $subtotal             += $amount;
                 $totalDiscount1Amount += $itemDiscount1Amount;
                 $totalDiscount2Amount += $itemDiscount2Amount;
+                $totalPphAmount       += $pphAmount;
+                $totalBiayaPksAmount  += $biayaPksAmount;
 
                 $detailsData[] = [
                     'item_id'           => $detail['item_id'],
@@ -425,6 +455,10 @@ class SaleController extends Controller
                     'discount1_amount'  => $itemDiscount1Amount,
                     'discount2_percent' => $itemDiscount2Percent,
                     'discount2_amount'  => $itemDiscount2Amount,
+                    'pph_percent'       => $pphPercent,
+                    'pph_amount'        => $pphAmount,
+                    'biaya_pks_per_qty' => $biayaPksPerQty,
+                    'biaya_pks_amount'  => $biayaPksAmount,
                     'subtotal'          => $itemSubtotal,
                     'cost'              => 0,
                     'profit'            => 0,
@@ -463,7 +497,9 @@ class SaleController extends Controller
                 'total_after_discount' => $totalAfterDiscount,
                 'ppn_percent'          => $ppnPercent,
                 'ppn_amount'           => $ppnAmount,
-                'total_amount'         => $totalAmount,
+                'pph_amount'           => $totalPphAmount,
+                'biaya_pks_amount'     => $totalBiayaPksAmount,
+                'total_amount'         => $totalAmount - $totalPphAmount - $totalBiayaPksAmount,
                 'notes'                => $request->notes,
                 'updated_by'           => auth()->id(),
             ]);
