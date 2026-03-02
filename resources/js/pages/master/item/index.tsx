@@ -18,7 +18,7 @@ import useDisclosure from '@/hooks/use-disclosure';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import itemRoutes, { destroy as destroyItem, index } from '@/routes/items';
-import { BreadcrumbItem, IItem, IUOM, PageProps as GlobalPageProps, PaginatedData } from '@/types';
+import { BreadcrumbItem, IChartOfAccount, IItem, IUOM, PageProps as GlobalPageProps, PaginatedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus, Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -26,6 +26,7 @@ import { useState } from 'react';
 interface ItemPageProps {
     items: PaginatedData<IItem>;
     uoms: IUOM[];
+    incomeAccounts: IChartOfAccount[];
     filters?: {
         search: string;
         stock_filter: string;
@@ -49,6 +50,7 @@ const ItemIndex = (props: ItemPageProps) => {
     const {
         items,
         uoms,
+        incomeAccounts,
         filters = {
             search: '',
             stock_filter: 'all',
@@ -182,6 +184,7 @@ const ItemIndex = (props: ItemPageProps) => {
                     onModalClose={closeEditModal}
                     item={selectedItem}
                     uomOptions={uoms}
+                    incomeAccounts={incomeAccounts}
                 />
                 <DeleteModalLayout
                     dataId={selectedItem?.id}

@@ -27,6 +27,7 @@ class UpdateItemRequest extends FormRequest
             'stock'                   => ['nullable', 'numeric', 'min:0'],
             'modal_price'             => ['nullable', 'numeric', 'min:0'],
             'description'             => ['nullable', 'string'],
+            'revenue_account_id'      => ['nullable', 'exists:chart_of_accounts,id'],
             'uoms'                    => ['required', 'array', 'min:1'],
             'uoms.*.uom_id'           => ['required', 'exists:uoms,id'],
             'uoms.*.conversion_value' => ['required', 'numeric', 'min:1'],

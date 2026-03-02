@@ -108,10 +108,15 @@ class ItemController extends Controller
         });
 
         $uoms  = Uom::orderBy('name')->get();
+        $incomeAccounts = \App\Models\ChartOfAccount::where('type', 'income')
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get();
 
         return Inertia::render('master/item/index', [
             'items' => $items,
             'uoms'  => $uoms,
+            'incomeAccounts' => $incomeAccounts,
             'filters' => [
                 'search' => $request->get('search', ''),
                 'stock_filter' => $request->get('stock_filter', 'all'),
@@ -211,6 +216,7 @@ class ItemController extends Controller
                 'stock'       => $openingStock,
                 'initial_stock' => $openingStock,
                 'description' => $request->description,
+                'revenue_account_id' => $request->revenue_account_id,
             ]);
 
             foreach ($request->uoms as $uom) {
@@ -465,6 +471,7 @@ class ItemController extends Controller
             $item->update([
                 'name'        => $request->name,
                 'description' => $request->description,
+                'revenue_account_id' => $request->revenue_account_id,
             ]);
 
             $existingUomIds = $item->itemUoms->pluck('id')->toArray();

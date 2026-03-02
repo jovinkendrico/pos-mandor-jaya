@@ -38,6 +38,7 @@ const itemSchema = Yup.object().shape({
             otherwise: (schema) => schema,
         }),
     description: Yup.string().nullable().max(255, 'Maksimal 255 karakter.'),
+    revenue_account_id: Yup.number().nullable(),
     uoms: Yup.array()
         .of(uomSchema)
         .required('Minimal harus ada 1 UOM.')
@@ -78,7 +79,7 @@ const itemSchema = Yup.object().shape({
         ),
 });
 
-const useItem = (closeModal: () => void = () => {}) => {
+const useItem = (closeModal: () => void = () => { }) => {
     const {
         data,
         setData,
@@ -93,6 +94,7 @@ const useItem = (closeModal: () => void = () => {}) => {
         stock: 0,
         modal_price: 0,
         description: '',
+        revenue_account_id: null as number | null,
         uoms: [
             {
                 uom_id: 0,

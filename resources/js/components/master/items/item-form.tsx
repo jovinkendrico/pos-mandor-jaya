@@ -19,7 +19,7 @@ import {
     formatNumberWithSeparator,
     parseStringtoNumber,
 } from '@/lib/utils';
-import { IItem, IUOM } from '@/types';
+import { IChartOfAccount, IItem, IUOM } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import UOMForm from '../uom/uom-form';
@@ -29,10 +29,11 @@ interface ItemFormProps {
     onModalClose: () => void;
     item?: IItem | undefined;
     uomOptions: IUOM[];
+    incomeAccounts: IChartOfAccount[];
 }
 
 const ItemForm = (props: ItemFormProps) => {
-    const { item, uomOptions, isModalOpen, onModalClose } = props;
+    const { item, uomOptions, incomeAccounts, isModalOpen, onModalClose } = props;
 
     const [localUOMS, setLocalUOMS] = useState<IUOM[]>(uomOptions);
     const [isAddUOMModalOpen, setIsAddUOMModalOpen] = useState(false);
@@ -64,6 +65,13 @@ const ItemForm = (props: ItemFormProps) => {
         setLocalUOMS(uomOptions);
     }, [uomOptions]);
 
+    const incomeAccountComboBoxOptions: ComboboxOption[] = useMemo(() => {
+        return incomeAccounts.map((acc) => ({
+            value: acc.id.toString(),
+            label: `${acc.code} - ${acc.name}`,
+        }));
+    }, [incomeAccounts]);
+
     const uomComboBoxOptions: ComboboxOption[] = useMemo(() => {
         return localUOMS.map((uom) => ({
             value: uom.id.toString(),
@@ -77,6 +85,7 @@ const ItemForm = (props: ItemFormProps) => {
             setDataItem('stock', item.stock ?? 0);
             setDataItem('modal_price', 0);
             setDataItem('description', item.description ?? '');
+            setDataItem('revenue_account_id', item.revenue_account_id ?? null);
             setDataItem('uoms', item.item_uoms);
 
             setStockDisplayValue(formatNumberWithSeparator(item.stock));
@@ -179,7 +188,7 @@ const ItemForm = (props: ItemFormProps) => {
                                     setDataItem(
                                         'modal_price',
                                         parseStringtoNumber(e.target.value) ||
-                                            0,
+                                        0,
                                     )
                                 }
                                 placeholder="Cth: 15000"
@@ -205,6 +214,25 @@ const ItemForm = (props: ItemFormProps) => {
                             />
                             {errorsItem.description && (
                                 <InputError message={errorsItem.description} />
+                            )}
+                        </div>
+
+                        <div>
+                            <Label htmlFor="revenue_account_id">Akun Pendapatan</Label>
+                            <Combobox
+                                options={incomeAccountComboBoxOptions}
+                                value={dataItem.revenue_account_id?.toString() || ''}
+                                onValueChange={(newValue) =>
+                                    setDataItem('revenue_account_id', newValue ? Number(newValue) : null)
+                                }
+                                placeholder="Pilih Akun Pendapatan..."
+                                searchPlaceholder="Cari Akun..."
+                                emptyText="Akun tidak ditemukan"
+                                className="combobox"
+                                disabled={processingItem}
+                            />
+                            {errorsItem.revenue_account_id && (
+                                <InputError message={errorsItem.revenue_account_id} />
                             )}
                         </div>
                     </div>
@@ -317,7 +345,7 @@ const ItemForm = (props: ItemFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `uoms[${index}].uom.name`
+                                                        `uoms[${index}].uom.name`
                                                         ]
                                                     }
                                                 />
@@ -340,8 +368,8 @@ const ItemForm = (props: ItemFormProps) => {
                                                         uom.is_base
                                                             ? '1'
                                                             : (conversionDisplayValues[
-                                                                  index
-                                                              ] ?? '0')
+                                                                index
+                                                            ] ?? '0')
                                                     }
                                                     onChange={(e) => {
                                                         handleConversionValueChange(
@@ -370,7 +398,7 @@ const ItemForm = (props: ItemFormProps) => {
                                                                 string
                                                             >
                                                         )[
-                                                            `uoms[${index}].conversion_value`
+                                                        `uoms[${index}].conversion_value`
                                                         ]
                                                     }
                                                 />
@@ -391,7 +419,7 @@ const ItemForm = (props: ItemFormProps) => {
                                                     type="text"
                                                     value={
                                                         priceDisplayValues[
-                                                            index
+                                                        index
                                                         ] || 'Rp. 0'
                                                     }
                                                     onChange={(e) =>
@@ -497,8 +525,8 @@ const ItemForm = (props: ItemFormProps) => {
                             {processingItem
                                 ? 'Menyimpan...'
                                 : item
-                                  ? 'Update'
-                                  : 'Simpan'}
+                                    ? 'Update'
+                                    : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </form>
