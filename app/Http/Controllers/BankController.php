@@ -174,8 +174,9 @@ class BankController extends Controller
         }
 
         // Get transactions with pagination
-        // Sort by ID DESC as requested (Latest created first)
+        // Sort by Date DESC and ID DESC to show latest first
         $transactions = $query
+            ->orderBy('movement_date', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(50)
             ->withQueryString()
@@ -185,13 +186,7 @@ class BankController extends Controller
                 $debit = (float) $movement->debit;
                 $credit = (float) $movement->credit;
                 
-                // Calculate balance before: Balance After - Debit + Credit
-                // This formula holds true for all standard transactions.
-                // For 'Bank' type (Initial Balance), balance is set directly to debit (or -credit).
-                // So expected balance_before is 0.
-                
                 $balanceBefore = $balanceAfter - $debit + $credit;
-                // Fix floating point precision issues if close to 0
                 if (abs($balanceBefore) < 0.001) $balanceBefore = 0;
 
                 // Get reference number based on reference type
@@ -222,12 +217,10 @@ class BankController extends Controller
                             $ref = \App\Models\PurchaseReturn::find($movement->reference_id);
                             $referenceNumber = $ref ? $ref->return_number : '-';
                             break;
-                        case 'Bank': // Transfer between banks? or Opening Balance
-                            // Check if it's Transfer
-                            /* Actually Bank reference seems to be Opening Balance logic in postBankOpeningBalance */
+                        case 'Bank':
                             $referenceNumber = 'Saldo Awal';
                             break;
-                        case 'App\Models\Transfer': // Handle Full Class Name
+                        case 'App\Models\Transfer':
                         case 'Transfer':
                             $ref = \App\Models\Transfer::find($movement->reference_id);
                             $referenceNumber = $ref ? $ref->transfer_number : '-';
@@ -235,14 +228,20 @@ class BankController extends Controller
                     }
                 }
 
-                // Handle polymorphic type string cleanup
-                $typeStr = $movement->reference_type;
-                if ($typeStr === 'App\Models\Transfer') $typeStr = 'Transfer';
+                // Map type to frontend slugs
+                $typeSlug = 'other';
+                $refType = $movement->reference_type;
+                if (str_contains($refType, 'CashIn')) $typeSlug = 'cash_in';
+                elseif (str_contains($refType, 'CashOut')) $typeSlug = 'cash_out';
+                elseif (str_contains($refType, 'Payment')) $typeSlug = 'payment';
+                elseif (str_contains($refType, 'Transfer')) $typeSlug = 'transfer';
+                elseif (str_contains($refType, 'Return')) $typeSlug = 'return';
+                elseif ($refType === 'Bank') $typeSlug = 'bank';
                 
                 return [
                     'id' => $movement->id,
                     'date' => $movement->movement_date->format('Y-m-d'),
-                    'type' => $typeStr ? strtolower(str_replace(['Sale', 'Purchase', 'App\\Models\\'], '', $typeStr)) : 'other',
+                    'type' => $typeSlug,
                     'reference_number' => $referenceNumber,
                     'reference_type' => $movement->reference_type,
                     'description' => $movement->description,

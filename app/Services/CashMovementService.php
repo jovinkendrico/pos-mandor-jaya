@@ -31,26 +31,25 @@ class CashMovementService
         ?string $description = null
     ): CashMovement {
         return DB::transaction(function () use ($bank, $referenceType, $referenceId, $movementDate, $debit, $credit, $description) {
+            $formattedDate = is_string($movementDate) ? $movementDate : $movementDate->format('Y-m-d');
+
             // For opening balance (Bank reference), balance should equal the debit/credit amount
-            // because this represents the initial balance, not an addition to existing balance
             if ($referenceType === 'Bank') {
-                // Opening balance - balance equals the debit amount (or negative credit)
                 $newBalance = $debit > 0 ? $debit : (0 - $credit);
             } else {
-                // Get current balance from the last cash movement or initial balance
-                $lastMovement = CashMovement::where('bank_id', $bank->id)
+                // Get last movement BEFORE this new movement date
+                $lastMovementBefore = CashMovement::where('bank_id', $bank->id)
+                    ->where('movement_date', '<=', $formattedDate)
                     ->orderBy('movement_date', 'desc')
                     ->orderBy('id', 'desc')
                     ->lockForUpdate()
                     ->first();
 
-                // Calculate from last movement or initial balance
-                $currentBalance = $lastMovement 
-                    ? (float) $lastMovement->balance 
+                $startingBalance = $lastMovementBefore 
+                    ? (float) $lastMovementBefore->balance 
                     : (float) ($bank->initial_balance ?? 0);
 
-                // Calculate new balance
-                $newBalance = $currentBalance + $debit - $credit;
+                $newBalance = $startingBalance + $debit - $credit;
             }
 
             // Create cash movement record
@@ -58,15 +57,30 @@ class CashMovementService
                 'bank_id' => $bank->id,
                 'reference_type' => $referenceType,
                 'reference_id' => $referenceId,
-                'movement_date' => is_string($movementDate) ? $movementDate : $movementDate->format('Y-m-d'),
+                'movement_date' => $formattedDate,
                 'debit' => $debit,
                 'credit' => $credit,
                 'balance' => $newBalance,
                 'description' => $description,
             ]);
 
-            // Update bank balance
-            $bank->update(['balance' => $newBalance]);
+            // Check if there are movements AFTER this date that need recalculation
+            $hasFutureMovements = CashMovement::where('bank_id', $bank->id)
+                ->where(function($q) use ($formattedDate, $cashMovement) {
+                    $q->where('movement_date', '>', $formattedDate)
+                      ->orWhere(function($q2) use ($formattedDate, $cashMovement) {
+                          $q2->where('movement_date', $formattedDate)
+                             ->where('id', '>', $cashMovement->id);
+                      });
+                })
+                ->exists();
+
+            if ($hasFutureMovements) {
+                $this->recalculateBalances($bank, $formattedDate);
+            } else {
+                // Just update bank balance if it's the latest
+                $bank->update(['balance' => $newBalance]);
+            }
 
             return $cashMovement;
         });

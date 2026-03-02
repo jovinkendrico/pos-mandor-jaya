@@ -23,7 +23,7 @@ import { ArrowLeft } from 'lucide-react';
 interface CashMovementTransaction {
     id: number;
     date: string;
-    type: 'cash_in' | 'cash_out' | 'sale_payment' | 'purchase_payment';
+    type: 'cash_in' | 'cash_out' | 'payment' | 'transfer' | 'return' | 'bank' | 'other';
     reference_number: string;
     reference_type: string | null;
     description: string;
@@ -88,6 +88,14 @@ const CashMovementPage = (props: PageProps) => {
                 return 'Kas Masuk';
             case 'cash_out':
                 return 'Kas Keluar';
+            case 'payment':
+                return 'Pembayaran';
+            case 'transfer':
+                return 'Transfer';
+            case 'return':
+                return 'Retur';
+            case 'bank':
+                return 'Saldo/Bank';
             default:
                 return type;
         }
@@ -99,6 +107,12 @@ const CashMovementPage = (props: PageProps) => {
                 return 'default';
             case 'cash_out':
                 return 'destructive';
+            case 'payment':
+                return 'outline';
+            case 'transfer':
+                return 'secondary';
+            case 'bank':
+                return 'default';
             default:
                 return 'secondary';
         }
@@ -173,28 +187,28 @@ const CashMovementPage = (props: PageProps) => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[100px] text-center">
                                         Tanggal
                                     </TableHead>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[100px] text-center">
                                         Tipe
                                     </TableHead>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[120px] text-center">
                                         No. Referensi
                                     </TableHead>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[200px] text-left">
                                         Keterangan
                                     </TableHead>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[120px] text-right">
                                         Debit
                                     </TableHead>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[120px] text-right">
                                         Kredit
                                     </TableHead>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[150px] text-right">
                                         Saldo Sebelum
                                     </TableHead>
-                                    <TableHead className="text-center">
+                                    <TableHead className="min-w-[150px] text-right">
                                         Saldo Akhir
                                     </TableHead>
                                 </TableRow>
@@ -239,31 +253,31 @@ const CashMovementPage = (props: PageProps) => {
                                                             transaction.reference_number
                                                         }
                                                     </TableCell>
-                                                    <TableCell className="text-center">
+                                                    <TableCell className="text-left">
                                                         {
                                                             transaction.description
                                                         }
                                                     </TableCell>
-                                                    <TableCell className="text-center text-green-600">
+                                                    <TableCell className="text-right text-green-600">
                                                         {transaction.debit > 0
                                                             ? formatCurrency(
-                                                                  transaction.debit,
-                                                              )
+                                                                transaction.debit,
+                                                            )
                                                             : '-'}
                                                     </TableCell>
-                                                    <TableCell className="text-center text-red-600">
+                                                    <TableCell className="text-right text-red-600">
                                                         {transaction.credit > 0
                                                             ? formatCurrency(
-                                                                  transaction.credit,
-                                                              )
+                                                                transaction.credit,
+                                                            )
                                                             : '-'}
                                                     </TableCell>
-                                                    <TableCell className="text-center">
+                                                    <TableCell className="text-right">
                                                         {formatCurrency(
                                                             transaction.balance_before,
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="text-center font-semibold">
+                                                    <TableCell className="text-right font-semibold">
                                                         {formatCurrency(
                                                             transaction.balance_after,
                                                         )}
