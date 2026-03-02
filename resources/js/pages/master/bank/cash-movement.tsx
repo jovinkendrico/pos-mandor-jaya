@@ -23,7 +23,7 @@ import { ArrowLeft } from 'lucide-react';
 interface CashMovementTransaction {
     id: number;
     date: string;
-    type: 'cash_in' | 'cash_out' | 'sale_payment' | 'purchase_payment';
+    type: 'cash_in' | 'cash_out' | 'sale_payment' | 'purchase_payment' | 'draft_cash_in' | 'draft_cash_out' | 'transfer' | 'return' | 'bank' | 'other';
     reference_number: string;
     reference_type: string | null;
     description: string;
@@ -88,17 +88,43 @@ const CashMovementPage = (props: PageProps) => {
                 return 'Kas Masuk';
             case 'cash_out':
                 return 'Kas Keluar';
+            case 'draft_cash_in':
+                return '[DRAFT] Kas Masuk';
+            case 'draft_cash_out':
+                return '[DRAFT] Kas Keluar';
+            case 'sale_payment':
+            case 'purchase_payment':
+            case 'payment':
+                return 'Pembayaran';
+            case 'transfer':
+                return 'Transfer';
+            case 'return':
+            case 'sale_return':
+            case 'purchase_return':
+                return 'Retur';
+            case 'bank':
+                return 'Saldo/Bank';
             default:
                 return type;
         }
     };
 
     const getTypeBadgeVariant = (type: string) => {
+        if (type.startsWith('draft_')) return 'outline';
+
         switch (type) {
             case 'cash_in':
                 return 'default';
             case 'cash_out':
                 return 'destructive';
+            case 'sale_payment':
+            case 'purchase_payment':
+            case 'payment':
+                return 'outline';
+            case 'transfer':
+                return 'secondary';
+            case 'bank':
+                return 'default';
             default:
                 return 'secondary';
         }

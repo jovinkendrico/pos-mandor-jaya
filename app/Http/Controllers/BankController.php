@@ -173,6 +173,81 @@ class BankController extends Controller
             $closingBalance = (float) $lastMovementInRange->balance;
         }
 
+        // Initialize collections
+        $draftTransactions = collect();
+
+        // 1. Fetch Draft transactions (CashIn and CashOut) if searching for manual/all and it's the first page
+        $isFirstPage = ($request->get('page', 1) == 1);
+        $refTypeFilter = $request->get('reference_type', 'all');
+
+        if ($isFirstPage && ($refTypeFilter === 'all' || $refTypeFilter === 'manual')) {
+            $draftCashIns = \App\Models\CashIn::where('bank_id', $bank->id)
+                ->where('status', 'draft')
+                ->where('reference_type', 'Manual')
+                ->get();
+
+            $draftCashOuts = \App\Models\CashOut::where('bank_id', $bank->id)
+                ->where('status', 'draft')
+                ->where('reference_type', 'Manual')
+                ->get();
+
+            // Merge draft results
+            foreach ($draftCashIns as $draftIn) {
+                $draftTransactions->push([
+                    'type' => 'draft_cash_in',
+                    'date' => $draftIn->cash_in_date,
+                    'amount' => (float) $draftIn->amount,
+                    'debit' => (float) $draftIn->amount,
+                    'credit' => 0,
+                    'reference_number' => $draftIn->cash_in_number,
+                    'description' => '[DRAFT] ' . $draftIn->description,
+                    'sort_key' => $draftIn->created_at->timestamp,
+                ]);
+            }
+
+            foreach ($draftCashOuts as $draftOut) {
+                $draftTransactions->push([
+                    'type' => 'draft_cash_out',
+                    'date' => $draftOut->cash_out_date,
+                    'amount' => (float) $draftOut->amount,
+                    'debit' => 0,
+                    'credit' => (float) $draftOut->amount,
+                    'reference_number' => $draftOut->cash_out_number,
+                    'description' => '[DRAFT] ' . $draftOut->description,
+                    'sort_key' => $draftOut->created_at->timestamp,
+                ]);
+            }
+
+            // Sort drafts by created_at DESC (latest first)
+            $draftTransactions = $draftTransactions->sortByDesc('sort_key');
+
+            // Calculate theoretical balances for drafts
+            // Starting from CURRENT bank balance
+            $currentTheoreticalBalance = (float) $bank->balance;
+            
+            // We iterate backward to calculate the "before" and "after" for each draft
+            // But since we show them on top, the LATEST draft has the HIGHEST theoretical balance
+            // Actually, it's easier to just calculate forward from current balance
+            $processedDrafts = collect();
+            $balanceTracker = $currentTheoreticalBalance;
+
+            // Sort ASC to calculate forward, then reverse for display
+            $draftsForCalculation = $draftTransactions->sortBy('sort_key');
+            foreach ($draftsForCalculation as $draft) {
+                $balanceBefore = $balanceTracker;
+                $balanceAfter = $balanceTracker + $draft['debit'] - $draft['credit'];
+                
+                $draft['balance_before'] = $balanceBefore;
+                $draft['balance_after'] = $balanceAfter;
+                
+                $processedDrafts->push($draft);
+                $balanceTracker = $balanceAfter;
+            }
+
+            // Reverse back to latest first
+            $draftTransactions = $processedDrafts->reverse()->values();
+        }
+
         // Get transactions with pagination
         // Sort by ID DESC as requested (Latest created first)
         $transactions = $query
@@ -244,6 +319,16 @@ class BankController extends Controller
                     'balance_after' => $balanceAfter,
                 ];
             });
+
+        // Prepend draft transactions if on first page
+        if ($draftTransactions->isNotEmpty()) {
+            $paginatedTransactions = $transactions->toArray();
+            $paginatedTransactions['data'] = array_merge(
+                $draftTransactions->toArray(),
+                $paginatedTransactions['data']
+            );
+            $transactions = $paginatedTransactions;
+        }
 
         return Inertia::render('master/bank/cash-movement', [
             'bank' => $bank,
