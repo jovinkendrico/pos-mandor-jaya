@@ -29,8 +29,20 @@ class UpdateCashOutRequest extends FormRequest
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:500',
             'auto_post' => 'nullable|boolean',
-            'attachment' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+            'attachment' => 'nullable|' . ($this->hasFile('attachment') ? 'image|mimes:jpeg,png,jpg,gif|max:2048' : 'string'),
             'vehicle_id' => 'nullable|exists:vehicles,id',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('vehicle_id') && $this->vehicle_id === '') {
+            $this->merge([
+                'vehicle_id' => null,
+            ]);
+        }
     }
 }

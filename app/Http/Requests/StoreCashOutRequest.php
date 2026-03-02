@@ -33,4 +33,16 @@ class StoreCashOutRequest extends FormRequest
             'vehicle_id' => 'nullable|exists:vehicles,id',
         ];
     }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('vehicle_id') && $this->vehicle_id === '') {
+            $this->merge([
+                'vehicle_id' => null,
+            ]);
+        }
+    }
 }
