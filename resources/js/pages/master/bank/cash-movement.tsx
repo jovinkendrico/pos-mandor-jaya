@@ -239,31 +239,31 @@ const CashMovementPage = (props: PageProps) => {
                                                             transaction.reference_number
                                                         }
                                                     </TableCell>
-                                                    <TableCell className="text-left">
+                                                    <TableCell className="text-center">
                                                         {
                                                             transaction.description
                                                         }
                                                     </TableCell>
-                                                    <TableCell className="text-right text-green-600">
+                                                    <TableCell className="text-center text-green-600">
                                                         {transaction.debit > 0
                                                             ? formatCurrency(
                                                                 transaction.debit,
                                                             )
                                                             : '-'}
                                                     </TableCell>
-                                                    <TableCell className="text-right text-red-600">
+                                                    <TableCell className="text-center text-red-600">
                                                         {transaction.credit > 0
                                                             ? formatCurrency(
                                                                 transaction.credit,
                                                             )
                                                             : '-'}
                                                     </TableCell>
-                                                    <TableCell className="text-right">
+                                                    <TableCell className="text-center">
                                                         {formatCurrency(
                                                             transaction.balance_before,
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="text-right font-semibold">
+                                                    <TableCell className="text-center font-semibold">
                                                         {formatCurrency(
                                                             transaction.balance_after,
                                                         )}
