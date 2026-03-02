@@ -173,28 +173,28 @@ const CashMovementPage = (props: PageProps) => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="min-w-[100px] text-center">
+                                    <TableHead className="text-center">
                                         Tanggal
                                     </TableHead>
-                                    <TableHead className="min-w-[100px] text-center">
+                                    <TableHead className="text-center">
                                         Tipe
                                     </TableHead>
-                                    <TableHead className="min-w-[120px] text-center">
+                                    <TableHead className="text-center">
                                         No. Referensi
                                     </TableHead>
-                                    <TableHead className="min-w-[200px] text-left">
+                                    <TableHead className="text-center">
                                         Keterangan
                                     </TableHead>
-                                    <TableHead className="min-w-[120px] text-right">
+                                    <TableHead className="text-center">
                                         Debit
                                     </TableHead>
-                                    <TableHead className="min-w-[120px] text-right">
+                                    <TableHead className="text-center">
                                         Kredit
                                     </TableHead>
-                                    <TableHead className="min-w-[150px] text-right">
+                                    <TableHead className="text-center">
                                         Saldo Sebelum
                                     </TableHead>
-                                    <TableHead className="min-w-[150px] text-right">
+                                    <TableHead className="text-center">
                                         Saldo Akhir
                                     </TableHead>
                                 </TableRow>
