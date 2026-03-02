@@ -61,7 +61,7 @@ const CashOutTable = (props: CashOutTableProps) => {
                     <TableCell className="flex w-full items-center justify-center text-center">
                         {formatCurrency(row.amount)}
                     </TableCell>
-                    <TableCell className="flex w-full max-w-xs items-center justify-center truncate text-center">
+                    <TableCell className="flex w-full min-w-[200px] items-center justify-start text-left">
                         {row.description || '-'}
                     </TableCell>
                     <TableCell className="flex w-full items-center justify-center text-center">
