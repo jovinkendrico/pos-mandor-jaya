@@ -123,7 +123,22 @@ export function formatDiscountDisplay(value: number): string {
     });
 }
 
-export function formatDatetoString(date: Date) {
+export function formatDatetoString(date: Date | string) {
+    // If already a YYYY-MM-DD string, return as-is to avoid timezone shift
+    if (typeof date === 'string') {
+        // If it's already a YYYY-MM-DD string, return directly
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return date;
+        }
+        // Otherwise parse it safely using local time
+        const parsed = new Date(date);
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const day = String(parsed.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Date object: use local time methods
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
