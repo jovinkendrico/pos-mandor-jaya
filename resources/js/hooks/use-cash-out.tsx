@@ -57,8 +57,12 @@ const useCashOut = () => {
 
             if (cashOut) {
                 // For updates with files, we must use POST with _method: 'PUT'
+                // NOTE: transform() does NOT apply to router.post(), so we must format dates manually
                 router.post(update(cashOut.id).url, {
                     ...data,
+                    cash_out_date: data.cash_out_date
+                        ? formatDatetoString(data.cash_out_date)
+                        : data.cash_out_date,
                     _method: 'put',
                 }, {
                     onSuccess: () => {
