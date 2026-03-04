@@ -91,12 +91,13 @@ class ItemController extends Controller
                 ->where('sales.status', 'pending')
                 ->sum(\DB::raw('sale_details.quantity * item_uoms.conversion_value'));
 
-             // Purchases Pending (Stock In Pending)
+             // Purchases Pending (Stock In Pending) - exclude soft-deleted purchases
              $pendingPurchasesQty = \App\Models\PurchaseDetail::query()
                 ->join('purchases', 'purchases.id', '=', 'purchase_details.purchase_id')
                 ->join('item_uoms', 'item_uoms.id', '=', 'purchase_details.item_uom_id')
                 ->where('purchase_details.item_id', $item->id)
                 ->where('purchases.status', 'pending')
+                ->whereNull('purchases.deleted_at')
                 ->sum(\DB::raw('purchase_details.quantity * item_uoms.conversion_value'));
              
              $item->pending_stock = (float)$pendingSalesQty; // Customer booked but not confirmed
@@ -165,6 +166,7 @@ class ItemController extends Controller
                 ->join('item_uoms', 'item_uoms.id', '=', 'purchase_details.item_uom_id')
                 ->where('purchase_details.item_id', $item->id)
                 ->where('purchases.status', 'pending')
+                ->whereNull('purchases.deleted_at')
                 ->sum(\DB::raw('purchase_details.quantity * item_uoms.conversion_value'));
              
              $item->pending_stock = (float)$pendingSalesQty;
