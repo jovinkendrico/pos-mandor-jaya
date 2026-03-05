@@ -90,7 +90,7 @@ export function formatNumberWithSeparator(input: number): string {
     });
 }
 
-export function formatDate(dateString: Date) {
+export function formatDate(dateString: string | Date) {
     return new Date(dateString).toLocaleDateString('id-ID', {
         year: 'numeric',
         month: 'long',

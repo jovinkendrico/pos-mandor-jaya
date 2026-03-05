@@ -374,6 +374,8 @@ class ItemController extends Controller
         $entityName = '';
         $price = 0;
         $uom = $baseUomName;
+        $discountInfo = '';
+        $subtotal = 0;
         
         if ($row['reference_type'] === 'Sale') {
             if (isset($sales[$row['reference_id']])) {
@@ -383,6 +385,12 @@ class ItemController extends Controller
                 $detail = $saleDetails[$row['reference_id']];
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
+                $subtotal = $detail->subtotal;
+
+                $discounts = [];
+                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
+                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
+                $discountInfo = implode('+', $discounts);
             }
         } elseif ($row['reference_type'] === 'Purchase') {
             if (isset($purchases[$row['reference_id']])) {
@@ -392,6 +400,14 @@ class ItemController extends Controller
                 $detail = $purchaseDetails[$row['reference_id']];
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
+                $subtotal = $detail->subtotal;
+
+                $discounts = [];
+                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
+                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
+                if ($detail->discount3_percent > 0) $discounts[] = number_format($detail->discount3_percent, 0) . '%';
+                if ($detail->discount4_percent > 0) $discounts[] = number_format($detail->discount4_percent, 0) . '%';
+                $discountInfo = implode('+', $discounts);
             }
         } elseif ($row['reference_type'] === 'SaleReturn') {
             if (isset($saleReturns[$row['reference_id']])) {
@@ -401,6 +417,12 @@ class ItemController extends Controller
                 $detail = $saleReturnDetails[$row['reference_id']];
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
+                $subtotal = $detail->subtotal;
+
+                $discounts = [];
+                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
+                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
+                $discountInfo = implode('+', $discounts);
             }
         } elseif ($row['reference_type'] === 'PurchaseReturn') {
             if (isset($purchaseReturns[$row['reference_id']])) {
@@ -410,6 +432,12 @@ class ItemController extends Controller
                 $detail = $purchaseReturnDetails[$row['reference_id']];
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
+                $subtotal = $detail->subtotal;
+
+                $discounts = [];
+                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
+                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
+                $discountInfo = implode('+', $discounts);
             }
         }
 
@@ -419,6 +447,8 @@ class ItemController extends Controller
 
         $row['price'] = $price;
         $row['uom'] = $uom; // Always use base UOM
+        $row['discount_info'] = $discountInfo;
+        $row['subtotal'] = $subtotal;
         
         return $row;
     });

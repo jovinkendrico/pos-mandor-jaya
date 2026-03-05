@@ -39,6 +39,8 @@ interface StockCardTransaction {
     balance: number;
     price: number;
     uom: string;
+    discount_info: string;
+    subtotal: number;
 }
 
 interface PageProps {
@@ -87,6 +89,8 @@ const StockCardPage = (props: PageProps) => {
             ...filters,
             search: '',
             status: 'all',
+            sort_by: '',
+            sort_order: '',
         },
     );
 
@@ -261,6 +265,12 @@ const StockCardPage = (props: PageProps) => {
                                         Harga
                                     </TableHead>
                                     <TableHead className="text-center">
+                                        Diskon
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        Total
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Saldo
                                     </TableHead>
                                 </TableRow>
@@ -282,7 +292,7 @@ const StockCardPage = (props: PageProps) => {
                                                 <TableRow key={transaction.id}>
                                                     <TableCell className="text-center">
                                                         {formatDate(
-                                                            transaction.date,
+                                                            new Date(transaction.date),
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-center">
@@ -319,6 +329,12 @@ const StockCardPage = (props: PageProps) => {
                                                     </TableCell>
                                                     <TableCell className="text-center">
                                                         {transaction.price && transaction.price > 0 ? formatCurrency(transaction.price) : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.discount_info || '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.subtotal && transaction.subtotal > 0 ? formatCurrency(transaction.subtotal) : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-center font-semibold">
                                                         {formatNumberWithSeparator(
