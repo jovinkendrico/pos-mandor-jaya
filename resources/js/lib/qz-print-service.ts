@@ -245,7 +245,7 @@ class QZPrintService {
             const nextLine = wrappedLines[i];
             // 7 (Total:) + 20 (Value) = 27 spaces
             const footerLineNext =
-                '| ' + nextLine.padEnd(62) + ''.padEnd(27) + '|';
+                '| ' + nextLine.padEnd(62) + ''.padEnd(27) + '  |';
             escp.push(footerLineNext + '\n');
         }
 
