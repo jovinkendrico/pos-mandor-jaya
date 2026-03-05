@@ -386,18 +386,19 @@ class ItemController extends Controller
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
                 $subtotal = $detail->subtotal;
+                $baseQty = $detail->quantity * $conversion;
 
                 $discounts = [];
                 if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
-                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    if ($detail->discount1_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount1_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
-                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    if ($detail->discount2_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount2_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 $discountInfo = implode('+', $discounts);
@@ -411,30 +412,31 @@ class ItemController extends Controller
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
                 $subtotal = $detail->subtotal;
+                $baseQty = $detail->quantity * $conversion;
 
                 $discounts = [];
                 if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
-                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    if ($detail->discount1_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount1_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
-                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    if ($detail->discount2_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount2_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 if ($detail->discount3_percent > 0 || $detail->discount3_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount3_percent > 0) $itemDisc[] = number_format($detail->discount3_percent, 0) . '%';
-                    if ($detail->discount3_amount > 0) $itemDisc[] = number_format($detail->discount3_amount, 0);
+                    if ($detail->discount3_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount3_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 if ($detail->discount4_percent > 0 || $detail->discount4_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount4_percent > 0) $itemDisc[] = number_format($detail->discount4_percent, 0) . '%';
-                    if ($detail->discount4_amount > 0) $itemDisc[] = number_format($detail->discount4_amount, 0);
+                    if ($detail->discount4_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount4_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 $discountInfo = implode('+', $discounts);
@@ -448,18 +450,19 @@ class ItemController extends Controller
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
                 $subtotal = $detail->subtotal;
+                $baseQty = $detail->quantity * $conversion;
 
                 $discounts = [];
                 if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
-                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    if ($detail->discount1_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount1_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
-                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    if ($detail->discount2_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount2_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 $discountInfo = implode('+', $discounts);
@@ -473,18 +476,19 @@ class ItemController extends Controller
                 $conversion = $detail->itemUom->conversion_value ?? 1;
                 $price = $conversion > 0 ? ($detail->price / $conversion) : 0;
                 $subtotal = $detail->subtotal;
+                $baseQty = $detail->quantity * $conversion;
 
                 $discounts = [];
                 if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
-                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    if ($detail->discount1_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount1_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
                     $itemDisc = [];
                     if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
-                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    if ($detail->discount2_amount > 0 && $baseQty > 0) $itemDisc[] = number_format($detail->discount2_amount / $baseQty, 0);
                     $discounts[] = implode(' ', $itemDisc);
                 }
                 $discountInfo = implode('+', $discounts);
