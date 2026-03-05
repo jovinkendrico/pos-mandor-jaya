@@ -184,7 +184,7 @@ class QZPrintService {
                 const item = data.details[i];
 
                 // QTY: 12 chars inner.
-                const qUom = item.uom.substring(0, 5).padEnd(5);
+                const qUom = item.uom.substring(0, 7).padEnd(7);
                 const qNum6 = this.formatQuantity(item.quantity).padStart(6);
                 const qtyStr = `${qNum6} ${qUom}`; // 6+1+5 = 12 chars. Exactly matches column.
 
@@ -194,7 +194,7 @@ class QZPrintService {
 
                 row += `${qtyStr}| ${nameStr} | ${priceStr} | ${subStr} |`;
             } else {
-                row += `            |                                              |            |            |`;
+                row += `              |                                              |            |            |`;
             }
             escp.push(row + '\n');
         }
