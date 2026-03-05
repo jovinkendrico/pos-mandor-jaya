@@ -388,8 +388,18 @@ class ItemController extends Controller
                 $subtotal = $detail->subtotal;
 
                 $discounts = [];
-                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
-                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
+                if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
+                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
+                if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
+                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
                 $discountInfo = implode('+', $discounts);
             }
         } elseif ($row['reference_type'] === 'Purchase') {
@@ -403,10 +413,30 @@ class ItemController extends Controller
                 $subtotal = $detail->subtotal;
 
                 $discounts = [];
-                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
-                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
-                if ($detail->discount3_percent > 0) $discounts[] = number_format($detail->discount3_percent, 0) . '%';
-                if ($detail->discount4_percent > 0) $discounts[] = number_format($detail->discount4_percent, 0) . '%';
+                if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
+                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
+                if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
+                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
+                if ($detail->discount3_percent > 0 || $detail->discount3_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount3_percent > 0) $itemDisc[] = number_format($detail->discount3_percent, 0) . '%';
+                    if ($detail->discount3_amount > 0) $itemDisc[] = number_format($detail->discount3_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
+                if ($detail->discount4_percent > 0 || $detail->discount4_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount4_percent > 0) $itemDisc[] = number_format($detail->discount4_percent, 0) . '%';
+                    if ($detail->discount4_amount > 0) $itemDisc[] = number_format($detail->discount4_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
                 $discountInfo = implode('+', $discounts);
             }
         } elseif ($row['reference_type'] === 'SaleReturn') {
@@ -420,8 +450,18 @@ class ItemController extends Controller
                 $subtotal = $detail->subtotal;
 
                 $discounts = [];
-                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
-                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
+                if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
+                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
+                if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
+                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
                 $discountInfo = implode('+', $discounts);
             }
         } elseif ($row['reference_type'] === 'PurchaseReturn') {
@@ -435,8 +475,18 @@ class ItemController extends Controller
                 $subtotal = $detail->subtotal;
 
                 $discounts = [];
-                if ($detail->discount1_percent > 0) $discounts[] = number_format($detail->discount1_percent, 0) . '%';
-                if ($detail->discount2_percent > 0) $discounts[] = number_format($detail->discount2_percent, 0) . '%';
+                if ($detail->discount1_percent > 0 || $detail->discount1_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount1_percent > 0) $itemDisc[] = number_format($detail->discount1_percent, 0) . '%';
+                    if ($detail->discount1_amount > 0) $itemDisc[] = number_format($detail->discount1_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
+                if ($detail->discount2_percent > 0 || $detail->discount2_amount > 0) {
+                    $itemDisc = [];
+                    if ($detail->discount2_percent > 0) $itemDisc[] = number_format($detail->discount2_percent, 0) . '%';
+                    if ($detail->discount2_amount > 0) $itemDisc[] = number_format($detail->discount2_amount, 0);
+                    $discounts[] = implode(' ', $itemDisc);
+                }
                 $discountInfo = implode('+', $discounts);
             }
         }
