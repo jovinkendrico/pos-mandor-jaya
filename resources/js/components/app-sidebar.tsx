@@ -102,6 +102,11 @@ const mainNavItems: NavItem[] = [
                 href: stockAdjustmentIndex(),
                 permissions: ['stock-adjustments.index'],
             },
+            {
+                title: 'Anggota',
+                href: '/members',
+                permissions: ['members.index'],
+            },
         ],
     },
     {
@@ -128,6 +133,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Retur Jual',
                 href: saleReturnIndex(),
                 permissions: ['sale-returns.index'],
+            },
+            {
+                title: 'Pinjaman Anggota',
+                href: '/member-loans',
+                permissions: ['member-loans.index'],
             },
         ],
     },
@@ -164,6 +174,11 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Transfer Dana',
                 href: '/transfers',
+            },
+            {
+                title: 'Pembayaran Pinjaman Anggota',
+                href: '/member-loan-payments',
+                permissions: ['member-loan-payments.index'],
             },
         ],
     },

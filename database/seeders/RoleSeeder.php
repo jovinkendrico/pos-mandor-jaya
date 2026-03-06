@@ -139,6 +139,27 @@ class RoleSeeder extends Seeder
             ['name' => 'chart-of-accounts.create', 'group' => 'master'],
             ['name' => 'chart-of-accounts.edit', 'group' => 'master'],
 
+            // Members
+            ['name' => 'members.index', 'group' => 'master'],
+            ['name' => 'members.show', 'group' => 'master'],
+            ['name' => 'members.create', 'group' => 'master'],
+            ['name' => 'members.edit', 'group' => 'master'],
+            ['name' => 'members.delete', 'group' => 'master'],
+
+            // Member Loans
+            ['name' => 'member-loans.index', 'group' => 'finance'],
+            ['name' => 'member-loans.show', 'group' => 'finance'],
+            ['name' => 'member-loans.create', 'group' => 'finance'],
+            ['name' => 'member-loans.edit', 'group' => 'finance'],
+            ['name' => 'member-loans.delete', 'group' => 'finance'],
+
+            // Member Loan Payments
+            ['name' => 'member-loan-payments.index', 'group' => 'finance'],
+            ['name' => 'member-loan-payments.show', 'group' => 'finance'],
+            ['name' => 'member-loan-payments.create', 'group' => 'finance'],
+            ['name' => 'member-loan-payments.edit', 'group' => 'finance'],
+            ['name' => 'member-loan-payments.delete', 'group' => 'finance'],
+
             // Reports & Finance Views
             ['name' => 'reports.view', 'group' => 'reports'],
             ['name' => 'reports.binder', 'group' => 'reports'],
@@ -199,6 +220,9 @@ class RoleSeeder extends Seeder
             'banks.index', 'banks.show',
             'uoms.index', 'uoms.show',
             'chart-of-accounts.index', 'chart-of-accounts.show',
+            'members.index', 'members.show',
+            'member-loans.index', 'member-loans.show',
+            'member-loan-payments.index', 'member-loan-payments.show',
             'reports.view',
             'finance.view',
         ];
@@ -233,6 +257,9 @@ class RoleSeeder extends Seeder
             'banks.index', 'banks.show', 'banks.create', 'banks.edit',
             'uoms.index', 'uoms.show',
             'chart-of-accounts.index', 'chart-of-accounts.show',
+            'members.index', 'members.show', 'members.create', 'members.edit',
+            'member-loans.index', 'member-loans.show', 'member-loans.create', 'member-loans.edit',
+            'member-loan-payments.index', 'member-loan-payments.show', 'member-loan-payments.create', 'member-loan-payments.edit',
         ]);
 
         // Assign Roles to Users
