@@ -384,7 +384,7 @@ class PurchasePaymentController extends Controller
      */
     public function confirm(PurchasePayment $purchasePayment): RedirectResponse
     {
-        return DB::transaction(function () use ($purchasePayment) {
+        $result = DB::transaction(function () use ($purchasePayment) {
             $purchasePayment = PurchasePayment::lockForUpdate()->find($purchasePayment->id);
 
             if ($purchasePayment->status === 'confirmed') {
@@ -470,7 +470,14 @@ class PurchasePaymentController extends Controller
                     }
                 }
             }
+
+            return null; // Normal success path
         });
+
+        // If the transaction returned a redirect (e.g., already confirmed), return it
+        if ($result instanceof \Illuminate\Http\RedirectResponse) {
+            return $result;
+        }
 
         return redirect()->route('purchase-payments.show', $purchasePayment)
             ->with('success', 'Pembayaran berhasil dikonfirmasi.');
