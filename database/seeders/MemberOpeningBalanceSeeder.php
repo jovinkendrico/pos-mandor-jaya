@@ -18,7 +18,7 @@ class MemberOpeningBalanceSeeder extends Seeder
      */
     public function run(): void
     {
-        $openingDate = '2026-01-01'; // Tanggal saldo awal
+        $openingDate = '2026-03-01'; // Tanggal saldo awal
         $adminId     = 1;           // ID user admin/system
 
         $members = [
@@ -92,8 +92,6 @@ class MemberOpeningBalanceSeeder extends Seeder
                     'reference_type' => 'MemberLoan',
                     'reference_id'   => $loan->id,
                     'status'         => 'posted',
-                    'created_by'     => $adminId,
-                    'updated_by'     => $adminId,
                 ]);
 
                 // Debit: Piutang Karyawan

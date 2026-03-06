@@ -251,8 +251,6 @@ class MemberLoanController extends Controller
                     'reference_type' => 'MemberLoan',
                     'reference_id'   => $memberLoan->id,
                     'status'         => 'posted',
-                    'created_by'     => auth()->id(),
-                    'updated_by'     => auth()->id(),
                 ]);
 
                 JournalEntryDetail::create([
@@ -300,8 +298,6 @@ class MemberLoanController extends Controller
                     'reference_type' => 'MemberLoan',
                     'reference_id'   => $memberLoan->id,
                     'status'         => 'posted',
-                    'created_by'     => auth()->id(),
-                    'updated_by'     => auth()->id(),
                 ]);
 
                 JournalEntryDetail::create([
