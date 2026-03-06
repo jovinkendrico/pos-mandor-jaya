@@ -51,6 +51,9 @@ use App\Http\Controllers\ImportItemController;
 use App\Http\Controllers\ImportCustomerController;
 use App\Http\Controllers\ImportSupplierController;
 use App\Http\Controllers\TransferController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\MemberLoanController;
+use App\Http\Controllers\MemberLoanPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -656,6 +659,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'transfers'          => TransferController::class,
         'journal-entries'   => JournalEntryController::class,
         'activity-logs'     => \App\Http\Controllers\ActivityLogController::class,
+    ]);
+
+    // Member Loan routes
+    Route::post('member-loans/{memberLoan}/confirm', [MemberLoanController::class, 'confirm'])->name('member-loans.confirm');
+    Route::post('member-loans/{memberLoan}/unconfirm', [MemberLoanController::class, 'unconfirm'])->name('member-loans.unconfirm');
+    Route::post('member-loan-payments/{memberLoanPayment}/confirm', [MemberLoanPaymentController::class, 'confirm'])->name('member-loan-payments.confirm');
+    Route::post('member-loan-payments/{memberLoanPayment}/unconfirm', [MemberLoanPaymentController::class, 'unconfirm'])->name('member-loan-payments.unconfirm');
+    Route::resources([
+        'members'              => MemberController::class,
+        'member-loans'         => MemberLoanController::class,
+        'member-loan-payments' => MemberLoanPaymentController::class,
     ]);
 
 });
