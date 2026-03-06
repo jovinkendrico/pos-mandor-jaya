@@ -28,7 +28,7 @@ class MemberLoan extends Model
     ];
 
     protected $casts = [
-        'loan_date'          => 'date',
+        'loan_date'          => 'date:Y-m-d',
         'amount'             => 'decimal:2',
         'is_opening_balance' => 'boolean',
     ];
