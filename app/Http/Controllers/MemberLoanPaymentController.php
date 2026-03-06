@@ -175,8 +175,6 @@ class MemberLoanPaymentController extends Controller
                     'reference_type' => 'MemberLoanPayment',
                     'reference_id'   => $memberLoanPayment->id,
                     'status'         => 'posted',
-                    'created_by'     => auth()->id(),
-                    'updated_by'     => auth()->id(),
                 ]);
 
                 JournalEntryDetail::create([
