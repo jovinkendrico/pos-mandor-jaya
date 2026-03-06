@@ -42,7 +42,7 @@ class MemberOpeningBalanceSeeder extends Seeder
 
         // Get COA accounts
         $piutangAccount   = ChartOfAccount::where('code', '1202')->where('is_active', true)->first();
-        $retainedEarnings = ChartOfAccount::where('code', '3103')->where('is_active', true)->first();
+        $retainedEarnings = ChartOfAccount::where('code', '3101')->where('is_active', true)->first();
 
         if (!$piutangAccount) {
             $this->command->error('Akun Piutang Karyawan (1202) tidak ditemukan!');
