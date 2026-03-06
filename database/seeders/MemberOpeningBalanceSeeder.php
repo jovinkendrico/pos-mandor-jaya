@@ -22,22 +22,15 @@ class MemberOpeningBalanceSeeder extends Seeder
         $adminId     = 1;           // ID user admin/system
 
         $members = [
-            ['name' => 'Adiansyah',    'amount' => 1000000],
-            ['name' => 'Adi Juragan',   'amount' => 2500000],
-            ['name' => 'Adi.K',         'amount' => 300000],
-            ['name' => 'Dandi Op Beko', 'amount' => 1000000],
-            ['name' => 'Eko Wanto',     'amount' => 1000000],
-            ['name' => 'Ijol',          'amount' => 1000000],
-            ['name' => 'Rudi',          'amount' => 1000000],
-            ['name' => 'Supran',        'amount' => 2000000],
-            ['name' => 'Kevin',         'amount' => 200000],
-            ['name' => 'Irpan',         'amount' => 200000],
-            ['name' => 'BG Doli',       'amount' => 3000000],
-            ['name' => 'Herman',        'amount' => 1500000],
-            ['name' => 'Ibrahim',       'amount' => 1000000],
-            ['name' => 'Marsudy',       'amount' => 2500000],
-            ['name' => 'Pasaribu',      'amount' => 1000000],
-            ['name' => 'Dinni',         'amount' => 2000000],
+            ['name' => 'Silpa',    'amount' => 500000],
+            ['name' => 'Dika',   'amount' => 2000000],
+            ['name' => 'Legiman',         'amount' => 500000],
+            ['name' => 'Toni', 'amount' => 1300000],
+            ['name' => 'Irfan',     'amount' => 1000000],
+            ['name' => 'Asmadi',          'amount' => 1200000],
+            ['name' => 'Jailani',          'amount' => 1000000],
+            ['name' => 'Nuriani',        'amount' => 250000],
+            ['name' => 'Bambang',         'amount' => 900000],
         ];
 
         // Get COA accounts
