@@ -111,6 +111,26 @@ class Sale extends Model
     }
 
     /**
+     * Get formatted item description for remarks
+     * Format: [Item Name] [Qty] [Uom] x Rp.[Price]
+     */
+    public function getFormattedItemDescriptionAttribute(): string
+    {
+        $firstDetail = $this->details()->with(['item', 'itemUom.uom'])->first();
+        
+        if (!$firstDetail) {
+            return "";
+        }
+
+        $itemName = $firstDetail->item->name ?? 'Item';
+        $qty      = number_format($firstDetail->quantity, 0, ',', '.');
+        $uomName  = $firstDetail->itemUom->uom->name ?? '';
+        $price    = number_format($firstDetail->price, 0, ',', '.');
+
+        return "{$itemName} {$qty} {$uomName} x Rp.{$price}";
+    }
+
+    /**
      * Check if sale is fully paid
      */
     public function isFullyPaid(): bool

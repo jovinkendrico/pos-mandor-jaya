@@ -422,6 +422,16 @@ class SalePaymentController extends Controller
                         try {
                             $cashInNumber = CashIn::generateCashInNumber();
 
+                            // Generate more descriptive description
+                            $cashInDescription = "Pembayaran Penjualan #{$salePayment->payment_number}";
+                            $paymentItems = $salePayment->items()->with(['sale'])->get();
+                            if ($paymentItems->count() === 1) {
+                                $sale = $paymentItems->first()->sale;
+                                if ($sale && !empty($sale->formatted_item_description)) {
+                                    $cashInDescription = "Terima Penjualan " . $sale->formatted_item_description;
+                                }
+                            }
+
                             // CashIn records the full payment amount to bank
                             $cashIn = CashIn::create([
                                 'cash_in_number' => $cashInNumber,
@@ -429,7 +439,7 @@ class SalePaymentController extends Controller
                                 'bank_id' => $salePayment->bank_id,
                                 'chart_of_account_id' => $receivableAccount->id,
                                 'amount' => $salePayment->total_amount, // Full amount including overpayment
-                                'description' => "Pembayaran Penjualan #{$salePayment->payment_number}",
+                                'description' => $cashInDescription,
                                 'status' => 'posted',
                                 'reference_type' => 'SalePayment',
                                 'reference_id' => $salePayment->id,

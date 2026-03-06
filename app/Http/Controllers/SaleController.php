@@ -320,6 +320,11 @@ class SaleController extends Controller
             foreach ($detailsData as $detailData) {
                 $sale->details()->create($detailData);
             }
+
+            // If notes is empty, use formatted item description
+            if (empty($sale->notes)) {
+                $sale->update(['notes' => $sale->formatted_item_description]);
+            }
         });
 
         return redirect()->route('sales.index')
@@ -510,6 +515,11 @@ class SaleController extends Controller
             // Create new details
             foreach ($detailsData as $detailData) {
                 $sale->details()->create($detailData);
+            }
+
+            // If notes is empty, use formatted item description
+            if (empty($sale->notes)) {
+                $sale->update(['notes' => $sale->formatted_item_description]);
             }
         });
 
