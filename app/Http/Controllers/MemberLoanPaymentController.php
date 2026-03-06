@@ -18,6 +18,47 @@ use Illuminate\Support\Facades\DB;
 class MemberLoanPaymentController extends Controller
 {
     /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
+    {
+        $query = MemberLoanPayment::with(['loan.member', 'bank', 'creator']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('payment_number', 'like', "%{$search}%")
+                  ->orWhereHas('loan.member', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('payment_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('payment_date', '<=', $request->date_to);
+        }
+
+        $query->orderByRaw('CAST(SUBSTRING(payment_number, 3) AS UNSIGNED) DESC');
+
+        $payments = $query->paginate(15)->withQueryString();
+
+        return Inertia::render('transaction/member-loan-payment/index', [
+            'payments' => $payments,
+            'filters'  => [
+                'search'    => $request->get('search', ''),
+                'status'    => $request->get('status', 'all'),
+                'date_from' => $request->get('date_from', ''),
+                'date_to'   => $request->get('date_to', ''),
+            ],
+        ]);
+    }
+
+    /**
      * Show form to create a payment for a loan
      */
     public function create(Request $request): Response
