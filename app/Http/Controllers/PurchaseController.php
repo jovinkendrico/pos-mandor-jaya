@@ -520,15 +520,19 @@ class PurchaseController extends Controller
     {
         $this->authorize('update', $purchase);
 
-        if ($purchase->status === 'confirmed') {
+        return DB::transaction(function () use ($purchase) {
+            $purchase = Purchase::lockForUpdate()->findOrFail($purchase->id);
+
+            if ($purchase->status === 'confirmed') {
+                return redirect()->route('purchases.show', $purchase)
+                    ->with('error', 'Pembelian sudah dikonfirmasi.');
+            }
+
+            $this->stockService->confirmPurchase($purchase);
+
             return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Pembelian sudah dikonfirmasi.');
-        }
-
-        $this->stockService->confirmPurchase($purchase);
-
-        return redirect()->route('purchases.show', $purchase)
-            ->with('success', 'Pembelian berhasil dikonfirmasi. Stock sudah masuk.');
+                ->with('success', 'Pembelian berhasil dikonfirmasi. Stock sudah masuk.');
+        });
     }
 
     /**

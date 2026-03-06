@@ -389,25 +389,29 @@ class SaleReturnController extends Controller
      */
     public function confirm(SaleReturn $saleReturn): RedirectResponse
     {
-        if ($saleReturn->status === 'confirmed') {
-            return redirect()->route('sale-returns.show', $saleReturn)
-                ->with('error', 'Retur penjualan sudah dikonfirmasi.');
-        }
+        return DB::transaction(function () use ($saleReturn) {
+            $saleReturn = SaleReturn::lockForUpdate()->findOrFail($saleReturn->id);
 
-        try {
-            $this->stockService->confirmSaleReturn($saleReturn);
+            if ($saleReturn->status === 'confirmed') {
+                return redirect()->route('sale-returns.show', $saleReturn)
+                    ->with('error', 'Retur penjualan sudah dikonfirmasi.');
+            }
 
-            return redirect()->route('sale-returns.show', $saleReturn)
-                ->with('success', 'Retur penjualan dikonfirmasi. Stock telah dikembalikan.');
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Sale Return Confirmation Error', [
-                'sale_return_id' => $saleReturn->id,
-                'error' => $e->getMessage()
-            ]);
+            try {
+                $this->stockService->confirmSaleReturn($saleReturn);
 
-            return redirect()->route('sale-returns.show', $saleReturn)
-                ->with('error', 'Gagal Konfirmasi: ' . $e->getMessage());
-        }
+                return redirect()->route('sale-returns.show', $saleReturn)
+                    ->with('success', 'Retur penjualan dikonfirmasi. Stock telah dikembalikan.');
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Sale Return Confirmation Error', [
+                    'sale_return_id' => $saleReturn->id,
+                    'error' => $e->getMessage()
+                ]);
+
+                return redirect()->route('sale-returns.show', $saleReturn)
+                    ->with('error', 'Gagal Konfirmasi: ' . $e->getMessage());
+            }
+        });
     }
 
     /**

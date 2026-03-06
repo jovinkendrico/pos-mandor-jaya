@@ -384,12 +384,14 @@ class PurchasePaymentController extends Controller
      */
     public function confirm(PurchasePayment $purchasePayment): RedirectResponse
     {
-        if ($purchasePayment->status === 'confirmed') {
-            return redirect()->route('purchase-payments.show', $purchasePayment)
-                ->with('error', 'Pembayaran sudah dikonfirmasi.');
-        }
+        return DB::transaction(function () use ($purchasePayment) {
+            $purchasePayment = PurchasePayment::lockForUpdate()->find($purchasePayment->id);
 
-        DB::transaction(function () use ($purchasePayment) {
+            if ($purchasePayment->status === 'confirmed') {
+                return redirect()->route('purchase-payments.show', $purchasePayment)
+                    ->with('error', 'Pembayaran sudah dikonfirmasi.');
+            }
+
             // Calculate overpayment before confirming
             $overpaymentAmount = $purchasePayment->calculateOverpayment();
             

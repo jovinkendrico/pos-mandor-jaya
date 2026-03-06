@@ -383,25 +383,29 @@ class PurchaseReturnController extends Controller
      */
     public function confirm(PurchaseReturn $purchaseReturn): RedirectResponse
     {
-        if ($purchaseReturn->status === 'confirmed') {
-            return redirect()->route('purchase-returns.show', $purchaseReturn)
-                ->with('error', 'Retur pembelian sudah dikonfirmasi.');
-        }
+        return DB::transaction(function () use ($purchaseReturn) {
+            $purchaseReturn = PurchaseReturn::lockForUpdate()->findOrFail($purchaseReturn->id);
 
-        try {
-            $this->stockService->confirmPurchaseReturn($purchaseReturn);
+            if ($purchaseReturn->status === 'confirmed') {
+                return redirect()->route('purchase-returns.show', $purchaseReturn)
+                    ->with('error', 'Retur pembelian sudah dikonfirmasi.');
+            }
 
-            return redirect()->route('purchase-returns.show', $purchaseReturn)
-                ->with('success', 'Retur pembelian dikonfirmasi. Stock telah dikurangi.');
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Purchase Return Confirmation Error', [
-                'purchase_return_id' => $purchaseReturn->id,
-                'error' => $e->getMessage()
-            ]);
+            try {
+                $this->stockService->confirmPurchaseReturn($purchaseReturn);
 
-            return redirect()->route('purchase-returns.show', $purchaseReturn)
-                ->with('error', 'Gagal Konfirmasi: ' . $e->getMessage());
-        }
+                return redirect()->route('purchase-returns.show', $purchaseReturn)
+                    ->with('success', 'Retur pembelian dikonfirmasi. Stock telah dikurangi.');
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Purchase Return Confirmation Error', [
+                    'purchase_return_id' => $purchaseReturn->id,
+                    'error' => $e->getMessage()
+                ]);
+
+                return redirect()->route('purchase-returns.show', $purchaseReturn)
+                    ->with('error', 'Gagal Konfirmasi: ' . $e->getMessage());
+            }
+        });
     }
 
     /**

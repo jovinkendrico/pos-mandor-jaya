@@ -383,12 +383,14 @@ class SalePaymentController extends Controller
      */
     public function confirm(SalePayment $salePayment): RedirectResponse
     {
-        if ($salePayment->status === 'confirmed') {
-            return redirect()->route('sale-payments.show', $salePayment)
-                ->with('error', 'Pembayaran sudah dikonfirmasi.');
-        }
+        return DB::transaction(function () use ($salePayment) {
+            $salePayment = SalePayment::lockForUpdate()->find($salePayment->id);
 
-        DB::transaction(function () use ($salePayment) {
+            if ($salePayment->status === 'confirmed') {
+                return redirect()->route('sale-payments.show', $salePayment)
+                    ->with('error', 'Pembayaran sudah dikonfirmasi.');
+            }
+
             // Calculate overpayment before confirming
             $overpaymentAmount = $salePayment->calculateOverpayment();
             
