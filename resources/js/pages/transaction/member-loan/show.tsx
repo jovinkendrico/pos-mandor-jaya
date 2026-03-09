@@ -100,6 +100,11 @@ export default function MemberLoanShow({ loan, banks }: { loan: Loan; banks: { i
         router.delete(`/member-loan-payments/${payment.id}`);
     };
 
+    const handleWriteOff = () => {
+        if (!confirm('Write-off selisih pembulatan ini? Sisa akan dianggap lunas.')) return;
+        router.post(`/member-loans/${loan.id}/write-off`);
+    };
+
     const progress = pct(loan.total_paid, loan.amount);
 
     return (
@@ -179,6 +184,12 @@ export default function MemberLoanShow({ loan, banks }: { loan: Loan; banks: { i
                                 />
                             </div>
                         </div>
+
+                        {loan.status === 'confirmed' && loan.remaining_amount > 0 && loan.remaining_amount < 10000 && (
+                            <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-8 border-dashed border-red-300 text-red-600 hover:bg-red-50" onClick={handleWriteOff}>
+                                Write Off Selisih Pembulatan
+                            </Button>
+                        )}
                     </CardContent>
                 </Card>
             </div>

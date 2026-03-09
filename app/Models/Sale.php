@@ -107,7 +107,7 @@ class Sale extends Model
      */
     public function getRemainingAmountAttribute(): float
     {
-        return max(0, $this->total_amount - $this->total_paid);
+        return round(max(0, (float) $this->total_amount - $this->total_paid), 2);
     }
 
     /**

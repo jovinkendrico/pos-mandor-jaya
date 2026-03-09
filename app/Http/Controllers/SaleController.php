@@ -706,14 +706,16 @@ class SaleController extends Controller
         $sale->append(['total_paid', 'remaining_amount']);
 
         // Validate remaining amount
-        if ($sale->remaining_amount <= 0) {
+        $remainingAmount = round($sale->remaining_amount, 2);
+
+        if ($remainingAmount <= 0) {
             return redirect()->route('sales.show', $sale)
                 ->with('error', 'Penjualan sudah lunas.');
         }
 
-        if ($sale->remaining_amount >= 100000) {
+        if ($remainingAmount >= 100000) {
             return redirect()->route('sales.show', $sale)
-                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 100.000). Sisa: Rp ' . number_format($sale->remaining_amount, 0, ',', '.'));
+                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 100.000). Sisa: Rp ' . number_format($remainingAmount, 0, ',', '.'));
         }
 
         // Get write-off account (4999 - Selisih Pembulatan Penjualan)
@@ -736,9 +738,9 @@ class SaleController extends Controller
                 ->with('error', 'Akun Piutang Usaha (1103) tidak ditemukan. Silakan hubungi administrator.');
         }
 
-        DB::transaction(function () use ($sale, $writeOffAccount, $piutangAccount) {
+        DB::transaction(function () use ($sale, $writeOffAccount, $piutangAccount, $remainingAmount) {
             // Store remaining amount before creating payment (it will become 0 after payment)
-            $writeOffAmount = $sale->remaining_amount;
+            $writeOffAmount = $remainingAmount;
 
             // Create sale payment for remaining amount
             $payment = \App\Models\SalePayment::create([

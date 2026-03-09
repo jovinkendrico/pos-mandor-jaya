@@ -379,4 +379,93 @@ class MemberLoanController extends Controller
         return redirect()->route('member-loans.show', $memberLoan)
             ->with('success', 'Konfirmasi pinjaman dibatalkan.');
     }
+
+    /**
+     * Write off small remaining amount (< 10000) as rounding difference
+     */
+    public function writeOff(\App\Models\MemberLoan $memberLoan): \Illuminate\Http\RedirectResponse
+    {
+        // Load computed attributes
+        $memberLoan->append(['total_paid', 'remaining_amount']);
+
+        // Validate remaining amount
+        if ($memberLoan->remaining_amount <= 0) {
+            return redirect()->route('member-loans.show', $memberLoan)
+                ->with('error', 'Pinjaman sudah lunas.');
+        }
+
+        if ($memberLoan->remaining_amount >= 10000) {
+            return redirect()->route('member-loans.show', $memberLoan)
+                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 10.000). Sisa: Rp ' . number_format($memberLoan->remaining_amount, 0, ',', '.'));
+        }
+
+        // Get write-off account (6999 - Selisih Pembulatan)
+        $writeOffAccount = \App\Models\ChartOfAccount::where('code', '6999')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$writeOffAccount) {
+            return redirect()->route('member-loans.show', $memberLoan)
+                ->with('error', 'Akun Selisih Pembulatan (6999) tidak ditemukan.');
+        }
+
+        // Get Piutang Karyawan account (1202)
+        $piutangAccount = \App\Models\ChartOfAccount::where('code', '1202')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$piutangAccount) {
+            return redirect()->route('member-loans.show', $memberLoan)
+                ->with('error', 'Akun Piutang Karyawan (1202) tidak ditemukan.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($memberLoan, $writeOffAccount, $piutangAccount) {
+            $writeOffAmount = $memberLoan->remaining_amount;
+
+            // Create MemberLoanPayment
+            $payment = \App\Models\MemberLoanPayment::create([
+                'payment_number' => \App\Models\MemberLoanPayment::generatePaymentNumber(),
+                'member_loan_id' => $memberLoan->id,
+                'member_id'      => $memberLoan->member_id,
+                'payment_date'   => now(),
+                'amount'         => $writeOffAmount,
+                'bank_id'        => null, // No bank movement for write-off
+                'notes'          => 'Write-off selisih pembulatan',
+                'status'         => 'confirmed', // Auto-confirm
+                'created_by'     => auth()->id(),
+                'updated_by'     => auth()->id(),
+            ]);
+
+            // Create Journal Entry
+            $journal = \App\Models\JournalEntry::create([
+                'journal_number' => \App\Models\JournalEntry::generateJournalNumber(),
+                'journal_date'   => now(),
+                'description'    => "Write-off Pinjaman - {$memberLoan->member->name} #{$memberLoan->loan_number}",
+                'reference_type' => 'MemberLoanPayment',
+                'reference_id'   => $payment->id,
+                'status'         => 'posted',
+            ]);
+
+            // Debit: Selisih Pembulatan (Expense)
+            \App\Models\JournalEntryDetail::create([
+                'journal_entry_id'    => $journal->id,
+                'chart_of_account_id' => $writeOffAccount->id,
+                'debit'               => $writeOffAmount,
+                'credit'              => 0,
+                'description'         => "Write-off piutang {$memberLoan->member->name}",
+            ]);
+
+            // Credit: Piutang Karyawan (Asset decrease)
+            \App\Models\JournalEntryDetail::create([
+                'journal_entry_id'    => $journal->id,
+                'chart_of_account_id' => $piutangAccount->id,
+                'debit'               => 0,
+                'credit'              => $writeOffAmount,
+                'description'         => "Write-off piutang {$memberLoan->member->name}",
+            ]);
+        });
+
+        return redirect()->route('member-loans.show', $memberLoan)
+            ->with('success', 'Selisih pembulatan berhasil di-write-off.');
+    }
 }

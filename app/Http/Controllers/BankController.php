@@ -234,8 +234,8 @@ class BankController extends Controller
             // Sort ASC to calculate forward, then reverse for display
             $draftsForCalculation = $draftTransactions->sortBy('sort_key');
             foreach ($draftsForCalculation as $draft) {
-                $balanceBefore = $balanceTracker;
-                $balanceAfter = $balanceTracker + $draft['debit'] - $draft['credit'];
+                $balanceBefore = round($balanceTracker, 2);
+                $balanceAfter = round($balanceTracker + $draft['debit'] - $draft['credit'], 2);
                 
                 $draft['balance_before'] = $balanceBefore;
                 $draft['balance_after'] = $balanceAfter;
@@ -249,8 +249,9 @@ class BankController extends Controller
         }
 
         // Get transactions with pagination
-        // Sort by ID DESC as requested (Latest created first)
+        // Sort by Date then ID DESC (Matches service balance calculation)
         $transactions = $query
+            ->orderBy('movement_date', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(50)
             ->withQueryString()
@@ -260,8 +261,7 @@ class BankController extends Controller
                 $debit = (float) $movement->debit;
                 $credit = (float) $movement->credit;
                 
-                $balanceBefore = $balanceAfter - $debit + $credit;
-                if (abs($balanceBefore) < 0.001) $balanceBefore = 0;
+                $balanceBefore = round($balanceAfter - $debit + $credit, 2);
 
                 // Get reference number based on reference type
                 $referenceNumber = '-';

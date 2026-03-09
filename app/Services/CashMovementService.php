@@ -49,7 +49,7 @@ class CashMovementService
                     ? (float) $lastMovementBefore->balance 
                     : (float) ($bank->initial_balance ?? 0);
 
-                $newBalance = $startingBalance + $debit - $credit;
+                $newBalance = round($startingBalance + $debit - $credit, 2);
             }
 
             // Create cash movement record
@@ -174,9 +174,9 @@ class CashMovementService
                 // For opening balance (Bank reference), balance should equal the debit amount
                 // because this represents the initial balance, not an addition
                 if ($movement->reference_type === 'Bank') {
-                    $runningBalance = $movement->debit > 0 ? (float) $movement->debit : (0 - (float) $movement->credit);
+                    $runningBalance = round($movement->debit > 0 ? (float) $movement->debit : (0 - (float) $movement->credit), 2);
                 } else {
-                    $runningBalance = $runningBalance + (float) $movement->debit - (float) $movement->credit;
+                    $runningBalance = round($runningBalance + (float) $movement->debit - (float) $movement->credit, 2);
                 }
                 $movement->update(['balance' => $runningBalance]);
             }

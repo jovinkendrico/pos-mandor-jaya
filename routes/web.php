@@ -664,6 +664,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Member Loan routes
     Route::post('member-loans/{memberLoan}/confirm', [MemberLoanController::class, 'confirm'])->name('member-loans.confirm');
     Route::post('member-loans/{memberLoan}/unconfirm', [MemberLoanController::class, 'unconfirm'])->name('member-loans.unconfirm');
+    Route::post('member-loans/{memberLoan}/write-off', [MemberLoanController::class, 'writeOff'])->name('member-loans.write-off');
     Route::post('member-loan-payments/{memberLoanPayment}/confirm', [MemberLoanPaymentController::class, 'confirm'])->name('member-loan-payments.confirm');
     Route::post('member-loan-payments/{memberLoanPayment}/unconfirm', [MemberLoanPaymentController::class, 'unconfirm'])->name('member-loan-payments.unconfirm');
     Route::resources([

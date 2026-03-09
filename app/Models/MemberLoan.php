@@ -73,7 +73,7 @@ class MemberLoan extends Model
      */
     public function getRemainingAmountAttribute(): float
     {
-        return max(0, (float) $this->amount - $this->total_paid);
+        return round(max(0, (float) $this->amount - $this->total_paid), 2);
     }
 
     /**
