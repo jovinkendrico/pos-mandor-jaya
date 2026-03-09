@@ -154,8 +154,8 @@ const CashMovementPage = (props: PageProps) => {
                 </div>
 
                 <Card className="content mt-4 p-4">
-                    <div className="grid grid-cols-3 gap-4">
-                        <div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex justify-between items-center md:block">
                             <p className="text-sm text-muted-foreground">
                                 Saldo Awal
                             </p>
@@ -163,24 +163,12 @@ const CashMovementPage = (props: PageProps) => {
                                 {formatCurrency(openingBalance)}
                             </p>
                         </div>
-                        <div>
+                        <div className="flex justify-between items-center md:block">
                             <p className="text-sm text-muted-foreground">
                                 Saldo Akhir
                             </p>
                             <p className="text-lg font-semibold">
                                 {formatCurrency(closingBalance)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                Selisih
-                            </p>
-                            <p
-                                className={`text-lg font-semibold ${closingBalance - openingBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}
-                            >
-                                {formatCurrency(
-                                    closingBalance - openingBalance,
-                                )}
                             </p>
                         </div>
                     </div>
@@ -194,7 +182,8 @@ const CashMovementPage = (props: PageProps) => {
                     statusOptions={[]}
                 />
 
-                <Card className="content mt-4">
+                {/* Desktop Table View */}
+                <Card className="content mt-4 hidden md:block">
                     <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
@@ -303,6 +292,67 @@ const CashMovementPage = (props: PageProps) => {
                         </Table>
                     </div>
                 </Card>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden mt-4 space-y-4">
+                    {transactions.data.length === 0 ? (
+                        <Card className="p-8 text-center text-muted-foreground">
+                            Tidak ada data pergerakan kas
+                        </Card>
+                    ) : (
+                        transactions.data.map((transaction) => (
+                            <Card key={`${transaction.type}-${transaction.id}`} className="p-4 space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium">
+                                            {formatDate(new Date(transaction.date))}
+                                        </p>
+                                        <p className="text-xs font-mono text-muted-foreground">
+                                            {transaction.reference_number}
+                                        </p>
+                                    </div>
+                                    <Badge
+                                        variant={getTypeBadgeVariant(transaction.type)}
+                                        className="text-[10px] px-2 py-0 h-5"
+                                    >
+                                        {getTypeLabel(transaction.type)}
+                                    </Badge>
+                                </div>
+
+                                <p className="text-sm">
+                                    {transaction.description}
+                                </p>
+
+                                <div className="grid grid-cols-2 gap-2 pt-2 border-t text-xs">
+                                    <div>
+                                        <p className="text-muted-foreground">Debit</p>
+                                        <p className="font-medium text-green-600">
+                                            {transaction.debit > 0 ? formatCurrency(transaction.debit) : '-'}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-muted-foreground">Kredit</p>
+                                        <p className="font-medium text-red-600">
+                                            {transaction.credit > 0 ? formatCurrency(transaction.credit) : '-'}
+                                        </p>
+                                    </div>
+                                    <div className="mt-1">
+                                        <p className="text-muted-foreground">Sebelum</p>
+                                        <p className="font-medium">
+                                            {formatCurrency(transaction.balance_before)}
+                                        </p>
+                                    </div>
+                                    <div className="text-right mt-1">
+                                        <p className="text-muted-foreground font-semibold">Akhir</p>
+                                        <p className="font-bold text-sm">
+                                            {formatCurrency(transaction.balance_after)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))
+                    )}
+                </div>
 
                 {transactions.data.length !== 0 && (
                     <TablePagination data={transactions} />
