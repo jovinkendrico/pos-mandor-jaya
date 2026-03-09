@@ -153,7 +153,7 @@ const CashMovementPage = (props: PageProps) => {
                     </div>
                 </div>
 
-                <Card className="content mt-4 p-4">
+                {/* <Card className="content mt-4 p-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="flex justify-between items-center md:block">
                             <p className="text-sm text-muted-foreground">
@@ -172,7 +172,7 @@ const CashMovementPage = (props: PageProps) => {
                             </p>
                         </div>
                     </div>
-                </Card>
+                </Card> */}
 
                 <FilterBar
                     filters={{ ...allFilters, search: '' }}
