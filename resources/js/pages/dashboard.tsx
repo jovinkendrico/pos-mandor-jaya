@@ -37,6 +37,7 @@ import {
     AlertTriangle,
     ArrowDownRight,
     ArrowLeftRight,
+    ArrowRight,
     ArrowUpRight,
     BarChart3,
     Box,
@@ -466,7 +467,7 @@ export default function Dashboard({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-7">
+                                <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-8">
                                     <Button
                                         variant="outline"
                                         className="input-box flex h-20 cursor-pointer flex-col items-center justify-center gap-1.5 hover:bg-accent dark:hover:bg-primary-800/10"
@@ -545,6 +546,18 @@ export default function Dashboard({
                                         <ArrowUpRight className="!h-7 !w-7 text-red-500 dark:text-red-400" />
                                         <span className="text-xs lg:text-sm xl:text-base">
                                             Kas Keluar
+                                        </span>
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="input-box flex h-20 cursor-pointer flex-col items-center justify-center gap-1.5 hover:bg-accent dark:hover:bg-primary-800/10"
+                                        onClick={() =>
+                                            router.visit('/banks')
+                                        }
+                                    >
+                                        <Wallet2 className="!h-7 !w-7 text-indigo-600 dark:text-indigo-400" />
+                                        <span className="text-xs lg:text-sm xl:text-base">
+                                            Pergerakan Kas
                                         </span>
                                     </Button>
                                 </div>
@@ -1089,7 +1102,8 @@ export default function Dashboard({
                                             banks.map((bank) => (
                                                 <div
                                                     key={bank.id}
-                                                    className="input-box flex items-center justify-between rounded-md border p-1.5 text-sm hover:bg-muted/50"
+                                                    className="input-box flex cursor-pointer items-center justify-between rounded-md border p-1.5 text-sm hover:bg-muted/50"
+                                                    onClick={() => router.visit(`/banks/${bank.id}/cash-movement`)}
                                                 >
                                                     <div>
                                                         <p className="font-medium">
@@ -1099,9 +1113,12 @@ export default function Dashboard({
                                                             {bank.type}
                                                         </p>
                                                     </div>
-                                                    <p className="font-bold">
-                                                        {formatCurrency(bank.balance)}
-                                                    </p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold">
+                                                            {formatCurrency(bank.balance)}
+                                                        </p>
+                                                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
                                                 </div>
                                             ))
                                         )}
