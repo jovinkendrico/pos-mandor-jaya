@@ -16,7 +16,7 @@ import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { show } from '@/routes/general-ledger';
-import { ChartOfAccount, LedgerData } from '@/types';
+import { ChartOfAccount, LedgerData, Vehicle } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { Info } from 'lucide-react';
@@ -28,7 +28,9 @@ interface PageProps {
     dateFrom: string;
     dateTo: string;
     accountId?: string;
+    vehicleId?: string;
     accounts: ChartOfAccount[];
+    vehicles: Vehicle[];
     ledgerData: LedgerData[];
 }
 
@@ -43,7 +45,9 @@ export default function GeneralLedgerIndex({
     dateFrom,
     dateTo,
     accountId,
+    vehicleId,
     accounts,
+    vehicles,
     ledgerData,
 }: PageProps) {
     const [defaultFilters] = useState({
@@ -51,6 +55,7 @@ export default function GeneralLedgerIndex({
         date_from: dateFrom,
         date_to: dateTo,
         account_id: accountId || '',
+        vehicle_id: vehicleId || '',
         status: 'all',
         sort_by: 'date',
         sort_order: 'desc',
@@ -82,31 +87,59 @@ export default function GeneralLedgerIndex({
                 showDateRange={true}
                 showSort={false}
                 additionalFilters={
-                    <div className="w-[200px]">
-                        <Label htmlFor="account_id">Akun (Opsional)</Label>
-                        <Select
-                            value={allFilters.account_id || 'all'}
-                            onValueChange={(value) =>
-                                handleFilterChange({
-                                    account_id: value === 'all' ? '' : value,
-                                })
-                            }
-                        >
-                            <SelectTrigger className="combobox">
-                                <SelectValue placeholder="Semua Akun" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua Akun</SelectItem>
-                                {accounts.map((account) => (
-                                    <SelectItem
-                                        key={account.id}
-                                        value={account.id.toString()}
-                                    >
-                                        {account.code} - {account.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                    <div className="flex gap-4">
+                        <div className="w-[200px]">
+                            <Label htmlFor="account_id">Akun (Opsional)</Label>
+                            <Select
+                                value={allFilters.account_id || 'all'}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        account_id: value === 'all' ? '' : value,
+                                    })
+                                }
+                            >
+                                <SelectTrigger className="combobox">
+                                    <SelectValue placeholder="Semua Akun" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua Akun</SelectItem>
+                                    {accounts.map((account) => (
+                                        <SelectItem
+                                            key={account.id}
+                                            value={account.id.toString()}
+                                        >
+                                            {account.code} - {account.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="w-[200px]">
+                            <Label htmlFor="vehicle_id">Divisi / Truk</Label>
+                            <Select
+                                value={allFilters.vehicle_id || 'all'}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        vehicle_id: value === 'all' ? '' : value,
+                                    })
+                                }
+                            >
+                                <SelectTrigger className="combobox">
+                                    <SelectValue placeholder="Semua Divisi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua Divisi</SelectItem>
+                                    {vehicles.map((vehicle) => (
+                                        <SelectItem
+                                            key={vehicle.id}
+                                            value={vehicle.id.toString()}
+                                        >
+                                            {vehicle.police_number}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 }
             />
