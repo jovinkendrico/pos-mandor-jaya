@@ -11,10 +11,17 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { index } from '@/routes/general-ledger';
-import { ChartOfAccount, LedgerData } from '@/types';
+import { ChartOfAccount, LedgerData, Vehicle } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { ArrowLeft, Search } from 'lucide-react';
@@ -26,7 +33,9 @@ interface PageProps {
     account: ChartOfAccount;
     dateFrom: string;
     dateTo: string;
+    vehicleId?: string;
     ledgerData: LedgerData;
+    vehicles: Vehicle[];
 }
 
 const breadcrumbs = [
@@ -39,11 +48,14 @@ export default function GeneralLedgerShow({
     account,
     dateFrom,
     dateTo,
+    vehicleId,
     ledgerData,
+    vehicles,
 }: PageProps) {
     const [filters, setFilters] = useState({
         date_from: dateFrom,
         date_to: dateTo,
+        vehicle_id: vehicleId || '',
     });
 
     const handleFilter = () => {
@@ -72,7 +84,7 @@ export default function GeneralLedgerShow({
                     <CardTitle>Filter Periode</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                         <div className="flex flex-col space-y-2">
                             <Label htmlFor="date_from">Dari Tanggal</Label>
                             <DatePicker
@@ -110,6 +122,33 @@ export default function GeneralLedgerShow({
                                 }
                                 className="input-box"
                             />
+                        </div>
+                        <div className="flex flex-col space-y-2">
+                            <Label htmlFor="vehicle_id">Divisi / Truk</Label>
+                            <Select
+                                value={filters.vehicle_id}
+                                onValueChange={(value) =>
+                                    setFilters({
+                                        ...filters,
+                                        vehicle_id: value === 'all' ? '' : value,
+                                    })
+                                }
+                            >
+                                <SelectTrigger className="input-box">
+                                    <SelectValue placeholder="Semua Divisi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua Divisi</SelectItem>
+                                    {vehicles.map((vehicle) => (
+                                        <SelectItem
+                                            key={vehicle.id}
+                                            value={vehicle.id.toString()}
+                                        >
+                                            {vehicle.police_number} {vehicle.name ? `- ${vehicle.name}` : ''}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="flex items-end">
                             <Button
@@ -186,6 +225,9 @@ export default function GeneralLedgerShow({
                                         No. Jurnal
                                     </TableHead>
                                     <TableHead className="text-center">
+                                        Divisi/Truk
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Keterangan
                                     </TableHead>
                                     <TableHead className="text-right">
@@ -203,7 +245,7 @@ export default function GeneralLedgerShow({
                                 {/* Opening Balance Row */}
                                 <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
                                     <TableCell
-                                        colSpan={3}
+                                        colSpan={4}
                                         className="font-medium"
                                     >
                                         Saldo Awal
@@ -236,20 +278,23 @@ export default function GeneralLedgerShow({
                                                     {transaction.journal_number}
                                                 </TableCell>
                                                 <TableCell className="text-center">
+                                                    {transaction.vehicle}
+                                                </TableCell>
+                                                <TableCell className="text-center">
                                                     {transaction.description}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     {transaction.debit > 0
                                                         ? formatCurrency(
-                                                              transaction.debit,
-                                                          )
+                                                            transaction.debit,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     {transaction.credit > 0
                                                         ? formatCurrency(
-                                                              transaction.credit,
-                                                          )
+                                                            transaction.credit,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium">
@@ -263,7 +308,7 @@ export default function GeneralLedgerShow({
                                 ) : (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={6}
+                                            colSpan={7}
                                             className="text-center text-muted-foreground"
                                         >
                                             Tidak ada transaksi pada periode ini
@@ -273,7 +318,7 @@ export default function GeneralLedgerShow({
 
                                 {/* Totals Row */}
                                 <TableRow className="bg-muted/50 font-semibold dark:bg-primary-800/10">
-                                    <TableCell colSpan={3}>Total</TableCell>
+                                    <TableCell colSpan={4}>Total</TableCell>
                                     <TableCell className="text-right">
                                         {formatCurrency(ledgerData.debit_total)}
                                     </TableCell>

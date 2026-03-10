@@ -21,11 +21,15 @@ class GeneralLedgerController extends Controller
         $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', now()->format('Y-m-d'));
         $accountId = $request->get('account_id');
+        $vehicleId = $request->get('vehicle_id');
 
         // Get all active accounts
         $accounts = ChartOfAccount::where('is_active', true)
             ->orderBy('code')
             ->get();
+
+        // Get all vehicles for filter
+        $vehicles = \App\Models\Vehicle::orderBy('police_number')->get();
 
         $ledgerData = [];
 
@@ -33,19 +37,19 @@ class GeneralLedgerController extends Controller
             // Get specific account ledger
             $account = ChartOfAccount::find($accountId);
             if ($account) {
-                $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo);
+                $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId);
             }
         } else {
             // Get all accounts with their balances
             foreach ($accounts as $account) {
-                $balance = $this->getAccountBalance($account->id, $dateFrom, $dateTo);
-                if ($balance != 0 || $this->hasTransactions($account->id, $dateFrom, $dateTo)) {
+                $balance = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'both', $vehicleId);
+                if ($balance != 0 || $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId)) {
                     $ledgerData[] = [
                         'account' => $account,
-                        'opening_balance' => $this->getOpeningBalance($account->id, $dateFrom),
-                        'debit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'debit'),
-                        'credit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit'),
-                        'closing_balance' => $this->getClosingBalance($account->id, $dateFrom, $dateTo),
+                        'opening_balance' => $this->getOpeningBalance($account->id, $dateFrom, $vehicleId),
+                        'debit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'debit', $vehicleId),
+                        'credit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit', $vehicleId),
+                        'closing_balance' => $this->getClosingBalance($account->id, $dateFrom, $dateTo, $vehicleId),
                     ];
                 }
             }
@@ -55,7 +59,9 @@ class GeneralLedgerController extends Controller
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'accountId' => $accountId,
+            'vehicleId' => $vehicleId,
             'accounts' => $accounts,
+            'vehicles' => $vehicles,
             'ledgerData' => $ledgerData,
         ]);
     }
@@ -67,32 +73,41 @@ class GeneralLedgerController extends Controller
     {
         $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+        $vehicleId = $request->get('vehicle_id');
 
-        $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo);
+        $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId);
+        $vehicles = \App\Models\Vehicle::orderBy('police_number')->get();
 
         return Inertia::render('accounting/general-ledger/show', [
             'account' => $account,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
+            'vehicleId' => $vehicleId,
             'ledgerData' => $ledgerData,
+            'vehicles' => $vehicles,
         ]);
     }
 
     /**
      * Get account ledger with transaction details
      */
-    private function getAccountLedger(ChartOfAccount $account, string $dateFrom, string $dateTo): array
+    private function getAccountLedger(ChartOfAccount $account, string $dateFrom, string $dateTo, ?int $vehicleId = null): array
     {
-        $openingBalance = $this->getOpeningBalance($account->id, $dateFrom);
+        $openingBalance = $this->getOpeningBalance($account->id, $dateFrom, $vehicleId);
 
-        $transactions = JournalEntryDetail::with(['journalEntry'])
+        $query = JournalEntryDetail::with(['journalEntry', 'vehicle'])
             ->join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $account->id)
             ->where('journal_entries.status', 'posted')
             ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
-            ->whereDate('journal_entries.journal_date', '<=', $dateTo)
-            ->orderBy('journal_entries.journal_date')
+            ->whereDate('journal_entries.journal_date', '<=', $dateTo);
+
+        if ($vehicleId) {
+            $query->where('journal_entry_details.vehicle_id', $vehicleId);
+        }
+
+        $transactions = $query->orderBy('journal_entries.journal_date')
             ->orderBy('journal_entries.id')
             ->select('journal_entry_details.*', 'journal_entries.journal_number', 'journal_entries.journal_date', 'journal_entries.description as journal_description')
             ->get();
@@ -110,10 +125,21 @@ class GeneralLedgerController extends Controller
                 $runningBalance += $transaction->credit - $transaction->debit;
             }
 
+            // Enhanced description with source and vehicle
+            $description = $transaction->description ?: $transaction->journal_description;
+            
+            // Add source info if available in journal entry
+            if ($transaction->journalEntry->reference_type === 'CashIn') {
+                $description .= ' (Kas Masuk)';
+            } elseif ($transaction->journalEntry->reference_type === 'CashOut') {
+                $description .= ' (Kas Keluar)';
+            }
+
             $transactionDetails[] = [
                 'date' => $transaction->journal_date,
                 'journal_number' => $transaction->journal_number,
-                'description' => $transaction->description ?: $transaction->journal_description,
+                'description' => $description,
+                'vehicle' => $transaction->vehicle ? $transaction->vehicle->police_number : '-',
                 'debit' => $transaction->debit,
                 'credit' => $transaction->credit,
                 'balance' => $runningBalance,
@@ -124,8 +150,8 @@ class GeneralLedgerController extends Controller
             'account' => $account,
             'opening_balance' => $openingBalance,
             'transactions' => $transactionDetails,
-            'debit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'debit'),
-            'credit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit'),
+            'debit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'debit', $vehicleId),
+            'credit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit', $vehicleId),
             'closing_balance' => $runningBalance,
         ];
     }
@@ -133,7 +159,7 @@ class GeneralLedgerController extends Controller
     /**
      * Get opening balance (before dateFrom)
      */
-    private function getOpeningBalance(int $accountId, string $dateFrom): float
+    private function getOpeningBalance(int $accountId, string $dateFrom, ?int $vehicleId = null): float
     {
         $account = ChartOfAccount::find($accountId);
         if (!$account) {
@@ -145,6 +171,10 @@ class GeneralLedgerController extends Controller
             ->where('journal_entries.status', 'posted')
             ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '<', $dateFrom);
+
+        if ($vehicleId) {
+            $query->where('journal_entry_details.vehicle_id', $vehicleId);
+        }
 
         $debit = (float) $query->sum('journal_entry_details.debit') ?? 0;
         $credit = (float) $query->sum('journal_entry_details.credit') ?? 0;
@@ -160,16 +190,16 @@ class GeneralLedgerController extends Controller
     /**
      * Get closing balance
      */
-    private function getClosingBalance(int $accountId, string $dateFrom, string $dateTo): float
+    private function getClosingBalance(int $accountId, string $dateFrom, string $dateTo, ?int $vehicleId = null): float
     {
         $account = ChartOfAccount::find($accountId);
         if (!$account) {
             return 0;
         }
 
-        $openingBalance = $this->getOpeningBalance($accountId, $dateFrom);
-        $debit = $this->getAccountBalance($accountId, $dateFrom, $dateTo, 'debit');
-        $credit = $this->getAccountBalance($accountId, $dateFrom, $dateTo, 'credit');
+        $openingBalance = $this->getOpeningBalance($accountId, $dateFrom, $vehicleId);
+        $debit = $this->getAccountBalance($accountId, $dateFrom, $dateTo, 'debit', $vehicleId);
+        $credit = $this->getAccountBalance($accountId, $dateFrom, $dateTo, 'credit', $vehicleId);
 
         if (in_array($account->type, ['asset', 'expense', 'biaya', 'pengeluaran'])) {
             return $openingBalance + $debit - $credit;
@@ -181,7 +211,7 @@ class GeneralLedgerController extends Controller
     /**
      * Get account balance for a date range
      */
-    private function getAccountBalance(int $accountId, string $dateFrom, string $dateTo, string $type = 'both'): float
+    private function getAccountBalance(int $accountId, string $dateFrom, string $dateTo, string $type = 'both', ?int $vehicleId = null): float
     {
         $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $accountId)
@@ -189,6 +219,10 @@ class GeneralLedgerController extends Controller
             ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo);
+
+        if ($vehicleId) {
+            $query->where('journal_entry_details.vehicle_id', $vehicleId);
+        }
 
         if ($type === 'debit') {
             return (float) $query->sum('journal_entry_details.debit') ?? 0;
@@ -204,14 +238,19 @@ class GeneralLedgerController extends Controller
     /**
      * Check if account has transactions in date range
      */
-    private function hasTransactions(int $accountId, string $dateFrom, string $dateTo): bool
+    private function hasTransactions(int $accountId, string $dateFrom, string $dateTo, ?int $vehicleId = null): bool
     {
-        return JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+        $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $accountId)
             ->where('journal_entries.status', 'posted')
             ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
-            ->whereDate('journal_entries.journal_date', '<=', $dateTo)
-            ->exists();
+            ->whereDate('journal_entries.journal_date', '<=', $dateTo);
+
+        if ($vehicleId) {
+            $query->where('journal_entry_details.vehicle_id', $vehicleId);
+        }
+
+        return $query->exists();
     }
 }

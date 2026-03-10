@@ -1034,6 +1034,7 @@ export interface LedgerTransaction {
     date: string;
     journal_number: string;
     description: string;
+    vehicle: string;
     debit: number;
     credit: number;
     balance: number;
