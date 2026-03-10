@@ -36,6 +36,7 @@ interface Filters {
     max_stock?: string;
     limit?: string;
     min_days?: string;
+    vehicle_id?: string;
 }
 
 const useResourceFilters = (

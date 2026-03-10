@@ -138,7 +138,15 @@ class BankController extends Controller
     public function cashMovement(\Illuminate\Http\Request $request, Bank $bank): Response
     {
         // Query cash movements from the table
-        $query = \App\Models\CashMovement::where('bank_id', $bank->id);
+        // Query cash movements from the table
+        $query = \App\Models\CashMovement::where('bank_id', $bank->id)
+            ->where('description', 'not like', 'Pembalikan:%')
+            ->whereNotExists(function ($sub) {
+                $sub->from('cash_movements as cm2')
+                    ->whereColumn('cm2.reference_type', 'cash_movements.reference_type')
+                    ->whereColumn('cm2.reference_id', 'cash_movements.reference_id')
+                    ->where('cm2.description', 'like', 'Pembalikan:%');
+            });
 
         // Filter by date range if provided
         if ($request->has('date_from') && $request->date_from) {
