@@ -78,12 +78,32 @@ class GeneralLedgerController extends Controller
         $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId);
         $vehicles = \App\Models\Vehicle::orderBy('police_number')->get();
 
+        $groupedLedgerData = [];
+        if (!$vehicleId) {
+            // Get data for each vehicle that has activity or balance
+            foreach ($vehicles as $v) {
+                $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id);
+                if (count($vLedger['transactions']) > 0 || $vLedger['opening_balance'] != 0) {
+                    $vLedger['vehicle'] = $v;
+                    $groupedLedgerData[] = $vLedger;
+                }
+            }
+
+            // Also check for entries with NO vehicle
+            $noVehicleLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1); // -1 for No Vehicle
+            if (count($noVehicleLedger['transactions']) > 0 || $noVehicleLedger['opening_balance'] != 0) {
+                $noVehicleLedger['vehicle'] = ['id' => 0, 'police_number' => 'None'];
+                $groupedLedgerData[] = $noVehicleLedger;
+            }
+        }
+
         return Inertia::render('accounting/general-ledger/show', [
             'account' => $account,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'vehicleId' => $vehicleId,
             'ledgerData' => $ledgerData,
+            'groupedLedgerData' => $groupedLedgerData,
             'vehicles' => $vehicles,
         ]);
     }
@@ -95,7 +115,7 @@ class GeneralLedgerController extends Controller
     {
         $openingBalance = $this->getOpeningBalance($account->id, $dateFrom, $vehicleId);
 
-        $query = JournalEntryDetail::with(['journalEntry', 'vehicle'])
+        $query = JournalEntryDetail::with(['journalEntry.reference', 'vehicle'])
             ->join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $account->id)
             ->where('journal_entries.status', 'posted')
@@ -103,7 +123,9 @@ class GeneralLedgerController extends Controller
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo);
 
-        if ($vehicleId) {
+        if ($vehicleId === -1) {
+            $query->whereNull('journal_entry_details.vehicle_id');
+        } elseif ($vehicleId) {
             $query->where('journal_entry_details.vehicle_id', $vehicleId);
         }
 
@@ -127,6 +149,11 @@ class GeneralLedgerController extends Controller
 
             // Enhanced description with source and vehicle
             $description = $transaction->description ?: $transaction->journal_description;
+
+            // Use source description if available (from CashIn/CashOut)
+            if ($transaction->journalEntry && $transaction->journalEntry->reference && isset($transaction->journalEntry->reference->description)) {
+                $description = $transaction->journalEntry->reference->description;
+            }
             
             // Add source info if available in journal entry
             if ($transaction->journalEntry->reference_type === 'CashIn') {
@@ -167,12 +194,11 @@ class GeneralLedgerController extends Controller
         }
 
         $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
-            ->where('journal_entry_details.chart_of_account_id', $accountId)
-            ->where('journal_entries.status', 'posted')
-            ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '<', $dateFrom);
 
-        if ($vehicleId) {
+        if ($vehicleId === -1) {
+            $query->whereNull('journal_entry_details.vehicle_id');
+        } elseif ($vehicleId) {
             $query->where('journal_entry_details.vehicle_id', $vehicleId);
         }
 
