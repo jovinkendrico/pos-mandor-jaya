@@ -1047,6 +1047,7 @@ export interface LedgerData {
     debit_total: number;
     credit_total: number;
     closing_balance: number;
+    vehicle?: Vehicle | { id: number; police_number: string };
 }
 
 export interface ProfitLossItem {

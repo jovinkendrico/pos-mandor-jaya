@@ -194,6 +194,9 @@ class GeneralLedgerController extends Controller
         }
 
         $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
+            ->where('journal_entry_details.chart_of_account_id', $accountId)
+            ->where('journal_entries.status', 'posted')
+            ->whereNull('journal_entries.deleted_at')
             ->whereDate('journal_entries.journal_date', '<', $dateFrom);
 
         if ($vehicleId === -1) {
@@ -246,7 +249,9 @@ class GeneralLedgerController extends Controller
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo);
 
-        if ($vehicleId) {
+        if ($vehicleId === -1) {
+            $query->whereNull('journal_entry_details.vehicle_id');
+        } elseif ($vehicleId) {
             $query->where('journal_entry_details.vehicle_id', $vehicleId);
         }
 
@@ -273,7 +278,9 @@ class GeneralLedgerController extends Controller
             ->whereDate('journal_entries.journal_date', '>=', $dateFrom)
             ->whereDate('journal_entries.journal_date', '<=', $dateTo);
 
-        if ($vehicleId) {
+        if ($vehicleId === -1) {
+            $query->whereNull('journal_entry_details.vehicle_id');
+        } elseif ($vehicleId) {
             $query->where('journal_entry_details.vehicle_id', $vehicleId);
         }
 

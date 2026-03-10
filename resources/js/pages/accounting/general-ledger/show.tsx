@@ -35,6 +35,7 @@ interface PageProps {
     dateTo: string;
     vehicleId?: string;
     ledgerData: LedgerData;
+    groupedLedgerData?: LedgerData[];
     vehicles: Vehicle[];
 }
 
@@ -50,6 +51,7 @@ export default function GeneralLedgerShow({
     dateTo,
     vehicleId,
     ledgerData,
+    groupedLedgerData = [],
     vehicles,
 }: PageProps) {
     const [filters, setFilters] = useState({
@@ -205,74 +207,122 @@ export default function GeneralLedgerShow({
                 </CardContent>
             </Card>
 
-            <Card className="content">
-                <CardHeader>
-                    <CardTitle>Transaksi</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                        Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} -{' '}
-                        {format(new Date(dateTo), 'dd MMM yyyy')}
-                    </p>
-                </CardHeader>
-                <CardContent>
-                    <div className="input-box overflow-x-auto rounded-lg">
-                        <Table className="content">
-                            <TableHeader>
-                                <TableRow className="dark:border-b-2 dark:border-white/25">
-                                    <TableHead className="text-center">
-                                        Tanggal
-                                    </TableHead>
-                                    <TableHead className="text-center">
-                                        No. Jurnal
-                                    </TableHead>
-                                    <TableHead className="text-center">
-                                        Divisi/Truk
-                                    </TableHead>
-                                    <TableHead className="text-center">
-                                        Keterangan
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Debit
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Kredit
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Saldo
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {/* Opening Balance Row */}
-                                <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
-                                    <TableCell
-                                        colSpan={4}
-                                        className="font-medium"
-                                    >
-                                        Saldo Awal
-                                    </TableCell>
-                                    <TableCell colSpan={2}></TableCell>
-                                    <TableCell className="text-right font-medium">
-                                        {formatCurrency(
-                                            ledgerData.opening_balance,
-                                        )}
-                                    </TableCell>
-                                </TableRow>
+            {groupedLedgerData.length > 0 ? (
+                groupedLedgerData.map((data, gIndex) => (
+                    <Card key={gIndex} className="content mt-4">
+                        <CardHeader>
+                            <CardTitle>
+                                {data.vehicle
+                                    ? `Divisi: ${data.vehicle.police_number}`
+                                    : 'Tanpa Divisi'}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="input-box overflow-x-auto rounded-lg">
+                                <Table className="content">
+                                    <TableHeader>
+                                        <TableRow className="dark:border-b-2 dark:border-white/25">
+                                            <TableHead className="text-center">Tanggal</TableHead>
+                                            <TableHead className="text-center">No. Jurnal</TableHead>
+                                            <TableHead className="text-center">Divisi/Truk</TableHead>
+                                            <TableHead className="text-center">Keterangan</TableHead>
+                                            <TableHead className="text-right">Debit</TableHead>
+                                            <TableHead className="text-right">Kredit</TableHead>
+                                            <TableHead className="text-right">Saldo</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                            <TableCell colSpan={4} className="font-medium">Saldo Awal</TableCell>
+                                            <TableCell colSpan={2}></TableCell>
+                                            <TableCell className="text-right font-medium">
+                                                {formatCurrency(data.opening_balance)}
+                                            </TableCell>
+                                        </TableRow>
 
-                                {/* Transactions */}
-                                {(ledgerData.transactions || []).length > 0 ? (
-                                    (ledgerData.transactions || []).map(
-                                        (transaction, index) => (
-                                            <TableRow
-                                                key={index}
-                                                className="dark:border-b-2 dark:border-white/25"
-                                            >
+                                        {(data.transactions || []).length > 0 ? (
+                                            (data.transactions || []).map((transaction, tIndex) => (
+                                                <TableRow key={tIndex} className="dark:border-b-2 dark:border-white/25">
+                                                    <TableCell className="text-center">
+                                                        {format(new Date(transaction.date), 'dd MMM yyyy')}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.journal_number}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.vehicle}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {transaction.description}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {transaction.debit > 0 ? formatCurrency(transaction.debit) : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {transaction.credit > 0 ? formatCurrency(transaction.credit) : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-medium">
+                                                        {formatCurrency(transaction.balance)}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                                                    Tidak ada transaksi pada periode ini
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+
+                                        <TableRow className="bg-muted/50 font-semibold dark:bg-primary-800/10">
+                                            <TableCell colSpan={4}>Total</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(data.debit_total)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(data.credit_total)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(data.closing_balance)}</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))
+            ) : (
+                <Card className="content mt-4">
+                    <CardHeader>
+                        <CardTitle>Transaksi</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Periode: {format(new Date(dateFrom), 'dd MMM yyyy')} -{' '}
+                            {format(new Date(dateTo), 'dd MMM yyyy')}
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="input-box overflow-x-auto rounded-lg">
+                            <Table className="content">
+                                <TableHeader>
+                                    <TableRow className="dark:border-b-2 dark:border-white/25">
+                                        <TableHead className="text-center">Tanggal</TableHead>
+                                        <TableHead className="text-center">No. Jurnal</TableHead>
+                                        <TableHead className="text-center">Divisi/Truk</TableHead>
+                                        <TableHead className="text-center">Keterangan</TableHead>
+                                        <TableHead className="text-right">Debit</TableHead>
+                                        <TableHead className="text-right">Kredit</TableHead>
+                                        <TableHead className="text-right">Saldo</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                        <TableCell colSpan={4} className="font-medium">Saldo Awal</TableCell>
+                                        <TableCell colSpan={2}></TableCell>
+                                        <TableCell className="text-right font-medium">
+                                            {formatCurrency(ledgerData.opening_balance)}
+                                        </TableCell>
+                                    </TableRow>
+
+                                    {(ledgerData.transactions || []).length > 0 ? (
+                                        (ledgerData.transactions || []).map((transaction, tIndex) => (
+                                            <TableRow key={tIndex} className="dark:border-b-2 dark:border-white/25">
                                                 <TableCell className="text-center">
-                                                    {format(
-                                                        new Date(
-                                                            transaction.date,
-                                                        ),
-                                                        'dd MMM yyyy',
-                                                    )}
+                                                    {format(new Date(transaction.date), 'dd MMM yyyy')}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     {transaction.journal_number}
@@ -284,60 +334,36 @@ export default function GeneralLedgerShow({
                                                     {transaction.description}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    {transaction.debit > 0
-                                                        ? formatCurrency(
-                                                            transaction.debit,
-                                                        )
-                                                        : '-'}
+                                                    {transaction.debit > 0 ? formatCurrency(transaction.debit) : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    {transaction.credit > 0
-                                                        ? formatCurrency(
-                                                            transaction.credit,
-                                                        )
-                                                        : '-'}
+                                                    {transaction.credit > 0 ? formatCurrency(transaction.credit) : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium">
-                                                    {formatCurrency(
-                                                        transaction.balance,
-                                                    )}
+                                                    {formatCurrency(transaction.balance)}
                                                 </TableCell>
                                             </TableRow>
-                                        ),
-                                    )
-                                ) : (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={7}
-                                            className="text-center text-muted-foreground"
-                                        >
-                                            Tidak ada transaksi pada periode ini
-                                        </TableCell>
-                                    </TableRow>
-                                )}
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="text-center text-muted-foreground">
+                                                Tidak ada transaksi pada periode ini
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
 
-                                {/* Totals Row */}
-                                <TableRow className="bg-muted/50 font-semibold dark:bg-primary-800/10">
-                                    <TableCell colSpan={4}>Total</TableCell>
-                                    <TableCell className="text-right">
-                                        {formatCurrency(ledgerData.debit_total)}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {formatCurrency(
-                                            ledgerData.credit_total,
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {formatCurrency(
-                                            ledgerData.closing_balance,
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
+                                    <TableRow className="bg-muted/50 font-semibold dark:bg-primary-800/10">
+                                        <TableCell colSpan={4}>Total</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(ledgerData.debit_total)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(ledgerData.credit_total)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(ledgerData.closing_balance)}</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </AppLayout>
     );
 }
