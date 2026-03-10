@@ -479,10 +479,10 @@ class SalePaymentController extends Controller
                     }
                 }
             }
-        });
 
-        return redirect()->route('sale-payments.show', $salePayment)
-            ->with('success', 'Pembayaran berhasil dikonfirmasi.');
+            return redirect()->route('sale-payments.show', $salePayment)
+                ->with('success', 'Pembayaran berhasil dikonfirmasi.');
+        });
     }
 
     /**
