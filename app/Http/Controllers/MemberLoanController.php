@@ -317,12 +317,42 @@ class MemberLoanController extends Controller
                         'description'         => "Pinjaman anggota {$memberLoan->member->name}",
                     ]);
                 }
+                // Create Cash Out record
+                $maxRetries = 5;
+                $cashOut = null;
+                for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+                    try {
+                        $cashOutNumber = \App\Models\CashOut::generateCashOutNumber();
+                        
+                        $cashOut = \App\Models\CashOut::create([
+                            'cash_out_number' => $cashOutNumber,
+                            'cash_out_date'   => $memberLoan->loan_date,
+                            'bank_id'         => $memberLoan->bank_id,
+                            'chart_of_account_id' => $piutangAccount->id,
+                            'amount'          => $memberLoan->amount,
+                            'description'     => "Pinjaman Anggota #{$memberLoan->loan_number} - {$memberLoan->member->name}",
+                            'status'          => 'posted',
+                            'reference_type'  => 'MemberLoan',
+                            'reference_id'    => $memberLoan->id,
+                            'created_by'      => auth()->id(),
+                            'updated_by'      => auth()->id(),
+                        ]);
+                        break;
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        if ($e->getCode() == 23000 && str_contains($e->getMessage(), 'cash_out_number')) {
+                            if ($attempt === $maxRetries - 1) throw $e;
+                            usleep(10000 * ($attempt + 1));
+                            continue;
+                        }
+                        throw $e;
+                    }
+                }
 
                 // Update bank balance
                 app(\App\Services\CashMovementService::class)->createMovement(
                     $bank,
-                    'MemberLoan',
-                    $memberLoan->id,
+                    'CashOut', // Link movement to the CashOut record
+                    $cashOut->id,
                     $memberLoan->loan_date,
                     0,
                     (float) $memberLoan->amount,
@@ -363,10 +393,29 @@ class MemberLoanController extends Controller
 
             // Reverse bank cash movement if not opening balance
             if (!$memberLoan->is_opening_balance && $memberLoan->bank_id) {
-                $movement = \App\Models\CashMovement::where('reference_type', 'MemberLoan')
-                    ->where('reference_id', $memberLoan->id)->first();
-                if ($movement) {
-                    app(\App\Services\CashMovementService::class)->deleteMovement($movement);
+                // Find associated CashOut record
+                $cashOut = \App\Models\CashOut::where('reference_type', 'MemberLoan')
+                    ->where('reference_id', $memberLoan->id)
+                    ->first();
+
+                if ($cashOut) {
+                    // Delete CashMovement linked to CashOut
+                    $movement = \App\Models\CashMovement::where('reference_type', 'CashOut')
+                        ->where('reference_id', $cashOut->id)->first();
+                    
+                    if ($movement) {
+                        app(\App\Services\CashMovementService::class)->deleteMovement($movement);
+                    }
+                    
+                    // Soft delete the CashOut record
+                    $cashOut->delete();
+                } else {
+                    // Fallback for older data where movement was linked directly to MemberLoan
+                    $movement = \App\Models\CashMovement::where('reference_type', 'MemberLoan')
+                        ->where('reference_id', $memberLoan->id)->first();
+                    if ($movement) {
+                        app(\App\Services\CashMovementService::class)->deleteMovement($movement);
+                    }
                 }
             }
 
