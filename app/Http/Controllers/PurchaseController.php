@@ -352,8 +352,25 @@ class PurchaseController extends Controller
         }
 
         $purchase->load(['supplier.city', 'details.item.itemUoms.uom', 'details.itemUom.uom']);
-        $suppliers = Supplier::with('city')->orderBy('name')->limit(10)->get();
-        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
+        
+        // Optimize supplier loading: load top 20 + selected supplier
+        $suppliers = Supplier::with('city')->orderBy('name')->limit(20)->get();
+        if ($purchase->supplier_id && !$suppliers->contains('id', $purchase->supplier_id)) {
+            $selectedSupplier = Supplier::with('city')->find($purchase->supplier_id);
+            if ($selectedSupplier) {
+                $suppliers->push($selectedSupplier);
+            }
+        }
+
+        // Optimize item loading: load top 20 + selected items
+        $selectedItemIds = $purchase->details->pluck('item_id')->unique()->toArray();
+        $items = Item::with('itemUoms.uom')->orderBy('name')->limit(20)->get();
+        
+        $missingItemIds = array_diff($selectedItemIds, $items->pluck('id')->toArray());
+        if (!empty($missingItemIds)) {
+            $selectedItems = Item::with('itemUoms.uom')->whereIn('id', $missingItemIds)->get();
+            $items = $items->concat($selectedItems);
+        }
 
 
         return Inertia::render('transaction/purchase/edit', [

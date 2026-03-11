@@ -344,8 +344,25 @@ class SaleController extends Controller
         }
 
         $sale->load(['customer.city', 'details.item.itemUoms.uom', 'details.itemUom']);
-        $customers = Customer::with('city')->orderBy('name')->limit(5)->get();
-        $items     = Item::with('itemUoms.uom')->orderBy('name')->get();
+        
+        // Optimize customer loading: load top 20 + selected customer
+        $customers = Customer::with('city')->orderBy('name')->limit(20)->get();
+        if ($sale->customer_id && !$customers->contains('id', $sale->customer_id)) {
+            $selectedCustomer = Customer::with('city')->find($sale->customer_id);
+            if ($selectedCustomer) {
+                $customers->push($selectedCustomer);
+            }
+        }
+
+        // Optimize item loading: load top 20 + selected items
+        $selectedItemIds = $sale->details->pluck('item_id')->unique()->toArray();
+        $items = Item::with('itemUoms.uom')->orderBy('name')->limit(20)->get();
+        
+        $missingItemIds = array_diff($selectedItemIds, $items->pluck('id')->toArray());
+        if (!empty($missingItemIds)) {
+            $selectedItems = Item::with('itemUoms.uom')->whereIn('id', $missingItemIds)->get();
+            $items = $items->concat($selectedItems);
+        }
 
         // Calculate pending stock for all items
         $pendingQuantities = DB::table('sale_details')
