@@ -140,7 +140,7 @@ class StockAdjustmentController extends Controller
         $options = $items->map(function ($item) {
             return [
                 'value' => (string) $item->id,
-                'label' => ($item->code ? $item->code . ' - ' : '') . $item->name,
+                'label' => ($item->code ? $item->code . ' - ' : '') . $item->name . ' (Stok: ' . number_format($item->stock, 0, ',', '.') . ')',
                 'item' => [
                     'id' => $item->id,
                     'code' => $item->code,

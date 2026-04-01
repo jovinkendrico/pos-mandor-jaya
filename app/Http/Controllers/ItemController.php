@@ -180,7 +180,7 @@ class ItemController extends Controller
         $results = $items->map(function ($item) {
             return [
                 'value' => (string)$item->id,
-                'label' => $item->code . ' - ' . $item->name,
+                'label' => $item->code . ' - ' . $item->name . ' (Sisa: ' . number_format($item->available_stock, 0, ',', '.') . ')',
                 'item'  => $item,
             ];
         });
