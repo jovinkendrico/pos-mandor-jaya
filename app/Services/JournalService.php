@@ -282,8 +282,13 @@ class JournalService
                 ->where('is_active', true)
                 ->first();
 
-            // Get Kas Besar account for Loans
-            $kasBesarAccount = ChartOfAccount::where('code', '1102') // Kas Besar
+            // Get PPh account (1403 - PPh 22 Dibayar Dimuka)
+            $pphAccount = ChartOfAccount::where('code', '1403')
+                ->where('is_active', true)
+                ->first();
+
+            // Get Biaya PKS account (6111 - Biaya PKS)
+            $biayaPksAccount = ChartOfAccount::where('code', '6111')
                 ->where('is_active', true)
                 ->first();
 
@@ -320,6 +325,30 @@ class JournalService
                 'credit'              => 0,
                 'description'         => "Piutang dari Penjualan #{$sale->sale_number}",
             ]);
+
+            // Debit: PPh 22 Dibayar Dimuka (jika ada)
+            $pphAmount = (float) ($sale->pph_amount ?? 0);
+            if ($pphAmount > 0 && $pphAccount) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $pphAccount->id,
+                    'debit'               => $pphAmount,
+                    'credit'              => 0,
+                    'description'         => "PPh 22 dari Penjualan #{$sale->sale_number}",
+                ]);
+            }
+
+            // Debit: Biaya PKS (jika ada)
+            $biayaPksAmount = (float) ($sale->biaya_pks_amount ?? 0);
+            if ($biayaPksAmount > 0 && $biayaPksAccount) {
+                JournalEntryDetail::create([
+                    'journal_entry_id'    => $journalEntry->id,
+                    'chart_of_account_id' => $biayaPksAccount->id,
+                    'debit'               => $biayaPksAmount,
+                    'credit'              => 0,
+                    'description'         => "Biaya PKS dari Penjualan #{$sale->sale_number}",
+                ]);
+            }
 
             // Credit: Pendapatan Penjualan (Hanya Goods)
             // Note: If there is a header discount, it usually applies to Goods only in this context.
