@@ -14,7 +14,7 @@ use App\Traits\Auditable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, TwoFactorAuthenticatable, Auditable;
+    use \Laravel\Sanctum\HasApiTokens, HasFactory, Notifiable, HasRoles, TwoFactorAuthenticatable, Auditable;
 
     /**
      * The attributes that are mass assignable.
