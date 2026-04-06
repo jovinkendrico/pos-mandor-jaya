@@ -181,18 +181,21 @@ class BankController extends Controller
         $refTypeFilter = $request->get('reference_type', 'all');
 
         if ($isFirstPage && ($refTypeFilter === 'all' || $refTypeFilter === 'manual')) {
+            $dateFrom = $request->get('date_from');
+            $dateTo = $request->get('date_to');
+
             $draftCashIns = \App\Models\CashIn::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual')
-                ->when($request->date_from, fn($q) => $q->where('cash_in_date', '>=', $request->date_from))
-                ->when($request->date_to, fn($q) => $q->where('cash_in_date', '<=', $request->date_to))
+                ->when($dateFrom, fn($q) => $q->whereDate('cash_in_date', '>=', $dateFrom))
+                ->when($dateTo, fn($q) => $q->whereDate('cash_in_date', '<=', $dateTo))
                 ->get();
 
             $draftCashOuts = \App\Models\CashOut::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual')
-                ->when($request->date_from, fn($q) => $q->where('cash_out_date', '>=', $request->date_from))
-                ->when($request->date_to, fn($q) => $q->where('cash_out_date', '<=', $request->date_to))
+                ->when($dateFrom, fn($q) => $q->whereDate('cash_out_date', '>=', $dateFrom))
+                ->when($dateTo, fn($q) => $q->whereDate('cash_out_date', '<=', $dateTo))
                 ->get();
 
             // Merge draft results
