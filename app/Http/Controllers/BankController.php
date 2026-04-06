@@ -184,19 +184,29 @@ class BankController extends Controller
             $dateFrom = $request->get('date_from');
             $dateTo = $request->get('date_to');
 
-            $draftCashIns = \App\Models\CashIn::where('bank_id', $bank->id)
+            $inQuery = \App\Models\CashIn::where('bank_id', $bank->id)
                 ->where('status', 'draft')
-                ->where('reference_type', 'Manual')
-                ->when($dateFrom, fn($q) => $q->whereDate('cash_in_date', '>=', $dateFrom))
-                ->when($dateTo, fn($q) => $q->whereDate('cash_in_date', '<=', $dateTo))
-                ->get();
+                ->where('reference_type', 'Manual');
 
-            $draftCashOuts = \App\Models\CashOut::where('bank_id', $bank->id)
+            if ($dateFrom) {
+                $inQuery->where('cash_in_date', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $inQuery->where('cash_in_date', '<=', $dateTo);
+            }
+            $draftCashIns = $inQuery->get();
+
+            $outQuery = \App\Models\CashOut::where('bank_id', $bank->id)
                 ->where('status', 'draft')
-                ->where('reference_type', 'Manual')
-                ->when($dateFrom, fn($q) => $q->whereDate('cash_out_date', '>=', $dateFrom))
-                ->when($dateTo, fn($q) => $q->whereDate('cash_out_date', '<=', $dateTo))
-                ->get();
+                ->where('reference_type', 'Manual');
+
+            if ($dateFrom) {
+                $outQuery->where('cash_out_date', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $outQuery->where('cash_out_date', '<=', $dateTo);
+            }
+            $draftCashOuts = $outQuery->get();
 
             // Merge draft results
             foreach ($draftCashIns as $draftIn) {
