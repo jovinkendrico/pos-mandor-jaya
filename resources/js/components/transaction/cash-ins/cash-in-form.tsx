@@ -122,7 +122,7 @@ const CashInForm = (props: CashInFormProps) => {
 
                         <div className="space-y-2">
                             <Label htmlFor="chart_of_account_id">
-                                Akun Pendapatan *
+                                Akun (Pendapatan/Biaya) *
                             </Label>
                             <Combobox
                                 options={accountOptions}
@@ -133,7 +133,7 @@ const CashInForm = (props: CashInFormProps) => {
                                         Number(value),
                                     )
                                 }
-                                placeholder="Pilih Akun Pendapatan"
+                                placeholder="Pilih Akun"
                                 searchPlaceholder="Cari Akun..."
                                 className="combobox"
                             />
