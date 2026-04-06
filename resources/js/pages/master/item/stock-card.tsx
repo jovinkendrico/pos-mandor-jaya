@@ -89,6 +89,8 @@ const StockCardPage = (props: PageProps) => {
             ...filters,
             search: '',
             status: 'all',
+            sort_by: 'id',
+            sort_order: 'desc',
         },
     );
 
@@ -283,7 +285,7 @@ const StockCardPage = (props: PageProps) => {
                                                 <TableRow key={transaction.id}>
                                                     <TableCell className="text-center">
                                                         {formatDate(
-                                                            transaction.date,
+                                                            new Date(transaction.date),
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-center">

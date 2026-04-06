@@ -269,18 +269,15 @@ class CashInController extends Controller
     public function post(CashIn $cashIn): RedirectResponse
     {
         if ($cashIn->status === 'posted') {
-            return redirect()->route('cash-ins.show', $cashIn)
-                ->with('error', 'Kas masuk sudah diposting.');
+            return back()->with('error', 'Kas masuk sudah diposting.');
         }
 
         try {
             $this->journalService->postCashIn($cashIn);
-            return redirect()->route('cash-ins.show', $cashIn)
-                ->with('success', 'Kas masuk berhasil diposting ke jurnal.');
+            return back()->with('success', 'Kas masuk berhasil diposting ke jurnal.');
         } catch (\Exception $e) {
             $errorMessage = 'Gagal memposting: ' . $e->getMessage();
-            return redirect()->route('cash-ins.show', $cashIn)
-                ->withErrors(['msg' => $errorMessage]);
+            return back()->withErrors(['msg' => $errorMessage]);
         }
     }
 
@@ -290,17 +287,14 @@ class CashInController extends Controller
     public function reverse(CashIn $cashIn): RedirectResponse
     {
         if ($cashIn->status !== 'posted') {
-            return redirect()->route('cash-ins.show', $cashIn)
-                ->with('error', 'Hanya kas masuk yang sudah diposting yang dapat di-reverse.');
+            return back()->with('error', 'Hanya kas masuk yang sudah diposting yang dapat di-reverse.');
         }
 
         try {
             $this->journalService->reverseCashIn($cashIn);
-            return redirect()->route('cash-ins.show', $cashIn)
-                ->with('success', 'Kas masuk berhasil di-reverse.');
+            return back()->with('success', 'Kas masuk berhasil di-reverse.');
         } catch (\Exception $e) {
-            return redirect()->route('cash-ins.show', $cashIn)
-                ->with('error', 'Gagal reverse: ' . $e->getMessage());
+            return back()->with('error', 'Gagal reverse: ' . $e->getMessage());
         }
     }
 

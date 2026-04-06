@@ -521,14 +521,12 @@ class PurchaseController extends Controller
         $this->authorize('update', $purchase);
 
         if ($purchase->status === 'confirmed') {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Pembelian sudah dikonfirmasi.');
+            return back()->with('error', 'Pembelian sudah dikonfirmasi.');
         }
 
         $this->stockService->confirmPurchase($purchase);
 
-        return redirect()->route('purchases.show', $purchase)
-            ->with('success', 'Pembelian berhasil dikonfirmasi. Stock sudah masuk.');
+        return back()->with('success', 'Pembelian berhasil dikonfirmasi. Stock sudah masuk.');
     }
 
     /**
@@ -539,14 +537,12 @@ class PurchaseController extends Controller
         $this->authorize('update', $purchase);
 
         if ($purchase->status === 'pending') {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Pembelian belum dikonfirmasi.');
+            return back()->with('error', 'Pembelian belum dikonfirmasi.');
         }
 
         $this->stockService->unconfirmPurchase($purchase);
 
-        return redirect()->route('purchases.show', $purchase)
-            ->with('success', 'Konfirmasi pembelian dibatalkan. Stock dikembalikan.');
+        return back()->with('success', 'Konfirmasi pembelian dibatalkan. Stock dikembalikan.');
     }
 
     /**
@@ -594,13 +590,11 @@ class PurchaseController extends Controller
 
         // Validate remaining amount
         if ($purchase->remaining_amount <= 0) {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Pembelian sudah lunas.');
+            return back()->with('error', 'Pembelian sudah lunas.');
         }
 
         if ($purchase->remaining_amount >= 100000) {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 100.000). Sisa: Rp ' . number_format($purchase->remaining_amount, 0, ',', '.'));
+            return back()->with('error', 'Write-off hanya untuk selisih kecil (< Rp 100.000). Sisa: Rp ' . number_format($purchase->remaining_amount, 0, ',', '.'));
         }
 
         // Get write-off account (6999 - Selisih Pembulatan Pembelian)
@@ -609,8 +603,7 @@ class PurchaseController extends Controller
             ->first();
 
         if (!$writeOffAccount) {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Akun Selisih Pembulatan (6999) tidak ditemukan. Silakan hubungi administrator.');
+            return back()->with('error', 'Akun Selisih Pembulatan (6999) tidak ditemukan. Silakan hubungi administrator.');
         }
 
         // Get Hutang Usaha account (2101)
@@ -619,8 +612,7 @@ class PurchaseController extends Controller
             ->first();
 
         if (!$hutangAccount) {
-            return redirect()->route('purchases.show', $purchase)
-                ->with('error', 'Akun Hutang Usaha (2101) tidak ditemukan. Silakan hubungi administrator.');
+            return back()->with('error', 'Akun Hutang Usaha (2101) tidak ditemukan. Silakan hubungi administrator.');
         }
 
         DB::transaction(function () use ($purchase, $writeOffAccount, $hutangAccount) {
@@ -677,7 +669,6 @@ class PurchaseController extends Controller
             ]);
         });
 
-        return redirect()->route('purchases.show', $purchase)
-            ->with('success', 'Selisih pembulatan berhasil di-write-off. Pembelian sekarang lunas.');
+        return back()->with('success', 'Selisih pembulatan berhasil di-write-off. Pembelian sekarang lunas.');
     }
 }
