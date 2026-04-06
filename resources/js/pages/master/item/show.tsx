@@ -9,7 +9,7 @@ import {
     IItemStockMovement,
     PaginatedData,
 } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
@@ -19,6 +19,7 @@ interface PageProps {
 
 const ShowStock = (props: PageProps) => {
     const { stockMovements, item } = props;
+    const { backUrl } = usePage<any>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -27,7 +28,7 @@ const ShowStock = (props: PageProps) => {
         },
         {
             title: 'Barang',
-            href: index().url,
+            href: backUrl || index().url,
         },
         {
             title: item.name,
@@ -40,9 +41,9 @@ const ShowStock = (props: PageProps) => {
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Barang" />
                 <div className="flex flex-row items-center gap-2">
-                    <button type="button" onClick={() => window.history.back()}>
+                    <Link href={backUrl || index().url}>
                         <ArrowLeft className="h-8 w-8" />
-                    </button>
+                    </Link>
                     <PageTitle title={`Perpindahan Stok (${item.name})`} />
                 </div>
                 <StockMovementTable

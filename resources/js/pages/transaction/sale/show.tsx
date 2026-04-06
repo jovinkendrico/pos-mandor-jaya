@@ -17,7 +17,7 @@ import {
 } from '@/lib/utils';
 import { edit, index, print } from '@/routes/sales';
 import { BreadcrumbItem, ISale } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -29,25 +29,27 @@ import { toast } from 'sonner';
 
 interface PageProps {
     sale: ISale;
+    backUrl?: string;
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Transaksi',
-        href: '#',
-    },
-    {
-        title: 'Penjualan',
-        href: index().url,
-    },
-    {
-        title: 'Detail',
-        href: '#',
-    },
-];
 
 const SaleShow = (props: PageProps) => {
     const { sale } = props;
+    const { backUrl } = usePage<any>().props;
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Transaksi',
+            href: '#',
+        },
+        {
+            title: 'Penjualan',
+            href: backUrl || index().url,
+        },
+        {
+            title: 'Detail',
+            href: '#',
+        },
+    ];
 
     const {
         isOpen: isConfirmModalOpen,
@@ -150,12 +152,12 @@ const SaleShow = (props: PageProps) => {
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <div className="flex flex-row items-center gap-2">
-                            <div
+                            <Link
+                                href={backUrl || index().url}
                                 className="cursor-pointer"
-                                onClick={() => window.history.back()}
                             >
                                 <ArrowLeft className="h-8 w-8" />
-                            </div>
+                            </Link>
                             <PageTitle
                                 title={`Penjualan ${sale.sale_number}`}
                             />

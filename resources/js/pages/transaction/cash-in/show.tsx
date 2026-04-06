@@ -8,31 +8,33 @@ import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency, formatDatetoString } from '@/lib/utils';
 import { edit, index } from '@/routes/cash-ins';
 import { BreadcrumbItem, ICashIn } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, Pencil, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
     cashIn: ICashIn;
+    backUrl?: string;
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Transaksi',
-        href: '#',
-    },
-    {
-        title: 'Kas Masuk',
-        href: index().url,
-    },
-    {
-        title: 'Detail',
-        href: '#',
-    },
-];
 
 const CashInShow = (props: PageProps) => {
     const { cashIn } = props;
+    const { backUrl } = usePage<any>().props;
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Transaksi',
+            href: '#',
+        },
+        {
+            title: 'Kas Masuk',
+            href: backUrl || index().url,
+        },
+        {
+            title: 'Detail',
+            href: '#',
+        },
+    ];
 
     const {
         isOpen: isConfirmModalOpen,
@@ -87,12 +89,12 @@ const CashInShow = (props: PageProps) => {
                 <div className="mb-2 flex items-center justify-between">
                     <div>
                         <div className="flex flex-row items-center gap-2">
-                        <div
-                            className="cursor-pointer"
-                            onClick={() => window.history.back()}
-                        >
-                            <ArrowLeft className="h-8 w-8" />
-                        </div>
+                            <Link
+                                href={backUrl || index().url}
+                                className="cursor-pointer"
+                            >
+                                <ArrowLeft className="h-8 w-8" />
+                            </Link>
                             <PageTitle
                                 title={`Kas Masuk ${cashIn.cash_in_number}`}
                             />

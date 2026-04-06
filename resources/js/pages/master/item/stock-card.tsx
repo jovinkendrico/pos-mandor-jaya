@@ -25,7 +25,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDate, formatNumberWithSeparator } from '@/lib/utils';
 import { index } from '@/routes/items';
 import { BreadcrumbItem, IItem, PaginatedData } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
 interface StockCardTransaction {
@@ -51,22 +51,8 @@ interface PageProps {
         date_to: string;
         reference_type: string;
     };
+    backUrl?: string;
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Master',
-        href: '#',
-    },
-    {
-        title: 'Barang',
-        href: index().url,
-    },
-    {
-        title: 'Kartu Stok',
-        href: '#',
-    },
-];
 
 const StockCardPage = (props: PageProps) => {
     const {
@@ -80,6 +66,22 @@ const StockCardPage = (props: PageProps) => {
             reference_type: 'all',
         },
     } = props;
+    const { backUrl } = usePage<any>().props;
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Master',
+            href: '#',
+        },
+        {
+            title: 'Barang',
+            href: backUrl || index().url,
+        },
+        {
+            title: 'Kartu Stok',
+            href: '#',
+        },
+    ];
 
     const { allFilters, handleFilterChange } = useResourceFilters(
         () => ({ url: '', method: 'get' as const }),
@@ -141,13 +143,12 @@ const StockCardPage = (props: PageProps) => {
                 <Head title={`Kartu Stok - ${item.name}`} />
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => window.history.back()}
+                        <Link
+                            href={backUrl || index().url}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9"
                         >
                             <ArrowLeft />
-                        </Button>
+                        </Link>
                         <div>
                             <PageTitle title={`Kartu Stok - ${item.name}`} />
                             <p className="text-sm text-muted-foreground">
