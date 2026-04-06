@@ -147,7 +147,9 @@ const ItemForm = (props: ItemFormProps) => {
                         </div>
 
                         <div>
-                            <Label htmlFor="stock">Stok (dalam Base UOM)</Label>
+                            <Label htmlFor="stock">
+                                Stok (dalam Base UOM) {item && '(Read Only)'}
+                            </Label>
                             <Input
                                 id="stock"
                                 type="text"
@@ -157,7 +159,7 @@ const ItemForm = (props: ItemFormProps) => {
                                 }
                                 onBlur={handleBlur}
                                 placeholder="Cth: 100"
-                                disabled={processingItem}
+                                disabled={processingItem || !!item}
                                 className="input-box"
                             />
                             {errorsItem.stock && (

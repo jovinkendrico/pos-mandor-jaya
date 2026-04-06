@@ -24,8 +24,6 @@ class UpdateItemRequest extends FormRequest
     {
         return [
             'name'                    => ['required', 'string', 'max:255'],
-            'stock'                   => ['nullable', 'numeric', 'min:0'],
-            'modal_price'             => ['nullable', 'numeric', 'min:0'],
             'description'             => ['nullable', 'string'],
             'uoms'                    => ['required', 'array', 'min:1'],
             'uoms.*.uom_id'           => ['required', 'exists:uoms,id'],
@@ -43,11 +41,6 @@ class UpdateItemRequest extends FormRequest
 
             if ($baseCount !== 1) {
                 $validator->errors()->add('uoms', 'Harus ada tepat satu UOM sebagai base.');
-            }
-
-            $stock = (float) ($this->input('stock') ?? 0);
-            if ($stock > 0 && $this->filled('modal_price') === false) {
-                $validator->errors()->add('modal_price', 'Harga modal wajib diisi ketika stok awal lebih dari 0.');
             }
         });
     }

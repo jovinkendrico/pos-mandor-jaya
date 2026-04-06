@@ -491,9 +491,6 @@ class ItemController extends Controller
     public function update(UpdateItemRequest $request, Item $item): RedirectResponse
     {
         DB::transaction(function () use ($request, $item) {
-            $existingStock = (float) $item->stock;
-            $targetStock   = (float) ($request->stock ?? $existingStock);
-
             $item->update([
                 'name'        => $request->name,
                 'description' => $request->description,
@@ -547,26 +544,6 @@ class ItemController extends Controller
                     // Safe to delete
                     \App\Models\ItemUom::where('id', $idToDelete)->delete();
                 }
-            }
-
-            $diff = $targetStock - $existingStock;
-            if ($diff > 0) {
-                $unitCost = (float) ($request->modal_price ?? 0);
-
-                $item->increment('stock', $diff);
-
-                StockMovement::create([
-                    'item_id'            => $item->id,
-                    'reference_type'     => 'Adjustment',
-                    'reference_id'       => $item->id,
-                    'quantity'           => $diff,
-                    'unit_cost'          => $unitCost,
-                    'remaining_quantity' => $diff,
-                    'movement_date'      => now(),
-                    'notes'              => 'Penyesuaian stok manual (IN)',
-                ]);
-            } elseif ($diff < 0) {
-                $this->stockService->consumeForAdjustment($item, abs($diff));
             }
         });
 
