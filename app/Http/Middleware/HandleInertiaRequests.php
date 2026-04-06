@@ -38,6 +38,10 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $routeName = $request->route() ? $request->route()->getName() : null;
+        $resource = $routeName ? explode('.', $routeName)[0] : null;
+        $backUrl = $resource ? $request->session()->get("last_index_url_{$resource}") : null;
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -52,13 +56,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-            'backUrl' => function () use ($request) {
-                if (!$request->route()) return null;
-                $routeName = $request->route()->getName();
-                if (!$routeName) return null;
-                $resource = explode('.', $routeName)[0];
-                return $request->session()->get("last_index_url_{$resource}");
-            },
+            'backUrl' => $backUrl,
         ];
     }
 }

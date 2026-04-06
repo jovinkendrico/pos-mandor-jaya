@@ -558,14 +558,12 @@ class SaleController extends Controller
                 $sale = Sale::lockForUpdate()->find($sale->id);
 
                 if ($sale->status === 'confirmed') {
-                    return redirect()->route('sales.show', $sale)
-                        ->with('error', 'Penjualan sudah dikonfirmasi.');
+                    return back()->with('error', 'Penjualan sudah dikonfirmasi.');
                 }
 
                 $this->stockService->confirmSale($sale);
 
-                return redirect()->route('sales.show', $sale)
-                    ->with('success', 'Penjualan berhasil dikonfirmasi. Profit sudah dihitung dengan FIFO.');
+                return back()->with('success', 'Penjualan berhasil dikonfirmasi. Profit sudah dihitung dengan FIFO.');
             });
         } catch (\Exception $e) {
             Log::error('Sale Confirmation Error', [
@@ -589,14 +587,12 @@ class SaleController extends Controller
             $sale = Sale::lockForUpdate()->find($sale->id);
 
             if ($sale->status === 'pending') {
-                return redirect()->route('sales.show', $sale)
-                    ->with('error', 'Penjualan belum dikonfirmasi.');
+                return back()->with('error', 'Penjualan belum dikonfirmasi.');
             }
 
             $this->stockService->unconfirmSale($sale);
 
-            return redirect()->route('sales.show', $sale)
-                ->with('success', 'Konfirmasi penjualan dibatalkan. Stock dikembalikan.');
+            return back()->with('success', 'Konfirmasi penjualan dibatalkan. Stock dikembalikan.');
         });
     }
 
@@ -709,13 +705,11 @@ class SaleController extends Controller
         $remainingAmount = round($sale->remaining_amount, 2);
 
         if ($remainingAmount <= 0) {
-            return redirect()->route('sales.show', $sale)
-                ->with('error', 'Penjualan sudah lunas.');
+            return back()->with('error', 'Penjualan sudah lunas.');
         }
 
         if ($remainingAmount >= 100000) {
-            return redirect()->route('sales.show', $sale)
-                ->with('error', 'Write-off hanya untuk selisih kecil (< Rp 100.000). Sisa: Rp ' . number_format($remainingAmount, 0, ',', '.'));
+            return back()->with('error', 'Write-off hanya untuk selisih kecil (< Rp 100.000). Sisa: Rp ' . number_format($remainingAmount, 0, ',', '.'));
         }
 
         // Get write-off account (4999 - Selisih Pembulatan Penjualan)
@@ -724,8 +718,7 @@ class SaleController extends Controller
             ->first();
 
         if (!$writeOffAccount) {
-            return redirect()->route('sales.show', $sale)
-                ->with('error', 'Akun Selisih Pembulatan (4999) tidak ditemukan. Silakan hubungi administrator.');
+            return back()->with('error', 'Akun Selisih Pembulatan (4999) tidak ditemukan. Silakan hubungi administrator.');
         }
 
         // Get Piutang Usaha account (1201)
@@ -734,8 +727,7 @@ class SaleController extends Controller
             ->first();
 
         if (!$piutangAccount) {
-            return redirect()->route('sales.show', $sale)
-                ->with('error', 'Akun Piutang Usaha (1103) tidak ditemukan. Silakan hubungi administrator.');
+            return back()->with('error', 'Akun Piutang Usaha (1103) tidak ditemukan. Silakan hubungi administrator.');
         }
 
         DB::transaction(function () use ($sale, $writeOffAccount, $piutangAccount, $remainingAmount) {
@@ -792,7 +784,6 @@ class SaleController extends Controller
             ]);
         });
 
-        return redirect()->route('sales.show', $sale)
-            ->with('success', 'Selisih pembulatan berhasil di-write-off. Penjualan sekarang lunas.');
+        return back()->with('success', 'Selisih pembulatan berhasil di-write-off. Penjualan sekarang lunas.');
     }
 }

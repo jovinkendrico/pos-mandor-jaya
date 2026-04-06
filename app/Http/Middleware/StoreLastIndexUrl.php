@@ -16,17 +16,16 @@ class StoreLastIndexUrl
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $response = $next($request);
-
         // Only store for GET requests to index routes
         if ($request->isMethod('get') && $request->route() && str_ends_with($request->route()->getName(), '.index')) {
             $routeName = $request->route()->getName();
             $resource = explode('.', $routeName)[0];
             
             // Store the full URL with query parameters in session
-            Session::put("last_index_url_{$resource}", $request->fullUrl());
+            // We use the request's own session to be consistent
+            $request->session()->put("last_index_url_{$resource}", $request->fullUrl());
         }
 
-        return $response;
+        return $next($request);
     }
 }
