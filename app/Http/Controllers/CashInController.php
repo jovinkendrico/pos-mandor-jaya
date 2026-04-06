@@ -111,8 +111,8 @@ class CashInController extends Controller
     public function create(): Response
     {
         $banks = Bank::orderBy('name')->get();
-        // Get accounts (type = 'income', 'revenue', 'pendapatan', 'equity', 'liability', 'asset')
-        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan', 'equity', 'liability', 'asset'])
+        // Get accounts (including expense for refunds/reversals)
+        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan', 'expense', 'biaya', 'pengeluaran', 'equity', 'liability', 'asset'])
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
@@ -201,7 +201,7 @@ class CashInController extends Controller
         }
 
         $banks = Bank::orderBy('name')->get();
-        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan', 'equity', 'liability', 'asset'])
+        $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan', 'expense', 'biaya', 'pengeluaran', 'equity', 'liability', 'asset'])
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
