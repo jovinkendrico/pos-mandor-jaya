@@ -184,11 +184,15 @@ class BankController extends Controller
             $draftCashIns = \App\Models\CashIn::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual')
+                ->when($request->date_from, fn($q) => $q->where('cash_in_date', '>=', $request->date_from))
+                ->when($request->date_to, fn($q) => $q->where('cash_in_date', '<=', $request->date_to))
                 ->get();
 
             $draftCashOuts = \App\Models\CashOut::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual')
+                ->when($request->date_from, fn($q) => $q->where('cash_out_date', '>=', $request->date_from))
+                ->when($request->date_to, fn($q) => $q->where('cash_out_date', '<=', $request->date_to))
                 ->get();
 
             // Merge draft results
