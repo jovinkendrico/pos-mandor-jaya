@@ -42,6 +42,7 @@ interface Filters {
 const useResourceFilters = (
     resourceIndexRoute: RouteFunction,
     initialFilters: Filters,
+    options: { isSPA?: boolean } = { isSPA: true },
 ) => {
     const [searchTerm, setSearchTerm] = useState(initialFilters.search);
     const [allFilters, setAllFilters] = useState(initialFilters);
@@ -69,13 +70,21 @@ const useResourceFilters = (
             const updatedFilters = { ...allFilters, ...newFilters };
             setAllFilters(updatedFilters);
 
-            router.get(resourceIndexRoute().url, updatedFilters, {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            });
+            if (options.isSPA) {
+                router.get(resourceIndexRoute().url, updatedFilters, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                });
+            } else {
+                const url = new URL(resourceIndexRoute().url, window.location.origin);
+                Object.entries(updatedFilters).forEach(([key, value]) => {
+                    if (value) url.searchParams.set(key, value.toString());
+                });
+                window.location.href = url.toString();
+            }
         },
-        [searchTerm, allFilters, resourceIndexRoute],
+        [searchTerm, allFilters, resourceIndexRoute, options.isSPA],
     );
 
     useEffect(() => {
@@ -87,13 +96,21 @@ const useResourceFilters = (
 
             setAllFilters(updatedFilters);
 
-            router.get(resourceIndexRoute().url, updatedFilters, {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            });
+            if (options.isSPA) {
+                router.get(resourceIndexRoute().url, updatedFilters, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                });
+            } else {
+                const url = new URL(resourceIndexRoute().url, window.location.origin);
+                Object.entries(updatedFilters).forEach(([key, value]) => {
+                    if (value) url.searchParams.set(key, value.toString());
+                });
+                window.location.href = url.toString();
+            }
         }
-    }, [debouncedSearchTerm, allFilters, resourceIndexRoute]);
+    }, [debouncedSearchTerm, allFilters, resourceIndexRoute, options.isSPA]);
 
     return {
         allFilters,

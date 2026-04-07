@@ -80,6 +80,7 @@ const CashMovementPage = (props: PageProps) => {
             sort_by: 'date',
             sort_order: 'desc',
         },
+        { isSPA: false },
     );
 
     const getTypeLabel = (type: string) => {
@@ -180,6 +181,7 @@ const CashMovementPage = (props: PageProps) => {
                     showPaymentStatus={false}
                     sortOptions={[]}
                     statusOptions={[]}
+                    useSubmit={true}
                 />
 
                 {/* Desktop Table View */}

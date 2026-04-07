@@ -39,6 +39,7 @@ interface FilterBarProps {
     additionalFilters?: ReactNode;
     children?: ReactNode;
     defaultFilters?: Partial<FilterState>;
+    useSubmit?: boolean;
 }
 
 const FilterBar = (props: FilterBarProps) => {
@@ -64,6 +65,7 @@ const FilterBar = (props: FilterBarProps) => {
         handleFilterChange,
         handleReset,
         handleSortOrderToggle,
+        handleSubmit,
         hasActiveFilters,
     } = useFilterBar({
         initialFilters: filters,
@@ -71,6 +73,7 @@ const FilterBar = (props: FilterBarProps) => {
         sortOptions,
         defaultSortOrder,
         defaultFilters,
+        useSubmit: props.useSubmit,
     });
 
     return (
@@ -265,6 +268,15 @@ const FilterBar = (props: FilterBarProps) => {
                     >
                         <X className="mr-2 h-4 w-4" />
                         Reset
+                    </Button>
+                )}
+                {props.useSubmit && (
+                    <Button
+                        onClick={handleSubmit}
+                        className="btn-primary"
+                    >
+                        <Search className="mr-2 h-4 w-4" />
+                        Cari
                     </Button>
                 )}
             </div>

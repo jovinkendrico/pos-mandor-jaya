@@ -40,6 +40,7 @@ interface UseFilterBarProps {
     sortOptions?: Option[];
     defaultSortOrder?: string;
     defaultFilters?: Partial<FilterState>;
+    useSubmit?: boolean;
 }
 
 interface UseFilterBarReturn {
@@ -50,6 +51,7 @@ interface UseFilterBarReturn {
     ) => void;
     handleReset: () => void;
     handleSortOrderToggle: () => void;
+    handleSubmit: () => void;
     hasActiveFilters: boolean;
 }
 
@@ -72,6 +74,7 @@ export const useFilterBar = ({
     sortOptions = defaultSortOptions,
     defaultSortOrder = 'desc',
     defaultFilters,
+    useSubmit = false,
 }: UseFilterBarProps): UseFilterBarReturn => {
     const [localFilters, setLocalFilters] =
         useState<FilterState>(initialFilters);
@@ -97,10 +100,17 @@ export const useFilterBar = ({
                 [key]: processedValue,
             };
             setLocalFilters(newFilters);
-            onFilterChange(newFilters);
+            
+            if (!useSubmit) {
+                onFilterChange(newFilters);
+            }
         },
-        [localFilters, onFilterChange],
+        [localFilters, onFilterChange, useSubmit],
     );
+
+    const handleSubmit = useCallback(() => {
+        onFilterChange(localFilters);
+    }, [localFilters, onFilterChange]);
 
     const handleSortOrderToggle = useCallback(() => {
         const newOrder = localFilters.sort_order === 'asc' ? 'desc' : 'asc';
@@ -176,6 +186,7 @@ export const useFilterBar = ({
         handleFilterChange,
         handleReset,
         handleSortOrderToggle,
+        handleSubmit,
         hasActiveFilters,
     };
 };
