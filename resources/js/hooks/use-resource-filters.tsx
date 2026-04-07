@@ -47,10 +47,11 @@ const useResourceFilters = (
     const [allFilters, setAllFilters] = useState(initialFilters);
 
     // Sync allFilters state with initialFilters from props when they change
+    // Using JSON.stringify as a stable dependency for object literal props
     useEffect(() => {
         setAllFilters(initialFilters);
         setSearchTerm(initialFilters.search);
-    }, [initialFilters]);
+    }, [JSON.stringify(initialFilters)]);
 
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
