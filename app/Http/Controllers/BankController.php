@@ -184,15 +184,18 @@ class BankController extends Controller
             $dateFrom = $request->get('date_from');
             $dateTo = $request->get('date_to');
 
+            // Log parameters to debug why the filter might be skipped
+            // \Log::info('Cash Movement Draft Filter Params:', ['date_from' => $dateFrom, 'date_to' => $dateTo]);
+
             // 1. Fetch Draft CashIn entries
             $inQuery = \App\Models\CashIn::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual');
 
-            if ($dateFrom) {
+            if ($request->filled('date_from')) {
                 $inQuery->whereDate('cash_in_date', '>=', $dateFrom);
             }
-            if ($dateTo) {
+            if ($request->filled('date_to')) {
                 $inQuery->whereDate('cash_in_date', '<=', $dateTo);
             }
             $draftCashIns = $inQuery->get();
@@ -202,10 +205,10 @@ class BankController extends Controller
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual');
 
-            if ($dateFrom) {
+            if ($request->filled('date_from')) {
                 $outQuery->whereDate('cash_out_date', '>=', $dateFrom);
             }
-            if ($dateTo) {
+            if ($request->filled('date_to')) {
                 $outQuery->whereDate('cash_out_date', '<=', $dateTo);
             }
             $draftCashOuts = $outQuery->get();
