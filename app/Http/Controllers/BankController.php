@@ -142,10 +142,10 @@ class BankController extends Controller
 
         // Filter by date range if provided
         if ($request->has('date_from') && $request->date_from) {
-            $query->where('movement_date', '>=', $request->date_from);
+            $query->whereDate('movement_date', '>=', $request->date_from);
         }
         if ($request->has('date_to') && $request->date_to) {
-            $query->where('movement_date', '<=', $request->date_to);
+            $query->whereDate('movement_date', '<=', $request->date_to);
         }
 
         // Get opening balance (balance before the filter date)
@@ -181,18 +181,18 @@ class BankController extends Controller
         $refTypeFilter = $request->get('reference_type', 'all');
 
         if ($isFirstPage && ($refTypeFilter === 'all' || $refTypeFilter === 'manual')) {
-            $dateFrom = $request->get('date_from');
-            $dateTo = $request->get('date_to');
+            $dateFrom = $request->input('date_from');
+            $dateTo = $request->input('date_to');
 
             $inQuery = \App\Models\CashIn::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual');
 
             if ($dateFrom) {
-                $inQuery->where('cash_in_date', '>=', $dateFrom);
+                $inQuery->whereDate('cash_in_date', '>=', $dateFrom);
             }
             if ($dateTo) {
-                $inQuery->where('cash_in_date', '<=', $dateTo);
+                $inQuery->whereDate('cash_in_date', '<=', $dateTo);
             }
             $draftCashIns = $inQuery->get();
 
@@ -201,10 +201,10 @@ class BankController extends Controller
                 ->where('reference_type', 'Manual');
 
             if ($dateFrom) {
-                $outQuery->where('cash_out_date', '>=', $dateFrom);
+                $outQuery->whereDate('cash_out_date', '>=', $dateFrom);
             }
             if ($dateTo) {
-                $outQuery->where('cash_out_date', '<=', $dateTo);
+                $outQuery->whereDate('cash_out_date', '<=', $dateTo);
             }
             $draftCashOuts = $outQuery->get();
 
