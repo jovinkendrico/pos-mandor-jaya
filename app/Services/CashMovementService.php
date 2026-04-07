@@ -115,7 +115,7 @@ class CashMovementService
     public function reverseMovement(CashMovement $movement, $reversalDate = null): CashMovement
     {
         return DB::transaction(function () use ($movement, $reversalDate) {
-            $date = $reversalDate ?? now();
+            $date = $reversalDate ?? $movement->movement_date;
             
             // Create reversal record
             // Debit becomes Credit, Credit becomes Debit

@@ -157,7 +157,7 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date'   => now(),
+                'journal_date'   => $journalEntry->journal_date,
                 'reference_type' => 'CashIn',
                 'reference_id'   => $cashIn->id,
                 'description'    => "Pembalikan Kas Masuk #{$cashIn->cash_in_number}",
@@ -211,7 +211,7 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date'   => now(),
+                'journal_date'   => $journalEntry->journal_date,
                 'reference_type' => 'CashOut',
                 'reference_id'   => $cashOut->id,
                 'description'    => "Pembalikan Kas Keluar #{$cashOut->cash_out_number}",
@@ -931,7 +931,7 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date'   => now(),
+                'journal_date'   => $journalEntry->journal_date,
                 'reference_type' => 'StockAdjustment',
                 'reference_id'   => $stockMovement->id,
                 'description'    => "Pembalikan Penyesuaian Stok: " . ($stockMovement->item->name ?? ''),
@@ -976,7 +976,7 @@ class JournalService
 
             $journalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date'   => now(),
+                'journal_date'   => $sale->sale_date,
                 'reference_type' => 'Sale', // Link to Sale so it builds up history
                 'reference_id'   => $sale->id,
                 'description'    => "Penyesuaian HPP (Reconciliasi Stok) Penjualan #{$sale->sale_number}",
@@ -1310,7 +1310,7 @@ class JournalService
             // Create reversal entry
             $reversalEntry = JournalEntry::create([
                 'journal_number' => JournalEntry::generateJournalNumber(),
-                'journal_date'   => now(),
+                'journal_date'   => $journalEntry->journal_date,
                 'reference_type' => $journalEntry->reference_type,
                 'reference_id'   => $journalEntry->reference_id,
                 'description'    => "Pembalikan: " . ($journalEntry->description ?? $journalEntry->journal_number),
