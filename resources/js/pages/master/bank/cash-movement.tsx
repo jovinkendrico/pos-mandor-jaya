@@ -15,7 +15,7 @@ import TablePagination from '@/components/ui/TablePagination/table-pagination';
 import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { index } from '@/routes/banks';
+import { cashMovement, index } from '@/routes/banks';
 import { BreadcrumbItem, IBank, PaginatedData } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
@@ -72,7 +72,7 @@ const CashMovementPage = (props: PageProps) => {
     } = props;
 
     const { allFilters, handleFilterChange } = useResourceFilters(
-        () => ({ url: '', method: 'get' as const }),
+        () => cashMovement(bank.id),
         {
             ...filters,
             search: '',

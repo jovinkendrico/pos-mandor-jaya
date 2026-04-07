@@ -181,9 +181,10 @@ class BankController extends Controller
         $refTypeFilter = $request->get('reference_type', 'all');
 
         if ($isFirstPage && ($refTypeFilter === 'all' || $refTypeFilter === 'manual')) {
-            $dateFrom = $request->input('date_from');
-            $dateTo = $request->input('date_to');
+            $dateFrom = $request->get('date_from');
+            $dateTo = $request->get('date_to');
 
+            // 1. Fetch Draft CashIn entries
             $inQuery = \App\Models\CashIn::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual');
@@ -196,6 +197,7 @@ class BankController extends Controller
             }
             $draftCashIns = $inQuery->get();
 
+            // 2. Fetch Draft CashOut entries
             $outQuery = \App\Models\CashOut::where('bank_id', $bank->id)
                 ->where('status', 'draft')
                 ->where('reference_type', 'Manual');

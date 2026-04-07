@@ -46,6 +46,12 @@ const useResourceFilters = (
     const [searchTerm, setSearchTerm] = useState(initialFilters.search);
     const [allFilters, setAllFilters] = useState(initialFilters);
 
+    // Sync allFilters state with initialFilters from props when they change
+    useEffect(() => {
+        setAllFilters(initialFilters);
+        setSearchTerm(initialFilters.search);
+    }, [initialFilters]);
+
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
     const handleFilterChange = useCallback(
