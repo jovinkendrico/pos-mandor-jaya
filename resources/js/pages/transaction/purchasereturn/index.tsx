@@ -46,6 +46,7 @@ interface PageProps {
         supplier_id: string;
         sort_by: string;
         sort_order: string;
+        page?: string | number;
     };
 }
 
@@ -73,6 +74,7 @@ const PurchaseReturnIndex = (props: PageProps) => {
             supplier_id: '',
             sort_by: 'return_date',
             sort_order: 'desc',
+            page: returns.current_page,
         },
     } = props;
 

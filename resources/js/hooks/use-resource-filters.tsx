@@ -17,6 +17,7 @@ interface Filters {
     date_to: string;
     sort_by: string;
     sort_order: string;
+    page?: string | number;
     bank_id?: string;
     reference_type?: string;
     payment_method?: string;
@@ -63,11 +64,16 @@ const useResourceFilters = (
                 setAllFilters((prevFilters) => ({
                     ...prevFilters,
                     ...newFilters,
+                    page: 1, // Reset page when search term starts changing
                 }));
                 return;
             }
 
-            const updatedFilters = { ...allFilters, ...newFilters };
+            const updatedFilters = { 
+                ...allFilters, 
+                ...newFilters,
+                page: 1 // Reset page on filter change
+            };
             setAllFilters(updatedFilters);
 
             if (options.isSPA) {
@@ -87,11 +93,13 @@ const useResourceFilters = (
         [searchTerm, allFilters, resourceIndexRoute, options.isSPA],
     );
 
+    // Search effect: Trigger redirect when debouncedSearchTerm changes and differs from URL
     useEffect(() => {
-        if (debouncedSearchTerm !== allFilters.search) {
+        if (debouncedSearchTerm !== initialFilters.search) {
             const updatedFilters = {
                 ...allFilters,
                 search: debouncedSearchTerm,
+                page: 1, // Always reset to page 1 on search
             };
 
             setAllFilters(updatedFilters);
@@ -110,7 +118,8 @@ const useResourceFilters = (
                 window.location.href = url.toString();
             }
         }
-    }, [debouncedSearchTerm, allFilters, resourceIndexRoute, options.isSPA]);
+    }, [debouncedSearchTerm, initialFilters.search, resourceIndexRoute, options.isSPA]);
+    // Note: removed allFilters from dependencies to prevent infinite loops and premature triggers
 
     return {
         allFilters,

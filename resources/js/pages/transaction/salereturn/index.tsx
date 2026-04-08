@@ -32,6 +32,7 @@ interface PageProps {
         customer_id: string;
         sort_by: string;
         sort_order: string;
+        page?: string | number;
     };
 }
 
@@ -58,6 +59,7 @@ export default function SaleReturnIndex({
         customer_id: '',
         sort_by: 'return_date',
         sort_order: 'desc',
+        page: returns.current_page,
     },
 }: PageProps) {
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(

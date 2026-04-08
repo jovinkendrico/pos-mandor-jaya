@@ -42,6 +42,7 @@ interface PageProps {
         reference_type: string;
         sort_by: string;
         sort_order: string;
+        page?: string | number;
     };
 }
 
@@ -69,6 +70,7 @@ const CashOutIndex = (props: PageProps) => {
             reference_type: 'all',
             sort_by: 'cash_out_date',
             sort_order: 'desc',
+            page: cashOuts.current_page,
         },
     } = props;
     const { flash } = usePage<InertiaPageProps>().props;

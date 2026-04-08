@@ -34,6 +34,7 @@ interface PageProps {
         date_to: string;
         sort_by: string;
         sort_order: string;
+        page?: string | number;
     };
 }
 
@@ -61,6 +62,7 @@ const PurchaseIndex = (props: PageProps) => {
             date_to: '',
             sort_by: 'purchase_number',
             sort_order: 'desc',
+            page: purchases.current_page,
         },
     } = props;
     const { flash } = usePage<InertiaPageProps>().props;
