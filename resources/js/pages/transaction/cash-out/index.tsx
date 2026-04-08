@@ -78,7 +78,7 @@ const CashOutIndex = (props: PageProps) => {
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
-        filters,
+        { ...filters, page: cashOuts.current_page },
     );
 
     const [selectedCashOut, setSelectedCashOut] = useState<

@@ -83,7 +83,7 @@ const PurchaseReturnIndex = (props: PageProps) => {
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
-        filters,
+        { ...filters, page: returns.current_page },
     );
 
     const [selectedPurchaseReturn, setSelectedPurchaseReturn] = useState<

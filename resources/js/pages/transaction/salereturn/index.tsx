@@ -64,7 +64,7 @@ export default function SaleReturnIndex({
 }: PageProps) {
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
-        filters,
+        { ...filters, page: returns.current_page },
     );
     const { hasPermission } = usePermission();
 

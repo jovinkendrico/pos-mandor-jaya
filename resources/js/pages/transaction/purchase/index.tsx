@@ -71,7 +71,7 @@ const PurchaseIndex = (props: PageProps) => {
 
     const { allFilters, searchTerm, handleFilterChange } = useResourceFilters(
         index,
-        filters,
+        { ...filters, page: purchases.current_page },
     );
 
     const [selectedPurchase, setSelectedPurchase] = useState<
