@@ -63,7 +63,6 @@ const TablePagination = (props: TablePaginationProps) => {
                                     )}
                                     as="button"
                                     disabled={!link.url}
-                                    preserveState
                                     preserveScroll
                                 >
                                     {content}
