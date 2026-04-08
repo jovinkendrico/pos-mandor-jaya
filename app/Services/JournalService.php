@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 
 class JournalService
 {
+    public static $skipTransactionCreation = false;
+
     /**
      * Post cash in to journal
      */
@@ -292,6 +294,11 @@ class JournalService
                 ->where('is_active', true)
                 ->first();
 
+            // Get Kas Besar account (1102)
+            $kasBesarAccount = ChartOfAccount::where('code', '1102')
+                ->where('is_active', true)
+                ->first();
+
             if (!$receivableAccount || !$incomeAccount || !$hppAccount || !$inventoryAccount || !$kasBesarAccount) {
                 throw new \Exception('Chart of Account tidak ditemukan. Pastikan akun Piutang Usaha (1201), Pendapatan (4101), HPP (5101), Persediaan (1301), dan Kas Besar (1102) sudah ada.');
             }
@@ -381,33 +388,35 @@ class JournalService
                 ]);
 
                 // Create CashOut record for visibility in Kas Keluar menu
-                $cashOutNumber = \App\Models\CashOut::generateCashOutNumber();
-                $cashOut = \App\Models\CashOut::create([
-                    'cash_out_number' => $cashOutNumber,
-                    'cash_out_date' => $sale->sale_date,
-                    'bank_id' => 1, // KAS BESAR
-                    'chart_of_account_id' => $receivableAccount->id, // Debited to AR
-                    'amount' => $loanTotal,
-                    'description' => "Pinjaman Tunai / Uang Jalan di Penjualan #{$sale->sale_number}",
-                    'status' => 'posted',
-                    'reference_type' => 'Sale',
-                    'reference_id' => $sale->id,
-                    'created_by' => auth()->id() ?? 1,
-                    'updated_by' => auth()->id() ?? 1,
-                ]);
+                if (!self::$skipTransactionCreation) {
+                    $cashOutNumber = \App\Models\CashOut::generateCashOutNumber();
+                    $cashOut = \App\Models\CashOut::create([
+                        'cash_out_number' => $cashOutNumber,
+                        'cash_out_date' => $sale->sale_date,
+                        'bank_id' => 1, // KAS BESAR
+                        'chart_of_account_id' => $receivableAccount->id, // Debited to AR
+                        'amount' => $loanTotal,
+                        'description' => "Pinjaman Tunai / Uang Jalan di Penjualan #{$sale->sale_number}",
+                        'status' => 'posted',
+                        'reference_type' => 'Sale',
+                        'reference_id' => $sale->id,
+                        'created_by' => auth()->id() ?? 1,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
 
-                // Create Cash Movement for Kas Besar
-                $bank = \App\Models\Bank::find(1); // KAS BESAR
-                if ($bank) {
-                    app(\App\Services\CashMovementService::class)->createMovement(
-                        $bank,
-                        'CashOut', // Link to CashOut instead of Sale for better traceability
-                        $cashOut->id,
-                        $sale->sale_date,
-                        0,
-                        $loanTotal,
-                        "Kas Keluar #{$cashOut->cash_out_number} (Ref: Sale #{$sale->sale_number})"
-                    );
+                    // Create Cash Movement for Kas Besar
+                    $bank = \App\Models\Bank::find(1); // KAS BESAR
+                    if ($bank) {
+                        app(\App\Services\CashMovementService::class)->createMovement(
+                            $bank,
+                            'CashOut', // Link to CashOut instead of Sale for better traceability
+                            $cashOut->id,
+                            $sale->sale_date,
+                            0,
+                            $loanTotal,
+                            "Kas Keluar #{$cashOut->cash_out_number} (Ref: Sale #{$sale->sale_number})"
+                        );
+                    }
                 }
             }
 
