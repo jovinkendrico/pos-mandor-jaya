@@ -71,6 +71,12 @@ export default function GeneralLedgerIndex({
             <Head title="Buku Besar" />
             <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Buku Besar" />
+                <Button 
+                    className="btn-primary"
+                    onClick={() => window.open(`/general-ledger/print-all?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}`, '_blank')}
+                >
+                    Cetak Semua (PDF)
+                </Button>
             </div>
 
             <FilterBar

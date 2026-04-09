@@ -128,8 +128,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Accounting Reports
     Route::get('profit-loss', [ProfitLossController::class, 'index'])->name('profit-loss.index');
+    Route::get('profit-loss/print', [ProfitLossController::class, 'print'])->name('profit-loss.print');
     Route::get('general-ledger', [GeneralLedgerController::class, 'index'])->name('general-ledger.index');
+    Route::get('general-ledger/print-all', [GeneralLedgerController::class, 'printAll'])->name('general-ledger.print-all');
     Route::get('general-ledger/{account}', [GeneralLedgerController::class, 'show'])->name('general-ledger.show');
+    Route::get('general-ledger/{account}/print', [GeneralLedgerController::class, 'printShow'])->name('general-ledger.print-show');
 
     // Business Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

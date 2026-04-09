@@ -10,6 +10,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class GeneralLedgerController extends Controller
 {
@@ -64,6 +66,83 @@ class GeneralLedgerController extends Controller
             'vehicles' => $vehicles,
             'ledgerData' => $ledgerData,
         ]);
+    }
+
+    /**
+     * Print all accounts ledger as PDF
+     */
+    public function printAll(Request $request)
+    {
+        $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+        $vehicleId = $request->get('vehicle_id');
+
+        // Get all active accounts
+        $accounts = ChartOfAccount::where('is_active', true)
+            ->orderBy('code')
+            ->get();
+
+        $allLedgerData = [];
+
+        foreach ($accounts as $account) {
+            // Only include accounts with transactions OR non-zero opening balance
+            $openingBalance = $this->getOpeningBalance($account->id, $dateFrom, $vehicleId);
+            $hasActivity = $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId);
+
+            if ($openingBalance != 0 || $hasActivity) {
+                $allLedgerData[] = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId);
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.reports.general-ledger-all', [
+            'title' => 'Buku Besar Lengkap',
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'allLedgerData' => $allLedgerData,
+        ])->setPaper('a4', 'landscape'); // Use landscape for detailed ledger
+
+        return $pdf->download('buku-besar-lengkap-' . $dateFrom . '-to-' . $dateTo . '.pdf');
+    }
+
+    /**
+     * Print specific account ledger as PDF
+     */
+    public function printShow(Request $request, ChartOfAccount $account)
+    {
+        $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+        $vehicleId = $request->get('vehicle_id');
+
+        $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId);
+        $vehicles = \App\Models\Vehicle::orderBy('police_number')->get();
+
+        $groupedLedgerData = [];
+        if (!$vehicleId) {
+            foreach ($vehicles as $v) {
+                $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id);
+                if (count($vLedger['transactions']) > 0 || $vLedger['opening_balance'] != 0) {
+                    $vLedger['vehicle'] = $v;
+                    $groupedLedgerData[] = $vLedger;
+                }
+            }
+
+            $noVehicleLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1);
+            if (count($noVehicleLedger['transactions']) > 0 || $noVehicleLedger['opening_balance'] != 0) {
+                $noVehicleLedger['vehicle'] = (object) ['id' => 0, 'police_number' => 'None'];
+                $groupedLedgerData[] = $noVehicleLedger;
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.reports.general-ledger-detail', [
+            'title' => 'Buku Besar - ' . $account->name,
+            'account' => $account,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'ledgerData' => $ledgerData,
+            'groupedLedgerData' => $groupedLedgerData,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('buku-besar-' . $account->code . '-' . $dateFrom . '-to-' . $dateTo . '.pdf');
     }
 
     /**

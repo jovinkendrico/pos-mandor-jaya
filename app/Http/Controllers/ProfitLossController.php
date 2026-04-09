@@ -21,6 +21,38 @@ class ProfitLossController extends Controller
         $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
         $dateTo = $request->get('date_to', now()->format('Y-m-d'));
 
+        $data = $this->getProfitLossData($dateFrom, $dateTo);
+
+        return Inertia::render('accounting/profit-loss/index', array_merge($data, [
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+        ]));
+    }
+
+    /**
+     * Print profit and loss report as PDF
+     */
+    public function print(Request $request)
+    {
+        $dateFrom = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+
+        $data = $this->getProfitLossData($dateFrom, $dateTo);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.reports.profit-loss', array_merge($data, [
+            'title' => 'Laporan Laba Rugi',
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+        ]))->setPaper('a4', 'portrait');
+
+        return $pdf->download('laporan-laba-rugi-' . $dateFrom . '-to-' . $dateTo . '.pdf');
+    }
+
+    /**
+     * Get profit and loss data calculation
+     */
+    private function getProfitLossData(string $dateFrom, string $dateTo): array
+    {
         // Get all income accounts (type: income, revenue, pendapatan)
         $incomeAccounts = ChartOfAccount::whereIn('type', ['income', 'revenue', 'pendapatan'])
             ->where('is_active', true)
@@ -83,9 +115,7 @@ class ProfitLossController extends Controller
         $grossProfit = $totalIncome - $totalHPP;
         $netProfit = $grossProfit - $totalExpense; // Total expense already excludes HPP
 
-        return Inertia::render('accounting/profit-loss/index', [
-            'dateFrom' => $dateFrom,
-            'dateTo' => $dateTo,
+        return [
             'incomeDetails' => $incomeDetails,
             'expenseDetails' => $expenseDetails,
             'totalIncome' => $totalIncome,
@@ -93,7 +123,7 @@ class ProfitLossController extends Controller
             'grossProfit' => $grossProfit,
             'totalExpense' => $totalExpense, // Already excludes HPP
             'netProfit' => $netProfit,
-        ]);
+        ];
     }
 
     /**

@@ -66,6 +66,12 @@ export default function ProfitLossIndex({
             <Head title="Laporan Laba Rugi" />
             <div className="mb-4 flex items-center justify-between">
                 <PageTitle title="Laporan Laba Rugi" />
+                <Button 
+                    className="btn-primary"
+                    onClick={() => window.open(`/profit-loss/print?date_from=${filters.date_from}&date_to=${filters.date_to}`, '_blank')}
+                >
+                    Cetak PDF
+                </Button>
             </div>
 
             <Card className="content mb-4">

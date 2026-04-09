@@ -79,6 +79,12 @@ export default function GeneralLedgerShow({
                         title={`Buku Besar - ${account.code} - ${account.name}`}
                     />
                 </div>
+                <Button 
+                    className="btn-primary"
+                    onClick={() => window.open(`/general-ledger/${account.id}/print?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}`, '_blank')}
+                >
+                    Cetak PDF
+                </Button>
             </div>
 
             <Card className="content mb-4">
