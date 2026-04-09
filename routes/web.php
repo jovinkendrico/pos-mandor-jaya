@@ -695,50 +695,43 @@ Route::get('/fix-kas-medan-live', function () {
         Bank::where('id', $bankId)->update(['initial_balance' => 0]);
         $output[] = "Set Bank 1 initial balance to 0.";
 
+        // Delete rogue Cash Movements manually
         $cmInitials = CashMovement::where('bank_id', $bankId)
-            ->where('description', 'like', '%Saldo Awal%')
+            ->where(function($q) {
+                $q->where('description', 'like', '%Saldo Awal%')
+                  ->orWhereIn('debit', [99900000, 100000]);
+            })
             ->get();
+            
         foreach ($cmInitials as $cm) {
-            $cm->delete();
-            $output[] = "Deleted CashMovement #{$cm->id} ({$cm->description} - {$cm->debit}).";
+            // Be careful to only delete those that match our target anomalies exactly.
+            if ($cm->debit == 99900000 || $cm->debit == 100000 || stripos($cm->description, 'Saldo Awal') !== false) {
+                $cm->delete();
+                $output[] = "Deleted CashMovement #{$cm->id} ({$cm->description} - {$cm->debit}).";
+            }
         }
 
-        $payments = MemberLoanPayment::whereIn('amount', [99900000, 100000])->where('bank_id', $bankId)->where('status', 'confirmed')->get();
-        foreach ($payments as $payment) {
-            $cashIns = CashIn::where('reference_type', 'MemberLoanPayment')->where('reference_id', $payment->id)->get();
-            foreach ($cashIns as $cashIn) {
-                CashMovement::where('reference_type', 'CashIn')->where('reference_id', $cashIn->id)->delete();
-                $je = JournalEntry::where('reference_type', 'CashIn')->where('reference_id', $cashIn->id)->first();
-                if ($je) {
-                    JournalEntryDetail::where('journal_entry_id', $je->id)->delete();
-                    $je->delete();
-                }
-                $cashIn->delete();
-                $output[] = "Deleted CashIn & Journals for Payment #{$payment->id}";
-            }
-            
-            $jeDirect = JournalEntry::where('reference_type', 'MemberLoanPayment')->where('reference_id', $payment->id)->first();
-            if ($jeDirect) {
-                JournalEntryDetail::where('journal_entry_id', $jeDirect->id)->delete();
-                $jeDirect->delete();
-            }
-            CashMovement::where('reference_type', 'MemberLoanPayment')->where('reference_id', $payment->id)->delete();
-            
-            $payment->status = 'pending';
-            $payment->save();
-            $loan = $payment->loan;
-            $loan->remaining_balance = $loan->remaining_balance + $payment->amount;
-            $loan->save();
-            $output[] = "Unconfirmed MemberLoanPayment #{$payment->id} ({$payment->amount}).";
+        // Delete the exact Journals
+        $targetJournals = ['JRN-20260225-00001', 'JRN-20260310-00039'];
+        $jrnEntries = JournalEntry::whereIn('journal_number', $targetJournals)->get();
+        foreach ($jrnEntries as $je) {
+            JournalEntryDetail::where('journal_entry_id', $je->id)->delete();
+            $je->delete();
+            $output[] = "Deleted specific Journal {$je->journal_number}.";
         }
 
+        // Recalculate balances
         $movements = CashMovement::where('bank_id', $bankId)->orderBy('movement_date', 'asc')->orderBy('id', 'asc')->get();
         $runningBalance = 0; 
         foreach ($movements as $movement) {
             $runningBalance = round($runningBalance + $movement->debit - $movement->credit, 2);
             DB::table('cash_movements')->where('id', $movement->id)->update(['balance' => $runningBalance]);
         }
-        $output[] = "Recalculated balances. New Ending Balance: " . number_format($runningBalance, 2);
+        
+        // Update the Bank balance column explicitly so the outside matches the inside!
+        DB::table('banks')->where('id', $bankId)->update(['balance' => $runningBalance]);
+
+        $output[] = "Recalculated balances. New Ending Balance synced to Bank 1: " . number_format($runningBalance, 2);
 
         DB::commit();
         return response()->json(['status' => 'success', 'messages' => $output]);
