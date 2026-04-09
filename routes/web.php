@@ -678,5 +678,75 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
+use App\Models\Bank;
+use App\Models\MemberLoanPayment;
+use App\Models\CashIn;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryDetail;
+use App\Models\CashMovement;
+use Illuminate\Support\Facades\DB;
+
+Route::get('/fix-kas-medan-live', function () {
+    DB::beginTransaction();
+    try {
+        $bankId = 1;
+        $output = [];
+        
+        Bank::where('id', $bankId)->update(['initial_balance' => 0]);
+        $output[] = "Set Bank 1 initial balance to 0.";
+
+        $cmInitials = CashMovement::where('bank_id', $bankId)
+            ->where('description', 'like', '%Saldo Awal%')
+            ->get();
+        foreach ($cmInitials as $cm) {
+            $cm->delete();
+            $output[] = "Deleted CashMovement #{$cm->id} ({$cm->description} - {$cm->debit}).";
+        }
+
+        $payments = MemberLoanPayment::whereIn('amount', [99900000, 100000])->where('bank_id', $bankId)->where('status', 'confirmed')->get();
+        foreach ($payments as $payment) {
+            $cashIns = CashIn::where('reference_type', 'MemberLoanPayment')->where('reference_id', $payment->id)->get();
+            foreach ($cashIns as $cashIn) {
+                CashMovement::where('reference_type', 'CashIn')->where('reference_id', $cashIn->id)->delete();
+                $je = JournalEntry::where('reference_type', 'CashIn')->where('reference_id', $cashIn->id)->first();
+                if ($je) {
+                    JournalEntryDetail::where('journal_entry_id', $je->id)->delete();
+                    $je->delete();
+                }
+                $cashIn->delete();
+                $output[] = "Deleted CashIn & Journals for Payment #{$payment->id}";
+            }
+            
+            $jeDirect = JournalEntry::where('reference_type', 'MemberLoanPayment')->where('reference_id', $payment->id)->first();
+            if ($jeDirect) {
+                JournalEntryDetail::where('journal_entry_id', $jeDirect->id)->delete();
+                $jeDirect->delete();
+            }
+            CashMovement::where('reference_type', 'MemberLoanPayment')->where('reference_id', $payment->id)->delete();
+            
+            $payment->status = 'pending';
+            $payment->save();
+            $loan = $payment->loan;
+            $loan->remaining_balance = $loan->remaining_balance + $payment->amount;
+            $loan->save();
+            $output[] = "Unconfirmed MemberLoanPayment #{$payment->id} ({$payment->amount}).";
+        }
+
+        $movements = CashMovement::where('bank_id', $bankId)->orderBy('movement_date', 'asc')->orderBy('id', 'asc')->get();
+        $runningBalance = 0; 
+        foreach ($movements as $movement) {
+            $runningBalance = round($runningBalance + $movement->debit - $movement->credit, 2);
+            DB::table('cash_movements')->where('id', $movement->id)->update(['balance' => $runningBalance]);
+        }
+        $output[] = "Recalculated balances. New Ending Balance: " . number_format($runningBalance, 2);
+
+        DB::commit();
+        return response()->json(['status' => 'success', 'messages' => $output]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+});
+
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
