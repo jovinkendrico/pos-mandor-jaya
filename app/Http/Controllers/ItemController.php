@@ -532,7 +532,7 @@ class ItemController extends Controller
 
                 StockMovement::create([
                     'item_id'            => $item->id,
-                    'reference_type'     => 'Adjustment',
+                    'reference_type'     => 'StockAdjustment',
                     'reference_id'       => $item->id,
                     'quantity'           => $diff,
                     'unit_cost'          => $unitCost,

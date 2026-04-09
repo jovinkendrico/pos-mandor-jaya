@@ -40,6 +40,7 @@ use App\Http\Controllers\PurchaseReturnReportController;
 use App\Http\Controllers\SalePaymentReportController;
 use App\Http\Controllers\PurchasePaymentReportController;
 use App\Http\Controllers\CashInOutReportController;
+use App\Http\Controllers\BankCashMovementReportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\BestSellerReportController;
 use App\Http\Controllers\DeadStockReportController;
@@ -148,6 +149,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/sale-payment', [SalePaymentReportController::class, 'index'])->name('reports.sale-payment');
     Route::get('reports/purchase-payment', [PurchasePaymentReportController::class, 'index'])->name('reports.purchase-payment');
     Route::get('reports/cash-in-out', [CashInOutReportController::class, 'index'])->name('reports.cash-in-out');
+    Route::get('reports/bank-cash-movement', [BankCashMovementReportController::class, 'index'])->name('reports.bank-cash-movement');
     Route::get('reports/best-seller', [BestSellerReportController::class, 'index'])->name('reports.best-seller');
     Route::get('reports/dead-stock', [DeadStockReportController::class, 'index'])->name('reports.dead-stock');
     Route::get('reports/stock-turnover', [StockTurnoverReportController::class, 'index'])->name('reports.stock-turnover');
@@ -169,6 +171,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/sale-payment/print', [SalePaymentReportController::class, 'print'])->name('reports.sale-payment.print');
     Route::get('reports/purchase-payment/print', [PurchasePaymentReportController::class, 'print'])->name('reports.purchase-payment.print');
     Route::get('reports/cash-in-out/print', [CashInOutReportController::class, 'print'])->name('reports.cash-in-out.print');
+    Route::get('reports/bank-cash-movement/print', [BankCashMovementReportController::class, 'print'])->name('reports.bank-cash-movement.print');
     Route::get('reports/best-seller/print', [BestSellerReportController::class, 'print'])->name('reports.best-seller.print');
     Route::get('reports/dead-stock/print', [DeadStockReportController::class, 'print'])->name('reports.dead-stock.print');
     Route::get('reports/stock-turnover/print', [StockTurnoverReportController::class, 'print'])->name('reports.stock-turnover.print');

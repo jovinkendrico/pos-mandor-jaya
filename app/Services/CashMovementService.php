@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 
 class CashMovementService
 {
+    public static $skipRecalculate = false;
+
     /**
      * Create a cash movement record and update bank balance
      * 
@@ -74,6 +76,10 @@ class CashMovementService
                       });
                 })
                 ->exists();
+
+            if (self::$skipRecalculate) {
+                return $cashMovement;
+            }
 
             if ($hasFutureMovements) {
                 $this->recalculateBalances($bank, $formattedDate);

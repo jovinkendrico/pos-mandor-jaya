@@ -205,6 +205,16 @@ const reports = [
         permission: 'reports.view',
     },
     {
+        id: 'bank-cash-movement',
+        title: 'Laporan Pergerakan Kas Bank',
+        description: 'Detail mutasi pergerakan kas masuk dan keluar untuk spesifik bank/kas',
+        href: '/reports/bank-cash-movement',
+        icon: Receipt,
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50',
+        permission: 'reports.view',
+    },
+    {
         id: 'best-seller',
         title: 'Laporan Barang Paling Laku',
         description:

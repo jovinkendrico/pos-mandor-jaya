@@ -1028,7 +1028,7 @@ class StockService
 
             $movementData = [
                 'item_id'            => $item->id,
-                'reference_type'     => $context['reference_type'] ?? 'Adjustment',
+                'reference_type'     => $context['reference_type'] ?? 'StockAdjustment',
                 'reference_id'       => $context['reference_id'] ?? $item->id,
                 'quantity'           => -$quantity,
                 'unit_cost'          => $context['unit_cost'] ?? $unitCost,

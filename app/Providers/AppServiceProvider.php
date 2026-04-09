@@ -27,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
             'PurchasePayment' => \App\Models\PurchasePayment::class,
             'Sale' => \App\Models\Sale::class,
             'SalePayment' => \App\Models\SalePayment::class,
+            'StockAdjustment' => \App\Models\StockMovement::class,
+            'Adjustment' => \App\Models\StockMovement::class,
         ]);
     }
 }
