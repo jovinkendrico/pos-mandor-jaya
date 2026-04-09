@@ -61,6 +61,11 @@ class BankCashMovementReportController extends Controller
                     $credit = (float) $movement->credit;
                     $balanceTracker = round($balanceTracker + $debit - $credit, 2);
 
+                    // Skip Saldo Awal entries as they are already part of the opening balance calculation
+                    if ($movement->reference_type === 'Bank') {
+                        continue;
+                    }
+
                     // Get reference number based on reference type
                     $referenceNumber = '-';
                     if ($movement->reference_type && $movement->reference_id) {
@@ -178,6 +183,11 @@ class BankCashMovementReportController extends Controller
                 $debit = (float) $movement->debit;
                 $credit = (float) $movement->credit;
                 $balanceTracker = round($balanceTracker + $debit - $credit, 2);
+
+                // Skip Saldo Awal entries as they are already part of the opening balance calculation
+                if ($movement->reference_type === 'Bank') {
+                    continue;
+                }
 
                 $referenceNumber = '-';
                 if ($movement->reference_type && $movement->reference_id) {
