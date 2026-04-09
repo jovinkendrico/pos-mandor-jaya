@@ -81,6 +81,8 @@ class GeneralLedgerController extends Controller
         $accounts = ChartOfAccount::where('is_active', true)
             ->orderBy('code')
             ->get();
+        
+        $vehicles = \App\Models\Vehicle::orderBy('police_number')->get();
 
         $allLedgerData = [];
 
@@ -90,7 +92,31 @@ class GeneralLedgerController extends Controller
             $hasActivity = $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId);
 
             if ($openingBalance != 0 || $hasActivity) {
-                $allLedgerData[] = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId);
+                $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId);
+                
+                $groupedData = [];
+                if (!$vehicleId) {
+                    // Group by vehicle for this specific account
+                    foreach ($vehicles as $v) {
+                        $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id);
+                        if (count($vLedger['transactions']) > 0 || $vLedger['opening_balance'] != 0) {
+                            $vLedger['vehicle'] = $v;
+                            $groupedData[] = $vLedger;
+                        }
+                    }
+
+                    $noVehicleLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1);
+                    if (count($noVehicleLedger['transactions']) > 0 || $noVehicleLedger['opening_balance'] != 0) {
+                        $noVehicleLedger['vehicle'] = (object) ['id' => 0, 'police_number' => 'None'];
+                        $groupedData[] = $noVehicleLedger;
+                    }
+                }
+
+                $allLedgerData[] = [
+                    'account' => $account,
+                    'summary' => $accountData,
+                    'grouped' => $groupedData,
+                ];
             }
         }
 
@@ -98,8 +124,9 @@ class GeneralLedgerController extends Controller
             'title' => 'Buku Besar Lengkap',
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
+            'vehicleId' => $vehicleId,
             'allLedgerData' => $allLedgerData,
-        ])->setPaper('a4', 'landscape'); // Use landscape for detailed ledger
+        ])->setPaper('a4', 'landscape');
 
         return $pdf->download('buku-besar-lengkap-' . $dateFrom . '-to-' . $dateTo . '.pdf');
     }
