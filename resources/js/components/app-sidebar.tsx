@@ -305,6 +305,12 @@ const mainNavItems: NavItem[] = [
 
             },
             {
+                title: 'Laporan Pergerakan Kas Bank',
+                href: '/reports/bank-cash-movement',
+                permissions: ['reports.view'],
+
+            },
+            {
                 title: 'Laporan Barang Paling Laku',
                 href: '/reports/best-seller',
                 permissions: ['reports.view'],
