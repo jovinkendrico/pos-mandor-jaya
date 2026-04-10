@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
             'SalePayment' => \App\Models\SalePayment::class,
             'StockAdjustment' => \App\Models\StockMovement::class,
             'Adjustment' => \App\Models\StockMovement::class,
+            'OpeningBalance' => \App\Models\ChartOfAccount::class,
         ]);
     }
 }
