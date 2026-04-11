@@ -16,21 +16,21 @@ import useResourceFilters from '@/hooks/use-resource-filters';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { show } from '@/routes/general-ledger';
-import { ChartOfAccount, LedgerData, Vehicle } from '@/types';
+import { ChartOfAccount, LedgerData, Vehicle, Bank } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { Info } from 'lucide-react';
 import { useState } from 'react';
-
-
 
 interface PageProps {
     dateFrom: string;
     dateTo: string;
     accountId?: string;
     vehicleId?: string;
+    bankId?: string;
     accounts: ChartOfAccount[];
     vehicles: Vehicle[];
+    banks: Bank[];
     ledgerData: LedgerData[];
 }
 
@@ -46,8 +46,10 @@ export default function GeneralLedgerIndex({
     dateTo,
     accountId,
     vehicleId,
+    bankId,
     accounts,
     vehicles,
+    banks,
     ledgerData,
 }: PageProps) {
     const [defaultFilters] = useState({
@@ -56,6 +58,7 @@ export default function GeneralLedgerIndex({
         date_to: dateTo,
         account_id: accountId || '',
         vehicle_id: vehicleId || '',
+        bank_id: bankId || '',
         status: 'all',
         sort_by: 'date',
         sort_order: 'desc',
@@ -73,7 +76,7 @@ export default function GeneralLedgerIndex({
                 <PageTitle title="Buku Besar" />
                 <Button 
                     className="btn-primary"
-                    onClick={() => window.open(`/general-ledger/print-all?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}`, '_blank')}
+                    onClick={() => window.open(`/general-ledger/print-all?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}&bank_id=${bankId || ''}`, '_blank')}
                 >
                     Cetak Semua (PDF)
                 </Button>
@@ -141,6 +144,32 @@ export default function GeneralLedgerIndex({
                                             value={vehicle.id.toString()}
                                         >
                                             {vehicle.police_number}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="w-[200px]">
+                            <Label htmlFor="bank_id">Kas / Bank</Label>
+                            <Select
+                                value={allFilters.bank_id || 'all'}
+                                onValueChange={(value) =>
+                                    handleFilterChange({
+                                        bank_id: value === 'all' ? '' : value,
+                                    })
+                                }
+                            >
+                                <SelectTrigger className="combobox">
+                                    <SelectValue placeholder="Pilih Kas" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua Kas</SelectItem>
+                                    {banks.map((bank) => (
+                                        <SelectItem
+                                            key={bank.id}
+                                            value={bank.id.toString()}
+                                        >
+                                            {bank.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
