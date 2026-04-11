@@ -27,8 +27,8 @@
 </div>
 
 @foreach($allLedgerData as $index => $item)
-    <div style="margin-top: {{ $index > 0 ? '40px' : '20px' }}; page-break-inside: avoid;">
-        <h2 style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 10px; color: #000; font-size: 1.25em;">
+    <div style="margin-top: {{ $index > 0 ? '30px' : '10px' }};">
+        <h2 style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 10px; color: #000; font-size: 1.2em;">
             Akun: {{ $item['account']->code }} - {{ $item['account']->name }}
         </h2>
         
@@ -44,12 +44,14 @@
         @endphp
 
         @foreach($bankGroupsAll as $bankName => $vehicleData)
-            <div style="margin-top: 15px; background-color: #f5f5f5; padding: 5px; border-left: 5px solid #333;">
-                <h3 style="margin: 0; text-transform: uppercase; font-size: 1.05em;">{{ $bankName }}</h3>
-            </div>
+            @if($bankName !== 'Tanpa Kas')
+                <div style="margin-top: 15px; background-color: #f5f5f5; padding: 5px; border-left: 5px solid #333;">
+                    <h3 style="margin: 0; text-transform: uppercase; font-size: 1.05em;">{{ $bankName }}</h3>
+                </div>
+            @endif
 
             @foreach($vehicleData as $data)
-                <div style="margin-top: 10px; margin-left: 15px;">
+                <div style="margin-top: 10px; margin-left: {{ $bankName !== 'Tanpa Kas' ? '15px' : '0' }};">
                     @if(isset($data['vehicle']) && (is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle']) !== 'None')
                         <h4 style="margin-bottom: 5px; color: #555; border-bottom: 1px solid #ddd; display: inline-block; font-size: 0.95em;">
                             Divisi: {{ is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle'] }}
