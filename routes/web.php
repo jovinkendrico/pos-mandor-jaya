@@ -25,6 +25,7 @@ use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\ProfitLossController;
 use App\Http\Controllers\GeneralLedgerController;
 use App\Http\Controllers\ExpenseReportController;
+use App\Http\Controllers\IncomeReportController;
 use App\Http\Controllers\SaleReportController;
 use App\Http\Controllers\PurchaseReportController;
 use App\Http\Controllers\ReceivableAgingController;
@@ -137,6 +138,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('reports/expenses', [ExpenseReportController::class, 'index'])->name('reports.expenses.index');
     Route::get('reports/expenses/print', [ExpenseReportController::class, 'print'])->name('reports.expenses.print');
+
+    Route::get('reports/income', [IncomeReportController::class, 'index'])->name('reports.income.index');
+    Route::get('reports/income/print', [IncomeReportController::class, 'print'])->name('reports.income.print');
 
     // Business Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

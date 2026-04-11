@@ -211,6 +211,12 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
         children: [
             {
+                title: 'Laporan Pendapatan',
+                href: '/reports/income',
+                permissions: ['reports.view'],
+
+            },
+            {
                 title: 'Laporan Biaya',
                 href: '/reports/expenses',
                 permissions: ['reports.view'],

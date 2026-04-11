@@ -35,6 +35,16 @@ const breadcrumbs = [
 
 const reports = [
     {
+        id: 'income-report',
+        title: 'Laporan Pendapatan',
+        description: 'Laporan rincian pemasukan pendapatan per akun, kas dan divisi',
+        href: '/reports/income',
+        icon: TrendingUp,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        permission: 'reports.view',
+    },
+    {
         id: 'expense-report',
         title: 'Laporan Biaya',
         description: 'Laporan rincian pengeluaran biaya per akun, kas dan divisi',
