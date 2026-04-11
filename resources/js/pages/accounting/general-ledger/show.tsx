@@ -259,13 +259,13 @@ export default function GeneralLedgerShow({
                         <div className="space-y-6 ml-4 border-l-4 border-primary-200 dark:border-primary-800 pl-4">
                             {bankGroup.vehicleData.map((data, vIndex) => (
                                 <Card key={vIndex} className="content">
-                                    <CardHeader className="py-3 px-4 bg-muted/30">
-                                        <CardTitle className="text-lg">
-                                            {data.vehicle?.police_number && data.vehicle.police_number !== 'None'
-                                                ? `Divisi: ${data.vehicle.police_number}`
-                                                : 'Tanpa Divisi'}
-                                        </CardTitle>
-                                    </CardHeader>
+                                    {data.vehicle?.police_number && data.vehicle.police_number !== 'None' && (
+                                        <CardHeader className="py-3 px-4 bg-muted/30">
+                                            <CardTitle className="text-lg">
+                                                Divisi: {data.vehicle.police_number}
+                                            </CardTitle>
+                                        </CardHeader>
+                                    )}
                                     <CardContent className="p-0">
                                         <div className="overflow-x-auto">
                                             <Table className="content">

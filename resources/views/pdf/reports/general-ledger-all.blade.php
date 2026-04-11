@@ -54,8 +54,6 @@
                         <h4 style="margin-bottom: 5px; color: #555; border-bottom: 1px solid #ddd; display: inline-block;">
                             Divisi: {{ is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle'] }}
                         </h4>
-                    @else
-                        <h4 style="margin-bottom: 5px; color: #555; border-bottom: 1px solid #ddd; display: inline-block;">Tanpa Divisi</h4>
                     @endif
 
                     <table>

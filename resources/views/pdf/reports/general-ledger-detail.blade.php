@@ -34,8 +34,6 @@
         <div style="margin-top: 15px; margin-left: 20px;">
             @if(isset($data['vehicle']) && $data['vehicle']->police_number !== 'None')
                 <h4 style="margin-bottom: 5px; color: #555;">Divisi: {{ $data['vehicle']->police_number }}</h4>
-            @else
-                <h4 style="margin-bottom: 5px; color: #555;">Tanpa Divisi</h4>
             @endif
             
             <table>
