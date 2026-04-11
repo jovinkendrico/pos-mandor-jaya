@@ -1,15 +1,19 @@
 @extends('pdf.reports.base')
 
 @section('content')
-<div style="margin-bottom: 20px;">
-    <table>
+<div class="filter-section">
+    <table class="filter-grid" style="margin:0;">
         <tr>
-            <td style="width: 120px; font-weight: bold; border: none; padding: 2px;">Akun</td>
-            <td style="border: none; padding: 2px;">: {{ $account->code }} - {{ $account->name }}</td>
+            <td class="filter-label" style="border:none; padding:2px;">KODE AKUN</td>
+            <td style="border:none; padding:2px;">: {{ $account->code }}</td>
         </tr>
         <tr>
-            <td style="font-weight: bold; border: none; padding: 2px;">Periode</td>
-            <td style="border: none; padding: 2px;">: {{ \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($dateTo)->format('d/m/Y') }}</td>
+            <td class="filter-label" style="border:none; padding:2px;">NAMA AKUN</td>
+            <td style="border:none; padding:2px; font-weight: bold;">: {{ $account->name }}</td>
+        </tr>
+        <tr>
+            <td class="filter-label" style="border:none; padding:2px;">PERIODE</td>
+            <td style="border:none; padding:2px;">: {{ \Carbon\Carbon::parse($dateFrom)->format('d F Y') }} s/d {{ \Carbon\Carbon::parse($dateTo)->format('d F Y') }}</td>
         </tr>
     </table>
 </div>
@@ -20,22 +24,24 @@
     // Group by bank
     $bankGroups = [];
     foreach($displays as $data) {
-        $bankName = isset($data['bank']) ? $data['bank']->name : 'Tanpa Kas';
+        $bankName = isset($data['bank']) ? (is_object($data['bank']) ? $data['bank']->name : $data['bank']) : 'TANPA KAS';
         $bankGroups[$bankName][] = $data;
     }
 @endphp
 
 @foreach($bankGroups as $bankName => $vehicleData)
-    <div style="margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; background-color: #f0f0f0; padding: 5px;">
-        <h3 style="margin: 0; color: #333; text-transform: uppercase;">{{ $bankName }}</h3>
+    <div class="bank-header">
+        SUMBER KAS: {{ $bankName }}
     </div>
 
     @foreach($vehicleData as $data)
-        <div style="margin-top: 15px; margin-left: 20px;">
-            @if(isset($data['vehicle']) && $data['vehicle']->police_number !== 'None')
-                <h4 style="margin-bottom: 5px; color: #555;">Divisi: {{ $data['vehicle']->police_number }}</h4>
+        <div style="margin-bottom: 30px;">
+            @if(isset($data['vehicle']) && (is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle']) !== 'None')
+                <span class="divisi-header">
+                    DIVISI / UNIT: {{ is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle'] }}
+                </span>
             @else
-                <h4 style="margin-bottom: 5px; color: #555;">Tanpa Divisi</h4>
+                <span class="divisi-header">UMUM / TANPA DIVISI</span>
             @endif
             
             <table>
@@ -50,33 +56,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style="background-color: #fdfdfd; font-weight: bold; font-size: 0.9em;">
-                        <td colspan="5" style="text-align: right;">SALDO AWAL</td>
-                        <td style="text-align: right;">{{ number_format($data['opening_balance'], 0, ',', '.') }}</td>
+                    <tr class="row-opening-balance">
+                        <td colspan="5" class="text-right">SALDO AWAL</td>
+                        <td class="text-right">{{ number_format($data['opening_balance'], 0, ',', '.') }}</td>
                     </tr>
                     
                     @if(count($data['transactions']) === 0)
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 8px; font-size: 0.85em; color: #777;">Tidak ada transaksi.</td>
+                        <td colspan="6" class="text-center" style="padding: 15px; color: #777;">Tidak ada aktivitas transaksi untuk unit ini pada periode tersebut.</td>
                     </tr>
                     @else
                         @foreach($data['transactions'] as $t)
-                        <tr style="font-size: 0.85em;">
-                            <td style="text-align: center;">{{ \Carbon\Carbon::parse($t['date'])->format('d/m/y') }}</td>
-                            <td style="text-align: center;">{{ $t['journal_number'] }}</td>
+                        <tr>
+                            <td class="text-center">{{ \Carbon\Carbon::parse($t['date'])->format('d/m/y') }}</td>
+                            <td class="text-center font-bold" style="font-size: 8px;">{{ $t['journal_number'] }}</td>
                             <td>{{ $t['description'] }}</td>
-                            <td style="text-align: right;">{{ $t['debit'] > 0 ? number_format($t['debit'], 0, ',', '.') : '-' }}</td>
-                            <td style="text-align: right;">{{ $t['credit'] > 0 ? number_format($t['credit'], 0, ',', '.') : '-' }}</td>
-                            <td style="text-align: right;">{{ number_format($t['balance'], 0, ',', '.') }}</td>
+                            <td class="text-right text-success">{{ $t['debit'] > 0 ? number_format($t['debit'], 0, ',', '.') : '-' }}</td>
+                            <td class="text-right text-danger">{{ $t['credit'] > 0 ? number_format($t['credit'], 0, ',', '.') : '-' }}</td>
+                            <td class="text-right font-bold">{{ number_format($t['balance'], 0, ',', '.') }}</td>
                         </tr>
                         @endforeach
                     @endif
 
-                    <tr style="background-color: #f9f9f9; font-weight: bold; font-size: 0.9em;">
-                        <td colspan="3" style="text-align: right;">TOTAL</td>
-                        <td style="text-align: right;">{{ number_format($data['debit_total'], 0, ',', '.') }}</td>
-                        <td style="text-align: right;">{{ number_format($data['credit_total'], 0, ',', '.') }}</td>
-                        <td style="text-align: right;">{{ number_format($data['closing_balance'], 0, ',', '.') }}</td>
+                    <tr class="row-total">
+                        <td colspan="3" class="text-right">TOTAL AKHIR</td>
+                        <td class="text-right text-success">{{ number_format($data['debit_total'], 0, ',', '.') }}</td>
+                        <td class="text-right text-danger">{{ number_format($data['credit_total'], 0, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($data['closing_balance'], 0, ',', '.') }}</td>
                     </tr>
                 </tbody>
             </table>
