@@ -159,7 +159,7 @@ class IncomeReportController extends Controller
     {
         $openingBalance = $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId);
 
-        $query = JournalEntryDetail::with(['journalEntry.reference.details.item', 'journalEntry.reference.details.itemUom.uom', 'vehicle'])
+        $query = JournalEntryDetail::with(['journalEntry.reference', 'vehicle'])
             ->join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $account->id)
             ->where('journal_entries.status', 'posted')
@@ -196,6 +196,13 @@ class IncomeReportController extends Controller
             ->orderBy('journal_entries.id')
             ->select('journal_entry_details.*', 'journal_entries.journal_number', 'journal_entries.journal_date', 'journal_entries.description as journal_description')
             ->get();
+
+        // Load Sale details efficiently for the polymorphic reference
+        $transactions->load(['journalEntry.reference' => function ($morphTo) {
+            $morphTo->morphWith([
+                \App\Models\Sale::class => ['details.item', 'details.itemUom.uom'],
+            ]);
+        }]);
 
         $runningBalance = $openingBalance;
         $transactionDetails = [];
