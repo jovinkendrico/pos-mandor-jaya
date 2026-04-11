@@ -35,6 +35,16 @@ const breadcrumbs = [
 
 const reports = [
     {
+        id: 'expense-report',
+        title: 'Laporan Biaya',
+        description: 'Laporan rincian pengeluaran biaya per akun, kas dan divisi',
+        href: '/reports/expenses',
+        icon: DollarSign,
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+        permission: 'reports.view',
+    },
+    {
         id: 'sale-report',
         title: 'Laporan Penjualan',
         description:

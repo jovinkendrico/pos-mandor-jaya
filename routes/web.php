@@ -24,6 +24,7 @@ use App\Http\Controllers\CashOutController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\ProfitLossController;
 use App\Http\Controllers\GeneralLedgerController;
+use App\Http\Controllers\ExpenseReportController;
 use App\Http\Controllers\SaleReportController;
 use App\Http\Controllers\PurchaseReportController;
 use App\Http\Controllers\ReceivableAgingController;
@@ -133,6 +134,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('general-ledger/print-all', [GeneralLedgerController::class, 'printAll'])->name('general-ledger.print-all');
     Route::get('general-ledger/{account}', [GeneralLedgerController::class, 'show'])->name('general-ledger.show');
     Route::get('general-ledger/{account}/print', [GeneralLedgerController::class, 'printShow'])->name('general-ledger.print-show');
+
+    Route::get('reports/expenses', [ExpenseReportController::class, 'index'])->name('reports.expenses.index');
+    Route::get('reports/expenses/print', [ExpenseReportController::class, 'print'])->name('reports.expenses.print');
 
     // Business Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
