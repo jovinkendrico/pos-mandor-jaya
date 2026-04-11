@@ -25,10 +25,6 @@ import { useState } from 'react';
 interface PageProps {
     dateFrom: string;
     dateTo: string;
-    vehicleId?: string;
-    bankId?: string;
-    vehicles: Vehicle[];
-    banks: Bank[];
     ledgerData: LedgerData[];
 }
 
@@ -43,18 +39,12 @@ const indexRoute = () => ({ url: '/reports/income' });
 export default function IncomeReportIndex({
     dateFrom,
     dateTo,
-    vehicleId,
-    bankId,
-    vehicles,
-    banks,
     ledgerData,
 }: PageProps) {
     const [defaultFilters] = useState({
         search: '',
         date_from: dateFrom,
         date_to: dateTo,
-        vehicle_id: vehicleId || '',
-        bank_id: bankId || '',
         status: 'all',
         sort_by: 'date',
         sort_order: 'desc',
@@ -69,8 +59,6 @@ export default function IncomeReportIndex({
         const queryParams = new URLSearchParams({
             date_from: allFilters.date_from || dateFrom,
             date_to: allFilters.date_to || dateTo,
-            vehicle_id: allFilters.vehicle_id || '',
-            bank_id: allFilters.bank_id || '',
         }).toString();
         
         window.open(`/reports/income/print?${queryParams}`, '_blank');
@@ -103,62 +91,6 @@ export default function IncomeReportIndex({
                 showSearch={false}
                 showDateRange={true}
                 showSort={false}
-                additionalFilters={
-                    <div className="flex gap-4">
-                        <div className="w-[200px]">
-                            <Label htmlFor="bank_id">Kas / Bank</Label>
-                            <Select
-                                value={allFilters.bank_id || 'all'}
-                                onValueChange={(value) =>
-                                    handleFilterChange({
-                                        bank_id: value === 'all' ? '' : value,
-                                    })
-                                }
-                            >
-                                <SelectTrigger className="input-box">
-                                    <SelectValue placeholder="Semua Kas" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Semua Kas</SelectItem>
-                                    {banks.map((bank) => (
-                                        <SelectItem
-                                            key={bank.id}
-                                            value={bank.id.toString()}
-                                        >
-                                            {bank.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="w-[200px]">
-                            <Label htmlFor="vehicle_id">Divisi / Truk</Label>
-                            <Select
-                                value={allFilters.vehicle_id || 'all'}
-                                onValueChange={(value) =>
-                                    handleFilterChange({
-                                        vehicle_id: value === 'all' ? '' : value,
-                                    })
-                                }
-                            >
-                                <SelectTrigger className="input-box">
-                                    <SelectValue placeholder="Semua Divisi" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Semua Divisi</SelectItem>
-                                    {vehicles.map((vehicle) => (
-                                        <SelectItem
-                                            key={vehicle.id}
-                                            value={vehicle.id.toString()}
-                                        >
-                                            {vehicle.police_number}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                }
             />
             
             <div className="mb-4"></div>

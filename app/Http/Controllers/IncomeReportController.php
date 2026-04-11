@@ -59,10 +59,6 @@ class IncomeReportController extends Controller
         return Inertia::render('reports/income/index', [
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
-            'vehicleId' => $vehicleId,
-            'bankId' => $bankId,
-            'vehicles' => $vehicles,
-            'banks' => $banks,
             'ledgerData' => $ledgerData,
         ]);
     }
@@ -93,17 +89,12 @@ class IncomeReportController extends Controller
             $hasActivity = $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId, $bankId);
 
             if ($openingBalance != 0 || $hasActivity) {
-                $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId);
+                $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo);
                 
-                $groupedData = [];
-                if (!$vehicleId && !$bankId) {
-                    $groupedData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks);
-                }
-
                 $allLedgerData[] = [
                     'account' => $account,
                     'summary' => $accountData,
-                    'grouped' => $groupedData,
+                    'grouped' => [], // Keep empty to avoid breaking view
                 ];
             }
         }
@@ -168,7 +159,7 @@ class IncomeReportController extends Controller
     {
         $openingBalance = $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId);
 
-        $query = JournalEntryDetail::with(['journalEntry.reference', 'vehicle'])
+        $query = JournalEntryDetail::with(['journalEntry.reference.details.item', 'journalEntry.reference.details.itemUom.uom', 'vehicle'])
             ->join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
             ->where('journal_entry_details.chart_of_account_id', $account->id)
             ->where('journal_entries.status', 'posted')
@@ -212,10 +203,34 @@ class IncomeReportController extends Controller
         foreach ($transactions as $transaction) {
             // Income: Credit increases balance
             $runningBalance += $transaction->credit - $transaction->debit;
-            $description = $transaction->description ?: $transaction->journal_description;
-
+            
+            $baseDescription = $transaction->description ?: $transaction->journal_description;
             if ($transaction->journalEntry && $transaction->journalEntry->reference && isset($transaction->journalEntry->reference->description)) {
-                $description = $transaction->journalEntry->reference->description;
+                $baseDescription = $transaction->journalEntry->reference->description;
+            }
+
+            // Check for Sale details
+            $detailedInfo = "";
+            if ($transaction->journalEntry && $transaction->journalEntry->reference_type === 'Sale') {
+                $sale = $transaction->journalEntry->reference;
+                if ($sale && $sale->details) {
+                    $itemStrings = [];
+                    foreach ($sale->details as $detail) {
+                        $itemName = $detail->item->name ?? 'Item';
+                        $qty = number_format($detail->quantity, 0, ',', '.');
+                        $uomName = $detail->itemUom->uom->name ?? '';
+                        $price = number_format($detail->price, 0, ',', '.');
+                        $total = number_format($detail->subtotal, 0, ',', '.');
+                        
+                        $itemStrings[] = "{$itemName} {$qty} {$uomName} x Rp.{$price} = Rp.{$total}";
+                    }
+                    $detailedInfo = implode("\n", $itemStrings);
+                }
+            }
+
+            $description = $baseDescription;
+            if ($detailedInfo) {
+                $description = $detailedInfo . ($baseDescription ? " ({$baseDescription})" : "");
             }
 
             $transactionDetails[] = [
