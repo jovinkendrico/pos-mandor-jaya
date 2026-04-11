@@ -2,24 +2,24 @@
 
 @section('content')
 <div class="filter-section">
-    <table class="filter-grid" style="margin:0;">
+    <table class="filter-table" style="margin:0;">
         <tr>
-            <td class="filter-label" style="border:none; padding:2px;">LAPORAN</td>
+            <td class="filter-label">LAPORAN</td>
             <td style="border:none; padding:2px;">: BUKU BESAR LENGKAP</td>
         </tr>
         <tr>
-            <td class="filter-label" style="border:none; padding:2px;">PERIODE</td>
+            <td class="filter-label">PERIODE</td>
             <td style="border:none; padding:2px;">: {{ \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($dateTo)->format('d/m/Y') }}</td>
         </tr>
         @if($vehicleId)
         <tr>
-            <td class="filter-label" style="border:none; padding:2px;">DIVISI</td>
+            <td class="filter-label">DIVISI</td>
             <td style="border:none; padding:2px;">: {{ \App\Models\Vehicle::find($vehicleId)?->police_number ?? '-' }}</td>
         </tr>
         @endif
         @if($bankId)
         <tr>
-            <td class="filter-label" style="border:none; padding:2px;">KAS / BANK</td>
+            <td class="filter-label">KAS / BANK</td>
             <td style="border:none; padding:2px;">: {{ \App\Models\Bank::find($bankId)?->name ?? '-' }}</td>
         </tr>
         @endif
@@ -49,13 +49,13 @@
 
         @foreach($vehicleData as $data)
             <div style="margin-bottom: 25px;">
-                @if(isset($data['vehicle']) && (is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle']) !== 'None')
-                    <span class="divisi-header">
+                <div class="divisi-header">
+                    @if(isset($data['vehicle']) && (is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle']) !== 'None')
                         DIVISI: {{ is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle'] }}
-                    </span>
-                @else
-                    <span class="divisi-header">UMUM / TANPA DIVISI</span>
-                @endif
+                    @else
+                        UMUM / TANPA DIVISI
+                    @endif
+                </div>
 
                 <table>
                     <thead>

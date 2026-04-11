@@ -2,17 +2,17 @@
 
 @section('content')
 <div class="filter-section">
-    <table class="filter-grid" style="margin:0;">
+    <table class="filter-table" style="margin:0;">
         <tr>
-            <td class="filter-label" style="border:none; padding:2px;">KODE AKUN</td>
+            <td class="filter-label">KODE AKUN</td>
             <td style="border:none; padding:2px;">: {{ $account->code }}</td>
         </tr>
         <tr>
-            <td class="filter-label" style="border:none; padding:2px;">NAMA AKUN</td>
+            <td class="filter-label">NAMA AKUN</td>
             <td style="border:none; padding:2px; font-weight: bold;">: {{ $account->name }}</td>
         </tr>
         <tr>
-            <td class="filter-label" style="border:none; padding:2px;">PERIODE</td>
+            <td class="filter-label">PERIODE</td>
             <td style="border:none; padding:2px;">: {{ \Carbon\Carbon::parse($dateFrom)->format('d F Y') }} s/d {{ \Carbon\Carbon::parse($dateTo)->format('d F Y') }}</td>
         </tr>
     </table>
@@ -36,13 +36,13 @@
 
     @foreach($vehicleData as $data)
         <div style="margin-bottom: 30px;">
-            @if(isset($data['vehicle']) && (is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle']) !== 'None')
-                <span class="divisi-header">
+            <div class="divisi-header">
+                @if(isset($data['vehicle']) && (is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle']) !== 'None')
                     DIVISI / UNIT: {{ is_object($data['vehicle']) ? $data['vehicle']->police_number : $data['vehicle'] }}
-                </span>
-            @else
-                <span class="divisi-header">UMUM / TANPA DIVISI</span>
-            @endif
+                @else
+                    UMUM / TANPA DIVISI
+                @endif
+            </div>
             
             <table>
                 <thead>

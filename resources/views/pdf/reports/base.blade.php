@@ -2,106 +2,69 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title }}</title>
     <style>
-        /* Modern PDF Theme for Mandor Jaya */
+        /* Standar PDF Styling - Mandor Jaya */
         @page {
             size: A4 landscape;
             margin: 0.8cm 1cm;
         }
 
-        :root {
-            --primary: #1a202c;
-            --secondary: #2d3748;
-            --accent: #4a5568;
-            --light: #f7fafc;
-            --border: #e2e8f0;
-            --text-dark: #1a202c;
-            --text-muted: #718096;
-            --success: #2f855a;
-            --danger: #c53030;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             font-size: 10px;
-            color: var(--text-dark);
+            color: #1a202c;
             line-height: 1.4;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Header Styles */
-        .report-header {
-            margin-bottom: 25px;
+        /* Header Styles using Table for Stability */
+        .header-table {
+            width: 100%;
+            border-bottom: 3px solid #1a202c;
+            margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 3px solid var(--primary);
-        }
-
-        .company-info {
-            float: left;
-            width: 50%;
         }
 
         .company-name {
             font-size: 20px;
             font-weight: bold;
-            color: var(--primary);
+            color: #1a202c;
             text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .report-meta {
-            float: right;
-            width: 50%;
-            text-align: right;
         }
 
         .report-title {
             font-size: 14px;
             font-weight: bold;
-            color: var(--secondary);
-            margin-bottom: 3px;
+            color: #2d3748;
+            margin-bottom: 2px;
         }
 
         .date-range {
             font-size: 10px;
-            color: var(--text-muted);
-        }
-
-        .clearfix::after {
-            content: "";
-            clear: both;
-            display: table;
+            color: #718096;
         }
 
         /* Filter Info Box */
         .filter-section {
             margin-bottom: 20px;
-            background-color: var(--light);
+            background-color: #f7fafc;
             padding: 10px 15px;
-            border-left: 4px solid var(--accent);
-            border-radius: 0 4px 4px 0;
+            border-left: 4px solid #4a5568;
         }
 
-        .filter-grid {
+        .filter-table {
             width: 100%;
-        }
-
-        .filter-item {
-            font-size: 9px;
-            padding: 2px 0;
+            border: none;
         }
 
         .filter-label {
             font-weight: bold;
-            color: var(--accent);
+            color: #4a5568;
             width: 100px;
+            font-size: 9px;
+            border: none !important;
         }
 
         /* Table Design */
@@ -109,86 +72,75 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
-            background-color: transparent;
         }
 
         th {
-            background-color: var(--secondary);
-            color: white;
+            background-color: #2d3748;
+            color: #ffffff;
             font-weight: bold;
             text-transform: uppercase;
             font-size: 9px;
             padding: 8px 10px;
             text-align: center;
-            border: none;
+            border: 1px solid #2d3748;
         }
 
         td {
             padding: 8px 10px;
-            border-bottom: 1px solid var(--border);
+            border: 1px solid #e2e8f0;
             vertical-align: middle;
-        }
-
-        /* Zebra Striping */
-        tr:nth-child(even) {
-            background-color: #fcfcfc;
         }
 
         /* Grouping Headers */
         .account-header {
-            background-color: var(--primary);
-            color: white;
+            background-color: #1a202c;
+            color: #ffffff;
             padding: 10px 15px;
-            margin-top: 30px;
+            margin-top: 25px;
             margin-bottom: 10px;
             font-size: 13px;
             font-weight: bold;
-            border-radius: 4px;
         }
 
         .bank-header {
             background-color: #edf2f7;
-            border-bottom: 2px solid var(--accent);
-            color: var(--secondary);
+            border-bottom: 2px solid #4a5568;
+            color: #2d3748;
             padding: 8px 15px;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin-top: 15px;
+            margin-bottom: 5px;
             font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
         }
 
         .divisi-header {
-            color: var(--accent);
+            color: #4a5568;
             font-size: 10px;
             font-weight: bold;
-            margin-top: 15px;
+            margin-top: 10px;
             margin-bottom: 5px;
             margin-left: 10px;
-            padding-bottom: 3px;
-            border-bottom: 1px solid var(--border);
-            display: block;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        /* Row Types */
+        /* Row Styles */
         .row-opening-balance {
-            background-color: #fdfdfd !important;
+            background-color: #fcfcfc;
             font-weight: bold;
-            color: var(--accent);
         }
 
         .row-total {
-            background-color: #f8fafc !important;
+            background-color: #f8fafc;
             font-weight: bold;
-            color: var(--text-dark);
-            border-top: 2px solid var(--border);
         }
 
         /* Utility Classes */
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .text-success { color: var(--success); }
-        .text-danger { color: var(--danger); }
+        .text-success { color: #2f855a; }
+        .text-danger { color: #c53030; }
         .font-bold { font-weight: bold; }
 
         /* Footer */
@@ -199,9 +151,9 @@
             right: 0;
             height: 30px;
             font-size: 8px;
-            color: var(--text-muted);
+            color: #718096;
             text-align: right;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid #e2e8f0;
             padding-top: 5px;
         }
 
@@ -211,31 +163,33 @@
     </style>
 </head>
 <body>
-    <div class="report-header clearfix">
-        <div class="company-info">
-            <div class="company-name">Mandor Jaya</div>
-            <div style="font-size: 9px; color: var(--text-muted);">
-                Sistem Informasi Akuntansi & Manajemen Operasional
-            </div>
-        </div>
-        <div class="report-meta">
-            <div class="report-title">{{ $title }}</div>
-            <div class="date-range">
-                @if(isset($dateFrom) && isset($dateTo))
-                    Periode: {{ \Carbon\Carbon::parse($dateFrom)->format('d F Y') }} - {{ \Carbon\Carbon::parse($dateTo)->format('d F Y') }}
-                @elseif(isset($asOfDate))
-                    Per Tanggal: {{ \Carbon\Carbon::parse($asOfDate)->format('d F Y') }}
-                @else
-                    Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}
-                @endif
-            </div>
-        </div>
-    </div>
+    <table class="header-table">
+        <tr>
+            <td style="border:none; padding:0; width:60%;">
+                <div class="company-name">Mandor Jaya</div>
+                <div style="font-size: 9px; color: #718096;">
+                    Sistem Informasi Akuntansi & Manajemen Operasional
+                </div>
+            </td>
+            <td style="border:none; padding:0; text-align:right;">
+                <div class="report-title">{{ $title }}</div>
+                <div class="date-range">
+                    @if(isset($dateFrom) && isset($dateTo))
+                        Periode: {{ \Carbon\Carbon::parse($dateFrom)->format('d F Y') }} - {{ \Carbon\Carbon::parse($dateTo)->format('d F Y') }}
+                    @elseif(isset($asOfDate))
+                        Per Tanggal: {{ \Carbon\Carbon::parse($asOfDate)->format('d F Y') }}
+                    @else
+                        Dicetak pada: {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}
+                    @endif
+                </div>
+            </td>
+        </tr>
+    </table>
 
     @yield('content')
 
     <div class="footer">
-        <span style="float: left;">Dicetak otomatis oleh Sistem Mandor Jaya</span>
+        <div style="float: left;">Dicetak otomatis oleh Sistem Mandor Jaya</div>
         Halaman <span class="page-number"></span>
     </div>
 </body>
