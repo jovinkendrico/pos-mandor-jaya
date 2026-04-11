@@ -241,41 +241,8 @@ class ExpenseReportController extends Controller
 
     private function getOpeningBalance(int $accountId, string $dateFrom, ?int $vehicleId = null, ?int $bankId = null): float
     {
-        $query = JournalEntryDetail::join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')
-            ->where('journal_entry_details.chart_of_account_id', $accountId)
-            ->where('journal_entries.status', 'posted')
-            ->whereNull('journal_entries.deleted_at')
-            ->whereDate('journal_entries.journal_date', '<', $dateFrom);
-
-        if ($vehicleId === -1) {
-            $query->whereNull('journal_entry_details.vehicle_id');
-        } elseif ($vehicleId) {
-            $query->where('journal_entry_details.vehicle_id', $vehicleId);
-        }
-
-        if ($bankId === -1) {
-            $query->whereNotExists(function ($q) {
-                $q->select(DB::raw(1))
-                    ->from('journal_entry_details as jed_sub')
-                    ->join('banks', 'banks.chart_of_account_id', '=', 'jed_sub.chart_of_account_id')
-                    ->whereColumn('jed_sub.journal_entry_id', 'journal_entry_details.journal_entry_id');
-            });
-        } elseif ($bankId) {
-            $bankCoaId = Bank::find($bankId)?->chart_of_account_id;
-            if ($bankCoaId) {
-                $query->whereExists(function ($q) use ($bankCoaId) {
-                    $q->select(DB::raw(1))
-                        ->from('journal_entry_details as jed_sub')
-                        ->whereColumn('jed_sub.journal_entry_id', 'journal_entry_details.journal_entry_id')
-                        ->where('jed_sub.chart_of_account_id', $bankCoaId);
-                });
-            }
-        }
-
-        $debit = (float) $query->sum('journal_entry_details.debit') ?? 0;
-        $credit = (float) $query->sum('journal_entry_details.credit') ?? 0;
-
-        return $debit - $credit;
+        // Per user request, income/expense reports start with 0 balance for the period
+        return 0.0;
     }
 
     private function getClosingBalance(int $accountId, string $dateFrom, string $dateTo, ?int $vehicleId = null, ?int $bankId = null): float
