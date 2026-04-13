@@ -1,5 +1,14 @@
 @extends('pdf.reports.base')
 
+@section('page-style')
+<style>
+    @page {
+        size: A4 portrait;
+        margin: 1cm;
+    }
+</style>
+@endsection
+
 @section('content')
 <div style="margin-bottom: 20px;">
     <table>

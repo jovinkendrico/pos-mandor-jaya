@@ -96,6 +96,7 @@
             color: #666;
         }
     </style>
+@yield('page-style')
 </head>
 <body>
     <div class="header">
