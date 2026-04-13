@@ -53,28 +53,59 @@
 </div>
 
 <h3 style="margin-top: 20px;">BIAYA - BIAYA</h3>
-<table>
-    <thead>
-        <tr>
-            <th style="width: 20%;">Kode Akun</th>
-            <th style="width: 60%;">Nama Akun</th>
-            <th style="width: 20%; text-align: right;">Jumlah</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($expenseDetails as $item)
-        <tr>
-            <td style="text-align: center;">{{ $item['code'] }}</td>
-            <td>{{ $item['name'] }}</td>
-            <td style="text-align: right;">{{ number_format($item['amount'], 0, ',', '.') }}</td>
-        </tr>
-        @endforeach
-        <tr style="background-color: #f9f9f9; font-weight: bold;">
-            <td colspan="2" style="text-align: right;">TOTAL BIAYA</td>
-            <td style="text-align: right;">{{ number_format($totalExpense, 0, ',', '.') }}</td>
-        </tr>
-    </tbody>
-</table>
+@if(count($expenseByBank) > 0)
+    @foreach($expenseByBank as $group)
+    <p style="margin: 10px 0 4px; font-weight: bold; font-size: 0.9em; color: #555;">{{ strtoupper($group['bank_name']) }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Kode Akun</th>
+                <th style="width: 60%;">Nama Akun</th>
+                <th style="width: 20%; text-align: right;">Jumlah</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($group['details'] as $item)
+            <tr>
+                <td style="text-align: center;">{{ $item['code'] }}</td>
+                <td>{{ $item['name'] }}</td>
+                <td style="text-align: right;">{{ number_format($item['amount'], 0, ',', '.') }}</td>
+            </tr>
+            @endforeach
+            <tr style="background-color: #f9f9f9; font-weight: bold;">
+                <td colspan="2" style="text-align: right;">TOTAL {{ strtoupper($group['bank_name']) }}</td>
+                <td style="text-align: right;">{{ number_format($group['total'], 0, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+    @endforeach
+    <div style="margin-top: 8px; padding: 8px; background-color: #ddd; font-weight: bold; text-align: right;">
+        TOTAL BIAYA: {{ number_format($totalExpense, 0, ',', '.') }}
+    </div>
+@else
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Kode Akun</th>
+                <th style="width: 60%;">Nama Akun</th>
+                <th style="width: 20%; text-align: right;">Jumlah</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($expenseDetails as $item)
+            <tr>
+                <td style="text-align: center;">{{ $item['code'] }}</td>
+                <td>{{ $item['name'] }}</td>
+                <td style="text-align: right;">{{ number_format($item['amount'], 0, ',', '.') }}</td>
+            </tr>
+            @endforeach
+            <tr style="background-color: #f9f9f9; font-weight: bold;">
+                <td colspan="2" style="text-align: right;">TOTAL BIAYA</td>
+                <td style="text-align: right;">{{ number_format($totalExpense, 0, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+@endif
 
 <div style="margin-top: 20px; padding: 15px; background-color: #333; color: white; font-weight: bold; text-align: right; font-size: 1.2em;">
     LABA (RUGI) BERSIH: {{ number_format($netProfit, 0, ',', '.') }}

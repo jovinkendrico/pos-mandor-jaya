@@ -1,4 +1,11 @@
 import { ProfitLossItem } from '@/types';
+
+interface ExpenseBankGroup {
+    bank_id: number | null;
+    bank_name: string;
+    details: ProfitLossItem[];
+    total: number;
+}
 import { DatePicker } from '@/components/date-picker';
 import PageTitle from '@/components/page-title';
 import { Button } from '@/components/ui/button';
@@ -26,6 +33,7 @@ interface PageProps {
     dateTo: string;
     incomeDetails: ProfitLossItem[];
     expenseDetails: ProfitLossItem[];
+    expenseByBank: ExpenseBankGroup[];
     totalIncome: number;
     totalHPP: number;
     grossProfit: number;
@@ -43,6 +51,7 @@ export default function ProfitLossIndex({
     dateTo,
     incomeDetails,
     expenseDetails,
+    expenseByBank,
     totalIncome,
     totalHPP,
     grossProfit,
@@ -253,42 +262,71 @@ export default function ProfitLossIndex({
                             </div>
                         </div>
 
-                        {/* Biaya */}
+                        {/* Biaya per Kas/Bank */}
                         <div>
                             <h3 className="mb-3 text-lg font-semibold">
                                 Biaya Operasional
                             </h3>
-                            <div className="input-box overflow-x-auto rounded-lg">
-                                <Table className="content">
-                                    <TableHeader>
-                                        <TableRow className="dark:border-b-2 dark:border-white/25">
-                                            <TableHead>Kode</TableHead>
-                                            <TableHead>Nama Akun</TableHead>
-                                            <TableHead className="text-right">
-                                                Jumlah
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {expenseDetails.length > 0 ? (
-                                            expenseDetails.map(
-                                                (item, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>
-                                                            {item.code}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {item.name}
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            {formatCurrency(
-                                                                item.amount,
-                                                            )}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ),
-                                            )
-                                        ) : (
+                            {expenseByBank.length > 0 ? (
+                                <div className="space-y-4">
+                                    {expenseByBank.map((group, gi) => (
+                                        <div key={gi}>
+                                            <p className="mb-1 text-sm font-semibold text-muted-foreground">
+                                                {group.bank_name}
+                                            </p>
+                                            <div className="input-box overflow-x-auto rounded-lg">
+                                                <Table className="content">
+                                                    <TableHeader>
+                                                        <TableRow className="dark:border-b-2 dark:border-white/25">
+                                                            <TableHead>Kode</TableHead>
+                                                            <TableHead>Nama Akun</TableHead>
+                                                            <TableHead className="text-right">
+                                                                Jumlah
+                                                            </TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {group.details.map((item, index) => (
+                                                            <TableRow
+                                                                key={index}
+                                                                className="dark:border-b-2 dark:border-white/25"
+                                                            >
+                                                                <TableCell>{item.code}</TableCell>
+                                                                <TableCell>{item.name}</TableCell>
+                                                                <TableCell className="text-right">
+                                                                    {formatCurrency(item.amount)}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                        <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
+                                                            <TableCell colSpan={2}>
+                                                                Total {group.bank_name}
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                {formatCurrency(group.total)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="flex items-center justify-between border-t pt-2 dark:border-white/25">
+                                        <span className="font-semibold">Total Biaya Operasional</span>
+                                        <span className="font-semibold">{formatCurrency(totalExpense)}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="input-box overflow-x-auto rounded-lg">
+                                    <Table className="content">
+                                        <TableHeader>
+                                            <TableRow className="dark:border-b-2 dark:border-white/25">
+                                                <TableHead>Kode</TableHead>
+                                                <TableHead>Nama Akun</TableHead>
+                                                <TableHead className="text-right">Jumlah</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
                                             <TableRow className="dark:border-b-2 dark:border-white/25">
                                                 <TableCell
                                                     colSpan={3}
@@ -297,18 +335,10 @@ export default function ProfitLossIndex({
                                                     Tidak ada data biaya
                                                 </TableCell>
                                             </TableRow>
-                                        )}
-                                        <TableRow className="bg-muted/50 font-semibold dark:border-b-2 dark:border-white/25 dark:bg-primary-800/10">
-                                            <TableCell colSpan={2}>
-                                                Total Biaya
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(totalExpense)}
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
                         </div>
 
                         {/* Laba Bersih */}

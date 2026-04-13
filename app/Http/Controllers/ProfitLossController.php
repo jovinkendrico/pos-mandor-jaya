@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bank;
 use App\Models\ChartOfAccount;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryDetail;
@@ -115,15 +116,98 @@ class ProfitLossController extends Controller
         $grossProfit = $totalIncome - $totalHPP;
         $netProfit = $grossProfit - $totalExpense; // Total expense already excludes HPP
 
+        $expenseByBank = $this->getExpenseByBank($expenseAccounts->all(), $dateFrom, $dateTo);
+
         return [
             'incomeDetails' => $incomeDetails,
             'expenseDetails' => $expenseDetails,
+            'expenseByBank' => $expenseByBank,
             'totalIncome' => $totalIncome,
             'totalHPP' => $totalHPP,
             'grossProfit' => $grossProfit,
             'totalExpense' => $totalExpense, // Already excludes HPP
             'netProfit' => $netProfit,
         ];
+    }
+
+    /**
+     * Get expense details grouped by bank/kas
+     */
+    private function getExpenseByBank(array $expenseAccounts, string $dateFrom, string $dateTo): array
+    {
+        if (empty($expenseAccounts)) {
+            return [];
+        }
+
+        $accountIds = array_map(fn($a) => $a->id, $expenseAccounts);
+        $accountMap = [];
+        foreach ($expenseAccounts as $a) {
+            $accountMap[$a->id] = ['code' => $a->code, 'name' => $a->name];
+        }
+
+        // Single query: group by account + bank
+        $rows = DB::table('journal_entry_details as jed')
+            ->join('journal_entries as je', function ($join) {
+                $join->on('je.id', '=', 'jed.journal_entry_id')
+                     ->whereNull('je.deleted_at');
+            })
+            ->leftJoin('cash_outs as co', function ($join) {
+                $join->on('je.reference_id', '=', 'co.id')
+                     ->where('je.reference_type', '=', 'CashOut')
+                     ->whereNull('co.deleted_at');
+            })
+            ->leftJoin('banks', function ($join) {
+                $join->on('co.bank_id', '=', 'banks.id')
+                     ->whereNull('banks.deleted_at');
+            })
+            ->whereIn('jed.chart_of_account_id', $accountIds)
+            ->where('je.status', 'posted')
+            ->whereDate('je.journal_date', '>=', $dateFrom)
+            ->whereDate('je.journal_date', '<=', $dateTo)
+            ->select(
+                'jed.chart_of_account_id',
+                'banks.id as bank_id',
+                'banks.name as bank_name',
+                DB::raw('SUM(jed.debit) - SUM(jed.credit) as amount')
+            )
+            ->groupBy('jed.chart_of_account_id', 'banks.id', 'banks.name')
+            ->get();
+
+        // Collect all banks in order
+        $banksOrder = [];
+        $grouped = []; // bank_key => ['bank_id', 'bank_name', accounts...]
+
+        foreach ($rows as $row) {
+            $bankKey = $row->bank_id ?? 'lainnya';
+            if (!isset($grouped[$bankKey])) {
+                $grouped[$bankKey] = [
+                    'bank_id' => $row->bank_id,
+                    'bank_name' => $row->bank_name ?? 'Lainnya',
+                    'details' => [],
+                    'total' => 0,
+                ];
+                $banksOrder[] = $bankKey;
+            }
+            $amount = (float) $row->amount;
+            if ($amount != 0) {
+                $grouped[$bankKey]['details'][] = [
+                    'code' => $accountMap[$row->chart_of_account_id]['code'],
+                    'name' => $accountMap[$row->chart_of_account_id]['name'],
+                    'amount' => $amount,
+                ];
+                $grouped[$bankKey]['total'] += $amount;
+            }
+        }
+
+        // Filter out banks with zero total and return in order
+        $result = [];
+        foreach ($banksOrder as $key) {
+            if ($grouped[$key]['total'] != 0) {
+                $result[] = $grouped[$key];
+            }
+        }
+
+        return $result;
     }
 
     /**
