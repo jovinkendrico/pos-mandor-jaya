@@ -151,6 +151,7 @@ class ProfitLossController extends Controller
                 $join->on('je.id', '=', 'jed.journal_entry_id')
                      ->whereNull('je.deleted_at');
             })
+            ->join('chart_of_accounts as coa', 'coa.id', '=', 'jed.chart_of_account_id')
             ->leftJoin('cash_outs as co', function ($join) {
                 $join->on('je.reference_id', '=', 'co.id')
                      ->where('je.reference_type', '=', 'CashOut')
@@ -166,11 +167,14 @@ class ProfitLossController extends Controller
             ->whereDate('je.journal_date', '<=', $dateTo)
             ->select(
                 'jed.chart_of_account_id',
+                'coa.code as coa_code',
                 'banks.id as bank_id',
                 'banks.name as bank_name',
                 DB::raw('SUM(jed.debit) - SUM(jed.credit) as amount')
             )
-            ->groupBy('jed.chart_of_account_id', 'banks.id', 'banks.name')
+            ->groupBy('jed.chart_of_account_id', 'coa.code', 'banks.id', 'banks.name')
+            ->orderBy('banks.name')
+            ->orderBy('coa.code')
             ->get();
 
         // Collect all banks in order
