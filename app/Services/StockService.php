@@ -369,6 +369,8 @@ class StockService
             ->lockForUpdate()
             ->get();
 
+        $totalAvailable = $movements->sum('remaining_quantity');
+
         foreach ($movements as $movement) {
             if ($remainingQty <= 0) break;
 
@@ -391,10 +393,20 @@ class StockService
         }
 
         // Jika masih ada remaining (stock tidak cukup / negatif)
-        if ($remainingQty > 0.0001) {
+        // Use a tolerance of 0.01 to account for decimal precision issues
+        if ($remainingQty > 0.01) {
              // STRICT MODE: Fail if stock is insufficient at this date
              $itemName = \App\Models\Item::find($itemId)?->name ?? "ID {$itemId}";
-             
+
+             Log::warning('FIFO Stock Consumption Failed - Insufficient Stock', [
+                 'item_id' => $itemId,
+                 'item_name' => $itemName,
+                 'requested_qty' => $quantity,
+                 'available_qty' => $totalAvailable,
+                 'remaining_needed' => round($remainingQty, 2),
+                 'movements_checked' => $movements->count(),
+             ]);
+
              // Friendly error message for user
              throw new \Exception("Stok tidak cukup untuk barang '{$itemName}'. Kurang: " . round($remainingQty, 2));
         }
@@ -1278,7 +1290,7 @@ class StockService
                     // Consume from movement
                     $movement->decrement('remaining_quantity', $qtyFromThisMovement);
                     
-                    if ($qtyFromThisMovement >= $remainingToReconcile - 0.0001) {
+                    if ($qtyFromThisMovement >= $remainingToReconcile - 0.01) {
                         // This movement can fully satisfy the REST of the mapping
                         $currentMapping->update([
                             'stock_movement_id' => $movement->id,
