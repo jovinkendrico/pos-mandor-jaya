@@ -354,7 +354,7 @@ class StockService
      */
     private function calculateFifoCostWithMappings(int $itemId, float $quantity, $date): array
     {
-        $remainingQty = $quantity;
+        $remainingQty = round($quantity, 2);
         $totalCost    = 0;
         $mappings     = [];
 
@@ -369,32 +369,33 @@ class StockService
             ->lockForUpdate()
             ->get();
 
-        $totalAvailable = $movements->sum('remaining_quantity');
+        $totalAvailable = round($movements->sum('remaining_quantity'), 2);
 
         foreach ($movements as $movement) {
             if ($remainingQty <= 0) break;
 
-            $qtyToUse             = min($remainingQty, (float)$movement->remaining_quantity);
-            $costForThisMovement  = $qtyToUse * (float)$movement->unit_cost;
-            $totalCost           += $costForThisMovement;
+            $movementRemaining    = round((float)$movement->remaining_quantity, 2);
+            $qtyToUse             = round(min($remainingQty, $movementRemaining), 2);
+            $costForThisMovement  = round($qtyToUse * (float)$movement->unit_cost, 2);
+            $totalCost            = round($totalCost + $costForThisMovement, 2);
 
             // Store mapping for audit trail
             $mappings[] = [
                 'movement_id' => $movement->id,
                 'quantity'    => $qtyToUse,
-                'unit_cost'   => (float)$movement->unit_cost,
+                'unit_cost'   => round((float)$movement->unit_cost, 2),
                 'total_cost'  => $costForThisMovement,
             ];
 
             // Update remaining quantity
             $movement->decrement('remaining_quantity', $qtyToUse);
 
-            $remainingQty -= $qtyToUse;
+            $remainingQty = round($remainingQty - $qtyToUse, 2);
         }
 
         // Jika masih ada remaining (stock tidak cukup / negatif)
-        // Use a tolerance of 0.01 to account for decimal precision issues
-        if ($remainingQty > 0.01) {
+        // Use a tolerance of 0.005 (more lenient for decimal precision)
+        if ($remainingQty > 0.005) {
              // STRICT MODE: Fail if stock is insufficient at this date
              $itemName = \App\Models\Item::find($itemId)?->name ?? "ID {$itemId}";
 
@@ -1082,7 +1083,7 @@ class StockService
 
                 $item->increment('stock', $quantity);
                 $this->reconcileNegativeStock($item->id);
-                
+
                 // Recalculate affected sales when HPP is adjusted
                 $this->recalculateAffectedSales($item->id, $unitCost, 'increase');
             } else {
@@ -1290,13 +1291,13 @@ class StockService
                     // Consume from movement
                     $movement->decrement('remaining_quantity', $qtyFromThisMovement);
                     
-                    if ($qtyFromThisMovement >= $remainingToReconcile - 0.01) {
+                    if ($qtyFromThisMovement >= round($remainingToReconcile - 0.005, 2)) {
                         // This movement can fully satisfy the REST of the mapping
                         $currentMapping->update([
                             'stock_movement_id' => $movement->id,
                             'is_estimated' => false,
-                            'unit_cost' => (float)$movement->unit_cost,
-                            'total_cost' => $remainingToReconcile * (float)$movement->unit_cost,
+                            'unit_cost' => round((float)$movement->unit_cost, 2),
+                            'total_cost' => round($remainingToReconcile * (float)$movement->unit_cost, 2),
                         ]);
                         $totalNewCost += $costFromThisMovement;
                         $totalReconciledQty += $remainingToReconcile;
