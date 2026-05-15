@@ -95,10 +95,17 @@ class ExpenseReportController extends Controller
             if ($openingBalance != 0 || $hasActivity) {
                 $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId);
                 
-                $groupedData = [];
-                if (!$vehicleId && !$bankId) {
-                    $groupedData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks);
+                // Filter collections for grouping if specific IDs are provided
+                $targetVehicles = $vehicles;
+                if ($vehicleId) {
+                    $targetVehicles = $vehicles->where('id', $vehicleId);
                 }
+                $targetBanks = $banks;
+                if ($bankId) {
+                    $targetBanks = $banks->where('id', $bankId);
+                }
+
+                $groupedData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $targetVehicles, $targetBanks, $vehicleId, $bankId);
 
                 $allLedgerData[] = [
                     'account' => $account,
@@ -124,7 +131,7 @@ class ExpenseReportController extends Controller
      * Helper to get nested grouped data (Bank > Vehicle)
      * Reused from GeneralLedgerController
      */
-    private function getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks)
+    private function getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks, $vehicleId = null, $bankId = null)
     {
         $groupedLedgerData = [];
 
@@ -138,28 +145,37 @@ class ExpenseReportController extends Controller
                 }
             }
 
-            $noVehicleLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, $b->id);
-            if (count($noVehicleLedger['transactions']) > 0 || $noVehicleLedger['opening_balance'] != 0) {
-                $noVehicleLedger['vehicle'] = (object)['id' => 0, 'police_number' => 'None'];
-                $noVehicleLedger['bank'] = $b;
-                $groupedLedgerData[] = $noVehicleLedger;
+            // Also check for entries with NO vehicle under this Bank (if not filtering for a specific vehicle)
+            if (!$vehicleId) {
+                $noVehicleLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, $b->id);
+                if (count($noVehicleLedger['transactions']) > 0 || $noVehicleLedger['opening_balance'] != 0) {
+                    $noVehicleLedger['vehicle'] = (object)['id' => 0, 'police_number' => 'None'];
+                    $noVehicleLedger['bank'] = $b;
+                    $groupedLedgerData[] = $noVehicleLedger;
+                }
             }
         }
 
-        foreach ($vehicles as $v) {
-            $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id, -1);
-            if (count($vLedger['transactions']) > 0 || $vLedger['opening_balance'] != 0) {
-                $vLedger['vehicle'] = $v;
-                $vLedger['bank'] = (object)['id' => 0, 'name' => 'Tanpa Kas'];
-                $groupedLedgerData[] = $vLedger;
+        // Also check for entries with specific vehicles but NO bank (if not filtering for a specific bank)
+        if (!$bankId) {
+            foreach ($vehicles as $v) {
+                $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id, -1);
+                if (count($vLedger['transactions']) > 0 || $vLedger['opening_balance'] != 0) {
+                    $vLedger['vehicle'] = $v;
+                    $vLedger['bank'] = (object)['id' => 0, 'name' => 'Tanpa Kas'];
+                    $groupedLedgerData[] = $vLedger;
+                }
             }
         }
 
-        $noVehicleNoBankLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, -1);
-        if (count($noVehicleNoBankLedger['transactions']) > 0 || $noVehicleNoBankLedger['opening_balance'] != 0) {
-            $noVehicleNoBankLedger['vehicle'] = (object)['id' => 0, 'police_number' => 'None'];
-            $noVehicleNoBankLedger['bank'] = (object)['id' => 0, 'name' => 'Tanpa Kas'];
-            $groupedLedgerData[] = $noVehicleNoBankLedger;
+        // Final check for entries with NO vehicle AND NO bank (if no filters active)
+        if (!$vehicleId && !$bankId) {
+            $noVehicleNoBankLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, -1);
+            if (count($noVehicleNoBankLedger['transactions']) > 0 || $noVehicleNoBankLedger['opening_balance'] != 0) {
+                $noVehicleNoBankLedger['vehicle'] = (object)['id' => 0, 'police_number' => 'None'];
+                $noVehicleNoBankLedger['bank'] = (object)['id' => 0, 'name' => 'Tanpa Kas'];
+                $groupedLedgerData[] = $noVehicleNoBankLedger;
+            }
         }
 
         return $groupedLedgerData;
