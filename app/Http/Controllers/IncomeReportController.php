@@ -251,9 +251,28 @@ class IncomeReportController extends Controller
                 }
             }
 
+            $baseDescription = $transaction->journal_description ?: $transaction->description;
+            $detailedInfo = '';
+            
+            if ($transaction->journalEntry && $transaction->journalEntry->reference_type === 'App\\Models\\Sale') {
+                $sale = $transaction->journalEntry->reference;
+                if ($sale) {
+                    $customerName = $sale->customer_name ?: 'Umum';
+                    $detailedInfo = "Penjualan: {$customerName} ({$sale->sale_number})";
+                }
+            }
+
             $description = $baseDescription;
             if ($detailedInfo) {
                 $description = $detailedInfo . ($baseDescription ? " ({$baseDescription})" : "");
+            }
+
+            // Add dynamic bank and vehicle info to description if not filtering
+            if (!$bankId && $transaction->dynamic_bank_name) {
+                $description .= ' [' . $transaction->dynamic_bank_name . ']';
+            }
+            if (!$vehicleId && $transaction->vehicle) {
+                $description .= ' (' . $transaction->vehicle->police_number . ')';
             }
 
             $transactionDetails[] = [
@@ -268,7 +287,7 @@ class IncomeReportController extends Controller
             ];
         }
 
-        return [
+        $result = [
             'account' => $account,
             'opening_balance' => $openingBalance,
             'transactions' => $transactionDetails,
@@ -276,6 +295,15 @@ class IncomeReportController extends Controller
             'credit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit', $vehicleId, $bankId),
             'closing_balance' => $runningBalance,
         ];
+
+        if ($bankId && $bankId !== -1) {
+            $result['bank'] = Bank::find($bankId);
+        }
+        if ($vehicleId && $vehicleId !== -1) {
+            $result['vehicle'] = \App\Models\Vehicle::find($vehicleId);
+        }
+
+        return $result;
     }
 
     private function getOpeningBalance(int $accountId, string $dateFrom, ?int $vehicleId = null, ?int $bankId = null): float

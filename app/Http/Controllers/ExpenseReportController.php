@@ -219,10 +219,17 @@ class ExpenseReportController extends Controller
 
         foreach ($transactions as $transaction) {
             $runningBalance += $transaction->debit - $transaction->credit;
-            $description = $transaction->description ?: $transaction->journal_description;
-
+            $description = $transaction->journal_description ?: $transaction->description;
             if ($transaction->journalEntry && $transaction->journalEntry->reference && isset($transaction->journalEntry->reference->description)) {
                 $description = $transaction->journalEntry->reference->description;
+            }
+
+            // Add dynamic bank and vehicle info to description if not filtering
+            if (!$bankId && $transaction->dynamic_bank_name) {
+                $description .= ' [' . $transaction->dynamic_bank_name . ']';
+            }
+            if (!$vehicleId && $transaction->vehicle) {
+                $description .= ' (' . $transaction->vehicle->police_number . ')';
             }
 
             $transactionDetails[] = [
@@ -237,7 +244,7 @@ class ExpenseReportController extends Controller
             ];
         }
 
-        return [
+        $result = [
             'account' => $account,
             'opening_balance' => $openingBalance,
             'transactions' => $transactionDetails,
@@ -245,6 +252,15 @@ class ExpenseReportController extends Controller
             'credit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit', $vehicleId, $bankId),
             'closing_balance' => $runningBalance,
         ];
+
+        if ($bankId && $bankId !== -1) {
+            $result['bank'] = Bank::find($bankId);
+        }
+        if ($vehicleId && $vehicleId !== -1) {
+            $result['vehicle'] = \App\Models\Vehicle::find($vehicleId);
+        }
+
+        return $result;
     }
 
     private function getOpeningBalance(int $accountId, string $dateFrom, ?int $vehicleId = null, ?int $bankId = null): float

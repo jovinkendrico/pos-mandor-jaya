@@ -205,7 +205,7 @@ export default function IncomeReportIndex({
                                         {formatCurrency(item.closing_balance)}
                                     </TableCell>
                                     <TableCell className="flex w-full min-w-[80px] items-center justify-center text-center">
-                                        <Link href={glShow(item.account.id).url + `?date_from=${allFilters.date_from || dateFrom}&date_to=${allFilters.date_to || dateTo}&vehicle_id=${allFilters.vehicle_id || ''}&bank_id=${allFilters.bank_id || ''}`}>
+                                        <Link href={glShow(item.account.id).url + `?date_from=${allFilters.date_from || dateFrom}&date_to=${allFilters.date_to || dateTo}&vehicle_id=${allFilters.vehicle_id || ''}&bank_id=${allFilters.bank_id || ''}&start_from_zero=1`}>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"

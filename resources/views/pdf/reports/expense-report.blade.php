@@ -60,22 +60,23 @@
                         <thead>
                             <tr>
                                 <th style="width: 10%;">Tanggal</th>
-                                <th style="width: 15%;">No. Jurnal</th>
-                                <th style="width: 40%;">Keterangan</th>
-                                <th style="width: 11%; text-align: right;">Debit</th>
-                                <th style="width: 11%; text-align: right;">Kredit</th>
+                                <th style="width: 12%;">No. Jurnal</th>
+                                <th style="width: 33%;">Keterangan</th>
+                                <th style="width: 10%;">Divisi</th>
+                                <th style="width: 10%;">Kas</th>
+                                <th style="width: 12%; text-align: right;">Debit</th>
                                 <th style="width: 13%; text-align: right;">Saldo</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr style="background-color: #fdfdfd; font-weight: bold;">
-                                <td colspan="5" style="text-align: right;">SALDO AWAL</td>
+                                <td colspan="6" style="text-align: right;">SALDO AWAL</td>
                                 <td style="text-align: right;">{{ number_format($data['opening_balance'], 0, ',', '.') }}</td>
                             </tr>
                             
                             @if(count($data['transactions']) === 0)
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 5px; color: #777;">Tidak ada transaksi.</td>
+                                <td colspan="7" style="text-align: center; padding: 5px; color: #777;">Tidak ada transaksi.</td>
                             </tr>
                             @else
                                 @foreach($data['transactions'] as $t)
@@ -83,17 +84,17 @@
                                     <td style="text-align: center;">{{ \Carbon\Carbon::parse($t['date'])->format('d/m/y') }}</td>
                                     <td style="text-align: center;">{{ $t['journal_number'] }}</td>
                                     <td>{!! nl2br(e($t['description'])) !!}</td>
+                                    <td style="text-align: center;">{{ $t['vehicle'] }}</td>
+                                    <td style="text-align: center;">{{ $t['bank'] }}</td>
                                     <td style="text-align: right;">{{ $t['debit'] > 0 ? number_format($t['debit'], 0, ',', '.') : '-' }}</td>
-                                    <td style="text-align: right;">{{ $t['credit'] > 0 ? number_format($t['credit'], 0, ',', '.') : '-' }}</td>
                                     <td style="text-align: right;">{{ number_format($t['balance'], 0, ',', '.') }}</td>
                                 </tr>
                                 @endforeach
                             @endif
 
                             <tr style="background-color: #f9f9f9; font-weight: bold;">
-                                <td colspan="3" style="text-align: right;">TOTAL</td>
+                                <td colspan="5" style="text-align: right;">TOTAL</td>
                                 <td style="text-align: right;">{{ number_format($data['debit_total'], 0, ',', '.') }}</td>
-                                <td style="text-align: right;">{{ number_format($data['credit_total'], 0, ',', '.') }}</td>
                                 <td style="text-align: right;">{{ number_format($data['closing_balance'], 0, ',', '.') }}</td>
                             </tr>
                         </tbody>
