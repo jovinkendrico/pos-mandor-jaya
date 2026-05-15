@@ -205,7 +205,7 @@ export default function ExpenseReportIndex({
                                         {formatCurrency(item.closing_balance)}
                                     </TableCell>
                                     <TableCell className="flex w-full min-w-[80px] items-center justify-center text-center">
-                                        <Link href={glShow(item.account.id).url}>
+                                        <Link href={glShow(item.account.id).url + `?date_from=${allFilters.date_from || dateFrom}&date_to=${allFilters.date_to || dateTo}&vehicle_id=${allFilters.vehicle_id || ''}&bank_id=${allFilters.bank_id || ''}`}>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"

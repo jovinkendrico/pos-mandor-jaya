@@ -204,7 +204,14 @@ class ExpenseReportController extends Controller
 
         $transactions = $query->orderBy('journal_entries.journal_date')
             ->orderBy('journal_entries.id')
-            ->select('journal_entry_details.*', 'journal_entries.journal_number', 'journal_entries.journal_date', 'journal_entries.description as journal_description')
+            ->select(
+                'journal_entry_details.*', 
+                'journal_entries.journal_number', 
+                'journal_entries.journal_date', 
+                'journal_entries.description as journal_description',
+                DB::raw('(SELECT banks.id FROM journal_entry_details jed2 JOIN banks ON banks.chart_of_account_id = jed2.chart_of_account_id WHERE jed2.journal_entry_id = journal_entry_details.journal_entry_id LIMIT 1) as dynamic_bank_id'),
+                DB::raw('(SELECT banks.name FROM journal_entry_details jed2 JOIN banks ON banks.chart_of_account_id = jed2.chart_of_account_id WHERE jed2.journal_entry_id = journal_entry_details.journal_entry_id LIMIT 1) as dynamic_bank_name')
+            )
             ->get();
 
         $runningBalance = $openingBalance;
@@ -223,6 +230,7 @@ class ExpenseReportController extends Controller
                 'journal_number' => $transaction->journal_number,
                 'description' => $description,
                 'vehicle' => $transaction->vehicle ? $transaction->vehicle->police_number : '-',
+                'bank' => $transaction->dynamic_bank_name ?: '-',
                 'debit' => $transaction->debit,
                 'credit' => $transaction->credit,
                 'balance' => $runningBalance,

@@ -59,6 +59,10 @@ class IncomeReportController extends Controller
         return Inertia::render('reports/income/index', [
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
+            'vehicleId' => $vehicleId,
+            'bankId' => $bankId,
+            'vehicles' => $vehicles,
+            'banks' => $banks,
             'ledgerData' => $ledgerData,
         ]);
     }
@@ -89,12 +93,17 @@ class IncomeReportController extends Controller
             $hasActivity = $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId, $bankId);
 
             if ($openingBalance != 0 || $hasActivity) {
-                $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo);
+                $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId);
                 
+                $groupedData = [];
+                if (!$vehicleId && !$bankId) {
+                    $groupedData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks);
+                }
+
                 $allLedgerData[] = [
                     'account' => $account,
                     'summary' => $accountData,
-                    'grouped' => [], // Keep empty to avoid breaking view
+                    'grouped' => $groupedData,
                 ];
             }
         }
@@ -194,7 +203,14 @@ class IncomeReportController extends Controller
 
         $transactions = $query->orderBy('journal_entries.journal_date')
             ->orderBy('journal_entries.id')
-            ->select('journal_entry_details.*', 'journal_entries.journal_number', 'journal_entries.journal_date', 'journal_entries.description as journal_description')
+            ->select(
+                'journal_entry_details.*', 
+                'journal_entries.journal_number', 
+                'journal_entries.journal_date', 
+                'journal_entries.description as journal_description',
+                DB::raw('(SELECT banks.id FROM journal_entry_details jed2 JOIN banks ON banks.chart_of_account_id = jed2.chart_of_account_id WHERE jed2.journal_entry_id = journal_entry_details.journal_entry_id LIMIT 1) as dynamic_bank_id'),
+                DB::raw('(SELECT banks.name FROM journal_entry_details jed2 JOIN banks ON banks.chart_of_account_id = jed2.chart_of_account_id WHERE jed2.journal_entry_id = journal_entry_details.journal_entry_id LIMIT 1) as dynamic_bank_name')
+            )
             ->get();
 
         // Load Sale details efficiently for the polymorphic reference
@@ -245,6 +261,7 @@ class IncomeReportController extends Controller
                 'journal_number' => $transaction->journal_number,
                 'description' => $description,
                 'vehicle' => $transaction->vehicle ? $transaction->vehicle->police_number : '-',
+                'bank' => $transaction->dynamic_bank_name ?: '-',
                 'debit' => $transaction->debit,
                 'credit' => $transaction->credit,
                 'balance' => $runningBalance,
