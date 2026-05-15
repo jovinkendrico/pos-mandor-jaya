@@ -170,6 +170,16 @@ const reports = [
         permission: 'reports.view',
     },
     {
+        id: 'monthly-balance-sheet',
+        title: 'Laporan Neraca Bulanan',
+        description: 'Perbandingan ringkasan neraca antar bulan dalam satu tahun',
+        href: '/reports/monthly-balance-sheet',
+        icon: Scale,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        permission: 'reports.view',
+    },
+    {
         id: 'sale-return',
         title: 'Laporan Retur Penjualan',
         description:

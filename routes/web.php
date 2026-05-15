@@ -57,6 +57,7 @@ use App\Http\Controllers\TransferController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MemberLoanController;
 use App\Http\Controllers\MemberLoanPaymentController;
+use App\Http\Controllers\MonthlyBalanceSheetController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -155,6 +156,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/purchase-by-supplier', [PurchaseBySupplierReportController::class, 'index'])->name('reports.purchase-by-supplier');
     Route::get('reports/stock-min-max', [StockMinMaxReportController::class, 'index'])->name('reports.stock-min-max');
     Route::get('reports/balance-sheet', [BalanceSheetController::class, 'index'])->name('reports.balance-sheet');
+    Route::get('reports/monthly-balance-sheet', [MonthlyBalanceSheetController::class, 'index'])->name('reports.monthly-balance-sheet');
     Route::get('reports/sale-return', [SaleReturnReportController::class, 'index'])->name('reports.sale-return');
     Route::get('reports/purchase-return', [PurchaseReturnReportController::class, 'index'])->name('reports.purchase-return');
     Route::get('reports/sale-payment', [SalePaymentReportController::class, 'index'])->name('reports.sale-payment');
@@ -177,6 +179,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/purchase-by-supplier/print', [PurchaseBySupplierReportController::class, 'print'])->name('reports.purchase-by-supplier.print');
     Route::get('reports/stock-min-max/print', [StockMinMaxReportController::class, 'print'])->name('reports.stock-min-max.print');
     Route::get('reports/balance-sheet/print', [BalanceSheetController::class, 'print'])->name('reports.balance-sheet.print');
+    Route::get('reports/monthly-balance-sheet/print', [MonthlyBalanceSheetController::class, 'print'])->name('reports.monthly-balance-sheet.print');
     Route::get('reports/sale-return/print', [SaleReturnReportController::class, 'print'])->name('reports.sale-return.print');
     Route::get('reports/purchase-return/print', [PurchaseReturnReportController::class, 'print'])->name('reports.purchase-return.print');
     Route::get('reports/sale-payment/print', [SalePaymentReportController::class, 'print'])->name('reports.sale-payment.print');
