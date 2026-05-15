@@ -26,6 +26,7 @@ class GeneralLedgerController extends Controller
         $accountId = $request->get('account_id');
         $vehicleId = $request->get('vehicle_id');
         $bankId = $request->get('bank_id');
+        $startFromZero = $request->boolean('start_from_zero', false);
 
         // Get all active accounts
         $accounts = ChartOfAccount::where('is_active', true)
@@ -44,19 +45,29 @@ class GeneralLedgerController extends Controller
             // Get specific account ledger
             $account = ChartOfAccount::find($accountId);
             if ($account) {
-                $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId);
+                $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId, $startFromZero);
             }
         } else {
             // Get all accounts with their balances
             foreach ($accounts as $account) {
-                $balance = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'both', $vehicleId, $bankId);
-                if ($balance != 0 || $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId, $bankId)) {
+                $openingBalance = $startFromZero ? 0 : $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId);
+                $debitTotal = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'debit', $vehicleId, $bankId);
+                $creditTotal = $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit', $vehicleId, $bankId);
+                
+                // Calculate closing balance based on account type
+                if (in_array($account->type, ['asset', 'expense', 'biaya', 'pengeluaran'])) {
+                    $closingBalance = $openingBalance + $debitTotal - $creditTotal;
+                } else {
+                    $closingBalance = $openingBalance + $creditTotal - $debitTotal;
+                }
+
+                if ($openingBalance != 0 || $debitTotal != 0 || $creditTotal != 0 || $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId, $bankId)) {
                     $ledgerData[] = [
                         'account' => $account,
-                        'opening_balance' => $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId),
-                        'debit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'debit', $vehicleId, $bankId),
-                        'credit_total' => $this->getAccountBalance($account->id, $dateFrom, $dateTo, 'credit', $vehicleId, $bankId),
-                        'closing_balance' => $this->getClosingBalance($account->id, $dateFrom, $dateTo, $vehicleId, $bankId),
+                        'opening_balance' => $openingBalance,
+                        'debit_total' => $debitTotal,
+                        'credit_total' => $creditTotal,
+                        'closing_balance' => $closingBalance,
                     ];
                 }
             }
@@ -68,6 +79,7 @@ class GeneralLedgerController extends Controller
             'accountId' => $accountId,
             'vehicleId' => $vehicleId,
             'bankId' => $bankId,
+            'startFromZero' => $startFromZero,
             'accounts' => $accounts,
             'vehicles' => $vehicles,
             'banks' => $banks,
@@ -84,6 +96,7 @@ class GeneralLedgerController extends Controller
         $dateTo = $request->get('date_to', now()->format('Y-m-d'));
         $vehicleId = $request->get('vehicle_id');
         $bankId = $request->get('bank_id');
+        $startFromZero = $request->boolean('start_from_zero', false);
 
         // Get all active accounts
         $accounts = ChartOfAccount::where('is_active', true)
@@ -97,15 +110,15 @@ class GeneralLedgerController extends Controller
 
         foreach ($accounts as $account) {
             // Only include accounts with transactions OR non-zero opening balance
-            $openingBalance = $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId);
+            $openingBalance = $startFromZero ? 0 : $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId);
             $hasActivity = $this->hasTransactions($account->id, $dateFrom, $dateTo, $vehicleId, $bankId);
 
             if ($openingBalance != 0 || $hasActivity) {
-                $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId);
+                $accountData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId, $startFromZero);
                 
                 $groupedData = [];
                 if (!$vehicleId && !$bankId) {
-                    $groupedData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks);
+                    $groupedData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks, $startFromZero);
                 }
 
                 $allLedgerData[] = [
@@ -122,6 +135,7 @@ class GeneralLedgerController extends Controller
             'dateTo' => $dateTo,
             'vehicleId' => $vehicleId,
             'bankId' => $bankId,
+            'startFromZero' => $startFromZero,
             'allLedgerData' => $allLedgerData,
         ])->setPaper('a4', 'landscape');
 
@@ -137,14 +151,15 @@ class GeneralLedgerController extends Controller
         $dateTo = $request->get('date_to', now()->format('Y-m-d'));
         $vehicleId = $request->get('vehicle_id');
         $bankId = $request->get('bank_id');
+        $startFromZero = $request->boolean('start_from_zero', false);
 
-        $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId);
+        $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId, $startFromZero);
         $vehicles = \App\Models\Vehicle::orderBy('police_number')->get();
         $banks = Bank::orderBy('name')->get();
 
         $groupedLedgerData = [];
         if (!$vehicleId && !$bankId) {
-            $groupedLedgerData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks);
+            $groupedLedgerData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks, $startFromZero);
         }
 
         $pdf = Pdf::loadView('pdf.reports.general-ledger-detail', [
@@ -152,6 +167,7 @@ class GeneralLedgerController extends Controller
             'account' => $account,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
+            'startFromZero' => $startFromZero,
             'ledgerData' => $ledgerData,
             'groupedLedgerData' => $groupedLedgerData,
         ])->setPaper('a4', 'landscape');
@@ -168,14 +184,15 @@ class GeneralLedgerController extends Controller
         $dateTo = $request->get('date_to', now()->format('Y-m-d'));
         $vehicleId = $request->get('vehicle_id');
         $bankId = $request->get('bank_id');
+        $startFromZero = $request->boolean('start_from_zero', false);
 
-        $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId);
+        $ledgerData = $this->getAccountLedger($account, $dateFrom, $dateTo, $vehicleId, $bankId, $startFromZero);
         $vehicles = \App\Models\Vehicle::orderBy('police_number')->get();
         $banks = Bank::orderBy('name')->get();
 
         $groupedLedgerData = [];
         if (!$vehicleId && !$bankId) {
-            $groupedLedgerData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks);
+            $groupedLedgerData = $this->getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks, $startFromZero);
         }
 
         return Inertia::render('accounting/general-ledger/show', [
@@ -184,6 +201,7 @@ class GeneralLedgerController extends Controller
             'dateTo' => $dateTo,
             'vehicleId' => $vehicleId,
             'bankId' => $bankId,
+            'startFromZero' => $startFromZero,
             'ledgerData' => $ledgerData,
             'groupedLedgerData' => $groupedLedgerData,
             'vehicles' => $vehicles,
@@ -194,7 +212,7 @@ class GeneralLedgerController extends Controller
     /**
      * Helper to get nested grouped data (Bank > Vehicle)
      */
-    private function getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks)
+    private function getNestedGroupedLedger($account, $dateFrom, $dateTo, $vehicles, $banks, bool $startFromZero = false)
     {
         $groupedLedgerData = [];
 
@@ -204,7 +222,7 @@ class GeneralLedgerController extends Controller
             
             // Loop through each Vehicle under this Bank
             foreach ($vehicles as $v) {
-                $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id, $b->id);
+                $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id, $b->id, $startFromZero);
                 if (count($vLedger['transactions']) > 0 || $vLedger['opening_balance'] != 0) {
                     $vLedger['vehicle'] = $v;
                     $vLedger['bank'] = $b;
@@ -214,7 +232,7 @@ class GeneralLedgerController extends Controller
             }
 
             // Also check for entries with NO vehicle under this Bank
-            $noVehicleLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, $b->id);
+            $noVehicleLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, $b->id, $startFromZero);
             if (count($noVehicleLedger['transactions']) > 0 || $noVehicleLedger['opening_balance'] != 0) {
                 $noVehicleLedger['vehicle'] = (object)['id' => 0, 'police_number' => 'None'];
                 $noVehicleLedger['bank'] = $b;
@@ -225,7 +243,7 @@ class GeneralLedgerController extends Controller
 
         // Also check for entries with NO bank at all
         foreach ($vehicles as $v) {
-            $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id, -1);
+            $vLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, $v->id, -1, $startFromZero);
             if (count($vLedger['transactions']) > 0 || $vLedger['opening_balance'] != 0) {
                 $vLedger['vehicle'] = $v;
                 $vLedger['bank'] = (object)['id' => 0, 'name' => 'Tanpa Kas'];
@@ -233,7 +251,7 @@ class GeneralLedgerController extends Controller
             }
         }
 
-        $noVehicleNoBankLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, -1);
+        $noVehicleNoBankLedger = $this->getAccountLedger($account, $dateFrom, $dateTo, -1, -1, $startFromZero);
         if (count($noVehicleNoBankLedger['transactions']) > 0 || $noVehicleNoBankLedger['opening_balance'] != 0) {
             $noVehicleNoBankLedger['vehicle'] = (object)['id' => 0, 'police_number' => 'None'];
             $noVehicleNoBankLedger['bank'] = (object)['id' => 0, 'name' => 'Tanpa Kas'];
@@ -246,9 +264,9 @@ class GeneralLedgerController extends Controller
     /**
      * Get account ledger with transaction details
      */
-    private function getAccountLedger(ChartOfAccount $account, string $dateFrom, string $dateTo, ?int $vehicleId = null, ?int $bankId = null): array
+    private function getAccountLedger(ChartOfAccount $account, string $dateFrom, string $dateTo, ?int $vehicleId = null, ?int $bankId = null, bool $startFromZero = false): array
     {
-        $openingBalance = $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId);
+        $openingBalance = $startFromZero ? 0 : $this->getOpeningBalance($account->id, $dateFrom, $vehicleId, $bankId);
 
         $query = JournalEntryDetail::with(['journalEntry.reference', 'vehicle'])
             ->join('journal_entries', 'journal_entry_details.journal_entry_id', '=', 'journal_entries.id')

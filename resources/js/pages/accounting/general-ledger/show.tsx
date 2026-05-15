@@ -18,6 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
 import { index } from '@/routes/general-ledger';
@@ -37,6 +38,7 @@ interface PageProps {
     groupedLedgerData?: (LedgerData & { bank?: { id: number, name: string }, vehicle?: { id: number, police_number: string } })[];
     vehicles: Vehicle[];
     banks: Bank[];
+    startFromZero: boolean;
 }
 
 const breadcrumbs = [
@@ -55,12 +57,14 @@ export default function GeneralLedgerShow({
     groupedLedgerData = [],
     vehicles,
     banks,
+    startFromZero,
 }: PageProps) {
     const [filters, setFilters] = useState({
         date_from: dateFrom,
         date_to: dateTo,
         vehicle_id: vehicleId || '',
         bank_id: bankId || '',
+        start_from_zero: startFromZero,
     });
 
     const handleFilter = () => {
@@ -104,7 +108,7 @@ export default function GeneralLedgerShow({
                 </div>
                 <Button 
                     className="btn-primary"
-                    onClick={() => window.open(`/general-ledger/${account.id}/print?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}&bank_id=${filters.bank_id || ''}`, '_blank')}
+                    onClick={() => window.open(`/general-ledger/${account.id}/print?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}&bank_id=${filters.bank_id || ''}&start_from_zero=${filters.start_from_zero ? 1 : 0}`, '_blank')}
                 >
                     Cetak PDF
                 </Button>
@@ -207,6 +211,16 @@ export default function GeneralLedgerShow({
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+                        <div className="flex items-center space-x-2 pt-8">
+                            <Checkbox 
+                                id="start_from_zero" 
+                                checked={filters.start_from_zero}
+                                onCheckedChange={(checked) => 
+                                    setFilters({ ...filters, start_from_zero: !!checked })
+                                }
+                            />
+                            <Label htmlFor="start_from_zero" className="cursor-pointer">Mulai dari Nol (0)</Label>
                         </div>
                         <div className="flex items-end">
                             <Button

@@ -21,65 +21,12 @@ class MonthlyBalanceSheetController extends Controller
     public function index(Request $request): Response
     {
         $year = $request->get('year', now()->year);
-        
-        $months = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $date = Carbon::createFromDate($year, $m, 1)->endOfMonth();
-            if ($date->isFuture() && $date->month > now()->month && $date->year == now()->year) {
-                // Skip future months if they are beyond current month in current year
-                // But let's show all months if it's a past year
-            }
-            $months[] = [
-                'name' => $date->translatedFormat('F'),
-                'date' => $date->format('Y-m-d'),
-                'month' => $m,
-            ];
-        }
+        $data = $this->getMonthlyBalanceSheetData($year);
 
-        // Get account categories
-        $assetAccounts = ChartOfAccount::where('type', 'asset')->where('is_active', true)->orderBy('code')->get();
-        $liabilityAccounts = ChartOfAccount::where('type', 'liability')->where('is_active', true)->orderBy('code')->get();
-        $equityAccounts = ChartOfAccount::where('type', 'equity')->where('is_active', true)->orderBy('code')->get();
-
-        $reportData = [];
-        
-        foreach ($months as $month) {
-            $asOfDate = $month['date'];
-            
-            $totalAssets = 0;
-            foreach ($assetAccounts as $account) {
-                $totalAssets += $this->getAccountBalanceAsOf($account->id, $asOfDate);
-            }
-
-            $totalLiabilities = 0;
-            foreach ($liabilityAccounts as $account) {
-                $totalLiabilities += $this->getAccountBalanceAsOf($account->id, $asOfDate);
-            }
-
-            $totalEquity = 0;
-            foreach ($equityAccounts as $account) {
-                $totalEquity += $this->getAccountBalanceAsOf($account->id, $asOfDate);
-            }
-
-            // Calculate net profit/loss from beginning of year to as of date
-            $yearStart = Carbon::parse($asOfDate)->startOfYear()->format('Y-m-d');
-            $netProfit = $this->calculateNetProfit($yearStart, $asOfDate);
-            $totalEquity += $netProfit;
-
-            $reportData[] = [
-                'month' => $month['name'],
-                'total_assets' => $totalAssets,
-                'total_liabilities' => $totalLiabilities,
-                'total_equity' => $totalEquity,
-                'net_profit' => $netProfit,
-            ];
-        }
-
-        return Inertia::render('reports/monthly-balance-sheet/index', [
+        return Inertia::render('reports/monthly-balance-sheet/index', array_merge($data, [
             'year' => $year,
-            'reportData' => $reportData,
             'availableYears' => $this->getAvailableYears(),
-        ]);
+        ]));
     }
 
     /**
@@ -88,7 +35,21 @@ class MonthlyBalanceSheetController extends Controller
     public function print(Request $request)
     {
         $year = $request->get('year', now()->year);
-        
+        $data = $this->getMonthlyBalanceSheetData($year);
+
+        $pdf = Pdf::loadView('pdf.reports.monthly-balance-sheet', array_merge($data, [
+            'title' => 'Laporan Neraca Bulanan (Detail)',
+            'year' => $year,
+        ]))->setPaper('a4', 'landscape');
+
+        return $pdf->download('laporan-neraca-bulanan-detail-' . $year . '.pdf');
+    }
+
+    /**
+     * Get all monthly balance sheet data including details
+     */
+    private function getMonthlyBalanceSheetData(int $year): array
+    {
         $months = [];
         for ($m = 1; $m <= 12; $m++) {
             $date = Carbon::createFromDate($year, $m, 1)->endOfMonth();
@@ -99,50 +60,101 @@ class MonthlyBalanceSheetController extends Controller
             ];
         }
 
-        // Get account categories
         $assetAccounts = ChartOfAccount::where('type', 'asset')->where('is_active', true)->orderBy('code')->get();
         $liabilityAccounts = ChartOfAccount::where('type', 'liability')->where('is_active', true)->orderBy('code')->get();
         $equityAccounts = ChartOfAccount::where('type', 'equity')->where('is_active', true)->orderBy('code')->get();
 
-        $reportData = [];
-        foreach ($months as $month) {
-            $asOfDate = $month['date'];
-            
-            $totalAssets = 0;
-            foreach ($assetAccounts as $account) {
-                $totalAssets += $this->getAccountBalanceAsOf($account->id, $asOfDate);
+        $assetDetails = [];
+        $liabilityDetails = [];
+        $equityDetails = [];
+        
+        $monthlyTotals = [
+            'assets' => array_fill(0, 12, 0),
+            'liabilities' => array_fill(0, 12, 0),
+            'equity' => array_fill(0, 12, 0),
+            'net_profit' => array_fill(0, 12, 0),
+        ];
+
+        // Process Assets
+        foreach ($assetAccounts as $account) {
+            $monthlyBalances = [];
+            $hasBalance = false;
+            foreach ($months as $idx => $month) {
+                $balance = $this->getAccountBalanceAsOf($account->id, $month['date']);
+                $monthlyBalances[] = $balance;
+                $monthlyTotals['assets'][$idx] += $balance;
+                if ($balance != 0) $hasBalance = true;
             }
-
-            $totalLiabilities = 0;
-            foreach ($liabilityAccounts as $account) {
-                $totalLiabilities += $this->getAccountBalanceAsOf($account->id, $asOfDate);
+            if ($hasBalance) {
+                $assetDetails[] = [
+                    'code' => $account->code,
+                    'name' => $account->name,
+                    'balances' => $monthlyBalances,
+                ];
             }
-
-            $totalEquity = 0;
-            foreach ($equityAccounts as $account) {
-                $totalEquity += $this->getAccountBalanceAsOf($account->id, $asOfDate);
-            }
-
-            $yearStart = Carbon::parse($asOfDate)->startOfYear()->format('Y-m-d');
-            $netProfit = $this->calculateNetProfit($yearStart, $asOfDate);
-            $totalEquity += $netProfit;
-
-            $reportData[] = [
-                'month' => $month['name'],
-                'total_assets' => $totalAssets,
-                'total_liabilities' => $totalLiabilities,
-                'total_equity' => $totalEquity,
-                'net_profit' => $netProfit,
-            ];
         }
 
-        $pdf = Pdf::loadView('pdf.reports.monthly-balance-sheet', [
-            'title' => 'Laporan Neraca Bulanan',
-            'year' => $year,
-            'reportData' => $reportData,
-        ])->setPaper('a4', 'landscape');
+        // Process Liabilities
+        foreach ($liabilityAccounts as $account) {
+            $monthlyBalances = [];
+            $hasBalance = false;
+            foreach ($months as $idx => $month) {
+                $balance = $this->getAccountBalanceAsOf($account->id, $month['date']);
+                $monthlyBalances[] = $balance;
+                $monthlyTotals['liabilities'][$idx] += $balance;
+                if ($balance != 0) $hasBalance = true;
+            }
+            if ($hasBalance) {
+                $liabilityDetails[] = [
+                    'code' => $account->code,
+                    'name' => $account->name,
+                    'balances' => $monthlyBalances,
+                ];
+            }
+        }
 
-        return $pdf->download('laporan-neraca-bulanan-' . $year . '.pdf');
+        // Process Equity
+        foreach ($equityAccounts as $account) {
+            $monthlyBalances = [];
+            $hasBalance = false;
+            foreach ($months as $idx => $month) {
+                $balance = $this->getAccountBalanceAsOf($account->id, $month['date']);
+                $monthlyBalances[] = $balance;
+                $monthlyTotals['equity'][$idx] += $balance;
+                if ($balance != 0) $hasBalance = true;
+            }
+            if ($hasBalance) {
+                $equityDetails[] = [
+                    'code' => $account->code,
+                    'name' => $account->name,
+                    'balances' => $monthlyBalances,
+                ];
+            }
+        }
+
+        // Add Net Profit (Retained Earnings for current year) to Equity
+        $netProfitBalances = [];
+        foreach ($months as $idx => $month) {
+            $yearStart = Carbon::parse($month['date'])->startOfYear()->format('Y-m-d');
+            $netProfit = $this->calculateNetProfit($yearStart, $month['date']);
+            $netProfitBalances[] = $netProfit;
+            $monthlyTotals['net_profit'][$idx] = $netProfit;
+            $monthlyTotals['equity'][$idx] += $netProfit;
+        }
+        
+        $equityDetails[] = [
+            'code' => 'L/R',
+            'name' => 'Laba/Rugi Tahun Berjalan',
+            'balances' => $netProfitBalances,
+        ];
+
+        return [
+            'monthNames' => array_column($months, 'name'),
+            'assetDetails' => $assetDetails,
+            'liabilityDetails' => $liabilityDetails,
+            'equityDetails' => $equityDetails,
+            'monthlyTotals' => $monthlyTotals,
+        ];
     }
 
     /**

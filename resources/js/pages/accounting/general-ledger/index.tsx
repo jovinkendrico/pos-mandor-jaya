@@ -10,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { TableCell } from '@/components/ui/table';
 import TableLayout from '@/components/ui/TableLayout/TableLayout';
 import useResourceFilters from '@/hooks/use-resource-filters';
@@ -32,6 +33,7 @@ interface PageProps {
     vehicles: Vehicle[];
     banks: Bank[];
     ledgerData: LedgerData[];
+    startFromZero: boolean;
 }
 
 const breadcrumbs = [
@@ -51,6 +53,7 @@ export default function GeneralLedgerIndex({
     vehicles,
     banks,
     ledgerData,
+    startFromZero,
 }: PageProps) {
     const [defaultFilters] = useState({
         search: '',
@@ -62,6 +65,7 @@ export default function GeneralLedgerIndex({
         status: 'all',
         sort_by: 'date',
         sort_order: 'desc',
+        start_from_zero: startFromZero,
     });
 
     const { allFilters, handleFilterChange } = useResourceFilters(
@@ -76,7 +80,7 @@ export default function GeneralLedgerIndex({
                 <PageTitle title="Buku Besar" />
                 <Button 
                     className="btn-primary"
-                    onClick={() => window.open(`/general-ledger/print-all?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}&bank_id=${bankId || ''}`, '_blank')}
+                    onClick={() => window.open(`/general-ledger/print-all?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}&bank_id=${bankId || ''}&start_from_zero=${allFilters.start_from_zero ? 1 : 0}`, '_blank')}
                 >
                     Cetak Semua (PDF)
                 </Button>
@@ -175,6 +179,16 @@ export default function GeneralLedgerIndex({
                                 </SelectContent>
                             </Select>
                         </div>
+                        <div className="flex items-center space-x-2 pt-8">
+                            <Checkbox 
+                                id="start_from_zero" 
+                                checked={allFilters.start_from_zero}
+                                onCheckedChange={(checked) => 
+                                    handleFilterChange({ start_from_zero: !!checked })
+                                }
+                            />
+                            <Label htmlFor="start_from_zero" className="cursor-pointer">Mulai dari Nol (0)</Label>
+                        </div>
                     </div>
                 }
             />
@@ -221,7 +235,7 @@ export default function GeneralLedgerIndex({
                                         {formatCurrency(item.closing_balance)}
                                     </TableCell>
                                     <TableCell className="flex w-full min-w-[105px] items-center justify-center text-center">
-                                        <Link href={show(item.account.id).url}>
+                                        <Link href={show(item.account.id).url + `?date_from=${dateFrom}&date_to=${dateTo}&vehicle_id=${vehicleId || ''}&bank_id=${bankId || ''}&start_from_zero=${allFilters.start_from_zero ? 1 : 0}`}>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"

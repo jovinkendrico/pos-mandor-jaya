@@ -21,29 +21,40 @@ import { formatCurrency } from '@/lib/utils';
 import { Head, router } from '@inertiajs/react';
 import { Printer } from 'lucide-react';
 
-interface ReportData {
-    month: string;
-    total_assets: number;
-    total_liabilities: number;
-    total_equity: number;
-    net_profit: number;
+interface AccountDetail {
+    code: string;
+    name: string;
+    balances: number[];
 }
 
 interface PageProps {
     year: number;
-    reportData: ReportData[];
+    monthNames: string[];
+    assetDetails: AccountDetail[];
+    liabilityDetails: AccountDetail[];
+    equityDetails: AccountDetail[];
+    monthlyTotals: {
+        assets: number[];
+        liabilities: number[];
+        equity: number[];
+        net_profit: number[];
+    };
     availableYears: number[];
 }
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Laporan', href: '/reports' },
-    { title: 'Neraca Bulanan', href: '#' },
+    { title: 'Neraca Bulanan Detail', href: '#' },
 ];
 
 export default function MonthlyBalanceSheetIndex({
     year,
-    reportData,
+    monthNames,
+    assetDetails,
+    liabilityDetails,
+    equityDetails,
+    monthlyTotals,
     availableYears,
 }: PageProps) {
     
@@ -58,11 +69,39 @@ export default function MonthlyBalanceSheetIndex({
         window.open(`/reports/monthly-balance-sheet/print?year=${year}`, '_blank');
     };
 
+    const renderAccountRows = (details: AccountDetail[]) => {
+        return details.map((account, index) => (
+            <TableRow key={`${account.code}-${index}`} className="dark:border-b-2 dark:border-white/25">
+                <TableCell className="sticky left-0 bg-background z-10 font-mono text-xs whitespace-nowrap border-r">
+                    {account.code} - {account.name}
+                </TableCell>
+                {account.balances.map((balance, bIdx) => (
+                    <TableCell key={bIdx} className="text-right text-xs whitespace-nowrap">
+                        {formatCurrency(balance)}
+                    </TableCell>
+                ))}
+            </TableRow>
+        ));
+    };
+
+    const renderTotalRow = (title: string, totals: number[], className = "") => (
+        <TableRow className={`bg-muted/50 font-bold dark:bg-primary-800/10 ${className}`}>
+            <TableCell className="sticky left-0 bg-muted/50 dark:bg-primary-800/20 z-10 border-r">
+                {title}
+            </TableCell>
+            {totals.map((total, idx) => (
+                <TableCell key={idx} className="text-right whitespace-nowrap">
+                    {formatCurrency(total)}
+                </TableCell>
+            ))}
+        </TableRow>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Laporan Neraca Bulanan" />
+            <Head title="Laporan Neraca Bulanan Detail" />
             <div className="mb-4 flex items-center justify-between">
-                <PageTitle title="Laporan Neraca Bulanan" />
+                <PageTitle title="Laporan Neraca Bulanan Detail" />
                 
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
@@ -94,62 +133,81 @@ export default function MonthlyBalanceSheetIndex({
 
             <Card className="content">
                 <CardHeader>
-                    <CardTitle>Ringkasan Neraca per Bulan - Tahun {year}</CardTitle>
+                    <CardTitle>Neraca Komparatif Bulanan - Tahun {year}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="input-box overflow-x-auto rounded-lg">
-                        <Table className="content">
+                        <Table className="content border-collapse">
                             <TableHeader>
                                 <TableRow className="dark:border-b-2 dark:border-white/25">
-                                    <TableHead className="text-center">Bulan</TableHead>
-                                    <TableHead className="text-right">Total Aktiva (Aset)</TableHead>
-                                    <TableHead className="text-right">Total Kewajiban</TableHead>
-                                    <TableHead className="text-right">Total Ekuitas (Modal)</TableHead>
-                                    <TableHead className="text-right">Laba/Rugi Berjalan</TableHead>
-                                    <TableHead className="text-center">Status</TableHead>
+                                    <TableHead className="sticky left-0 bg-background z-20 border-r min-w-[250px]">Akun</TableHead>
+                                    {monthNames.map((month, idx) => (
+                                        <TableHead key={idx} className="text-center min-w-[120px]">{month}</TableHead>
+                                    ))}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {reportData.map((data, index) => {
-                                    const totalPasiva = data.total_liabilities + data.total_equity;
-                                    const isBalanced = Math.abs(data.total_assets - totalPasiva) < 0.01;
-                                    
-                                    return (
-                                        <TableRow key={index} className="dark:border-b-2 dark:border-white/25">
-                                            <TableCell className="text-center font-medium">
-                                                {data.month}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(data.total_assets)}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(data.total_liabilities)}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(data.total_equity)}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(data.net_profit)}
-                                            </TableCell>
-                                            <TableCell className="text-center">
+                                {/* ASSETS SECTION */}
+                                <TableRow className="bg-primary/5 dark:bg-primary/20">
+                                    <TableCell colSpan={13} className="font-bold sticky left-0 z-10">AKTIVA (ASET)</TableCell>
+                                </TableRow>
+                                {renderAccountRows(assetDetails)}
+                                {renderTotalRow("TOTAL AKTIVA", monthlyTotals.assets, "text-primary")}
+
+                                {/* LIABILITIES SECTION */}
+                                <TableRow className="bg-primary/5 dark:bg-primary/20">
+                                    <TableCell colSpan={13} className="font-bold sticky left-0 z-10">KEWAJIBAN (PASIVA)</TableCell>
+                                </TableRow>
+                                {renderAccountRows(liabilityDetails)}
+                                {renderTotalRow("TOTAL KEWAJIBAN", monthlyTotals.liabilities, "text-orange-600")}
+
+                                {/* EQUITY SECTION */}
+                                <TableRow className="bg-primary/5 dark:bg-primary/20">
+                                    <TableCell colSpan={13} className="font-bold sticky left-0 z-10">EKUITAS (MODAL)</TableCell>
+                                </TableRow>
+                                {renderAccountRows(equityDetails)}
+                                {renderTotalRow("TOTAL EKUITAS", monthlyTotals.equity, "text-green-600")}
+
+                                {/* BALANCE CHECK */}
+                                <TableRow className="bg-muted font-bold dark:bg-primary-900/40">
+                                    <TableCell className="sticky left-0 bg-muted dark:bg-primary-900/60 z-10 border-r">
+                                        PASIVA + EKUITAS
+                                    </TableCell>
+                                    {monthlyTotals.liabilities.map((l, idx) => (
+                                        <TableCell key={idx} className="text-right whitespace-nowrap">
+                                            {formatCurrency(l + monthlyTotals.equity[idx])}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                                
+                                <TableRow className="font-bold">
+                                    <TableCell className="sticky left-0 bg-background z-10 border-r">
+                                        STATUS
+                                    </TableCell>
+                                    {monthlyTotals.assets.map((a, idx) => {
+                                        const diff = Math.abs(a - (monthlyTotals.liabilities[idx] + monthlyTotals.equity[idx]));
+                                        const isBalanced = diff < 0.01;
+                                        return (
+                                            <TableCell key={idx} className="text-center">
                                                 {isBalanced ? (
-                                                    <span className="text-green-600 dark:text-emerald-500 font-bold">✓</span>
+                                                    <span className="text-green-600 font-bold">✓</span>
                                                 ) : (
-                                                    <span className="text-red-600 dark:text-red-400 font-bold">✗</span>
+                                                    <span className="text-red-600 font-bold" title={`Selisih: ${diff}`}>✗</span>
                                                 )}
                                             </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
+                                        );
+                                    })}
+                                </TableRow>
                             </TableBody>
                         </Table>
                     </div>
                 </CardContent>
             </Card>
             
-            <div className="mt-4 text-sm text-muted-foreground">
-                <p>* Laba/Rugi Berjalan dihitung dari awal tahun sampai akhir bulan tersebut.</p>
-                <p>* Total Ekuitas sudah termasuk Laba/Rugi Berjalan.</p>
+            <div className="mt-4 text-sm text-muted-foreground flex flex-col gap-1">
+                <p>* Laba/Rugi Tahun Berjalan dihitung dari awal tahun sampai akhir bulan tersebut.</p>
+                <p>* Total Ekuitas sudah termasuk Laba/Rugi Tahun Berjalan.</p>
+                <p>* Geser tabel ke kanan untuk melihat bulan-bulan berikutnya.</p>
             </div>
         </AppLayout>
     );

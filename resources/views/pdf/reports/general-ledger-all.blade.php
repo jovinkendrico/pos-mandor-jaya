@@ -23,6 +23,12 @@
             <td style="border: none; padding: 2px;">: {{ \App\Models\Bank::find($bankId)?->name ?? '-' }}</td>
         </tr>
         @endif
+        @if($startFromZero)
+        <tr>
+            <td style="font-weight: bold; border: none; padding: 2px;">Opsi</td>
+            <td style="border: none; padding: 2px;">: Mulai dari Nol (0)</td>
+        </tr>
+        @endif
     </table>
 </div>
 

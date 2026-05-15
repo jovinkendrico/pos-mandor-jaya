@@ -11,6 +11,12 @@
             <td style="font-weight: bold; border: none; padding: 2px;">Periode</td>
             <td style="border: none; padding: 2px;">: {{ \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($dateTo)->format('d/m/Y') }}</td>
         </tr>
+        @if($startFromZero)
+        <tr>
+            <td style="font-weight: bold; border: none; padding: 2px;">Opsi</td>
+            <td style="border: none; padding: 2px;">: Mulai dari Nol (0)</td>
+        </tr>
+        @endif
     </table>
 </div>
 
