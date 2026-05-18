@@ -1,5 +1,26 @@
 @extends('pdf.reports.base')
 
+@section('page-style')
+<style>
+    body {
+        font-size: 11px !important;
+    }
+    .header h1 {
+        font-size: 18px !important;
+    }
+    .header .date-range {
+        font-size: 13px !important;
+    }
+    table {
+        font-size: 1em !important;
+    }
+    tr, th, td {
+        font-size: 1em !important;
+        padding: 7px 8px !important;
+    }
+</style>
+@endsection
+
 @section('content')
 <div style="margin-bottom: 20px;">
     <table>
@@ -56,7 +77,7 @@
                         </h4>
                     @endif
 
-                    <table style="font-size: 0.8em; margin-bottom: 10px;">
+                    <table style="margin-bottom: 10px;">
                         <thead>
                             <tr>
                                 <th style="width: 10%;">Tanggal</th>
