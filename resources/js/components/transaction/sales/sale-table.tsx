@@ -26,6 +26,9 @@ const SaleTable = (props: SaleTableProps) => {
         'Sisa',
         'Status Pembayaran',
         'Status',
+        'Status Print',
+        'Dibuat Pada',
+        'Diubah Pada',
         'Created By',
         'Updated By',
         'Aksi',
@@ -101,6 +104,24 @@ const SaleTable = (props: SaleTableProps) => {
                                     ? 'Confirmed'
                                     : 'Pending'}
                             </Badge>
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            <Badge
+                                variant={row.is_printed ? 'success' : 'secondary'}
+                                className={cn(
+                                    row.is_printed
+                                        ? 'badge-blue-light'
+                                        : 'bg-gray-200 text-gray-800 border-transparent hover:bg-gray-200/80',
+                                )}
+                            >
+                                {row.is_printed ? 'Sudah Diprint' : 'Belum Diprint'}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center whitespace-pre-wrap">
+                            {row.created_at ? new Date(row.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center whitespace-pre-wrap">
+                            {row.updated_at ? new Date(row.updated_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             {row.creator?.name || '-'}

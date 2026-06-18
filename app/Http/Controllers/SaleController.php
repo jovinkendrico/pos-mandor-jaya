@@ -581,6 +581,10 @@ class SaleController extends Controller
         try {
             $sale->load(['customer.city', 'details.item', 'details.itemUom.uom']);
 
+            $sale->timestamps = false;
+            $sale->update(['is_printed' => true]);
+            $sale->timestamps = true;
+
             // 9.5 x 11 inches = 241 x 279 mm = 684 x 792 points
             $pdf = Pdf::loadView('pdf.sale', [
                 'title' => 'MJ - ' . $sale->sale_number,

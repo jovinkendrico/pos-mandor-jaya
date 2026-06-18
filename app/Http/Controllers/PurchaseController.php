@@ -580,6 +580,12 @@ class PurchaseController extends Controller
         try {
             $purchase->load(['supplier', 'details.item', 'details.itemUom.uom']);
 
+            // Update is_printed status without changing updated_at to prevent changing the timestamp
+            // or we can just update it normally. Since it's a model action, let's just update.
+            $purchase->timestamps = false;
+            $purchase->update(['is_printed' => true]);
+            $purchase->timestamps = true;
+
             // 9.5 x 11 inches = 241 x 279 mm = 684 x 792 points
             $pdf = Pdf::loadView('pdf.purchase', [
                 'title'    => 'MB - ' . $purchase->purchase_number,

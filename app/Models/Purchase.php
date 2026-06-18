@@ -37,6 +37,7 @@ class Purchase extends Model
         'notes',
         'created_by',
         'updated_by',
+        'is_printed',
     ];
 
     protected $casts = [
@@ -55,6 +56,7 @@ class Purchase extends Model
         'ppn_percent'          => 'decimal:2',
         'ppn_amount'           => 'decimal:2',
         'total_amount'         => 'decimal:2',
+        'is_printed'           => 'boolean',
     ];
 
     public function supplier(): BelongsTo

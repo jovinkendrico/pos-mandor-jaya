@@ -35,6 +35,7 @@ class Sale extends Model
         'notes',
         'created_by',
         'updated_by',
+        'is_printed',
     ];
 
     protected $casts = [
@@ -51,6 +52,7 @@ class Sale extends Model
         'total_amount'         => 'decimal:2',
         'total_cost'           => 'decimal:2',
         'total_profit'         => 'decimal:2',
+        'is_printed'           => 'boolean',
     ];
 
     public function customer(): BelongsTo

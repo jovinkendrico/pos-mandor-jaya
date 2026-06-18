@@ -286,6 +286,23 @@ const PurchaseShow = (props: PageProps) => {
                                     )}
                                 </span>
                             </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Status Print:
+                                </span>
+                                <span className="font-medium">
+                                    <Badge
+                                        variant={purchase.is_printed ? 'success' : 'secondary'}
+                                        className={cn(
+                                            purchase.is_printed
+                                                ? 'badge-blue-light'
+                                                : 'bg-gray-200 text-gray-800 border-transparent hover:bg-gray-200/80',
+                                        )}
+                                    >
+                                        {purchase.is_printed ? 'Sudah Diprint' : 'Belum Diprint'}
+                                    </Badge>
+                                </span>
+                            </div>
                             {purchase.due_date && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">
@@ -318,10 +335,26 @@ const PurchaseShow = (props: PageProps) => {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
+                                    Waktu Dibuat:
+                                </span>
+                                <span className="font-medium">
+                                    {purchase.created_at ? new Date(purchase.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
                                     Updated By:
                                 </span>
                                 <span className="font-medium">
                                     {purchase.updater?.name || '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Waktu Diupdate:
+                                </span>
+                                <span className="font-medium">
+                                    {purchase.updated_at ? new Date(purchase.updated_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                                 </span>
                             </div>
                         </CardContent>
