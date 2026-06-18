@@ -72,12 +72,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('purchases/{purchase}/unconfirm', [PurchaseController::class, 'unconfirm'])->name('purchases.unconfirm');
     Route::post('purchases/{purchase}/write-off', [PurchaseController::class, 'writeOff'])->name('purchases.write-off');
     Route::get('purchases/{purchase}/print', [PurchaseController::class, 'print'])->name('purchases.print');
+    Route::post('purchases/{purchase}/mark-printed', [PurchaseController::class, 'markPrinted'])->name('purchases.mark-printed');
 
     // Sale confirm/unconfirm routes (must be before resource)
     Route::post('sales/{sale}/confirm', [SaleController::class, 'confirm'])->name('sales.confirm');
     Route::post('sales/{sale}/unconfirm', [SaleController::class, 'unconfirm'])->name('sales.unconfirm');
     Route::post('sales/{sale}/write-off', [SaleController::class, 'writeOff'])->name('sales.write-off');
     Route::get('sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
+    Route::post('sales/{sale}/mark-printed', [SaleController::class, 'markPrinted'])->name('sales.mark-printed');
 
     Route::get('purchase-returns/purchase-details/{purchase}', [PurchaseReturnController::class, 'getPurchaseDetails'])->name('purchase-returns.purchase-details');
     Route::get('purchase-returns/outstanding/{supplier}', [PurchaseReturnController::class, 'getOutstandingPurchases'])->name('purchase-returns.outstanding');
