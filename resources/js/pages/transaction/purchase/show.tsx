@@ -223,6 +223,9 @@ const PurchaseShow = (props: PageProps) => {
                                 subtotal: Number(d.subtotal)
                             }))
                         }}
+                        onSuccess={() => {
+                            router.post(`/purchases/${purchase.id}/mark-printed`, {}, { preserveScroll: true });
+                        }}
                     />
                     <Button
                         className="btn-primary"

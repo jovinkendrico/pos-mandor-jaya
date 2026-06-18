@@ -707,4 +707,18 @@ class PurchaseController extends Controller
         return redirect()->route('purchases.show', $purchase)
             ->with('success', 'Selisih pembulatan berhasil di-write-off. Pembelian sekarang lunas.');
     }
+
+    /**
+     * Mark purchase as printed (for dot matrix)
+     */
+    public function markPrinted(Purchase $purchase): RedirectResponse
+    {
+        $this->authorize('view', $purchase);
+
+        $purchase->timestamps = false;
+        $purchase->update(['is_printed' => true]);
+        $purchase->timestamps = true;
+
+        return back()->with('success', 'Status print berhasil diupdate.');
+    }
 }

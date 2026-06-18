@@ -7,9 +7,10 @@ import { toast } from 'sonner';
 interface DotMatrixPrintButtonProps {
     data: PrintData;
     className?: string;
+    onSuccess?: () => void;
 }
 
-export default function DotMatrixPrintButton({ data, className }: DotMatrixPrintButtonProps) {
+export default function DotMatrixPrintButton({ data, className, onSuccess }: DotMatrixPrintButtonProps) {
     const [isPrinting, setIsPrinting] = useState(false);
 
     const handlePrint = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -29,6 +30,9 @@ export default function DotMatrixPrintButton({ data, className }: DotMatrixPrint
         try {
             await qzPrintService.printRaw(data, printerName);
             toast.success('Faktur dikirim ke printer.');
+            if (onSuccess) {
+                onSuccess();
+            }
         } catch (error: any) {
             toast.error(error.message || 'Gagal mencetak.');
             // Clear printer name on error to let user re-enter if it was wrong

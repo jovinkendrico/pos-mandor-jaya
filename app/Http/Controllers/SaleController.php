@@ -768,4 +768,18 @@ class SaleController extends Controller
         return redirect()->route('sales.show', $sale)
             ->with('success', 'Selisih pembulatan berhasil di-write-off. Penjualan sekarang lunas.');
     }
+
+    /**
+     * Mark sale as printed (for dot matrix)
+     */
+    public function markPrinted(\App\Models\Sale $sale): RedirectResponse
+    {
+        $this->authorize('view', $sale);
+
+        $sale->timestamps = false;
+        $sale->update(['is_printed' => true]);
+        $sale->timestamps = true;
+
+        return back()->with('success', 'Status print berhasil diupdate.');
+    }
 }
