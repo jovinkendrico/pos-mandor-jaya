@@ -25,6 +25,7 @@ const SaleTable = (props: SaleTableProps) => {
         'Sudah Dibayar',
         'Sisa',
         'Status Pembayaran',
+        'Tanggal Lunas',
         'Status',
         'Status Print',
         'Dibuat Pada',
@@ -86,6 +87,9 @@ const SaleTable = (props: SaleTableProps) => {
                             >
                                 {isPaid ? 'Lunas' : 'Belum Lunas'}
                             </Badge>
+                        </TableCell>
+                        <TableCell className="flex w-full items-center justify-center text-center">
+                            {row.fully_paid_at ? formatDatetoString(new Date(row.fully_paid_at)) : '-'}
                         </TableCell>
                         <TableCell className="flex w-full items-center justify-center text-center">
                             <Badge

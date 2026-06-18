@@ -113,6 +113,22 @@ class Purchase extends Model
     }
 
     /**
+     * Get the date when it was fully paid
+     */
+    public function getFullyPaidAtAttribute(): ?string
+    {
+        if ($this->remaining_amount > 0) {
+            return null;
+        }
+
+        return DB::table('purchase_payment_items')
+            ->join('purchase_payments', 'purchase_payment_items.purchase_payment_id', '=', 'purchase_payments.id')
+            ->where('purchase_payment_items.purchase_id', $this->id)
+            ->where('purchase_payments.status', 'confirmed')
+            ->max('purchase_payments.payment_date');
+    }
+
+    /**
      * Check if purchase is fully paid
      */
     public function isFullyPaid(): bool

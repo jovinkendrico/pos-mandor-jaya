@@ -112,7 +112,7 @@ class SaleController extends Controller
         $sales = $query->paginate($perPage)->withQueryString();
 
         // Append computed attributes
-        $sales->getCollection()->each->append(['total_paid', 'remaining_amount']);
+        $sales->getCollection()->each->append(['total_paid', 'remaining_amount', 'fully_paid_at']);
 
         // Add permissions
         $sales->getCollection()->transform(function ($sale) {
@@ -318,7 +318,7 @@ class SaleController extends Controller
         $sale->load(['customer.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
         // Append computed attributes for payment tracking
-        $sale->append(['total_paid', 'remaining_amount']);
+        $sale->append(['total_paid', 'remaining_amount', 'fully_paid_at']);
 
         $sale->can = [
             'edit'   => auth()->user() ? auth()->user()->can('update', $sale) : false,

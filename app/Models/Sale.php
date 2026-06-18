@@ -109,6 +109,22 @@ class Sale extends Model
     }
 
     /**
+     * Get the date when it was fully paid
+     */
+    public function getFullyPaidAtAttribute(): ?string
+    {
+        if ($this->remaining_amount > 0) {
+            return null;
+        }
+
+        return DB::table('sale_payment_items')
+            ->join('sale_payments', 'sale_payment_items.sale_payment_id', '=', 'sale_payments.id')
+            ->where('sale_payment_items.sale_id', $this->id)
+            ->where('sale_payments.status', 'confirmed')
+            ->max('sale_payments.payment_date');
+    }
+
+    /**
      * Check if sale is fully paid
      */
     public function isFullyPaid(): bool

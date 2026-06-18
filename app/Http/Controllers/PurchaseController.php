@@ -111,7 +111,7 @@ class PurchaseController extends Controller
         $purchases = $query->paginate($perPage)->withQueryString();
 
         // Append computed attributes (only for current page)
-        $purchases->getCollection()->each->append(['total_paid', 'remaining_amount']);
+        $purchases->getCollection()->each->append(['total_paid', 'remaining_amount', 'fully_paid_at']);
 
         // Add permissions
         $purchases->getCollection()->transform(function ($purchase) {
@@ -326,7 +326,7 @@ class PurchaseController extends Controller
         $purchase->load(['supplier.city', 'details.item', 'details.itemUom.uom', 'creator', 'updater']);
 
         // Append computed attributes for payment tracking
-        $purchase->append(['total_paid', 'remaining_amount']);
+        $purchase->append(['total_paid', 'remaining_amount', 'fully_paid_at']);
 
         $purchase->can = [
             'edit'   => auth()->user() ? auth()->user()->can('update', $purchase) : false,
