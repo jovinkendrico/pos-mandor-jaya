@@ -550,6 +550,12 @@ const SalePaymentForm = (props: SalePaymentFormProps) => {
 
                     <div className="mt-4 flex justify-end">
                         <div className="space-y-1 text-right">
+                            <div className="flex justify-end gap-8 text-sm mb-2">
+                                <span className="text-muted-foreground">Jumlah Invoice Terpilih:</span>
+                                <span className="font-medium text-foreground">
+                                    {dataSalePayment.items.filter((item: ISalePaymentItem) => item.sale_id).length} Invoice
+                                </span>
+                            </div>
                             <div className="text-sm text-muted-foreground mr-2">
                                 Total Pembayaran
                             </div>

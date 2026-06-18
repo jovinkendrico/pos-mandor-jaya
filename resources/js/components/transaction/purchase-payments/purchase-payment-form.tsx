@@ -604,6 +604,12 @@ const PurchasePaymentForm = (props: PurchasePaymentFormProps) => {
                     <div className="mt-4 flex justify-end">
                         <div className="space-y-2 text-right">
                             <div className="flex justify-end gap-8 text-sm">
+                                <span className="text-muted-foreground">Jumlah Invoice Terpilih:</span>
+                                <span className="font-medium text-foreground">
+                                    {dataPurchasePayment.items.filter((item: IPurchasePaymentItem) => item.purchase_id).length} Invoice
+                                </span>
+                            </div>
+                            <div className="flex justify-end gap-8 text-sm">
                                 <span className="text-muted-foreground">Total Invoice:</span>
                                 <span className="font-medium text-foreground">{formatCurrency(totalInvoiceAmount)}</span>
                             </div>
