@@ -30,16 +30,16 @@ export default function DotMatrixPrintButton({ data, className, onSuccess }: Dot
         try {
             await qzPrintService.printRaw(data, printerName);
             toast.success('Faktur dikirim ke printer.');
-            if (onSuccess) {
-                onSuccess();
-            }
         } catch (error: any) {
-            toast.error(error.message || 'Gagal mencetak.');
+            toast.error(error.message || 'Gagal mencetak. (Status tetap diupdate menjadi sudah diprint)');
             // Clear printer name on error to let user re-enter if it was wrong
             if (error.message?.includes('not find')) {
                 localStorage.removeItem('qz_printer_name');
             }
         } finally {
+            if (onSuccess) {
+                onSuccess();
+            }
             setIsPrinting(false);
         }
     };
